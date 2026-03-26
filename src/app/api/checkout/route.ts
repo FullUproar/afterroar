@@ -244,11 +244,42 @@ export async function POST(request: NextRequest) {
       .eq("id", item.inventory_item_id);
   }
 
-  // 8. Return success
+  // 8. Build receipt and return success
+  const total_cents = subtotal_cents - effectiveCreditApplied;
   const change_cents =
     payment_method === "cash" || payment_method === "split"
-      ? Math.max(0, amount_tendered_cents - (subtotal_cents - effectiveCreditApplied))
+      ? Math.max(0, amount_tendered_cents - total_cents)
       : 0;
+
+  const receipt = {
+    store_name: "Afterroar Store",
+    date: new Date().toISOString(),
+    items: items.map((i) => {
+      const inv = invMap.get(i.inventory_item_id);
+      return {
+        name: inv?.name ?? "Unknown Item",
+        quantity: i.quantity,
+        price_cents: i.price_cents,
+        total_cents: i.price_cents * i.quantity,
+      };
+    }),
+    subtotal_cents,
+    credit_applied_cents: effectiveCreditApplied,
+    payment_method,
+    total_cents,
+    change_cents,
+    customer_name: null as string | null,
+  };
+
+  // Attach customer name if present
+  if (customer_id) {
+    const { data: cust } = await supabase
+      .from("customers")
+      .select("name")
+      .eq("id", customer_id)
+      .single();
+    if (cust) receipt.customer_name = cust.name;
+  }
 
   return NextResponse.json(
     {
@@ -256,6 +287,7 @@ export async function POST(request: NextRequest) {
       ledger_entry_id: ledgerEntry.id,
       change_cents,
       subtotal_cents,
+      receipt,
     },
     { status: 201 }
   );
