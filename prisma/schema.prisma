@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// NEXTAUTH (new tables)
+// ============================================================
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String?
+  email           String    @unique
+  email_verified  DateTime?
+  hashed_password String?
+  image           String?
+  created_at      DateTime  @default(now()) @db.Timestamptz()
+  updated_at      DateTime  @default(now()) @updatedAt @db.Timestamptz()
+
+  accounts Account[]
+  sessions Session[]
+  staff    Staff[]
+
+  @@map("app_users")
+}
+
+model Account {
+  id                  String  @id @default(uuid()) @db.Uuid
+  user_id             String  @db.Uuid
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String?
+  access_token        String?
+  expires_at          Int?
+  token_type          String?
+  scope               String?
+  id_token            String?
+  session_state       String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_account_id])
+  @@map("app_accounts")
+}
+
+model Session {
+  id            String   @id @default(uuid()) @db.Uuid
+  session_token String   @unique
+  user_id       String   @db.Uuid
+  expires       DateTime @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("app_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime @db.Timestamptz()
+
+  @@unique([identifier, token])
+  @@map("app_verification_tokens")
+}
+
+// ============================================================
+// STORES (existing table — match exactly)
+// ============================================================
+model Store {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  slug       String   @unique
+  owner_id   String?  @db.Uuid
+  address    Json?
+  settings   Json     @default("{}")
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @default(now()) @db.Timestamptz()
+
+  staff           Staff[]
+  customers       Customer[]
+  inventory_items InventoryItem[]
+  events          Event[]
+  ledger_entries  LedgerEntry[]
+  trade_ins       TradeIn[]
+  gift_cards      GiftCard[]
+  suppliers       Supplier[]
+
+  @@map("stores")
+}
+
+// ============================================================
+// STAFF (existing table)
+// ============================================================
+model Staff {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  store_id   String   @db.Uuid
+  role       String   @default("cashier")
+  name       String
+  active     Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user           User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  store          Store         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  ledger_entries LedgerEntry[]
+  trade_ins      TradeIn[]
+
+  @@unique([user_id, store_id])
+  @@map("staff")
+}
+
+// ============================================================
+// CUSTOMERS (existing table)
+// ============================================================
+model Customer {
+  id                   String   @id @default(uuid()) @db.Uuid
+  store_id             String   @db.Uuid
+  name                 String
+  email                String?
+  phone                String?
+  credit_balance_cents Int      @default(0)
+  loyalty_points       Int      @default(0)
+  notes                String?
+  afterroar_id         String?
+  created_at           DateTime @default(now()) @db.Timestamptz()
+  updated_at           DateTime @default(now()) @db.Timestamptz()
+
+  store           Store          @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  ledger_entries  LedgerEntry[]
+  trade_ins       TradeIn[]
+  event_checkins  EventCheckin[]
+
+  @@index([store_id])
+  @@map("customers")
+}
+
+// ============================================================
+// INVENTORY ITEMS (existing table + new fields)
+// ============================================================
+model InventoryItem {
+  id                  String   @id @default(uuid()) @db.Uuid
+  store_id            String   @db.Uuid
+  name                String
+  category            String
+  sku                 String?
+  barcode             String?
+  price_cents         Int      @default(0)
+  cost_cents          Int      @default(0)
+  quantity            Int      @default(0)
+  low_stock_threshold Int      @default(5)
+  attributes          Json     @default("{}")
+  image_url           String?
+  external_id         String?
+  supplier_id         String?  @db.Uuid
+  lead_time_days      Int?
+  reorder_point       Int?
+  safety_stock        Int      @default(0)
+  active              Boolean  @default(true)
+  created_at          DateTime @default(now()) @db.Timestamptz()
+  updated_at          DateTime @default(now()) @db.Timestamptz()
+
+  store          Store         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  supplier       Supplier?     @relation(fields: [supplier_id], references: [id])
+  trade_in_items TradeInItem[]
+
+  @@index([store_id])
+  @@index([store_id, category])
+  @@index([barcode])
+  @@index([store_id, sku])
+  @@map("inventory_items")
+}
+
+// ============================================================
+// SUPPLIERS (new table)
+// ============================================================
+model Supplier {
+  id                    String   @id @default(uuid()) @db.Uuid
+  store_id              String   @db.Uuid
+  name                  String
+  contact               String?
+  default_lead_time_days Int     @default(14)
+  notes                 String?
+  created_at            DateTime @default(now()) @db.Timestamptz()
+
+  store Store           @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  items InventoryItem[]
+
+  @@map("suppliers")
+}
+
+// ============================================================
+// EVENTS (existing table)
+// ============================================================
+model Event {
+  id                 String    @id @default(uuid()) @db.Uuid
+  store_id           String    @db.Uuid
+  name               String
+  description        String?
+  event_type         String?
+  starts_at          DateTime  @db.Timestamptz()
+  ends_at            DateTime? @db.Timestamptz()
+  entry_fee_cents    Int       @default(0)
+  max_players        Int?
+  afterroar_event_id String?
+  metadata           Json      @default("{}")
+  created_at         DateTime  @default(now()) @db.Timestamptz()
+  updated_at         DateTime  @default(now()) @db.Timestamptz()
+
+  store          Store          @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  checkins       EventCheckin[]
+  ledger_entries LedgerEntry[]
+
+  @@index([store_id])
+  @@index([store_id, starts_at(sort: Desc)])
+  @@map("events")
+}
+
+model EventCheckin {
+  id              String   @id @default(uuid()) @db.Uuid
+  event_id        String   @db.Uuid
+  customer_id     String   @db.Uuid
+  checked_in_at   DateTime @default(now()) @db.Timestamptz()
+  fee_paid        Boolean  @default(false)
+  ledger_entry_id String?  @db.Uuid
+
+  event    Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customer_id], references: [id])
+
+  @@unique([event_id, customer_id])
+  @@map("event_checkins")
+}
+
+// ============================================================
+// IMMUTABLE LEDGER (existing table)
+// ============================================================
+model LedgerEntry {
+  id                  String   @id @default(uuid()) @db.Uuid
+  store_id            String   @db.Uuid
+  type                String
+  customer_id         String?  @db.Uuid
+  staff_id            String?  @db.Uuid
+  event_id            String?  @db.Uuid
+  amount_cents        Int
+  credit_amount_cents Int      @default(0)
+  description         String?
+  metadata            Json     @default("{}")
+  created_at          DateTime @default(now()) @db.Timestamptz()
+
+  store    Store     @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customer_id], references: [id])
+  staff    Staff?    @relation(fields: [staff_id], references: [id])
+  event    Event?    @relation(fields: [event_id], references: [id])
+
+  @@index([store_id])
+  @@index([customer_id])
+  @@index([store_id, type])
+  @@index([store_id, created_at(sort: Desc)])
+  @@index([event_id])
+  @@map("ledger_entries")
+}
+
+// ============================================================
+// TRADE-INS (existing tables)
+// ============================================================
+model TradeIn {
+  id                   String    @id @default(uuid()) @db.Uuid
+  store_id             String    @db.Uuid
+  customer_id          String?   @db.Uuid
+  staff_id             String?   @db.Uuid
+  status               String    @default("pending")
+  payout_type          String?
+  total_offer_cents    Int       @default(0)
+  credit_bonus_percent Decimal   @default(0) @db.Decimal(5, 2)
+  total_payout_cents   Int       @default(0)
+  notes                String?
+  ledger_entry_id      String?   @db.Uuid
+  created_at           DateTime  @default(now()) @db.Timestamptz()
+  completed_at         DateTime? @db.Timestamptz()
+
+  store    Store         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer Customer?     @relation(fields: [customer_id], references: [id])
+  staff    Staff?        @relation(fields: [staff_id], references: [id])
+  items    TradeInItem[]
+
+  @@index([store_id])
+  @@index([customer_id])
+  @@index([store_id, status])
+  @@map("trade_ins")
+}
+
+model TradeInItem {
+  id                String   @id @default(uuid()) @db.Uuid
+  trade_in_id       String   @db.Uuid
+  inventory_item_id String?  @db.Uuid
+  name              String
+  category          String?
+  attributes        Json     @default("{}")
+  quantity          Int      @default(1)
+  market_price_cents Int?
+  offer_price_cents  Int
+  created_at        DateTime @default(now()) @db.Timestamptz()
+
+  trade_in       TradeIn        @relation(fields: [trade_in_id], references: [id], onDelete: Cascade)
+  inventory_item InventoryItem? @relation(fields: [inventory_item_id], references: [id])
+
+  @@map("trade_in_items")
+}
+
+// ============================================================
+// GIFT CARDS (new table)
+// ============================================================
+model GiftCard {
+  id                      String   @id @default(uuid()) @db.Uuid
+  store_id                String   @db.Uuid
+  code                    String   @unique
+  balance_cents           Int      @default(0)
+  initial_balance_cents   Int      @default(0)
+  purchased_by_customer_id String? @db.Uuid
+  active                  Boolean  @default(true)
+  created_at              DateTime @default(now()) @db.Timestamptz()
+  updated_at              DateTime @default(now()) @db.Timestamptz()
+
+  store Store @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@map("gift_cards")
+}

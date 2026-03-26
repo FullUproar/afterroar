@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { formatCents, parseDollars } from "@/lib/types";
 import type { InventoryItem, Customer } from "@/lib/types";
 import type { PaymentMethod } from "@/lib/payment";
@@ -79,8 +78,6 @@ export default function CheckoutPage() {
   const newCustNameRef = useRef<HTMLInputElement>(null);
   const completeButtonRef = useRef<HTMLButtonElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const supabase = createClient();
 
   // ---- Derived values ----
   const subtotal = cart.reduce((s, i) => s + i.price_cents * i.quantity, 0);

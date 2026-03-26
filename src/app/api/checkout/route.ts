@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { processPayment, PaymentMethod } from "@/lib/payment";
 
 interface CheckoutItem {
@@ -18,28 +19,17 @@ interface CheckoutBody {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-
-  // Authenticate
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get staff record
-  const { data: staff } = await supabase
-    .from("staff")
-    .select("id, store_id")
-    .eq("user_id", user.id)
-    .single();
-
+  const staff = await prisma.staff.findFirst({
+    where: { user_id: session.user.id, active: true },
+    select: { id: true, store_id: true },
+  });
   if (!staff) {
-    return NextResponse.json(
-      { error: "No store assignment found" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "No store found" }, { status: 403 });
   }
 
   // Parse body
@@ -68,17 +58,12 @@ export async function POST(request: NextRequest) {
 
   // 1. Validate all items exist and have sufficient quantity
   const itemIds = items.map((i) => i.inventory_item_id);
-  const { data: invItems, error: invError } = await supabase
-    .from("inventory_items")
-    .select("id, name, quantity, price_cents")
-    .eq("store_id", staff.store_id)
-    .in("id", itemIds);
+  const invItems = await prisma.inventoryItem.findMany({
+    where: { id: { in: itemIds }, store_id: staff.store_id },
+    select: { id: true, name: true, quantity: true, price_cents: true },
+  });
 
-  if (invError) {
-    return NextResponse.json({ error: invError.message }, { status: 500 });
-  }
-
-  if (!invItems || invItems.length !== itemIds.length) {
+  if (invItems.length !== itemIds.length) {
     return NextResponse.json(
       { error: "One or more items not found" },
       { status: 400 }
@@ -123,17 +108,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { data: customer } = await supabase
-      .from("customers")
-      .select("credit_balance_cents")
-      .eq("id", customer_id)
-      .single();
+    const customer = await prisma.customer.findUnique({
+      where: { id: customer_id },
+      select: { credit_balance_cents: true },
+    });
 
     if (!customer) {
-      return NextResponse.json(
-        { error: "Customer not found" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Customer not found" }, { status: 400 });
     }
     if (customer.credit_balance_cents < effectiveCreditApplied) {
       return NextResponse.json(
@@ -160,7 +141,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 5. Create sale ledger entry
+  // 5. Execute all DB writes in a transaction
   const itemNames = items
     .map((i) => {
       const inv = invMap.get(i.inventory_item_id);
@@ -168,83 +149,63 @@ export async function POST(request: NextRequest) {
     })
     .join(", ");
 
-  const { data: ledgerEntry, error: ledgerError } = await supabase
-    .from("ledger_entries")
-    .insert({
-      store_id: staff.store_id,
-      type: "sale",
-      customer_id,
-      staff_id: staff.id,
-      event_id,
-      amount_cents: subtotal_cents,
-      credit_amount_cents: effectiveCreditApplied,
-      description: `Sale: ${itemNames}`,
-      metadata: {
-        items,
-        payment_method,
-        transaction_id: paymentResult.transaction_id,
-        amount_tendered_cents,
+  const result = await prisma.$transaction(async (tx) => {
+    // Create sale ledger entry
+    const ledgerEntry = await tx.ledgerEntry.create({
+      data: {
+        store_id: staff.store_id,
+        type: "sale",
+        customer_id,
+        staff_id: staff.id,
+        event_id,
+        amount_cents: subtotal_cents,
+        credit_amount_cents: effectiveCreditApplied,
+        description: `Sale: ${itemNames}`,
+        metadata: JSON.parse(JSON.stringify({
+          items,
+          payment_method,
+          transaction_id: paymentResult.transaction_id,
+          amount_tendered_cents,
+        })),
       },
-    })
-    .select("id")
-    .single();
-
-  if (ledgerError) {
-    return NextResponse.json({ error: ledgerError.message }, { status: 500 });
-  }
-
-  // 6. If credit was applied, create credit_redeem ledger entry and update balance
-  if (effectiveCreditApplied > 0 && customer_id) {
-    await supabase.from("ledger_entries").insert({
-      store_id: staff.store_id,
-      type: "credit_redeem",
-      customer_id,
-      staff_id: staff.id,
-      event_id: null,
-      amount_cents: 0,
-      credit_amount_cents: -effectiveCreditApplied,
-      description: `Store credit redeemed for sale`,
-      metadata: { sale_ledger_entry_id: ledgerEntry.id },
     });
 
-    // Deduct customer credit balance via RPC, with fallback
-    const { error: rpcError } = await supabase.rpc(
-      "increment_credit_balance",
-      {
-        p_customer_id: customer_id,
-        p_amount: -effectiveCreditApplied,
-      }
-    );
+    // If credit was applied, create credit_redeem ledger entry and update balance
+    if (effectiveCreditApplied > 0 && customer_id) {
+      await tx.ledgerEntry.create({
+        data: {
+          store_id: staff.store_id,
+          type: "credit_redeem",
+          customer_id,
+          staff_id: staff.id,
+          event_id: null,
+          amount_cents: 0,
+          credit_amount_cents: -effectiveCreditApplied,
+          description: "Store credit redeemed for sale",
+          metadata: { sale_ledger_entry_id: ledgerEntry.id },
+        },
+      });
 
-    if (rpcError) {
-      const { data: customer } = await supabase
-        .from("customers")
-        .select("credit_balance_cents")
-        .eq("id", customer_id)
-        .single();
-
-      if (customer) {
-        await supabase
-          .from("customers")
-          .update({
-            credit_balance_cents:
-              (customer.credit_balance_cents || 0) - effectiveCreditApplied,
-          })
-          .eq("id", customer_id);
-      }
+      await tx.customer.update({
+        where: { id: customer_id },
+        data: {
+          credit_balance_cents: { decrement: effectiveCreditApplied },
+        },
+      });
     }
-  }
 
-  // 7. Deduct inventory quantities
-  for (const item of items) {
-    const inv = invMap.get(item.inventory_item_id)!;
-    await supabase
-      .from("inventory_items")
-      .update({ quantity: inv.quantity - item.quantity })
-      .eq("id", item.inventory_item_id);
-  }
+    // Deduct inventory quantities
+    for (const item of items) {
+      await tx.inventoryItem.update({
+        where: { id: item.inventory_item_id },
+        data: { quantity: { decrement: item.quantity } },
+      });
+    }
 
-  // 8. Build receipt and return success
+    return ledgerEntry;
+  });
+
+  // Build receipt
   const total_cents = subtotal_cents - effectiveCreditApplied;
   const change_cents =
     payment_method === "cash" || payment_method === "split"
@@ -273,18 +234,17 @@ export async function POST(request: NextRequest) {
 
   // Attach customer name if present
   if (customer_id) {
-    const { data: cust } = await supabase
-      .from("customers")
-      .select("name")
-      .eq("id", customer_id)
-      .single();
+    const cust = await prisma.customer.findUnique({
+      where: { id: customer_id },
+      select: { name: true },
+    });
     if (cust) receipt.customer_name = cust.name;
   }
 
   return NextResponse.json(
     {
       success: true,
-      ledger_entry_id: ledgerEntry.id,
+      ledger_entry_id: result.id,
       change_cents,
       subtotal_cents,
       receipt,

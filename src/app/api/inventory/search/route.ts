@@ -1,27 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: staff } = await supabase
-    .from("staff")
-    .select("store_id")
-    .eq("user_id", user.id)
-    .single();
-
+  const staff = await prisma.staff.findFirst({
+    where: { user_id: session.user.id, active: true },
+  });
   if (!staff) {
-    return NextResponse.json(
-      { error: "No store assignment found" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "No store found" }, { status: 403 });
   }
 
   const q = request.nextUrl.searchParams.get("q")?.trim();
@@ -30,17 +21,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 
-  const { data, error } = await supabase
-    .from("inventory_items")
-    .select("*")
-    .eq("store_id", staff.store_id)
-    .or(`name.ilike.%${q}%,barcode.eq.${q},sku.ilike.%${q}%`)
-    .order("name")
-    .limit(20);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const data = await prisma.inventoryItem.findMany({
+    where: {
+      store_id: staff.store_id,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { barcode: q },
+        { sku: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { name: "asc" },
+    take: 20,
+  });
 
   return NextResponse.json(data);
 }

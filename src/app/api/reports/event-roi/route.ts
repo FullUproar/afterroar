@@ -1,53 +1,51 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const supabase = await createClient();
-
-  const { data: events, error: eventsError } = await supabase
-    .from("events")
-    .select("*")
-    .order("date", { ascending: false });
-
-  if (eventsError) {
-    return NextResponse.json({ error: eventsError.message }, { status: 500 });
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const results = await Promise.all(
-    (events ?? []).map(async (event) => {
-      const [ledgerRes, checkinRes] = await Promise.all([
-        supabase
-          .from("ledger_entries")
-          .select("amount_cents, type")
-          .eq("event_id", event.id),
-        supabase
-          .from("event_checkins")
-          .select("id", { count: "exact", head: true })
-          .eq("event_id", event.id),
-      ]);
+  const staff = await prisma.staff.findFirst({
+    where: { user_id: session.user.id, active: true },
+  });
+  if (!staff) {
+    return NextResponse.json({ error: "No store found" }, { status: 403 });
+  }
 
-      const entries = ledgerRes.data ?? [];
+  const events = await prisma.event.findMany({
+    where: { store_id: staff.store_id },
+    orderBy: { starts_at: "desc" },
+    include: {
+      ledger_entries: {
+        select: { amount_cents: true, type: true },
+      },
+      _count: { select: { checkins: true } },
+    },
+  });
 
-      const entry_fees = entries
-        .filter((e) => e.type === "event_entry")
-        .reduce((sum, e) => sum + e.amount_cents, 0);
+  const results = events.map((event) => {
+    const entry_fees = event.ledger_entries
+      .filter((e) => e.type === "event_entry" || e.type === "event_fee")
+      .reduce((sum, e) => sum + e.amount_cents, 0);
 
-      const tagged_sales = entries
-        .filter((e) => e.type === "sale")
-        .reduce((sum, e) => sum + e.amount_cents, 0);
+    const tagged_sales = event.ledger_entries
+      .filter((e) => e.type === "sale")
+      .reduce((sum, e) => sum + e.amount_cents, 0);
 
-      return {
-        id: event.id,
-        name: event.name,
-        date: event.date,
-        type: event.type,
-        entry_fees,
-        tagged_sales,
-        total: entry_fees + tagged_sales,
-        checkin_count: checkinRes.count ?? 0,
-      };
-    })
-  );
+    return {
+      id: event.id,
+      name: event.name,
+      starts_at: event.starts_at,
+      event_type: event.event_type,
+      entry_fees,
+      tagged_sales,
+      total: entry_fees + tagged_sales,
+      checkin_count: event._count.checkins,
+    };
+  });
 
   return NextResponse.json(results);
 }

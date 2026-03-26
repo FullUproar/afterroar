@@ -1,16 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
-import type { LedgerEntry } from "@/lib/types";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const session = await auth();
 
-  // Check auth first
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!session?.user?.id) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className="text-zinc-400">Not authenticated. Please sign in.</p>
@@ -18,101 +13,63 @@ export default async function DashboardPage() {
     );
   }
 
-  const [inventoryRes, customersRes, tradeInsRes, eventsRes, ledgerRes] =
-    await Promise.all([
-      supabase
-        .from("inventory_items")
-        .select("id", { count: "exact", head: true }),
-      supabase
-        .from("customers")
-        .select("id", { count: "exact", head: true }),
-      supabase
-        .from("ledger_entries")
-        .select("id", { count: "exact", head: true })
-        .eq("type", "trade_in")
-        .gte(
-          "created_at",
-          new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
-        ),
-      supabase
-        .from("events")
-        .select("id", { count: "exact", head: true })
-        .gte("starts_at", new Date().toISOString()),
-      supabase
-        .from("ledger_entries")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10),
-    ]);
+  const staff = await prisma.staff.findFirst({
+    where: { user_id: session.user.id, active: true },
+  });
 
-  // Log any errors for debugging
-  const errors = [
-    inventoryRes.error,
-    customersRes.error,
-    tradeInsRes.error,
-    eventsRes.error,
-    ledgerRes.error,
-  ].filter(Boolean);
-
-  if (errors.length > 0) {
-    console.error("Dashboard query errors:", errors);
+  if (!staff) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-zinc-400">No store found. Please contact support.</p>
+      </div>
+    );
   }
 
-  const stats = [
-    {
-      label: "Total Inventory Items",
-      value: inventoryRes.count ?? 0,
-    },
-    {
-      label: "Active Customers",
-      value: customersRes.count ?? 0,
-    },
-    {
-      label: "Today's Trade-Ins",
-      value: tradeInsRes.count ?? 0,
-    },
-    {
-      label: "Upcoming Events",
-      value: eventsRes.count ?? 0,
-    },
-  ];
+  const storeId = staff.store_id;
+  const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-  const recentEntries: LedgerEntry[] = ledgerRes.data ?? [];
+  const [inventoryCount, customerCount, todayTradeIns, upcomingEvents, recentLedger] =
+    await Promise.all([
+      prisma.inventoryItem.count({ where: { store_id: storeId } }),
+      prisma.customer.count({ where: { store_id: storeId } }),
+      prisma.ledgerEntry.count({
+        where: { store_id: storeId, type: "trade_in", created_at: { gte: todayStart } },
+      }),
+      prisma.event.count({
+        where: { store_id: storeId, starts_at: { gte: new Date() } },
+      }),
+      prisma.ledgerEntry.findMany({
+        where: { store_id: storeId },
+        orderBy: { created_at: "desc" },
+        take: 10,
+      }),
+    ]);
+
+  const stats = [
+    { label: "Total Inventory Items", value: inventoryCount },
+    { label: "Active Customers", value: customerCount },
+    { label: "Today's Trade-Ins", value: todayTradeIns },
+    { label: "Upcoming Events", value: upcomingEvents },
+  ];
 
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-white">Welcome back</h1>
 
-      {errors.length > 0 && (
-        <div className="rounded-lg border border-yellow-800 bg-yellow-950/50 p-4 text-sm text-yellow-400">
-          Some data failed to load: {errors.map((e) => e?.message).join(", ")}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-lg border border-zinc-800 bg-zinc-900 p-6"
-          >
+          <div key={stat.label} className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
             <p className="text-sm text-zinc-400">{stat.label}</p>
-            <p className="mt-2 text-3xl font-semibold text-white">
-              {stat.value}
-            </p>
+            <p className="mt-2 text-3xl font-semibold text-white">{stat.value}</p>
           </div>
         ))}
       </div>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-white">
-          Recent Ledger Entries
-        </h2>
-        {recentEntries.length === 0 ? (
+        <h2 className="mb-4 text-lg font-semibold text-white">Recent Ledger Entries</h2>
+        {recentLedger.length === 0 ? (
           <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center">
-            <p className="text-zinc-400">
-              No ledger entries yet. Transactions will appear here as they come
-              in.
-            </p>
+            <p className="text-zinc-400">No ledger entries yet.</p>
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-zinc-800">
@@ -122,13 +79,11 @@ export default async function DashboardPage() {
                   <th className="px-4 py-3 text-zinc-400">Date</th>
                   <th className="px-4 py-3 text-zinc-400">Type</th>
                   <th className="px-4 py-3 text-zinc-400">Description</th>
-                  <th className="px-4 py-3 text-right text-zinc-400">
-                    Amount
-                  </th>
+                  <th className="px-4 py-3 text-right text-zinc-400">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800 bg-zinc-950">
-                {recentEntries.map((entry) => (
+                {recentLedger.map((entry) => (
                   <tr key={entry.id}>
                     <td className="whitespace-nowrap px-4 py-3 text-zinc-300">
                       {new Date(entry.created_at).toLocaleDateString()}
@@ -138,9 +93,7 @@ export default async function DashboardPage() {
                         {entry.type}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-zinc-300">
-                      {entry.description ?? "—"}
-                    </td>
+                    <td className="px-4 py-3 text-zinc-300">{entry.description ?? "—"}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-right text-white">
                       {formatCents(entry.amount_cents)}
                     </td>

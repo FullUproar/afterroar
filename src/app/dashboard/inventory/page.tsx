@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { SearchInput } from "@/components/search-input";
-import { createClient } from "@/lib/supabase/client";
 import {
   InventoryItem,
   ItemCategory,
@@ -61,28 +60,11 @@ export default function InventoryPage() {
   useEffect(() => {
     async function load() {
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: staff } = await supabase
-          .from("staff")
-          .select("store_id")
-          .eq("user_id", user.id)
-          .single();
-
-        if (!staff) return;
-
-        const { data } = await supabase
-          .from("inventory_items")
-          .select("*")
-          .eq("store_id", staff.store_id)
-          .order("name")
-          .range(0, 49);
-
-        if (data) setItems(data as InventoryItem[]);
+        const res = await fetch("/api/inventory");
+        if (res.ok) {
+          const data = await res.json();
+          setItems(data as InventoryItem[]);
+        }
       } catch (err) {
         console.error("Failed to load inventory:", err);
       } finally {
@@ -119,28 +101,11 @@ export default function InventoryPage() {
   useEffect(() => {
     if (searchQuery.trim() === "") {
       (async () => {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: staff } = await supabase
-          .from("staff")
-          .select("store_id")
-          .eq("user_id", user.id)
-          .single();
-
-        if (!staff) return;
-
-        const { data } = await supabase
-          .from("inventory_items")
-          .select("*")
-          .eq("store_id", staff.store_id)
-          .order("name")
-          .range(0, 49);
-
-        if (data) setItems(data as InventoryItem[]);
+        const res = await fetch("/api/inventory");
+        if (res.ok) {
+          const data = await res.json();
+          setItems(data as InventoryItem[]);
+        }
       })();
     }
   }, [searchQuery]);

@@ -1,21 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { useStore } from "@/lib/store-context";
-import { createClient } from "@/lib/supabase/client";
 import { NAV_ITEMS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { store, staff, effectiveRole, isTestMode, can } = useStore();
 
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
+  function handleSignOut() {
+    signOut({ callbackUrl: "/login" });
   }
 
   const visibleNav = NAV_ITEMS.filter((item) => can(item.permission));

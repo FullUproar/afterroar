@@ -1,42 +1,32 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const session = await auth();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError) {
-      return NextResponse.json({ auth: "error", message: authError.message });
-    }
-
-    if (!user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ auth: "no_user" });
     }
 
-    const { data: staff, error: staffError } = await supabase
-      .from("staff")
-      .select("*, stores(*)")
-      .eq("user_id", user.id)
-      .eq("active", true)
-      .single();
+    const staff = await prisma.staff.findFirst({
+      where: { user_id: session.user.id, active: true },
+      include: { store: true },
+    });
 
-    const { data: items, error: invError } = await supabase
-      .from("inventory_items")
-      .select("id", { count: "exact", head: true });
+    const inventoryCount = await prisma.inventoryItem.count({
+      where: staff ? { store_id: staff.store_id } : undefined,
+    });
 
     return NextResponse.json({
       auth: "ok",
-      user: user.email,
-      userId: user.id,
-      staff: staff ? { id: staff.id, role: staff.role, store: staff.stores?.name } : null,
-      staffError: staffError?.message ?? null,
-      inventoryCount: items,
-      inventoryError: invError?.message ?? null,
+      user: session.user.email,
+      userId: session.user.id,
+      staff: staff
+        ? { id: staff.id, role: staff.role, store: staff.store?.name }
+        : null,
+      inventoryCount,
     });
   } catch (e: unknown) {
     return NextResponse.json({

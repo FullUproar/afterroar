@@ -1,19 +1,33 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
+export default auth((req) => {
+  const path = req.nextUrl.pathname;
 
-  // Skip auth middleware for auth API routes and debug
-  if (path.startsWith("/api/auth") || path.startsWith("/api/debug") || path.startsWith("/api/setup")) {
-    return NextResponse.next();
+  // Public routes
+  const isPublic =
+    path === "/" ||
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/ops" ||
+    path.startsWith("/api/auth/") ||
+    path.startsWith("/api/debug");
+
+  if (!req.auth && !isPublic) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 
-  return await updateSession(request);
-}
+  if (req.auth && (path === "/login" || path === "/signup")) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
+});
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/auth/|api/debug|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
