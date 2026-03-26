@@ -13,7 +13,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
 
@@ -30,15 +30,15 @@ export default async function DashboardPage() {
 
   const [inventoryCount, customerCount, todayTradeIns, upcomingEvents, recentLedger] =
     await Promise.all([
-      prisma.inventoryItem.count({ where: { store_id: storeId } }),
-      prisma.customer.count({ where: { store_id: storeId } }),
-      prisma.ledgerEntry.count({
+      prisma.posInventoryItem.count({ where: { store_id: storeId } }),
+      prisma.posCustomer.count({ where: { store_id: storeId } }),
+      prisma.posLedgerEntry.count({
         where: { store_id: storeId, type: "trade_in", created_at: { gte: todayStart } },
       }),
-      prisma.event.count({
+      prisma.posEvent.count({
         where: { store_id: storeId, starts_at: { gte: new Date() } },
       }),
-      prisma.ledgerEntry.findMany({
+      prisma.posLedgerEntry.findMany({
         where: { store_id: storeId },
         orderBy: { created_at: "desc" },
         take: 10,

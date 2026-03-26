@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
+import cuid from "cuid";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const hashed_password = await hash(password, 12);
+  const passwordHash = await hash(password, 12);
 
   const slug = storeName
     .toLowerCase()
@@ -32,13 +33,14 @@ export async function POST(request: Request) {
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
+        id: cuid(),
         email,
-        hashed_password,
-        name: staffName || email.split("@")[0],
+        passwordHash,
+        displayName: staffName || email.split("@")[0],
       },
     });
 
-    const store = await tx.store.create({
+    const store = await tx.posStore.create({
       data: {
         name: storeName,
         slug,
@@ -46,7 +48,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await tx.staff.create({
+    await tx.posStaff.create({
       data: {
         user_id: user.id,
         store_id: store.id,

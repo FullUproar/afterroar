@@ -6,12 +6,12 @@ export default async function ReportsPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) return null;
 
-  const events = await prisma.event.findMany({
+  const events = await prisma.posEvent.findMany({
     where: { store_id: staff.store_id },
     orderBy: { starts_at: "desc" },
     include: {

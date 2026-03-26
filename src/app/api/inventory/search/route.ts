@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 
-  const data = await prisma.inventoryItem.findMany({
+  const data = await prisma.posInventoryItem.findMany({
     where: {
       store_id: staff.store_id,
       OR: [

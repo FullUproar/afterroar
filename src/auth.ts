@@ -21,20 +21,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
 
-        if (!user?.hashed_password) return null;
+        if (!user?.passwordHash) return null;
 
         const isValid = await compare(
           credentials.password as string,
-          user.hashed_password
+          user.passwordHash
         );
 
         if (!isValid) return null;
 
         return {
           id: user.id,
-          name: user.name,
+          name: user.displayName,
           email: user.email,
-          image: user.image,
+          image: user.avatarUrl,
         };
       },
     }),

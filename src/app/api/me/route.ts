@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
     include: { store: true },
   });

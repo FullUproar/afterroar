@@ -10,12 +10,12 @@ export async function GET() {
       return NextResponse.json({ auth: "no_user" });
     }
 
-    const staff = await prisma.staff.findFirst({
+    const staff = await prisma.posStaff.findFirst({
       where: { user_id: session.user.id, active: true },
       include: { store: true },
     });
 
-    const inventoryCount = await prisma.inventoryItem.count({
+    const inventoryCount = await prisma.posInventoryItem.count({
       where: staff ? { store_id: staff.store_id } : undefined,
     });
 

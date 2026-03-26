@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
     select: { id: true, store_id: true },
   });
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   // 1. Validate all items exist and have sufficient quantity
   const itemIds = items.map((i) => i.inventory_item_id);
-  const invItems = await prisma.inventoryItem.findMany({
+  const invItems = await prisma.posInventoryItem.findMany({
     where: { id: { in: itemIds }, store_id: staff.store_id },
     select: { id: true, name: true, quantity: true, price_cents: true },
   });
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const customer = await prisma.customer.findUnique({
+    const customer = await prisma.posCustomer.findUnique({
       where: { id: customer_id },
       select: { credit_balance_cents: true },
     });
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 
   const result = await prisma.$transaction(async (tx) => {
     // Create sale ledger entry
-    const ledgerEntry = await tx.ledgerEntry.create({
+    const ledgerEntry = await tx.posLedgerEntry.create({
       data: {
         store_id: staff.store_id,
         type: "sale",
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     // If credit was applied, create credit_redeem ledger entry and update balance
     if (effectiveCreditApplied > 0 && customer_id) {
-      await tx.ledgerEntry.create({
+      await tx.posLedgerEntry.create({
         data: {
           store_id: staff.store_id,
           type: "credit_redeem",
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      await tx.customer.update({
+      await tx.posCustomer.update({
         where: { id: customer_id },
         data: {
           credit_balance_cents: { decrement: effectiveCreditApplied },
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
 
     // Deduct inventory quantities
     for (const item of items) {
-      await tx.inventoryItem.update({
+      await tx.posInventoryItem.update({
         where: { id: item.inventory_item_id },
         data: { quantity: { decrement: item.quantity } },
       });
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
 
   // Attach customer name if present
   if (customer_id) {
-    const cust = await prisma.customer.findUnique({
+    const cust = await prisma.posCustomer.findUnique({
       where: { id: customer_id },
       select: { name: true },
     });

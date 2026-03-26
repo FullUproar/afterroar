@@ -12,14 +12,14 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
     return NextResponse.json({ error: "No store found" }, { status: 403 });
   }
 
-  const customer = await prisma.customer.findFirst({
+  const customer = await prisma.posCustomer.findFirst({
     where: { id, store_id: staff.store_id },
   });
 
@@ -28,12 +28,12 @@ export async function GET(
   }
 
   const [ledger_entries, trade_ins] = await Promise.all([
-    prisma.ledgerEntry.findMany({
+    prisma.posLedgerEntry.findMany({
       where: { customer_id: id },
       orderBy: { created_at: "desc" },
       take: 50,
     }),
-    prisma.tradeIn.findMany({
+    prisma.posTradeIn.findMany({
       where: { customer_id: id },
       orderBy: { created_at: "desc" },
       take: 50,
@@ -57,7 +57,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -76,7 +76,7 @@ export async function PATCH(
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
-  const data = await prisma.customer.update({
+  const data = await prisma.posCustomer.update({
     where: { id, store_id: staff.store_id },
     data: updates,
   });
@@ -94,7 +94,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -117,7 +117,7 @@ export async function POST(
 
   // Use a transaction for atomicity
   const updated = await prisma.$transaction(async (tx) => {
-    await tx.ledgerEntry.create({
+    await tx.posLedgerEntry.create({
       data: {
         store_id: staff.store_id,
         customer_id: id,
@@ -127,7 +127,7 @@ export async function POST(
       },
     });
 
-    return tx.customer.update({
+    return tx.posCustomer.update({
       where: { id },
       data: {
         credit_balance_cents: { increment: amount_cents },

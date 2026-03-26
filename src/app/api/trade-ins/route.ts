@@ -11,14 +11,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
     return NextResponse.json({ error: "No store found" }, { status: 403 });
   }
 
-  const data = await prisma.tradeIn.findMany({
+  const data = await prisma.posTradeIn.findMany({
     where: { store_id: staff.store_id },
     orderBy: { created_at: "desc" },
     include: {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
   // Use transaction for atomicity
   const result = await prisma.$transaction(async (tx) => {
     // Create trade-in record
-    const tradeIn = await tx.tradeIn.create({
+    const tradeIn = await tx.posTradeIn.create({
       data: {
         store_id: staff.store_id,
         customer_id,
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create trade-in items
-    await tx.tradeInItem.createMany({
+    await tx.posTradeInItem.createMany({
       data: items.map((i) => ({
         trade_in_id: tradeIn.id,
         name: i.name,
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create ledger entry (negative amount = cash going out)
-    await tx.ledgerEntry.create({
+    await tx.posLedgerEntry.create({
       data: {
         store_id: staff.store_id,
         type: "trade_in",
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // If store credit, update customer credit balance
     if (payout_type === "credit") {
-      await tx.customer.update({
+      await tx.posCustomer.update({
         where: { id: customer_id },
         data: {
           credit_balance_cents: { increment: total_payout_cents },

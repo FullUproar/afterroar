@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const limit = 50;
   const skip = (page - 1) * limit;
 
-  const data = await prisma.inventoryItem.findMany({
+  const data = await prisma.posInventoryItem.findMany({
     where: { store_id: staff.store_id },
     orderBy: { name: "asc" },
     skip,
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
 
-  const data = await prisma.inventoryItem.create({
+  const data = await prisma.posInventoryItem.create({
     data: {
       store_id: staff.store_id,
       name: name.trim(),
@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -105,7 +105,7 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  const data = await prisma.inventoryItem.update({
+  const data = await prisma.posInventoryItem.update({
     where: { id, store_id: staff.store_id },
     data: sanitized,
   });

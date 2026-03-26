@@ -12,7 +12,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const data = await prisma.eventCheckin.findMany({
+  const data = await prisma.posEventCheckin.findMany({
     where: { event_id: id },
     include: { customer: { select: { name: true } } },
     orderBy: { checked_in_at: "asc" },
@@ -37,7 +37,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findFirst({
+  const staff = await prisma.posStaff.findFirst({
     where: { user_id: session.user.id, active: true },
   });
   if (!staff) {
@@ -52,7 +52,7 @@ export async function POST(
   }
 
   // Check for duplicate checkin
-  const existing = await prisma.eventCheckin.findUnique({
+  const existing = await prisma.posEventCheckin.findUnique({
     where: { event_id_customer_id: { event_id, customer_id } },
   });
 
@@ -61,7 +61,7 @@ export async function POST(
   }
 
   // Get event to check entry fee
-  const event = await prisma.event.findUnique({
+  const event = await prisma.posEvent.findUnique({
     where: { id: event_id },
     select: { entry_fee_cents: true, store_id: true },
   });
@@ -73,7 +73,7 @@ export async function POST(
   const fee_paid = event.entry_fee_cents > 0;
 
   // Create checkin record
-  const checkin = await prisma.eventCheckin.create({
+  const checkin = await prisma.posEventCheckin.create({
     data: {
       event_id,
       customer_id,
@@ -84,7 +84,7 @@ export async function POST(
 
   // If there's an entry fee, create a ledger entry
   if (event.entry_fee_cents > 0) {
-    await prisma.ledgerEntry.create({
+    await prisma.posLedgerEntry.create({
       data: {
         store_id: event.store_id,
         customer_id,
