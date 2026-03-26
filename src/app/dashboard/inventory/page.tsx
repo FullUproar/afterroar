@@ -255,12 +255,20 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Inventory</h1>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-        >
-          {showAddForm ? "Cancel" : "Add Item"}
-        </button>
+        <div className="flex gap-2">
+          <a
+            href="/dashboard/inventory/labels"
+            className="rounded-md border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors"
+          >
+            Print Labels
+          </a>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          >
+            {showAddForm ? "Cancel" : "Add Item"}
+          </button>
+        </div>
       </div>
 
       <SearchInput

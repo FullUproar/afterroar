@@ -28,6 +28,9 @@ const TENANT_MODELS = [
   "posImportJob",
   "posCertification",
   "posGameCheckout",
+  "posPurchaseOrder",
+  "posStockCount",
+  "posTournament",
 ] as const;
 
 type TenantModel = (typeof TENANT_MODELS)[number];
