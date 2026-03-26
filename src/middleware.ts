@@ -11,12 +11,13 @@ export async function middleware(request: NextRequest) {
     path === "/signup" ||
     path === "/ops" ||
     path.startsWith("/api/auth/") ||
-    path.startsWith("/api/debug");
+    path.startsWith("/api/debug") ||
+    path.startsWith("/api/debug-");
 
   // JWT check (no DB access needed — runs on Edge)
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   });
 
   if (!token && !isPublic) {
