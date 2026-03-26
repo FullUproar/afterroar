@@ -1,8 +1,8 @@
-import { auth } from "@/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default auth((req) => {
-  const path = req.nextUrl.pathname;
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
 
   // Public routes
   const isPublic =
@@ -13,18 +13,24 @@ export default auth((req) => {
     path.startsWith("/api/auth/") ||
     path.startsWith("/api/debug");
 
-  if (!req.auth && !isPublic) {
-    const url = req.nextUrl.clone();
+  // JWT check (no DB access needed — runs on Edge)
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  if (!token && !isPublic) {
+    const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (req.auth && (path === "/login" || path === "/signup")) {
-    const url = req.nextUrl.clone();
+  if (token && (path === "/login" || path === "/signup")) {
+    const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
-});
+}
 
 export const config = {
   matcher: [
