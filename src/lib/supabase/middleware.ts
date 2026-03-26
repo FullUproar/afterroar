@@ -29,8 +29,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to login (except public routes)
   const path = request.nextUrl.pathname;
+
+  // Intercept POST to page routes (Next.js RSC navigation can POST)
+  if (request.method === "POST" && (path === "/login" || path === "/signup")) {
+    const url = request.nextUrl.clone();
+    url.pathname = user ? "/dashboard" : path;
+    return NextResponse.redirect(url, 303);
+  }
+
+  // Redirect unauthenticated users to login (except public routes)
   const isPublicRoute =
     path === "/" ||
     path === "/login" ||

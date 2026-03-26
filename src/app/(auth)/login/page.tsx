@@ -77,8 +77,12 @@ export default function LoginPage() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && email && password.length >= 6) {
-      handleSubmit();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (email && password.length >= 6) {
+        handleSubmit();
+      }
     }
   }
 
