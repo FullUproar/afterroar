@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string;
@@ -15,10 +14,10 @@ export async function signIn(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message, success: false };
   }
 
-  redirect("/dashboard");
+  return { success: true };
 }
 
 export async function signUp(formData: FormData) {
@@ -35,11 +34,10 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message, success: false };
   }
 
   if (data.user) {
-    // Create store + staff using service role
     const { createServiceClient } = await import("@/lib/supabase/server");
     const adminClient = await createServiceClient();
 
@@ -55,7 +53,7 @@ export async function signUp(formData: FormData) {
       .single();
 
     if (storeError) {
-      return { error: storeError.message };
+      return { error: storeError.message, success: false };
     }
 
     const { error: staffError } = await adminClient.from("staff").insert({
@@ -66,9 +64,9 @@ export async function signUp(formData: FormData) {
     });
 
     if (staffError) {
-      return { error: staffError.message };
+      return { error: staffError.message, success: false };
     }
   }
 
-  redirect("/dashboard");
+  return { success: true };
 }

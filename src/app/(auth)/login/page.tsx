@@ -18,8 +18,9 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError(result.error);
+      } else if (result?.success) {
+        window.location.href = "/dashboard";
       }
-      // On success, server action redirects — no client handling needed
     });
   }
 
