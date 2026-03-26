@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll().map(c => c.name);
+
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ auth: "no_user" });
+      return NextResponse.json({ auth: "no_user", cookies: allCookies });
     }
 
     const staff = await prisma.posStaff.findFirst({
