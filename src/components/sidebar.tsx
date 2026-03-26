@@ -4,28 +4,21 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store-context";
 import { createClient } from "@/lib/supabase/client";
+import { NAV_ITEMS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
-
-const nav = [
-  { href: "/dashboard/checkout", label: "Checkout", icon: "◈" },
-  { href: "/dashboard", label: "Dashboard", icon: "⌂" },
-  { href: "/dashboard/inventory", label: "Inventory", icon: "▦" },
-  { href: "/dashboard/trade-ins", label: "Trade-Ins", icon: "⇄" },
-  { href: "/dashboard/customers", label: "Customers", icon: "♟" },
-  { href: "/dashboard/events", label: "Events", icon: "★" },
-  { href: "/dashboard/reports", label: "Reports", icon: "◩" },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { store, staff } = useStore();
+  const { store, staff, effectiveRole, isTestMode, can } = useStore();
 
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
   }
+
+  const visibleNav = NAV_ITEMS.filter((item) => can(item.permission));
 
   return (
     <aside className="flex h-screen w-56 flex-col border-r border-zinc-800 bg-zinc-950">
@@ -37,7 +30,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-2 py-3">
-        {nav.map((item) => {
+        {visibleNav.map((item) => {
           const active =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
@@ -63,7 +56,13 @@ export function Sidebar() {
       <div className="border-t border-zinc-800 px-4 py-3">
         {staff && (
           <p className="truncate text-xs text-zinc-400">
-            {staff.name} &middot; {staff.role}
+            {staff.name} &middot;{" "}
+            <span className={isTestMode ? "text-purple-400" : ""}>
+              {effectiveRole}
+            </span>
+            {isTestMode && (
+              <span className="ml-1 text-purple-500">(test)</span>
+            )}
           </p>
         )}
         <button
