@@ -57,7 +57,7 @@ export default function LoginPage() {
         }
       }
 
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } else {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -70,7 +70,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
 
     setLoading(false);
