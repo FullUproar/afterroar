@@ -313,6 +313,7 @@ model PosInventoryItem {
   inventory_levels PosInventoryLevel[]
 
   @@index([store_id])
+  @@index([store_id, active])
   @@index([store_id, category])
   @@index([barcode])
   @@index([store_id, sku])

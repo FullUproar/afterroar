@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const preorders = await db.posPreorder.findMany({
       where,
       orderBy: { created_at: "desc" },
+      take: 200,
       include: {
         customer: { select: { name: true } },
         location: { select: { name: true } },

@@ -68,9 +68,12 @@ export async function GET() {
   try {
     const { db } = await requireStaff();
 
-    // Find items with reorder_flagged = true in attributes
-    const allItems = await db.posInventoryItem.findMany({
-      where: { active: true },
+    // Find items with reorder_flagged = true using Prisma JSON filter
+    const flaggedItems = await db.posInventoryItem.findMany({
+      where: {
+        active: true,
+        attributes: { path: ["reorder_flagged"], equals: true },
+      },
       select: {
         id: true,
         name: true,
@@ -80,13 +83,10 @@ export async function GET() {
         attributes: true,
         supplier: { select: { name: true } },
       },
+      take: 100,
     });
 
-    const flagged = allItems
-      .filter((item) => {
-        const attrs = item.attributes as Record<string, unknown>;
-        return attrs.reorder_flagged === true;
-      })
+    const flagged = flaggedItems
       .map((item) => {
         const attrs = item.attributes as Record<string, unknown>;
         return {

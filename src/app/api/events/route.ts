@@ -7,6 +7,7 @@ export async function GET() {
 
     const events = await db.posEvent.findMany({
       orderBy: { starts_at: "desc" },
+      take: 100,
       include: {
         _count: { select: { checkins: true } },
       },

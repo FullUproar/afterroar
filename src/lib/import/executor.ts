@@ -52,6 +52,15 @@ async function executeInventoryImport(
   const skuMap = new Map(existingItems.filter((i) => i.sku).map((i) => [i.sku!, i.id]));
   const barcodeMap = new Map(existingItems.filter((i) => i.barcode).map((i) => [i.barcode!, i.id]));
 
+  // Classify rows into creates vs updates
+  const toCreate: Array<{
+    store_id: string; name: string; category: string; sku: string | null;
+    barcode: string | null; price_cents: number; cost_cents: number;
+    quantity: number; attributes: Record<string, unknown>;
+    external_id: string | null; active: boolean;
+  }> = [];
+  const toUpdate: Array<{ id: string; data: Record<string, unknown> }> = [];
+
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     try {
@@ -61,7 +70,6 @@ async function executeInventoryImport(
         continue;
       }
 
-      // Build attributes from nested fields
       const attributes: Record<string, unknown> = {};
       if (typeof row.attributes === "object" && row.attributes) {
         Object.assign(attributes, row.attributes);
@@ -81,37 +89,26 @@ async function executeInventoryImport(
         active: true,
       };
 
-      // Dedup: match by SKU, then barcode
       let existingId: string | undefined;
       if (data.sku) existingId = skuMap.get(data.sku);
       if (!existingId && data.barcode) existingId = barcodeMap.get(data.barcode);
 
       if (existingId) {
-        // Update existing item
-        if (!dryRun) {
-          await db.posInventoryItem.update({
-            where: { id: existingId },
-            data: {
-              name: data.name,
-              category: data.category,
-              price_cents: data.price_cents,
-              cost_cents: data.cost_cents,
-              quantity: data.quantity,
-              attributes: data.attributes,
-              barcode: data.barcode,
-              external_id: data.external_id,
-            },
-          });
-        }
+        toUpdate.push({
+          id: existingId,
+          data: {
+            name: data.name, category: data.category,
+            price_cents: data.price_cents, cost_cents: data.cost_cents,
+            quantity: data.quantity, attributes: data.attributes,
+            barcode: data.barcode, external_id: data.external_id,
+          },
+        });
         result.updated++;
       } else {
-        // Create new item
-        if (!dryRun) {
-          const created = await db.posInventoryItem.create({ data });
-          // Update maps for subsequent dedup within same import
-          if (data.sku) skuMap.set(data.sku, created.id);
-          if (data.barcode) barcodeMap.set(data.barcode, created.id);
-        }
+        toCreate.push(data);
+        // Update maps for dedup within same batch
+        if (data.sku) skuMap.set(data.sku, `pending_${i}`);
+        if (data.barcode) barcodeMap.set(data.barcode, `pending_${i}`);
         result.created++;
       }
     } catch (err) {
@@ -119,6 +116,39 @@ async function executeInventoryImport(
         row: i + 1,
         message: err instanceof Error ? err.message : "Unknown error",
       });
+    }
+  }
+
+  // Execute in batches (not per-item)
+  if (!dryRun) {
+    // Batch create — single DB call for all new items
+    if (toCreate.length > 0) {
+      await db.posInventoryItem.createMany({
+        data: toCreate.map((item) => ({
+          ...item,
+          attributes: JSON.parse(JSON.stringify(item.attributes)),
+        })),
+      });
+    }
+
+    // Parallel updates — concurrent but separate calls (Prisma limitation)
+    // Process in chunks of 50 to avoid connection pool exhaustion
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < toUpdate.length; i += CHUNK_SIZE) {
+      const chunk = toUpdate.slice(i, i + CHUNK_SIZE);
+      await Promise.all(
+        chunk.map((u) =>
+          db.posInventoryItem.update({
+            where: { id: u.id },
+            data: {
+              ...u.data,
+              attributes: u.data.attributes
+                ? JSON.parse(JSON.stringify(u.data.attributes))
+                : undefined,
+            },
+          })
+        )
+      );
     }
   }
 }
@@ -139,6 +169,12 @@ async function executeCustomerImport(
     existingCustomers.filter((c) => c.email).map((c) => [c.email!.toLowerCase(), c.id])
   );
 
+  const toCreate: Array<{
+    store_id: string; name: string; email: string | null;
+    phone: string | null; credit_balance_cents: number; notes: string | null;
+  }> = [];
+  const toUpdate: Array<{ id: string; data: Record<string, unknown> }> = [];
+
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     try {
@@ -153,39 +189,18 @@ async function executeCustomerImport(
       const creditBalance = Number(row.credit_balance_cents) || 0;
       const notes = row.notes ? String(row.notes).trim() : null;
 
-      // Dedup: match by email
       let existingId: string | undefined;
       if (email) existingId = emailMap.get(email);
 
       if (existingId) {
-        // Update existing customer
-        if (!dryRun) {
-          await db.posCustomer.update({
-            where: { id: existingId },
-            data: {
-              name,
-              phone,
-              notes,
-              credit_balance_cents: creditBalance,
-            },
-          });
-        }
+        toUpdate.push({
+          id: existingId,
+          data: { name, phone, notes, credit_balance_cents: creditBalance },
+        });
         result.updated++;
       } else {
-        // Create new customer
-        if (!dryRun) {
-          const created = await db.posCustomer.create({
-            data: {
-              store_id: storeId,
-              name,
-              email,
-              phone,
-              credit_balance_cents: creditBalance,
-              notes,
-            },
-          });
-          if (email) emailMap.set(email, created.id);
-        }
+        toCreate.push({ store_id: storeId, name, email, phone, credit_balance_cents: creditBalance, notes });
+        if (email) emailMap.set(email, `pending_${i}`);
         result.created++;
       }
     } catch (err) {
@@ -193,6 +208,20 @@ async function executeCustomerImport(
         row: i + 1,
         message: err instanceof Error ? err.message : "Unknown error",
       });
+    }
+  }
+
+  if (!dryRun) {
+    if (toCreate.length > 0) {
+      await db.posCustomer.createMany({ data: toCreate });
+    }
+
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < toUpdate.length; i += CHUNK_SIZE) {
+      const chunk = toUpdate.slice(i, i + CHUNK_SIZE);
+      await Promise.all(
+        chunk.map((u) => db.posCustomer.update({ where: { id: u.id }, data: u.data }))
+      );
     }
   }
 }

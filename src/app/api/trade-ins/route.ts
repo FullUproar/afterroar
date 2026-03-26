@@ -12,9 +12,10 @@ export async function GET() {
 
     const data = await db.posTradeIn.findMany({
       orderBy: { created_at: "desc" },
+      take: 100,
       include: {
         customer: { select: { name: true } },
-        items: { select: { id: true } },
+        _count: { select: { items: true } },
       },
     });
 
@@ -22,7 +23,7 @@ export async function GET() {
       id: ti.id,
       created_at: ti.created_at,
       customer_name: ti.customer?.name ?? "Unknown",
-      item_count: ti.items.length,
+      item_count: ti._count.items,
       total_offer_cents: ti.total_offer_cents,
       total_payout_cents: ti.total_payout_cents,
       payout_type: ti.payout_type,

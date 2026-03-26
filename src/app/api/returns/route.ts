@@ -11,9 +11,10 @@ export async function GET() {
 
     const data = await db.posReturn.findMany({
       orderBy: { created_at: "desc" },
+      take: 100,
       include: {
         customer: { select: { name: true } },
-        items: { select: { id: true } },
+        _count: { select: { items: true } },
       },
     });
 
@@ -21,7 +22,7 @@ export async function GET() {
       id: r.id,
       created_at: r.created_at,
       customer_name: r.customer?.name ?? "Guest",
-      item_count: r.items.length,
+      item_count: r._count.items,
       total_refund_cents: r.total_refund_cents,
       refund_method: r.refund_method,
       reason: r.reason,
