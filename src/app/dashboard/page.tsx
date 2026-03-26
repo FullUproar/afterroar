@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 
@@ -23,6 +24,11 @@ export default async function DashboardPage() {
         <p className="text-zinc-400">No store found. Please contact support.</p>
       </div>
     );
+  }
+
+  // Cashiers go straight to the register — no dashboard stats for them
+  if (staff.role === "cashier") {
+    redirect("/dashboard/checkout");
   }
 
   const storeId = staff.store_id;

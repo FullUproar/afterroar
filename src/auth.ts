@@ -69,11 +69,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         }
       }
+
+      // Embed store/staff context in the JWT for faster tenant resolution
+      // Only look up if not already cached in token
+      if (token.id && !token.storeId) {
+        const staffRecord = await prisma.posStaff.findFirst({
+          where: { user_id: token.id as string, active: true },
+          select: { id: true, store_id: true, role: true },
+        });
+        if (staffRecord) {
+          token.staffId = staffRecord.id;
+          token.storeId = staffRecord.store_id;
+          token.role = staffRecord.role;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        // Expose tenant context in session for client components
+        (session as unknown as Record<string, unknown>).staffId = token.staffId;
+        (session as unknown as Record<string, unknown>).storeId = token.storeId;
+        (session as unknown as Record<string, unknown>).role = token.role;
       }
       return session;
     },

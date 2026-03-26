@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { Customer, formatCents, parseDollars } from '@/lib/types';
+import { useStoreSettings } from '@/lib/store-settings';
 
 /* ---------- types ---------- */
 
@@ -29,6 +30,7 @@ const CONDITIONS = ['NM', 'LP', 'MP', 'HP', 'DMG'] as const;
 /* ---------- component ---------- */
 
 export default function NewTradeInPage() {
+  const storeSettings = useStoreSettings();
   const [step, setStep] = useState(1);
 
   // Step 1 — customer
@@ -53,7 +55,7 @@ export default function NewTradeInPage() {
 
   // Step 3 — payout
   const [payoutType, setPayoutType] = useState<'cash' | 'credit'>('cash');
-  const [creditBonus, setCreditBonus] = useState(30);
+  const [creditBonus, setCreditBonus] = useState(storeSettings.trade_in_credit_bonus_percent);
   const [notes, setNotes] = useState('');
 
   // submission

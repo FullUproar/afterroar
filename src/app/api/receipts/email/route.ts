@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
 interface ReceiptItem {
   name: string;
@@ -25,34 +26,40 @@ interface EmailReceiptBody {
 }
 
 export async function POST(request: NextRequest) {
-  let body: EmailReceiptBody;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    await requireStaff();
+
+    let body: EmailReceiptBody;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const { customer_email, receipt } = body;
+
+    if (!customer_email?.trim()) {
+      return NextResponse.json(
+        { error: "customer_email is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!receipt) {
+      return NextResponse.json(
+        { error: "receipt data is required" },
+        { status: 400 }
+      );
+    }
+
+    // TODO: integrate with Resend/SendGrid for actual email delivery
+    console.log("Receipt email to:", customer_email, receipt);
+
+    return NextResponse.json({
+      success: true,
+      message: "Receipt queued (email not yet configured)",
+    });
+  } catch (error) {
+    return handleAuthError(error);
   }
-
-  const { customer_email, receipt } = body;
-
-  if (!customer_email?.trim()) {
-    return NextResponse.json(
-      { error: "customer_email is required" },
-      { status: 400 }
-    );
-  }
-
-  if (!receipt) {
-    return NextResponse.json(
-      { error: "receipt data is required" },
-      { status: 400 }
-    );
-  }
-
-  // TODO: integrate with Resend/SendGrid for actual email delivery
-  console.log("Receipt email to:", customer_email, receipt);
-
-  return NextResponse.json({
-    success: true,
-    message: "Receipt queued (email not yet configured)",
-  });
 }

@@ -13,7 +13,7 @@ Part of the Full Uproar Games ecosystem.
 - Vercel hosting
 
 ## Database
-- All Store Ops tables use `pos_` prefix (11 tables)
+- All Store Ops tables use `pos_` prefix (18 tables)
 - Shares database with Afterroar HQ (~100 HQ tables)
 - Store Ops reads HQ `User` table (PascalCase: `"User"`) but never writes to HQ tables
 - Bridge: `pos_staff.user_id` → `User.id`
@@ -27,6 +27,10 @@ All Store Ops models are prefixed with `Pos`:
 - prisma.posEvent, prisma.posEventCheckin
 - prisma.posLedgerEntry
 - prisma.posTradeIn, prisma.posTradeInItem
+- prisma.posReturn, prisma.posReturnItem
+- prisma.posLoyaltyEntry
+- prisma.posImportJob, prisma.posImportRecord
+- prisma.posCertification
 - prisma.posGiftCard
 - prisma.user (HQ User table — READ ONLY)
 

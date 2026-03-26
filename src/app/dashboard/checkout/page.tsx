@@ -4,6 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { formatCents, parseDollars } from "@/lib/types";
 import type { InventoryItem, Customer } from "@/lib/types";
 import type { PaymentMethod } from "@/lib/payment";
+import {
+  searchInventoryLocal,
+  searchCustomersLocal,
+  enqueueTx,
+  decrementLocalInventory,
+  updateLocalCustomerCredit,
+} from "@/lib/offline-db";
+import { useStoreName, useStoreSettings } from "@/lib/store-settings";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -29,6 +37,7 @@ interface ReceiptData {
   date: string;
   items: ReceiptItem[];
   subtotal_cents: number;
+  tax_cents: number;
   credit_applied_cents: number;
   payment_method: string;
   total_cents: number;
@@ -40,6 +49,9 @@ interface ReceiptData {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 export default function CheckoutPage() {
+  const storeName = useStoreName();
+  const storeSettings = useStoreSettings();
+
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -67,6 +79,16 @@ export default function CheckoutPage() {
   const [newCustPhone, setNewCustPhone] = useState("");
   const [creatingCustomer, setCreatingCustomer] = useState(false);
 
+  // Unlisted item state
+  const [showUnlisted, setShowUnlisted] = useState(false);
+  const [unlistedName, setUnlistedName] = useState("");
+  const [unlistedPrice, setUnlistedPrice] = useState("");
+
+  // AI camera state
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraProcessing, setCameraProcessing] = useState(false);
+  const [cameraResult, setCameraResult] = useState<string | null>(null);
+
   // Pay slide-over state
   const [showPayPanel, setShowPayPanel] = useState(false);
 
@@ -84,22 +106,27 @@ export default function CheckoutPage() {
   // ---- Derived values ----
   const subtotal = cart.reduce((s, i) => s + i.price_cents * i.quantity, 0);
   const cartItemCount = cart.reduce((s, i) => s + i.quantity, 0);
+  const taxRate = storeSettings.tax_rate_percent;
+  const taxCents = storeSettings.tax_included_in_price
+    ? 0 // Tax already in price — no additional charge
+    : Math.round(subtotal * taxRate / 100);
+  const totalBeforeCredit = subtotal + taxCents;
   const creditApplied =
     applyCredit && customer
       ? Math.min(
           creditInput ? parseDollars(creditInput) : customer.credit_balance_cents,
           customer.credit_balance_cents,
-          subtotal
+          totalBeforeCredit
         )
       : 0;
-  const amountDue = subtotal - creditApplied;
+  const amountDue = totalBeforeCredit - creditApplied;
   const tendered = tenderedInput ? parseDollars(tenderedInput) : 0;
   const change =
     paymentMethod === "cash" || paymentMethod === "split"
       ? Math.max(0, tendered - amountDue)
       : 0;
 
-  // ---- Inventory search ----
+  // ---- Inventory search (IndexedDB first, network update) ----
   const doSearch = useCallback(
     async (q: string) => {
       if (!q.trim()) {
@@ -107,13 +134,45 @@ export default function CheckoutPage() {
         setShowResults(false);
         return;
       }
+
+      // Try IndexedDB first for instant results
+      try {
+        const localResults = await searchInventoryLocal(q.trim());
+        if (localResults.length > 0) {
+          const asInventory = localResults.map((r) => ({
+            ...r,
+            low_stock_threshold: 5,
+            image_url: null,
+            external_id: null,
+            created_at: "",
+            updated_at: "",
+          })) as InventoryItem[];
+          // Check for exact barcode match -- auto-add
+          const exactBarcode = asInventory.find(
+            (d) => d.barcode && d.barcode === q.trim() && d.quantity > 0
+          );
+          if (exactBarcode) {
+            addToCart(exactBarcode);
+            setSearchQuery("");
+            setSearchResults([]);
+            setShowResults(false);
+            return;
+          }
+          setSearchResults(asInventory.filter((d) => d.quantity > 0));
+          setShowResults(true);
+          setSelectedIndex(0);
+        }
+      } catch {
+        // IndexedDB not available, fall through to network
+      }
+
+      // Also fetch from network to get fresh data
       try {
         const res = await fetch(
           `/api/inventory/search?q=${encodeURIComponent(q)}`
         );
         const data: InventoryItem[] = await res.json();
         if (Array.isArray(data)) {
-          // Check for exact barcode match -- auto-add
           const exactBarcode = data.find(
             (d) => d.barcode && d.barcode === q.trim() && d.quantity > 0
           );
@@ -129,7 +188,7 @@ export default function CheckoutPage() {
           setSelectedIndex(0);
         }
       } catch {
-        // ignore
+        // Network failed — local results (if any) are already displayed
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,12 +203,34 @@ export default function CheckoutPage() {
     };
   }, [searchQuery, doSearch]);
 
-  // ---- Customer search ----
+  // ---- Customer search (IndexedDB first, network update) ----
   const doCustomerSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
       setCustomerResults([]);
       return;
     }
+
+    // Try IndexedDB first
+    try {
+      const localResults = await searchCustomersLocal(q.trim());
+      if (localResults.length > 0) {
+        setCustomerResults(
+          localResults.map((c) => ({
+            ...c,
+            store_id: "",
+            notes: null,
+            afterroar_id: null,
+            loyalty_points: 0,
+            created_at: "",
+            updated_at: "",
+          })) as Customer[]
+        );
+      }
+    } catch {
+      // IndexedDB not available
+    }
+
+    // Also fetch from network
     try {
       const res = await fetch(
         `/api/customers?q=${encodeURIComponent(q)}`
@@ -159,7 +240,7 @@ export default function CheckoutPage() {
         setCustomerResults(data);
       }
     } catch {
-      // ignore
+      // Network failed — local results already displayed
     }
   }, []);
 
@@ -288,7 +369,7 @@ export default function CheckoutPage() {
     }
   }
 
-  // ---- Complete sale ----
+  // ---- Complete sale (online or offline) ----
   async function handleCompleteSale() {
     if (cart.length === 0 || processing) return;
 
@@ -307,22 +388,48 @@ export default function CheckoutPage() {
     }
 
     setProcessing(true);
+
+    const clientTxId = `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const payload = {
+      items: cart.map((c) => ({
+        inventory_item_id: c.inventory_item_id,
+        quantity: c.quantity,
+        price_cents: c.price_cents,
+      })),
+      customer_id: customer?.id ?? null,
+      payment_method: paymentMethod,
+      amount_tendered_cents: tendered,
+      credit_applied_cents: creditApplied,
+      event_id: null,
+      client_tx_id: clientTxId,
+      tax_cents: taxCents,
+    };
+
+    // Build receipt client-side (used for both online and offline)
+    const clientReceipt: ReceiptData = {
+      store_name: storeName,
+      date: new Date().toISOString(),
+      items: cart.map((c) => ({
+        name: c.name,
+        quantity: c.quantity,
+        price_cents: c.price_cents,
+        total_cents: c.price_cents * c.quantity,
+      })),
+      subtotal_cents: subtotal,
+      tax_cents: taxCents,
+      credit_applied_cents: creditApplied,
+      payment_method: paymentMethod,
+      total_cents: amountDue,
+      change_cents: change,
+      customer_name: customer?.name ?? null,
+    };
+
+    // Try network first
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart.map((c) => ({
-            inventory_item_id: c.inventory_item_id,
-            quantity: c.quantity,
-            price_cents: c.price_cents,
-          })),
-          customer_id: customer?.id ?? null,
-          payment_method: paymentMethod,
-          amount_tendered_cents: tendered,
-          credit_applied_cents: creditApplied,
-          event_id: null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -333,24 +440,99 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Show receipt modal
-      if (data.receipt) {
-        setReceipt(data.receipt);
-      }
-
-      // Clear cart state (but keep receipt modal open)
-      setCart([]);
-      setCustomer(null);
-      setApplyCredit(false);
-      setCreditInput("");
-      setPaymentMethod("cash");
-      setTenderedInput("");
-      setShowPayPanel(false);
+      // Use server receipt if available, otherwise client receipt
+      setReceipt(data.receipt ?? clientReceipt);
+      clearCartState();
     } catch {
-      alert("Network error");
+      // Network failed — queue for later sync
+      try {
+        await enqueueTx({
+          clientTxId,
+          type: "checkout",
+          createdAt: new Date().toISOString(),
+          status: "pending",
+          retryCount: 0,
+          lastError: null,
+          payload,
+          receipt: clientReceipt as unknown as Record<string, unknown>,
+        });
+
+        // Optimistic local updates
+        for (const item of cart) {
+          await decrementLocalInventory(item.inventory_item_id, item.quantity);
+        }
+        if (creditApplied > 0 && customer) {
+          await updateLocalCustomerCredit(customer.id, -creditApplied);
+        }
+
+        // Show client-side receipt with offline indicator
+        setReceipt({ ...clientReceipt, store_name: `${storeName} (Offline)` });
+        clearCartState();
+      } catch (queueErr) {
+        alert("Failed to save transaction. Please try again.");
+      }
     } finally {
       setProcessing(false);
     }
+  }
+
+  // ---- Add unlisted item to cart ----
+  function addUnlistedItem() {
+    if (!unlistedName.trim() || !unlistedPrice.trim()) return;
+    const priceCents = parseDollars(unlistedPrice);
+    if (priceCents <= 0) return;
+
+    setCart((prev) => [
+      ...prev,
+      {
+        inventory_item_id: `unlisted_${Date.now()}`,
+        name: unlistedName.trim(),
+        category: "other",
+        price_cents: priceCents,
+        quantity: 1,
+        max_quantity: 999,
+      },
+    ]);
+    setUnlistedName("");
+    setUnlistedPrice("");
+    setShowUnlisted(false);
+    searchRef.current?.focus();
+  }
+
+  // ---- Camera AI product identification ----
+  async function handleCameraCapture(imageDataUrl: string) {
+    setCameraProcessing(true);
+    setCameraResult(null);
+    try {
+      const res = await fetch("/api/inventory/identify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageDataUrl }),
+      });
+      const data = await res.json();
+      if (data.query) {
+        // AI identified something — search for it
+        setSearchQuery(data.query);
+        setCameraResult(data.description);
+      } else {
+        setCameraResult(data.description ?? "Could not identify this item");
+      }
+    } catch {
+      setCameraResult("Camera identification unavailable");
+    } finally {
+      setCameraProcessing(false);
+      setShowCamera(false);
+    }
+  }
+
+  function clearCartState() {
+    setCart([]);
+    setCustomer(null);
+    setApplyCredit(false);
+    setCreditInput("");
+    setPaymentMethod("cash");
+    setTenderedInput("");
+    setShowPayPanel(false);
   }
 
   // ---- Receipt helpers ----
@@ -493,7 +675,18 @@ export default function CheckoutPage() {
                       <div>
                         <div className="font-medium">{item.name}</div>
                         <div className="text-xs text-zinc-500">
-                          {item.category} &middot; {item.quantity} in stock
+                          {item.category} &middot;{" "}
+                          <span
+                            className={
+                              item.quantity === 0
+                                ? "text-red-400 font-medium"
+                                : item.quantity <= (item.low_stock_threshold ?? 5)
+                                  ? "text-yellow-400"
+                                  : "text-zinc-500"
+                            }
+                          >
+                            {item.quantity} in stock
+                          </span>
                           {item.barcode && ` \u00b7 ${item.barcode}`}
                         </div>
                       </div>
@@ -506,11 +699,102 @@ export default function CheckoutPage() {
               )}
 
               {showResults && searchQuery && searchResults.length === 0 && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-500">
-                  No items found
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-400">
+                  No items found for &quot;{searchQuery}&quot;
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => { setShowUnlisted(true); setShowResults(false); }}
+                      className="rounded bg-zinc-700 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-600"
+                    >
+                      Sell as unlisted item
+                    </button>
+                    <button
+                      onClick={() => { setShowCamera(true); setShowResults(false); }}
+                      className="rounded bg-zinc-700 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-600"
+                    >
+                      Try camera ID
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* Quick action buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowUnlisted(!showUnlisted)}
+                className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                  showUnlisted
+                    ? "bg-indigo-600 text-white"
+                    : "bg-zinc-800 text-zinc-400 hover:text-white"
+                }`}
+              >
+                + Unlisted Item
+              </button>
+              <button
+                onClick={() => setShowCamera(true)}
+                className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+              >
+                Camera ID
+              </button>
+            </div>
+
+            {/* Unlisted item form */}
+            {showUnlisted && (
+              <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-3">
+                <div className="text-sm font-medium text-white">Sell Unlisted Item</div>
+                <input
+                  type="text"
+                  placeholder="Item name (e.g. Small dragon figurine)"
+                  value={unlistedName}
+                  onChange={(e) => setUnlistedName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addUnlistedItem()}
+                  autoFocus
+                  className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-2 text-zinc-500">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Price"
+                      value={unlistedPrice}
+                      onChange={(e) => setUnlistedPrice(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addUnlistedItem()}
+                      className="w-full rounded-lg border border-zinc-600 bg-zinc-900 pl-7 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={addUnlistedItem}
+                    disabled={!unlistedName.trim() || !unlistedPrice.trim()}
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => { setShowUnlisted(false); setUnlistedName(""); setUnlistedPrice(""); }}
+                    className="rounded-lg bg-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Camera AI result */}
+            {cameraResult && (
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm text-indigo-300">
+                {cameraProcessing ? "Identifying..." : cameraResult}
+                <button
+                  onClick={() => setCameraResult(null)}
+                  className="ml-2 text-xs text-zinc-500 hover:text-white"
+                >
+                  dismiss
+                </button>
+              </div>
+            )}
 
             {/* Customer attach */}
             <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">

@@ -37,15 +37,124 @@ model PosStore {
   updated_at DateTime @default(now()) @db.Timestamptz()
 
   staff           PosStaff[]
+  locations       PosLocation[]
   customers       PosCustomer[]
   inventory_items PosInventoryItem[]
   events          PosEvent[]
   ledger_entries  PosLedgerEntry[]
   trade_ins       PosTradeIn[]
+  returns         PosReturn[]
+  import_jobs     PosImportJob[]
+  certifications  PosCertification[]
+  promotions      PosPromotion[]
+  loyalty_entries PosLoyaltyEntry[]
+  preorders       PosPreorder[]
   gift_cards      PosGiftCard[]
   suppliers       PosSupplier[]
 
   @@map("pos_stores")
+}
+
+// ============================================================
+// POS LOCATIONS (physical locations within a store/business)
+// ============================================================
+model PosLocation {
+  id         String   @id @default(cuid())
+  store_id   String
+  name       String             // "Minneapolis Store", "Warehouse", "Display Case A"
+  code       String?            // Short code: "MSP", "WH", "DC-A"
+  type       String   @default("store") // "store", "warehouse", "display", "online"
+  address    Json?
+  phone      String?
+  active     Boolean  @default(true)
+  is_default Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @default(now()) @db.Timestamptz()
+
+  store            PosStore              @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  inventory_levels PosInventoryLevel[]
+  transfers_from   PosTransfer[]         @relation("TransferFrom")
+  transfers_to     PosTransfer[]         @relation("TransferTo")
+  preorders        PosPreorder[]
+
+  @@unique([store_id, code])
+  @@index([store_id])
+  @@map("pos_locations")
+}
+
+// ============================================================
+// POS INVENTORY LEVELS (stock quantity per item per location)
+// ============================================================
+model PosInventoryLevel {
+  id                String   @id @default(cuid())
+  store_id          String
+  inventory_item_id String
+  location_id       String
+  quantity          Int      @default(0)
+  reserved_quantity Int      @default(0) // held for preorders/online
+  created_at        DateTime @default(now()) @db.Timestamptz()
+  updated_at        DateTime @default(now()) @db.Timestamptz()
+
+  inventory_item PosInventoryItem @relation(fields: [inventory_item_id], references: [id], onDelete: Cascade)
+  location       PosLocation      @relation(fields: [location_id], references: [id], onDelete: Cascade)
+
+  @@unique([inventory_item_id, location_id])
+  @@index([store_id])
+  @@index([location_id])
+  @@map("pos_inventory_levels")
+}
+
+// ============================================================
+// POS TRANSFERS (move stock between locations)
+// ============================================================
+model PosTransfer {
+  id                String    @id @default(cuid())
+  store_id          String
+  from_location_id  String
+  to_location_id    String
+  staff_id          String?
+  status            String    @default("pending") // pending, in_transit, completed, cancelled
+  notes             String?
+  items             Json      @default("[]") // [{inventory_item_id, quantity}]
+  created_at        DateTime  @default(now()) @db.Timestamptz()
+  completed_at      DateTime? @db.Timestamptz()
+
+  from_location PosLocation @relation("TransferFrom", fields: [from_location_id], references: [id])
+  to_location   PosLocation @relation("TransferTo", fields: [to_location_id], references: [id])
+
+  @@index([store_id])
+  @@map("pos_transfers")
+}
+
+// ============================================================
+// POS PREORDERS
+// ============================================================
+model PosPreorder {
+  id                String    @id @default(cuid())
+  store_id          String
+  customer_id       String?
+  location_id       String?
+  staff_id          String?
+  status            String    @default("pending") // pending, confirmed, received, fulfilled, cancelled
+  product_name      String
+  product_details   Json      @default("{}") // set name, release date, variant info
+  quantity          Int       @default(1)
+  deposit_cents     Int       @default(0)
+  total_price_cents Int       @default(0)
+  notes             String?
+  release_date      DateTime? @db.Timestamptz()
+  fulfilled_at      DateTime? @db.Timestamptz()
+  created_at        DateTime  @default(now()) @db.Timestamptz()
+  updated_at        DateTime  @default(now()) @db.Timestamptz()
+
+  store    PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer PosCustomer? @relation(fields: [customer_id], references: [id])
+  location PosLocation? @relation(fields: [location_id], references: [id])
+
+  @@index([store_id])
+  @@index([store_id, status])
+  @@index([customer_id])
+  @@map("pos_preorders")
 }
 
 // ============================================================
@@ -63,10 +172,35 @@ model PosStaff {
   user           User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
   ledger_entries PosLedgerEntry[]
-  trade_ins      PosTradeIn[]
+  trade_ins       PosTradeIn[]
+  returns         PosReturn[]
+  import_jobs     PosImportJob[]
+  certifications  PosCertification[]
+  time_entries    PosTimeEntry[]
 
   @@unique([user_id, store_id])
   @@map("pos_staff")
+}
+
+// ============================================================
+// POS TIME CLOCK
+// ============================================================
+model PosTimeEntry {
+  id           String    @id @default(cuid())
+  store_id     String
+  staff_id     String
+  clock_in     DateTime  @db.Timestamptz()
+  clock_out    DateTime? @db.Timestamptz()
+  hours_worked Decimal?  @db.Decimal(5, 2)
+  notes        String?
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+
+  staff PosStaff @relation(fields: [staff_id], references: [id])
+
+  @@index([store_id])
+  @@index([staff_id])
+  @@index([store_id, clock_in(sort: Desc)])
+  @@map("pos_time_entries")
 }
 
 // ============================================================
@@ -85,13 +219,66 @@ model PosCustomer {
   created_at           DateTime @default(now()) @db.Timestamptz()
   updated_at           DateTime @default(now()) @db.Timestamptz()
 
-  store          PosStore          @relation(fields: [store_id], references: [id], onDelete: Cascade)
-  ledger_entries PosLedgerEntry[]
-  trade_ins      PosTradeIn[]
-  event_checkins PosEventCheckin[]
+  store              PosStore               @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  ledger_entries     PosLedgerEntry[]
+  trade_ins          PosTradeIn[]
+  returns            PosReturn[]
+  event_checkins     PosEventCheckin[]
+  loyalty_entries    PosLoyaltyEntry[]
+  preorders          PosPreorder[]
 
   @@index([store_id])
   @@map("pos_customers")
+}
+
+// ============================================================
+// POS PROMOTIONS / SALE PRICING
+// ============================================================
+model PosPromotion {
+  id             String    @id @default(cuid())
+  store_id       String
+  name           String
+  type           String
+  value          Int
+  scope          String
+  scope_value    String?
+  starts_at      DateTime? @db.Timestamptz()
+  ends_at        DateTime? @db.Timestamptz()
+  active         Boolean   @default(true)
+  priority       Int       @default(0)
+  metadata       Json      @default("{}")
+  created_at     DateTime  @default(now()) @db.Timestamptz()
+  updated_at     DateTime  @default(now()) @db.Timestamptz()
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@index([store_id, active])
+  @@map("pos_promotions")
+}
+
+// ============================================================
+// POS LOYALTY POINTS LEDGER
+// ============================================================
+model PosLoyaltyEntry {
+  id           String   @id @default(cuid())
+  store_id     String
+  customer_id  String
+  type         String            // earn_purchase, earn_trade_in, earn_event, redeem, adjust
+  points       Int               // positive = earn, negative = redeem
+  balance_after Int              // running balance after this transaction
+  description  String?
+  reference_id String?           // ledger_entry_id, trade_in_id, event_id, etc.
+  metadata     Json     @default("{}")
+  created_at   DateTime @default(now()) @db.Timestamptz()
+
+  store    PosStore    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer PosCustomer @relation(fields: [customer_id], references: [id])
+
+  @@index([store_id])
+  @@index([customer_id])
+  @@index([store_id, created_at(sort: Desc)])
+  @@map("pos_loyalty_entries")
 }
 
 // ============================================================
@@ -121,7 +308,9 @@ model PosInventoryItem {
 
   store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
   supplier       PosSupplier?     @relation(fields: [supplier_id], references: [id])
-  trade_in_items PosTradeInItem[]
+  trade_in_items   PosTradeInItem[]
+  return_items     PosReturnItem[]
+  inventory_levels PosInventoryLevel[]
 
   @@index([store_id])
   @@index([store_id, category])
@@ -203,10 +392,11 @@ model PosLedgerEntry {
   metadata            Json     @default("{}")
   created_at          DateTime @default(now()) @db.Timestamptz()
 
-  store    PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
-  customer PosCustomer? @relation(fields: [customer_id], references: [id])
-  staff    PosStaff?    @relation(fields: [staff_id], references: [id])
-  event    PosEvent?    @relation(fields: [event_id], references: [id])
+  store            PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer         PosCustomer? @relation(fields: [customer_id], references: [id])
+  staff            PosStaff?    @relation(fields: [staff_id], references: [id])
+  event            PosEvent?    @relation(fields: [event_id], references: [id])
+  returns_from_sale PosReturn[] @relation("OriginalSale")
 
   @@index([store_id])
   @@index([customer_id])
@@ -261,6 +451,126 @@ model PosTradeInItem {
   inventory_item PosInventoryItem? @relation(fields: [inventory_item_id], references: [id])
 
   @@map("pos_trade_in_items")
+}
+
+// ============================================================
+// POS RETURNS
+// ============================================================
+model PosReturn {
+  id                       String   @id @default(cuid())
+  store_id                 String
+  customer_id              String?
+  staff_id                 String?
+  original_ledger_entry_id String
+  status                   String   @default("completed")
+  refund_method            String
+  reason                   String
+  reason_notes             String?
+  subtotal_cents           Int      @default(0)
+  restocking_fee_cents     Int      @default(0)
+  refund_amount_cents      Int      @default(0)
+  credit_bonus_percent     Decimal  @default(0) @db.Decimal(5, 2)
+  total_refund_cents       Int      @default(0)
+  ledger_entry_id          String?
+  created_at               DateTime @default(now()) @db.Timestamptz()
+
+  store           PosStore        @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer        PosCustomer?    @relation(fields: [customer_id], references: [id])
+  staff           PosStaff?       @relation(fields: [staff_id], references: [id])
+  original_ledger PosLedgerEntry  @relation("OriginalSale", fields: [original_ledger_entry_id], references: [id])
+  items           PosReturnItem[]
+
+  @@index([store_id])
+  @@index([customer_id])
+  @@index([original_ledger_entry_id])
+  @@map("pos_returns")
+}
+
+model PosReturnItem {
+  id                String   @id @default(cuid())
+  return_id         String
+  inventory_item_id String?
+  name              String
+  category          String?
+  quantity          Int      @default(1)
+  price_cents       Int
+  total_cents       Int
+  restock           Boolean  @default(true)
+  created_at        DateTime @default(now()) @db.Timestamptz()
+
+  return_record  PosReturn         @relation(fields: [return_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem? @relation(fields: [inventory_item_id], references: [id])
+
+  @@map("pos_return_items")
+}
+
+// ============================================================
+// POS IMPORT JOBS
+// ============================================================
+model PosImportJob {
+  id                String    @id @default(cuid())
+  store_id          String
+  staff_id          String
+  source_system     String
+  entity_type       String
+  status            String    @default("draft")
+  file_name         String
+  file_hash         String
+  row_count         Int       @default(0)
+  field_mapping     Json      @default("{}")
+  validation_errors Json      @default("[]")
+  preview_data      Json      @default("[]")
+  dry_run_summary   Json?
+  committed_at      DateTime? @db.Timestamptz()
+  created_at        DateTime  @default(now()) @db.Timestamptz()
+  updated_at        DateTime  @default(now()) @db.Timestamptz()
+
+  store   PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  staff   PosStaff         @relation(fields: [staff_id], references: [id])
+  records PosImportRecord[]
+
+  @@index([store_id])
+  @@index([store_id, file_hash])
+  @@map("pos_import_jobs")
+}
+
+model PosImportRecord {
+  id            String   @id @default(cuid())
+  import_job_id String
+  row_number    Int
+  source_data   Json
+  mapped_data   Json
+  target_table  String
+  target_id     String?
+  status        String   @default("pending")
+  error_message String?
+  created_at    DateTime @default(now()) @db.Timestamptz()
+
+  import_job PosImportJob @relation(fields: [import_job_id], references: [id], onDelete: Cascade)
+
+  @@index([import_job_id])
+  @@map("pos_import_records")
+}
+
+// ============================================================
+// POS DATA CERTIFICATION
+// ============================================================
+model PosCertification {
+  id           String    @id @default(cuid())
+  store_id     String
+  staff_id     String
+  status       String    @default("running")
+  checks       Json      @default("[]")
+  summary      Json?
+  started_at   DateTime  @default(now()) @db.Timestamptz()
+  completed_at DateTime? @db.Timestamptz()
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  staff PosStaff @relation(fields: [staff_id], references: [id])
+
+  @@index([store_id])
+  @@map("pos_certifications")
 }
 
 // ============================================================

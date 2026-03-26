@@ -1,14 +1,34 @@
-export type PaymentMethod = "cash" | "card" | "store_credit" | "split";
+/* ------------------------------------------------------------------ */
+/*  Payment Abstraction Layer                                           */
+/*                                                                      */
+/*  Providers:                                                          */
+/*    CashPaymentProvider       — always succeeds (cash at register)    */
+/*    SimulatedCardProvider     — dev/test mode (no real charges)       */
+/*    StripeConnectProvider     — real card payments via Stripe Connect */
+/*    ExternalPaymentProvider   — "process on your own terminal"       */
+/*    StoreCreditProvider       — validates balance (DB deduction in API) */
+/*                                                                      */
+/*  The checkout API calls processPayment() which routes to the right  */
+/*  provider based on payment method + environment config.             */
+/* ------------------------------------------------------------------ */
+
+export type PaymentMethod = "cash" | "card" | "store_credit" | "split" | "external";
 
 export interface PaymentResult {
   success: boolean;
   transaction_id: string;
   method: PaymentMethod;
+  provider: string;
   error?: string;
+  /** Stripe-specific: payment intent ID for reconciliation */
+  stripe_payment_intent_id?: string;
+  /** Whether this was processed on a real terminal vs simulated */
+  live: boolean;
 }
 
 export interface PaymentProvider {
-  charge(amount_cents: number): Promise<PaymentResult>;
+  charge(amount_cents: number, metadata?: Record<string, unknown>): Promise<PaymentResult>;
+  refund?(transaction_id: string, amount_cents: number): Promise<PaymentResult>;
   name: string;
 }
 
@@ -18,8 +38,17 @@ function generateTransactionId(prefix: string): string {
   return `${prefix}_${ts}_${rand}`;
 }
 
+/** Check if we should use real Stripe or simulated */
+export function isLivePayments(): boolean {
+  return process.env.PAYMENT_MODE === "live" || process.env.PAYMENT_MODE === "test";
+}
+
+export function isTestPayments(): boolean {
+  return process.env.PAYMENT_MODE === "test";
+}
+
 /* ------------------------------------------------------------------ */
-/*  Cash — always succeeds immediately                                */
+/*  Cash — always succeeds immediately                                 */
 /* ------------------------------------------------------------------ */
 export class CashPaymentProvider implements PaymentProvider {
   name = "cash";
@@ -29,29 +58,202 @@ export class CashPaymentProvider implements PaymentProvider {
       success: true,
       transaction_id: generateTransactionId("CASH"),
       method: "cash",
+      provider: "cash",
+      live: true, // Cash is always "live"
     };
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Simulated Card — succeeds after a short delay                     */
+/*  Simulated Card — dev/test mode, no real charges                    */
 /* ------------------------------------------------------------------ */
 export class SimulatedCardProvider implements PaymentProvider {
-  name = "card";
+  name = "simulated_card";
 
   async charge(amount_cents: number): Promise<PaymentResult> {
     await new Promise((r) => setTimeout(r, 500));
     return {
       success: true,
-      transaction_id: generateTransactionId("CARD"),
+      transaction_id: generateTransactionId("SIM_CARD"),
       method: "card",
+      provider: "simulated",
+      live: false,
+    };
+  }
+
+  async refund(transaction_id: string, amount_cents: number): Promise<PaymentResult> {
+    await new Promise((r) => setTimeout(r, 300));
+    return {
+      success: true,
+      transaction_id: generateTransactionId("SIM_REFUND"),
+      method: "card",
+      provider: "simulated",
+      live: false,
     };
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Store Credit — checks balance, returns success/fail               */
-/*  (actual DB deduction happens in the API route)                    */
+/*  Stripe Connect — real card payments via the store's Stripe account */
+/*                                                                      */
+/*  Uses Stripe Terminal JS SDK for in-person payments.                 */
+/*  The store must have a connected Stripe account.                     */
+/*                                                                      */
+/*  Server-side: creates a PaymentIntent on the connected account.     */
+/*  Client-side: Terminal SDK collects the payment on the reader.       */
+/*                                                                      */
+/*  This provider handles the SERVER side (PaymentIntent creation).     */
+/*  The client-side reader interaction is in stripe-terminal.ts.        */
+/* ------------------------------------------------------------------ */
+export class StripeConnectProvider implements PaymentProvider {
+  name = "stripe_connect";
+  private connectedAccountId: string;
+
+  constructor(connectedAccountId: string) {
+    this.connectedAccountId = connectedAccountId;
+  }
+
+  async charge(
+    amount_cents: number,
+    metadata?: Record<string, unknown>
+  ): Promise<PaymentResult> {
+    try {
+      // Dynamic import to avoid loading Stripe on every request
+      const Stripe = (await import("stripe")).default;
+      const stripeKey = isTestPayments()
+        ? process.env.STRIPE_SECRET_KEY_TEST
+        : process.env.STRIPE_SECRET_KEY;
+
+      if (!stripeKey) {
+        return {
+          success: false,
+          transaction_id: "",
+          method: "card",
+          provider: "stripe_connect",
+          error: "Stripe is not configured",
+          live: false,
+        };
+      }
+
+      const stripe = new Stripe(stripeKey);
+
+      // Create a PaymentIntent on the connected account
+      const paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: amount_cents,
+          currency: "usd",
+          payment_method_types: ["card_present"],
+          capture_method: "automatic",
+          metadata: {
+            ...metadata,
+            source: "afterroar_store_ops",
+          },
+        },
+        {
+          stripeAccount: this.connectedAccountId,
+        }
+      );
+
+      return {
+        success: true,
+        transaction_id: paymentIntent.id,
+        method: "card",
+        provider: "stripe_connect",
+        stripe_payment_intent_id: paymentIntent.id,
+        live: !isTestPayments(),
+      };
+    } catch (err) {
+      return {
+        success: false,
+        transaction_id: "",
+        method: "card",
+        provider: "stripe_connect",
+        error: err instanceof Error ? err.message : "Stripe payment failed",
+        live: false,
+      };
+    }
+  }
+
+  async refund(
+    transaction_id: string,
+    amount_cents: number
+  ): Promise<PaymentResult> {
+    try {
+      const Stripe = (await import("stripe")).default;
+      const stripeKey = isTestPayments()
+        ? process.env.STRIPE_SECRET_KEY_TEST
+        : process.env.STRIPE_SECRET_KEY;
+
+      if (!stripeKey) {
+        return {
+          success: false,
+          transaction_id: "",
+          method: "card",
+          provider: "stripe_connect",
+          error: "Stripe is not configured",
+          live: false,
+        };
+      }
+
+      const stripe = new Stripe(stripeKey);
+
+      const refund = await stripe.refunds.create(
+        {
+          payment_intent: transaction_id,
+          amount: amount_cents,
+        },
+        {
+          stripeAccount: this.connectedAccountId,
+        }
+      );
+
+      return {
+        success: true,
+        transaction_id: refund.id,
+        method: "card",
+        provider: "stripe_connect",
+        live: !isTestPayments(),
+      };
+    } catch (err) {
+      return {
+        success: false,
+        transaction_id: "",
+        method: "card",
+        provider: "stripe_connect",
+        error: err instanceof Error ? err.message : "Stripe refund failed",
+        live: false,
+      };
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  External Terminal — store processes on their own terminal           */
+/*  We just record that it happened. No actual payment processing.     */
+/*                                                                      */
+/*  UI flow: cashier selects "External Terminal" →                      */
+/*  screen shows "Process $47.23 on your terminal" →                   */
+/*  cashier confirms "Payment received" →                               */
+/*  we create the ledger entry.                                         */
+/* ------------------------------------------------------------------ */
+export class ExternalPaymentProvider implements PaymentProvider {
+  name = "external";
+
+  async charge(amount_cents: number): Promise<PaymentResult> {
+    // No actual processing — the cashier confirmed externally
+    return {
+      success: true,
+      transaction_id: generateTransactionId("EXT"),
+      method: "external",
+      provider: "external_terminal",
+      live: true, // It was a real payment, just not through us
+    };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Store Credit — checks balance, returns success/fail                */
+/*  (actual DB deduction happens in the API route)                     */
 /* ------------------------------------------------------------------ */
 export class StoreCreditProvider implements PaymentProvider {
   name = "store_credit";
@@ -67,24 +269,33 @@ export class StoreCreditProvider implements PaymentProvider {
         success: false,
         transaction_id: "",
         method: "store_credit",
+        provider: "store_credit",
         error: `Insufficient store credit. Balance: ${this.balance_cents}, required: ${amount_cents}`,
+        live: true,
       };
     }
     return {
       success: true,
       transaction_id: generateTransactionId("CREDIT"),
       method: "store_credit",
+      provider: "store_credit",
+      live: true,
     };
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  processPayment — top-level helper                                 */
+/*  processPayment — top-level helper                                  */
+/*  Routes to the right provider based on method + environment.        */
 /* ------------------------------------------------------------------ */
 export async function processPayment(
   method: PaymentMethod,
   amount_cents: number,
-  customer_credit_balance_cents?: number
+  options?: {
+    customer_credit_balance_cents?: number;
+    stripe_connected_account_id?: string;
+    metadata?: Record<string, unknown>;
+  }
 ): Promise<PaymentResult> {
   let provider: PaymentProvider;
 
@@ -92,25 +303,98 @@ export async function processPayment(
     case "cash":
       provider = new CashPaymentProvider();
       break;
-    case "card":
-      provider = new SimulatedCardProvider();
+
+    case "card": {
+      // Use Stripe Connect if configured, otherwise simulated
+      const connectedId = options?.stripe_connected_account_id;
+      if (connectedId && isLivePayments()) {
+        provider = new StripeConnectProvider(connectedId);
+      } else {
+        provider = new SimulatedCardProvider();
+      }
       break;
+    }
+
+    case "external":
+      provider = new ExternalPaymentProvider();
+      break;
+
     case "store_credit":
-      provider = new StoreCreditProvider(customer_credit_balance_cents ?? 0);
+      provider = new StoreCreditProvider(options?.customer_credit_balance_cents ?? 0);
       break;
+
     case "split":
       // For split payments the API route handles the two legs separately;
       // this just validates the card portion succeeds.
-      provider = new SimulatedCardProvider();
+      const splitConnectedId = options?.stripe_connected_account_id;
+      if (splitConnectedId && isLivePayments()) {
+        provider = new StripeConnectProvider(splitConnectedId);
+      } else {
+        provider = new SimulatedCardProvider();
+      }
       break;
+
     default:
       return {
         success: false,
         transaction_id: "",
         method,
+        provider: "unknown",
         error: `Unknown payment method: ${method}`,
+        live: false,
       };
   }
 
-  return provider.charge(amount_cents);
+  return provider.charge(amount_cents, options?.metadata);
+}
+
+/* ------------------------------------------------------------------ */
+/*  processRefund — refund via the original payment provider           */
+/* ------------------------------------------------------------------ */
+export async function processRefund(
+  original_transaction_id: string,
+  amount_cents: number,
+  options?: {
+    stripe_connected_account_id?: string;
+  }
+): Promise<PaymentResult> {
+  // Determine provider from transaction ID prefix
+  if (original_transaction_id.startsWith("CASH")) {
+    // Cash refunds are manual — just record it
+    return {
+      success: true,
+      transaction_id: generateTransactionId("CASH_REFUND"),
+      method: "cash",
+      provider: "cash",
+      live: true,
+    };
+  }
+
+  if (original_transaction_id.startsWith("EXT")) {
+    return {
+      success: true,
+      transaction_id: generateTransactionId("EXT_REFUND"),
+      method: "external",
+      provider: "external_terminal",
+      live: true,
+    };
+  }
+
+  if (original_transaction_id.startsWith("pi_")) {
+    // Stripe PaymentIntent — refund through Stripe
+    const connectedId = options?.stripe_connected_account_id;
+    if (connectedId) {
+      const provider = new StripeConnectProvider(connectedId);
+      return provider.refund!(original_transaction_id, amount_cents);
+    }
+  }
+
+  // Simulated — just succeed
+  return {
+    success: true,
+    transaction_id: generateTransactionId("SIM_REFUND"),
+    method: "card",
+    provider: "simulated",
+    live: false,
+  };
 }

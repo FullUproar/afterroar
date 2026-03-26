@@ -66,7 +66,9 @@ export type LedgerType =
   | "credit_issue"
   | "credit_redeem"
   | "adjustment"
-  | "event_fee";
+  | "event_fee"
+  | "refund";
+  // Future: | "chargeback" (Stripe Connect)
 
 export interface LedgerEntry {
   id: string;
@@ -153,6 +155,65 @@ export interface EventCheckin {
   // Joined
   customer?: Customer;
 }
+
+export type ReturnReason =
+  | "defective"
+  | "wrong_item"
+  | "changed_mind"
+  | "duplicate"
+  | "other";
+
+export type RefundMethod = "cash" | "store_credit";
+
+export const RETURN_REASONS: { value: ReturnReason; label: string }[] = [
+  { value: "defective", label: "Defective / Damaged" },
+  { value: "wrong_item", label: "Wrong Item" },
+  { value: "changed_mind", label: "Changed Mind" },
+  { value: "duplicate", label: "Duplicate Purchase" },
+  { value: "other", label: "Other" },
+];
+
+export interface Return {
+  id: string;
+  store_id: string;
+  customer_id: string | null;
+  staff_id: string | null;
+  original_ledger_entry_id: string;
+  status: string;
+  refund_method: RefundMethod;
+  reason: ReturnReason;
+  reason_notes: string | null;
+  subtotal_cents: number;
+  restocking_fee_cents: number;
+  refund_amount_cents: number;
+  credit_bonus_percent: number;
+  total_refund_cents: number;
+  ledger_entry_id: string | null;
+  created_at: string;
+  // Joined
+  customer?: Customer;
+  items?: ReturnItem[];
+}
+
+export interface ReturnItem {
+  id: string;
+  return_id: string;
+  inventory_item_id: string | null;
+  name: string;
+  category: string | null;
+  quantity: number;
+  price_cents: number;
+  total_cents: number;
+  restock: boolean;
+  created_at: string;
+}
+
+export type LoyaltyTransactionType =
+  | "earn_purchase"
+  | "earn_trade_in"
+  | "earn_event"
+  | "redeem"
+  | "adjust";
 
 // Utility
 export function formatCents(cents: number): string {
