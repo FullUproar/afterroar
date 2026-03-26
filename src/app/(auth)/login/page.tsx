@@ -1,28 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const storeNameRef = useRef<HTMLInputElement>(null);
+  const staffNameRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleClick() {
+    const email = emailRef.current?.value?.trim();
+    const password = passwordRef.current?.value;
+
+    if (!email || !password || password.length < 6) {
+      setError("Please enter email and password (min 6 chars)");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
-    const form = new FormData(e.currentTarget);
-    const email = form.get("email") as string;
-    const password = form.get("password") as string;
-
     try {
       if (isSignUp) {
-        const storeName = form.get("storeName") as string;
-        const staffName = form.get("staffName") as string;
+        const storeName = storeNameRef.current?.value?.trim();
+        const staffName = staffNameRef.current?.value?.trim();
 
-        if (!storeName?.trim()) {
+        if (!storeName) {
           setError("Store name is required");
           setLoading(false);
           return;
@@ -55,10 +62,9 @@ export default function LoginPage() {
         }
       }
 
-      // Full page reload to pick up auth cookies
       window.location.href = "/dashboard";
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (err) {
+      setError("Network error: " + (err instanceof Error ? err.message : "unknown"));
       setLoading(false);
     }
   }
@@ -80,7 +86,7 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           {isSignUp && (
             <>
               <div>
@@ -88,11 +94,10 @@ export default function LoginPage() {
                   Store name
                 </label>
                 <input
+                  ref={storeNameRef}
                   id="storeName"
-                  name="storeName"
                   type="text"
                   placeholder="Full Uproar Games"
-                  required={isSignUp}
                   autoComplete="organization"
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
@@ -102,8 +107,8 @@ export default function LoginPage() {
                   Your name
                 </label>
                 <input
+                  ref={staffNameRef}
                   id="staffName"
-                  name="staffName"
                   type="text"
                   placeholder="Jane Smith"
                   autoComplete="name"
@@ -119,13 +124,13 @@ export default function LoginPage() {
               Email
             </label>
             <input
+              ref={emailRef}
               id="email"
-              name="email"
               type="email"
               placeholder="you@yourstore.com"
-              required
               autoFocus
               autoComplete="email"
+              onKeyDown={(e) => e.key === "Enter" && passwordRef.current?.focus()}
               className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -136,13 +141,17 @@ export default function LoginPage() {
             </label>
             <div className="relative">
               <input
+                ref={passwordRef}
                 id="password"
-                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder={isSignUp ? "Min 6 characters" : "••••••••"}
-                required
-                minLength={6}
                 autoComplete={isSignUp ? "new-password" : "current-password"}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleClick();
+                  }
+                }}
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
@@ -172,8 +181,9 @@ export default function LoginPage() {
           )}
 
           <button
-            type="submit"
+            type="button"
             disabled={loading}
+            onClick={handleClick}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50"
           >
             {loading ? (
@@ -190,7 +200,7 @@ export default function LoginPage() {
               "Sign In"
             )}
           </button>
-        </form>
+        </div>
       </div>
 
       <p className="mt-6 text-sm text-zinc-500">
