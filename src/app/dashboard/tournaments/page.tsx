@@ -293,7 +293,7 @@ export default function TournamentsPage() {
             <h2 className="text-sm font-semibold text-white mb-4">Bracket</h2>
             <div className="flex gap-8 overflow-x-auto pb-4">
               {roundNumbers.map((round) => (
-                <div key={round} className="min-w-[220px]">
+                <div key={round} className="min-w-55">
                   <h3 className="text-xs text-zinc-400 uppercase tracking-wide mb-3">
                     {round === (activeTournament.total_rounds || 1) ? 'Finals' : `Round ${round}`}
                   </h3>
@@ -462,7 +462,7 @@ export default function TournamentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Tournaments</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Tournaments</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
@@ -521,46 +521,71 @@ export default function TournamentsPage() {
       ) : tournaments.length === 0 ? (
         <p className="text-zinc-400">No tournaments yet. Create one to get started.</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Format</th>
-                <th className="px-4 py-3 font-medium text-center">Players</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tournaments.map((t) => (
-                <tr
-                  key={t.id}
-                  onClick={() => openTournament(t.id)}
-                  className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
-                >
-                  <td className="px-4 py-3 font-medium">
-                    {t.name}
-                    {t.event && (
-                      <span className="ml-2 text-xs text-zinc-500">({t.event.name})</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-300">{t.format || '--'}</td>
-                  <td className="px-4 py-3 text-center text-zinc-300">
-                    {t._count?.players || 0}
-                    {t.max_players && <span className="text-zinc-500">/{t.max_players}</span>}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-300">{new Date(t.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-zinc-700 text-zinc-300'}`}>
-                      {t.status}
-                    </span>
-                  </td>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {tournaments.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => openTournament(t.id)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-white truncate mr-2">{t.name}</span>
+                  <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                    {t.status}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <span>{t.format || 'No format'} &middot; {t._count?.players || 0} players</span>
+                  <span>{new Date(t.created_at).toLocaleDateString()}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Format</th>
+                  <th className="px-4 py-3 font-medium text-center">Players</th>
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {tournaments.map((t) => (
+                  <tr
+                    key={t.id}
+                    onClick={() => openTournament(t.id)}
+                    className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
+                  >
+                    <td className="px-4 py-3 font-medium">
+                      {t.name}
+                      {t.event && (
+                        <span className="ml-2 text-xs text-zinc-500">({t.event.name})</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-300">{t.format || '--'}</td>
+                    <td className="px-4 py-3 text-center text-zinc-300">
+                      {t._count?.players || 0}
+                      {t.max_players && <span className="text-zinc-500">/{t.max_players}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-300">{new Date(t.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

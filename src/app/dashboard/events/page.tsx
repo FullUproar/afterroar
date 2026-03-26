@@ -132,7 +132,7 @@ export default function EventsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Events</h1>
+          <h1 className="hidden md:block text-2xl font-bold text-white">Events</h1>
           {isConnected && (
             <p className="mt-1 text-sm text-zinc-400">
               <span className="inline-flex items-center gap-1.5">
@@ -266,30 +266,92 @@ export default function EventsPage() {
       ) : events.length === 0 ? (
         <p className="text-zinc-400">No events yet. Create one to get started.</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium">Date/Time</th>
-                <th className="px-4 py-3 font-medium">Entry Fee</th>
-                <th className="px-4 py-3 font-medium">Players</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <EventRow
-                  key={event.id}
-                  event={event}
-                  expanded={expandedId === event.id}
-                  onToggle={() => setExpandedId(expandedId === event.id ? null : event.id)}
-                />
-              ))}
-            </tbody>
-          </table>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {events.map((event) => (
+              <div key={event.id}>
+                <button
+                  onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-white truncate mr-2">
+                      {event.name}
+                      {Boolean(event.afterroar_event_id) && (
+                        <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] bg-indigo-900/40 text-indigo-400 border border-indigo-800/30 font-normal">
+                          AR
+                        </span>
+                      )}
+                    </span>
+                    {statusBadge(event)}
+                  </div>
+                  <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
+                    {typeBadge(event.event_type)}
+                    <span>{new Date(event.starts_at).toLocaleDateString()}</span>
+                    <span>{event.checkin_count} players</span>
+                  </div>
+                </button>
+                {expandedId === event.id && (
+                  <div className="bg-zinc-950 border border-zinc-800 border-t-0 rounded-b-lg px-3 py-3">
+                    <MobileEventDetail event={event} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Type</th>
+                  <th className="px-4 py-3 font-medium">Date/Time</th>
+                  <th className="px-4 py-3 font-medium">Entry Fee</th>
+                  <th className="px-4 py-3 font-medium">Players</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event) => (
+                  <EventRow
+                    key={event.id}
+                    event={event}
+                    expanded={expandedId === event.id}
+                    onToggle={() => setExpandedId(expandedId === event.id ? null : event.id)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MobileEventDetail({ event }: { event: EventWithCount }) {
+  const isHQLinked = Boolean(event.afterroar_event_id);
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="flex items-center justify-between text-zinc-400">
+        <span>Entry Fee: {event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}</span>
+        <span>{new Date(event.starts_at).toLocaleString()}</span>
+      </div>
+      <div className="flex items-center gap-2 text-zinc-400">
+        <span>Players: {event.checkin_count}</span>
+        {event.rsvp_count !== null && <span className="text-zinc-500">({event.rsvp_count} RSVP)</span>}
+      </div>
+      {isHQLinked && (
+        <div className="flex items-center gap-1.5 text-xs text-indigo-400">
+          <span className="h-2 w-2 rounded-full bg-indigo-400" />
+          Afterroar linked event
         </div>
+      )}
+      {event.description && (
+        <p className="text-xs text-zinc-500">{event.description}</p>
       )}
     </div>
   );

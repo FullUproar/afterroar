@@ -163,7 +163,7 @@ export default function DrawerPage() {
   if (zReport) {
     return (
       <div className="space-y-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white">Z-Report</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Z-Report</h1>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -259,7 +259,7 @@ export default function DrawerPage() {
   if (!drawerOpen) {
     return (
       <div className="space-y-6 max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold text-white">Cash Drawer</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Cash Drawer</h1>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 space-y-4">
           <div className="text-center">
@@ -299,7 +299,7 @@ export default function DrawerPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Cash Drawer</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Cash Drawer</h1>
         <span className="rounded-full bg-emerald-900/50 px-3 py-1 text-xs font-medium text-emerald-400">
           Open
         </span>

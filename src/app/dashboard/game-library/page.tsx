@@ -234,7 +234,7 @@ export default function GameLibraryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Game Library</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Game Library</h1>
         <div className="flex gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
           <button
             onClick={() => setView("available")}

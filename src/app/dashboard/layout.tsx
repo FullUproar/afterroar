@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { TestPanel } from "@/components/test-panel";
 import { NetworkStatusBar } from "@/components/network-status-bar";
 import { OfflineProvider } from "@/components/offline-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
   return (
     <SessionProvider>
       <StoreProvider>
+        <ThemeProvider>
         <OfflineProvider>
           <div className="flex h-screen bg-zinc-950">
             <Sidebar />
@@ -29,6 +31,7 @@ export default function DashboardLayout({
           </div>
           <TestPanel />
         </OfflineProvider>
+        </ThemeProvider>
       </StoreProvider>
     </SessionProvider>
   );

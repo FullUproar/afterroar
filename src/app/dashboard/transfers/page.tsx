@@ -183,7 +183,7 @@ export default function TransfersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Transfers</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Transfers</h1>
         <button
           onClick={() => setShowNew(true)}
           disabled={locations.length < 2}
@@ -205,44 +205,69 @@ export default function TransfersPage() {
           <p className="text-zinc-400">No transfers yet.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
-                <th className="px-4 py-3 font-medium">From</th>
-                <th className="px-4 py-3 font-medium">To</th>
-                <th className="px-4 py-3 font-medium text-center">Items</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {transfers.map((t) => (
-                <tr key={t.id} className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors">
-                  <td className="px-4 py-3 text-white">
-                    {locationMap[t.from_location_id] || t.from_location_id}
-                  </td>
-                  <td className="px-4 py-3 text-white">
-                    {locationMap[t.to_location_id] || t.to_location_id}
-                  </td>
-                  <td className="px-4 py-3 text-center text-zinc-300">
-                    {Array.isArray(t.items) ? t.items.length : 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(t.status)}`}
-                    >
-                      {t.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400">
-                    {new Date(t.created_at).toLocaleDateString()}
-                  </td>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {transfers.map((t) => (
+              <div key={t.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 min-h-11">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white">
+                    {locationMap[t.from_location_id] || 'Unknown'} &rarr; {locationMap[t.to_location_id] || 'Unknown'}
+                  </span>
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(t.status)}`}
+                  >
+                    {t.status}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <span>{Array.isArray(t.items) ? t.items.length : 0} items</span>
+                  <span>{new Date(t.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                  <th className="px-4 py-3 font-medium">From</th>
+                  <th className="px-4 py-3 font-medium">To</th>
+                  <th className="px-4 py-3 font-medium text-center">Items</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {transfers.map((t) => (
+                  <tr key={t.id} className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors">
+                    <td className="px-4 py-3 text-white">
+                      {locationMap[t.from_location_id] || t.from_location_id}
+                    </td>
+                    <td className="px-4 py-3 text-white">
+                      {locationMap[t.to_location_id] || t.to_location_id}
+                    </td>
+                    <td className="px-4 py-3 text-center text-zinc-300">
+                      {Array.isArray(t.items) ? t.items.length : 0}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(t.status)}`}
+                      >
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-zinc-400">
+                      {new Date(t.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* New Transfer Modal */}

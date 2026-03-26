@@ -107,7 +107,7 @@ export default function GiftCardsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Gift Cards</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Gift Cards</h1>
         <button
           onClick={() => setShowCreate(true)}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
@@ -135,63 +135,92 @@ export default function GiftCardsPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
-                <th className="px-4 py-3 font-medium">Code</th>
-                <th className="px-4 py-3 font-medium text-right">Balance</th>
-                <th className="px-4 py-3 font-medium text-right">Original</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Created</th>
-                <th className="px-4 py-3 font-medium text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {cards.map((card) => (
-                <tr key={card.id} className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors">
-                  <td className="px-4 py-3 text-white font-mono text-xs">
-                    {maskCode(card.code)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono">
-                    <span
-                      className={
-                        card.balance_cents > 0 ? "text-emerald-400" : "text-zinc-500"
-                      }
-                    >
-                      {formatCents(card.balance_cents)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right text-zinc-400 font-mono">
-                    {formatCents(card.initial_balance_cents)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                        card.active
-                          ? "bg-green-900/50 text-green-400"
-                          : "bg-zinc-800 text-zinc-500"
-                      }`}
-                    >
-                      {card.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400">
-                    {new Date(card.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => viewDetail(card.code)}
-                      className="rounded bg-zinc-800 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
-                    >
-                      View
-                    </button>
-                  </td>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {cards.map((card) => (
+              <button
+                key={card.id}
+                onClick={() => viewDetail(card.code)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-mono text-xs">{maskCode(card.code)}</span>
+                  <span
+                    className={`font-mono font-medium ${
+                      card.balance_cents > 0 ? "text-emerald-400" : "text-zinc-500"
+                    }`}
+                  >
+                    {formatCents(card.balance_cents)}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <span>{card.active ? "Active" : "Inactive"}</span>
+                  <span>of {formatCents(card.initial_balance_cents)}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                  <th className="px-4 py-3 font-medium">Code</th>
+                  <th className="px-4 py-3 font-medium text-right">Balance</th>
+                  <th className="px-4 py-3 font-medium text-right">Original</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Created</th>
+                  <th className="px-4 py-3 font-medium text-center">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {cards.map((card) => (
+                  <tr key={card.id} className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors">
+                    <td className="px-4 py-3 text-white font-mono text-xs">
+                      {maskCode(card.code)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono">
+                      <span
+                        className={
+                          card.balance_cents > 0 ? "text-emerald-400" : "text-zinc-500"
+                        }
+                      >
+                        {formatCents(card.balance_cents)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-zinc-400 font-mono">
+                      {formatCents(card.initial_balance_cents)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          card.active
+                            ? "bg-green-900/50 text-green-400"
+                            : "bg-zinc-800 text-zinc-500"
+                        }`}
+                      >
+                        {card.active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-zinc-400">
+                      {new Date(card.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => viewDetail(card.code)}
+                        className="rounded bg-zinc-800 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Create Modal */}

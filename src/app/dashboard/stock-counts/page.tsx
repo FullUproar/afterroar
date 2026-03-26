@@ -196,30 +196,17 @@ export default function StockCountsPage() {
         {loadingDetail ? (
           <p className="text-zinc-400">Loading...</p>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                  <th className="px-4 py-3 font-medium">Item</th>
-                  <th className="px-4 py-3 font-medium">Category</th>
-                  <th className="px-4 py-3 font-medium">SKU/Barcode</th>
-                  <th className="px-4 py-3 font-medium text-center">System Qty</th>
-                  <th className="px-4 py-3 font-medium text-center">Counted</th>
-                  <th className="px-4 py-3 font-medium text-center">Variance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {countItems.map((item) => {
-                  const variance = item.counted_quantity !== null ? item.counted_quantity - item.system_quantity : null;
-                  return (
-                    <tr key={item.id} className="border-b border-zinc-800 text-white hover:bg-zinc-800/50">
-                      <td className="px-4 py-3 font-medium">{item.inventory_item.name}</td>
-                      <td className="px-4 py-3 text-zinc-400">{item.inventory_item.category}</td>
-                      <td className="px-4 py-3 text-zinc-400 text-xs">
-                        {item.inventory_item.sku || item.inventory_item.barcode || '--'}
-                      </td>
-                      <td className="px-4 py-3 text-center text-zinc-300">{item.system_quantity}</td>
-                      <td className="px-4 py-3 text-center">
+          <>
+            {/* Mobile card view */}
+            <div className="md:hidden space-y-2">
+              {countItems.map((item) => {
+                const variance = item.counted_quantity !== null ? item.counted_quantity - item.system_quantity : null;
+                return (
+                  <div key={item.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+                    <div className="font-medium text-white text-sm truncate">{item.inventory_item.name}</div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs text-zinc-500">System: {item.system_quantity}</span>
+                      <div className="flex items-center gap-3">
                         {activeCount.status === 'in_progress' ? (
                           <input
                             type="number"
@@ -242,21 +229,85 @@ export default function StockCountsPage() {
                               }
                             }}
                             disabled={savingItem === item.id}
-                            className="w-20 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white text-sm text-center"
+                            className="w-20 bg-zinc-800 border border-zinc-700 rounded px-2 py-2 text-white text-sm text-center"
+                            placeholder="Count"
                           />
                         ) : (
-                          <span>{item.counted_quantity ?? '--'}</span>
+                          <span className="text-sm text-white">{item.counted_quantity ?? '--'}</span>
                         )}
-                      </td>
-                      <td className={`px-4 py-3 text-center font-medium ${getVarianceColor(variance)}`}>
-                        {variance !== null ? (variance > 0 ? `+${variance}` : variance) : '--'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <span className={`text-sm font-medium min-w-8 text-right ${getVarianceColor(variance)}`}>
+                          {variance !== null ? (variance > 0 ? `+${variance}` : variance) : '--'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                    <th className="px-4 py-3 font-medium">Item</th>
+                    <th className="px-4 py-3 font-medium">Category</th>
+                    <th className="px-4 py-3 font-medium">SKU/Barcode</th>
+                    <th className="px-4 py-3 font-medium text-center">System Qty</th>
+                    <th className="px-4 py-3 font-medium text-center">Counted</th>
+                    <th className="px-4 py-3 font-medium text-center">Variance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {countItems.map((item) => {
+                    const variance = item.counted_quantity !== null ? item.counted_quantity - item.system_quantity : null;
+                    return (
+                      <tr key={item.id} className="border-b border-zinc-800 text-white hover:bg-zinc-800/50">
+                        <td className="px-4 py-3 font-medium">{item.inventory_item.name}</td>
+                        <td className="px-4 py-3 text-zinc-400">{item.inventory_item.category}</td>
+                        <td className="px-4 py-3 text-zinc-400 text-xs">
+                          {item.inventory_item.sku || item.inventory_item.barcode || '--'}
+                        </td>
+                        <td className="px-4 py-3 text-center text-zinc-300">{item.system_quantity}</td>
+                        <td className="px-4 py-3 text-center">
+                          {activeCount.status === 'in_progress' ? (
+                            <input
+                              type="number"
+                              min={0}
+                              value={item.counted_quantity ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                                setCountItems((prev) =>
+                                  prev.map((i) =>
+                                    i.id === item.id
+                                      ? { ...i, counted_quantity: val, variance: val !== null ? val - i.system_quantity : null }
+                                      : i
+                                  )
+                                );
+                              }}
+                              onBlur={(e) => {
+                                const val = e.target.value;
+                                if (val !== '') {
+                                  updateItemCount(item.id, parseInt(val, 10));
+                                }
+                              }}
+                              disabled={savingItem === item.id}
+                              className="w-20 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white text-sm text-center"
+                            />
+                          ) : (
+                            <span>{item.counted_quantity ?? '--'}</span>
+                          )}
+                        </td>
+                        <td className={`px-4 py-3 text-center font-medium ${getVarianceColor(variance)}`}>
+                          {variance !== null ? (variance > 0 ? `+${variance}` : variance) : '--'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     );
@@ -265,7 +316,7 @@ export default function StockCountsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Stock Counts</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Stock Counts</h1>
         <button
           onClick={() => setShowNew(!showNew)}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
@@ -303,48 +354,77 @@ export default function StockCountsPage() {
       ) : counts.length === 0 ? (
         <p className="text-zinc-400">No stock counts yet. Start one to begin.</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Staff</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium text-center">Items</th>
-                <th className="px-4 py-3 font-medium text-center">Variances</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {counts.map((count) => (
-                <tr
-                  key={count.id}
-                  onClick={() => openCount(count.id)}
-                  className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
-                >
-                  <td className="px-4 py-3">{new Date(count.started_at).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-zinc-300">{count.staff?.name || '--'}</td>
-                  <td className="px-4 py-3 text-zinc-300">{count.category_filter || 'All'}</td>
-                  <td className="px-4 py-3 text-center text-zinc-300">{count.total_items}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={count.variances > 0 ? 'text-yellow-400' : 'text-zinc-400'}>
-                      {count.variances}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      count.status === 'completed'
-                        ? 'bg-green-900 text-green-300'
-                        : 'bg-yellow-900 text-yellow-300'
-                    }`}>
-                      {count.status === 'in_progress' ? 'In Progress' : 'Completed'}
-                    </span>
-                  </td>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {counts.map((count) => (
+              <button
+                key={count.id}
+                onClick={() => openCount(count.id)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-white">{count.category_filter || 'All Categories'}</span>
+                  <span className={`px-2 py-0.5 rounded text-xs ${
+                    count.status === 'completed'
+                      ? 'bg-green-900 text-green-300'
+                      : 'bg-yellow-900 text-yellow-300'
+                  }`}>
+                    {count.status === 'in_progress' ? 'In Progress' : 'Completed'}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <span>{count.total_items} items &middot; {count.variances} variances</span>
+                  <span>{new Date(count.started_at).toLocaleDateString()}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium">Staff</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium text-center">Items</th>
+                  <th className="px-4 py-3 font-medium text-center">Variances</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {counts.map((count) => (
+                  <tr
+                    key={count.id}
+                    onClick={() => openCount(count.id)}
+                    className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
+                  >
+                    <td className="px-4 py-3">{new Date(count.started_at).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-zinc-300">{count.staff?.name || '--'}</td>
+                    <td className="px-4 py-3 text-zinc-300">{count.category_filter || 'All'}</td>
+                    <td className="px-4 py-3 text-center text-zinc-300">{count.total_items}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={count.variances > 0 ? 'text-yellow-400' : 'text-zinc-400'}>
+                        {count.variances}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded text-xs ${
+                        count.status === 'completed'
+                          ? 'bg-green-900 text-green-300'
+                          : 'bg-yellow-900 text-yellow-300'
+                      }`}>
+                        {count.status === 'in_progress' ? 'In Progress' : 'Completed'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

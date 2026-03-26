@@ -63,7 +63,7 @@ export default function LocationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Locations</h1>
+          <h1 className="hidden md:block text-2xl font-bold text-white">Locations</h1>
           <p className="mt-1 text-sm text-zinc-400">Manage your store locations, warehouses, and display areas.</p>
         </div>
         <button onClick={() => setShowCreate(!showCreate)}

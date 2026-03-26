@@ -432,7 +432,7 @@ export default function CashFlowPage() {
       {/* ---- HEADER ---- */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Cash Flow Intelligence</h1>
+          <h1 className="hidden md:block text-2xl font-bold tracking-tight text-white">Cash Flow Intelligence</h1>
           <p className="mt-1 text-sm text-zinc-500">Where your money is, where it&apos;s going, and where it&apos;s stuck.</p>
         </div>
         <div className="flex gap-1 rounded-xl bg-zinc-800/80 p-1 shadow-inner">

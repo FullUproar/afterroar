@@ -64,7 +64,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <h1 className="text-xl md:text-2xl font-bold text-white">Welcome back</h1>
+      <h1 className="hidden md:block text-xl md:text-2xl font-bold text-white">Welcome back</h1>
 
       {/* Quick Actions — mobile-first, most common staff tasks */}
       <div className="grid grid-cols-3 gap-2 md:hidden">

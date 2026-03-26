@@ -155,7 +155,7 @@ export default function PromotionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Promotions & Discounts</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Promotions & Discounts</h1>
         <button
           onClick={() => setShowCreate(!showCreate)}
           className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"

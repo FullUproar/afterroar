@@ -254,7 +254,7 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Inventory</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Inventory</h1>
         <div className="flex gap-2">
           <a
             href="/dashboard/inventory/labels"
@@ -463,103 +463,34 @@ export default function InventoryPage() {
             : "No inventory items yet. Add your first item above."}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium text-right">Price</th>
-                <th className="px-4 py-3 font-medium text-right">Cost</th>
-                <th className="px-4 py-3 font-medium text-center">Qty</th>
-                <th className="px-4 py-3 font-medium">Condition</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                {can("inventory.adjust") && (
-                  <th className="px-4 py-3 font-medium text-center">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-white font-medium">
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-white truncate mr-2">
                     {item.name}
                     {Boolean((item.attributes as Record<string, unknown>)?.foil) && (
-                      <span className="ml-2 inline-block rounded bg-yellow-900/50 px-1.5 py-0.5 text-xs text-yellow-400">
+                      <span className="ml-1.5 inline-block rounded bg-yellow-900/50 px-1.5 py-0.5 text-xs text-yellow-400">
                         Foil
                       </span>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400">
-                    {getCategoryLabel(item.category)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-white">
+                  </span>
+                  <span className="text-sm font-medium text-white whitespace-nowrap">
                     {formatCents(item.price_cents)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-zinc-400">
-                    {formatCents(item.cost_cents)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`font-medium ${getStockColor(item.quantity)}`}
-                    >
-                      {item.quantity}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-xs text-zinc-500">{getCategoryLabel(item.category)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm font-medium ${getStockColor(item.quantity)}`}>
+                      Qty: {item.quantity}
                     </span>
-                    {locations.length > 0 && (
-                      <button
-                        onClick={async () => {
-                          if (showLocationBreakdown === item.id) {
-                            setShowLocationBreakdown(null);
-                            return;
-                          }
-                          setShowLocationBreakdown(item.id);
-                          try {
-                            const res = await fetch(`/api/inventory/levels?item_id=${item.id}`);
-                            if (res.ok) {
-                              const data = await res.json();
-                              setLocationLevels(data);
-                            }
-                          } catch {
-                            setLocationLevels([]);
-                          }
-                        }}
-                        className="block mx-auto mt-0.5 text-[10px] text-zinc-500 hover:text-blue-400 transition-colors"
-                      >
-                        {showLocationBreakdown === item.id ? "hide" : "by location"}
-                      </button>
-                    )}
-                    {showLocationBreakdown === item.id && locationLevels.length > 0 && (
-                      <div className="mt-1 space-y-0.5">
-                        {locationLevels.map((ll) => (
-                          <div key={ll.location_id} className="text-[10px] text-zinc-400">
-                            {ll.location_name}: <span className="text-white">{ll.quantity}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {showLocationBreakdown === item.id && locationLevels.length === 0 && (
-                      <div className="mt-1 text-[10px] text-zinc-500">No location data</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400">
-                    {String((item.attributes as Record<string, unknown>)?.condition ?? "\u2014")}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                        item.active
-                          ? "bg-green-900/50 text-green-400"
-                          : "bg-zinc-800 text-zinc-500"
-                      }`}
-                    >
-                      {item.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  {can("inventory.adjust") && (
-                    <td className="px-4 py-3 text-center">
+                    {can("inventory.adjust") && (
                       <button
                         onClick={() =>
                           setAdjust({
@@ -570,17 +501,137 @@ export default function InventoryPage() {
                             notes: "",
                           })
                         }
-                        className="rounded-md bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/30 transition-colors"
+                        className="rounded-md bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/30 transition-colors min-h-11 flex items-center"
                       >
-                        Adjust Stock
+                        Adjust
                       </button>
-                    </td>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium text-right">Price</th>
+                  <th className="px-4 py-3 font-medium text-right">Cost</th>
+                  <th className="px-4 py-3 font-medium text-center">Qty</th>
+                  <th className="px-4 py-3 font-medium">Condition</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  {can("inventory.adjust") && (
+                    <th className="px-4 py-3 font-medium text-center">Actions</th>
                   )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {items.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-white font-medium">
+                      {item.name}
+                      {Boolean((item.attributes as Record<string, unknown>)?.foil) && (
+                        <span className="ml-2 inline-block rounded bg-yellow-900/50 px-1.5 py-0.5 text-xs text-yellow-400">
+                          Foil
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-400">
+                      {getCategoryLabel(item.category)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-white">
+                      {formatCents(item.price_cents)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-zinc-400">
+                      {formatCents(item.cost_cents)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`font-medium ${getStockColor(item.quantity)}`}
+                      >
+                        {item.quantity}
+                      </span>
+                      {locations.length > 0 && (
+                        <button
+                          onClick={async () => {
+                            if (showLocationBreakdown === item.id) {
+                              setShowLocationBreakdown(null);
+                              return;
+                            }
+                            setShowLocationBreakdown(item.id);
+                            try {
+                              const res = await fetch(`/api/inventory/levels?item_id=${item.id}`);
+                              if (res.ok) {
+                                const data = await res.json();
+                                setLocationLevels(data);
+                              }
+                            } catch {
+                              setLocationLevels([]);
+                            }
+                          }}
+                          className="block mx-auto mt-0.5 text-[10px] text-zinc-500 hover:text-blue-400 transition-colors"
+                        >
+                          {showLocationBreakdown === item.id ? "hide" : "by location"}
+                        </button>
+                      )}
+                      {showLocationBreakdown === item.id && locationLevels.length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {locationLevels.map((ll) => (
+                            <div key={ll.location_id} className="text-[10px] text-zinc-400">
+                              {ll.location_name}: <span className="text-white">{ll.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {showLocationBreakdown === item.id && locationLevels.length === 0 && (
+                        <div className="mt-1 text-[10px] text-zinc-500">No location data</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-400">
+                      {String((item.attributes as Record<string, unknown>)?.condition ?? "\u2014")}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.active
+                            ? "bg-green-900/50 text-green-400"
+                            : "bg-zinc-800 text-zinc-500"
+                        }`}
+                      >
+                        {item.active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    {can("inventory.adjust") && (
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() =>
+                            setAdjust({
+                              item,
+                              type: "add",
+                              amount: "",
+                              reason: "",
+                              notes: "",
+                            })
+                          }
+                          className="rounded-md bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/30 transition-colors"
+                        >
+                          Adjust Stock
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Stock Adjustment Modal */}

@@ -8,6 +8,7 @@ import {
   SETTINGS_DEFAULTS,
   type StoreSettings,
 } from '@/lib/store-settings';
+import { useTheme } from '@/components/theme-provider';
 
 interface VenueResult {
   id: string;
@@ -19,6 +20,7 @@ interface VenueResult {
 
 export default function SettingsPage() {
   const { can, store } = useStore();
+  const { theme, setTheme } = useTheme();
   const currentSettings = useStoreSettings();
   const [settings, setSettings] = useState<StoreSettings>(currentSettings);
   const [saving, setSaving] = useState<string | null>(null);
@@ -167,7 +169,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Store Settings</h1>
+          <h1 className="hidden md:block text-2xl font-bold text-white">Store Settings</h1>
           <p className="mt-1 text-sm text-zinc-400">
             {store?.name} &middot; Changes save automatically
           </p>
@@ -280,6 +282,35 @@ export default function SettingsPage() {
               </div>
             );
           })()}
+        </div>
+      </div>
+
+      {/* Theme Section */}
+      <div className="max-w-2xl">
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+          <h2 className="text-sm font-semibold text-white">Appearance</h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Choose your preferred color theme.
+          </p>
+          <div className="mt-4 flex gap-2">
+            {([
+              { value: 'light' as const, label: 'Light' },
+              { value: 'dark' as const, label: 'Dark' },
+              { value: 'system' as const, label: 'System' },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  theme === opt.value
+                    ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
+                    : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

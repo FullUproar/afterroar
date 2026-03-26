@@ -234,7 +234,7 @@ export default function PurchaseOrdersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Purchase Orders</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Purchase Orders</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
@@ -419,121 +419,178 @@ export default function PurchaseOrdersPage() {
       ) : orders.length === 0 ? (
         <p className="text-zinc-400">No purchase orders yet.</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                <th className="px-4 py-3 font-medium">Supplier</th>
-                <th className="px-4 py-3 font-medium">Items</th>
-                <th className="px-4 py-3 font-medium">Total</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Delivery</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((po) => (
-                <>
-                  <tr
-                    key={po.id}
-                    onClick={() => expandedId === po.id ? setExpandedId(null) : loadDetail(po.id)}
-                    className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
-                  >
-                    <td className="px-4 py-3 font-medium">{po.supplier_name}</td>
-                    <td className="px-4 py-3 text-zinc-300">{po.item_count}</td>
-                    <td className="px-4 py-3 text-zinc-300">{formatCents(po.total_cost_cents)}</td>
-                    <td className="px-4 py-3 text-zinc-300">
-                      {new Date(po.order_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-300">
-                      {po.expected_delivery ? new Date(po.expected_delivery).toLocaleDateString() : '--'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-zinc-700 text-zinc-300'}`}>
-                        {STATUS_LABELS[po.status] || po.status}
-                      </span>
-                    </td>
-                  </tr>
-                  {expandedId === po.id && detailPO && (
-                    <tr key={`${po.id}-detail`}>
-                      <td colSpan={6} className="bg-zinc-950 px-4 py-4 border-b border-zinc-800">
-                        <div className="space-y-4">
-                          {/* Status actions */}
-                          <div className="flex gap-2 flex-wrap">
-                            {detailPO.status === 'draft' && (
-                              <>
-                                <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs">
-                                  Submit Order
-                                </button>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {orders.map((po) => (
+              <div key={po.id}>
+                <button
+                  onClick={() => expandedId === po.id ? setExpandedId(null) : loadDetail(po.id)}
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-white truncate mr-2">{po.supplier_name}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                      {STATUS_LABELS[po.status] || po.status}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                    <span>{po.item_count} items</span>
+                    <span className="text-white font-medium">{formatCents(po.total_cost_cents)}</span>
+                  </div>
+                </button>
+                {expandedId === po.id && detailPO && (
+                  <div className="bg-zinc-950 border border-zinc-800 border-t-0 rounded-b-lg px-3 py-3 space-y-3">
+                    <div className="flex gap-2 flex-wrap">
+                      {detailPO.status === 'draft' && (
+                        <>
+                          <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs min-h-11">
+                            Submit Order
+                          </button>
+                          <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs min-h-11">
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {detailPO.items.map((item) => (
+                      <div key={item.id} className="rounded border border-zinc-800 bg-zinc-900 p-2 text-sm">
+                        <div className="flex items-center justify-between text-white">
+                          <span className="truncate mr-2">{item.name}</span>
+                          <span className="text-zinc-400 whitespace-nowrap">{formatCents(item.cost_cents)}</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                          <span>Ordered: {item.quantity_ordered} / Received: <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-zinc-400'}>{item.quantity_received}</span></span>
+                          {['submitted', 'partially_received'].includes(detailPO.status) && item.quantity_received < item.quantity_ordered && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
+                              className="px-2 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded text-xs min-h-11 flex items-center"
+                            >
+                              Receive
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                  <th className="px-4 py-3 font-medium">Supplier</th>
+                  <th className="px-4 py-3 font-medium">Items</th>
+                  <th className="px-4 py-3 font-medium">Total</th>
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium">Delivery</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((po) => (
+                  <>
+                    <tr
+                      key={po.id}
+                      onClick={() => expandedId === po.id ? setExpandedId(null) : loadDetail(po.id)}
+                      className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
+                    >
+                      <td className="px-4 py-3 font-medium">{po.supplier_name}</td>
+                      <td className="px-4 py-3 text-zinc-300">{po.item_count}</td>
+                      <td className="px-4 py-3 text-zinc-300">{formatCents(po.total_cost_cents)}</td>
+                      <td className="px-4 py-3 text-zinc-300">
+                        {new Date(po.order_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-300">
+                        {po.expected_delivery ? new Date(po.expected_delivery).toLocaleDateString() : '--'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                          {STATUS_LABELS[po.status] || po.status}
+                        </span>
+                      </td>
+                    </tr>
+                    {expandedId === po.id && detailPO && (
+                      <tr key={`${po.id}-detail`}>
+                        <td colSpan={6} className="bg-zinc-950 px-4 py-4 border-b border-zinc-800">
+                          <div className="space-y-4">
+                            <div className="flex gap-2 flex-wrap">
+                              {detailPO.status === 'draft' && (
+                                <>
+                                  <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs">
+                                    Submit Order
+                                  </button>
+                                  <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs">
+                                    Cancel
+                                  </button>
+                                </>
+                              )}
+                              {detailPO.status === 'submitted' && (
                                 <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs">
                                   Cancel
                                 </button>
-                              </>
+                              )}
+                            </div>
+                            {detailPO.notes && (
+                              <p className="text-sm text-zinc-400">Notes: {detailPO.notes}</p>
                             )}
-                            {detailPO.status === 'submitted' && (
-                              <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs">
-                                Cancel
-                              </button>
-                            )}
-                          </div>
-
-                          {detailPO.notes && (
-                            <p className="text-sm text-zinc-400">Notes: {detailPO.notes}</p>
-                          )}
-
-                          {/* Items table */}
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="text-zinc-500 text-left text-xs">
-                                <th className="pb-2">Item</th>
-                                <th className="pb-2">SKU</th>
-                                <th className="pb-2 text-center">Ordered</th>
-                                <th className="pb-2 text-center">Received</th>
-                                <th className="pb-2 text-right">Unit Cost</th>
-                                <th className="pb-2 text-right">Line Total</th>
-                                {['submitted', 'partially_received'].includes(detailPO.status) && (
-                                  <th className="pb-2 text-center">Actions</th>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {detailPO.items.map((item) => (
-                                <tr key={item.id} className="border-t border-zinc-800 text-white">
-                                  <td className="py-2">{item.name}</td>
-                                  <td className="py-2 text-zinc-400">{item.sku || '--'}</td>
-                                  <td className="py-2 text-center">{item.quantity_ordered}</td>
-                                  <td className="py-2 text-center">
-                                    <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-zinc-400'}>
-                                      {item.quantity_received}
-                                    </span>
-                                  </td>
-                                  <td className="py-2 text-right text-zinc-300">{formatCents(item.cost_cents)}</td>
-                                  <td className="py-2 text-right text-zinc-300">{formatCents(item.cost_cents * item.quantity_ordered)}</td>
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="text-zinc-500 text-left text-xs">
+                                  <th className="pb-2">Item</th>
+                                  <th className="pb-2">SKU</th>
+                                  <th className="pb-2 text-center">Ordered</th>
+                                  <th className="pb-2 text-center">Received</th>
+                                  <th className="pb-2 text-right">Unit Cost</th>
+                                  <th className="pb-2 text-right">Line Total</th>
                                   {['submitted', 'partially_received'].includes(detailPO.status) && (
-                                    <td className="py-2 text-center">
-                                      {item.quantity_received < item.quantity_ordered && (
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
-                                          className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs"
-                                        >
-                                          Receive
-                                        </button>
-                                      )}
-                                    </td>
+                                    <th className="pb-2 text-center">Actions</th>
                                   )}
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                              </thead>
+                              <tbody>
+                                {detailPO.items.map((item) => (
+                                  <tr key={item.id} className="border-t border-zinc-800 text-white">
+                                    <td className="py-2">{item.name}</td>
+                                    <td className="py-2 text-zinc-400">{item.sku || '--'}</td>
+                                    <td className="py-2 text-center">{item.quantity_ordered}</td>
+                                    <td className="py-2 text-center">
+                                      <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-zinc-400'}>
+                                        {item.quantity_received}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 text-right text-zinc-300">{formatCents(item.cost_cents)}</td>
+                                    <td className="py-2 text-right text-zinc-300">{formatCents(item.cost_cents * item.quantity_ordered)}</td>
+                                    {['submitted', 'partially_received'].includes(detailPO.status) && (
+                                      <td className="py-2 text-center">
+                                        {item.quantity_received < item.quantity_ordered && (
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
+                                            className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs"
+                                          >
+                                            Receive
+                                          </button>
+                                        )}
+                                      </td>
+                                    )}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Receive Modal */}

@@ -50,7 +50,7 @@ export default function CustomersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Customers</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Customers</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
@@ -115,42 +115,66 @@ export default function CustomersPage() {
       ) : customers.length === 0 ? (
         <p className="text-zinc-400">No customers found.</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Phone</th>
-                <th className="px-4 py-3 font-medium">Store Credit</th>
-                <th className="px-4 py-3 font-medium">Member Since</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/dashboard/customers/${c.id}`}
-                  className="contents"
-                >
-                  <tr className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white">
-                    <td className="px-4 py-3 font-medium">{c.name}</td>
-                    <td className="px-4 py-3 text-zinc-300">{c.email || '-'}</td>
-                    <td className="px-4 py-3 text-zinc-300">{c.phone || '-'}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-300">
-                        {formatCents(c.credit_balance_cents ?? 0)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-300">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                </Link>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {customers.map((c) => (
+              <Link
+                key={c.id}
+                href={`/dashboard/customers/${c.id}`}
+                className="block rounded-lg border border-zinc-800 bg-zinc-900 p-3 min-h-11 active:bg-zinc-800"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-white">{c.name}</span>
+                  <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-300">
+                    {formatCents(c.credit_balance_cents ?? 0)}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs text-zinc-500">
+                  {c.email || c.phone || 'No contact info'}
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Phone</th>
+                  <th className="px-4 py-3 font-medium">Store Credit</th>
+                  <th className="px-4 py-3 font-medium">Member Since</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/customers/${c.id}`}
+                    className="contents"
+                  >
+                    <tr className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white">
+                      <td className="px-4 py-3 font-medium">{c.name}</td>
+                      <td className="px-4 py-3 text-zinc-300">{c.email || '-'}</td>
+                      <td className="px-4 py-3 text-zinc-300">{c.phone || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-300">
+                          {formatCents(c.credit_balance_cents ?? 0)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-zinc-300">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  </Link>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

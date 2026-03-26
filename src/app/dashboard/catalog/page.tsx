@@ -224,7 +224,7 @@ export default function CatalogPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Catalog</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-white">Catalog</h1>
         <p className="text-sm text-zinc-400 mt-1">
           Search external product databases and add items to inventory
         </p>

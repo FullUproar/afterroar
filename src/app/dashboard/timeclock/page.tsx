@@ -110,7 +110,7 @@ export default function TimeclockPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-white">Time Clock</h1>
+      <h1 className="hidden md:block text-2xl font-bold text-white">Time Clock</h1>
 
       {data && (
         <>
@@ -219,40 +219,67 @@ export default function TimeclockPage() {
             {data.recent.length === 0 ? (
               <p className="px-4 py-4 text-sm text-zinc-500">No shifts recorded yet.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-zinc-800 text-zinc-400 text-left">
-                      <th className="px-4 py-2 font-medium">Date</th>
-                      <th className="px-4 py-2 font-medium">Clock In</th>
-                      <th className="px-4 py-2 font-medium">Clock Out</th>
-                      <th className="px-4 py-2 font-medium text-right">Hours</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800">
-                    {data.recent.map((entry) => (
-                      <tr key={entry.id} className="text-white">
-                        <td className="px-4 py-2 text-zinc-300">
+              <>
+                {/* Mobile card view */}
+                <div className="md:hidden divide-y divide-zinc-800">
+                  {data.recent.map((entry) => (
+                    <div key={entry.id} className="px-4 py-3 min-h-11">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-white">
                           {new Date(entry.clock_in).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2">
-                          {new Date(entry.clock_in).toLocaleTimeString()}
-                        </td>
-                        <td className="px-4 py-2">
-                          {entry.clock_out
-                            ? new Date(entry.clock_out).toLocaleTimeString()
-                            : "---"}
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono">
+                        </span>
+                        <span className="text-sm font-mono text-white">
                           {entry.hours_worked !== null
                             ? formatHours(Number(entry.hours_worked))
                             : "---"}
-                        </td>
+                        </span>
+                      </div>
+                      <div className="mt-0.5 text-xs text-zinc-500">
+                        {new Date(entry.clock_in).toLocaleTimeString()} &mdash;{" "}
+                        {entry.clock_out
+                          ? new Date(entry.clock_out).toLocaleTimeString()
+                          : "ongoing"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                        <th className="px-4 py-2 font-medium">Date</th>
+                        <th className="px-4 py-2 font-medium">Clock In</th>
+                        <th className="px-4 py-2 font-medium">Clock Out</th>
+                        <th className="px-4 py-2 font-medium text-right">Hours</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {data.recent.map((entry) => (
+                        <tr key={entry.id} className="text-white">
+                          <td className="px-4 py-2 text-zinc-300">
+                            {new Date(entry.clock_in).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-2">
+                            {new Date(entry.clock_in).toLocaleTimeString()}
+                          </td>
+                          <td className="px-4 py-2">
+                            {entry.clock_out
+                              ? new Date(entry.clock_out).toLocaleTimeString()
+                              : "---"}
+                          </td>
+                          <td className="px-4 py-2 text-right font-mono">
+                            {entry.hours_worked !== null
+                              ? formatHours(Number(entry.hours_worked))
+                              : "---"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </>

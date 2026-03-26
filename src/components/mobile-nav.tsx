@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useStore } from "@/lib/store-context";
 import { NAV_ITEMS } from "@/lib/permissions";
 import { signOut } from "next-auth/react";
+import { useTheme } from "@/components/theme-provider";
 
 /* ------------------------------------------------------------------ */
 /*  Bottom tab bar — 5 tabs max                                        */
@@ -83,6 +84,7 @@ const MORE_GROUPS: NavGroup[] = [
 export function MobileNav() {
   const pathname = usePathname();
   const { can, staff, effectiveRole, isTestMode } = useStore();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [moreOpen, setMoreOpen] = useState(false);
 
   function isActive(href: string) {
@@ -130,12 +132,21 @@ export function MobileNav() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
             <h2 className="text-lg font-bold text-white">Menu</h2>
-            <button
-              onClick={() => setMoreOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-xl text-zinc-400 hover:text-white active:bg-zinc-800"
-            >
-              &times;
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-zinc-400 hover:text-white active:bg-zinc-800"
+                aria-label="Toggle theme"
+              >
+                {resolvedTheme === 'dark' ? '\u2600' : '\u263E'}
+              </button>
+              <button
+                onClick={() => setMoreOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-xl text-zinc-400 hover:text-white active:bg-zinc-800"
+              >
+                &times;
+              </button>
+            </div>
           </div>
 
           {/* Scrollable groups */}
