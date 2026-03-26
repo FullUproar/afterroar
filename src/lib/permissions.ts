@@ -87,6 +87,7 @@ export function canAccess(role: Role, path: string): boolean {
     "/dashboard/transfers": "inventory.adjust",
     "/dashboard/staff": "staff.manage",
     "/dashboard/settings": "store.settings",
+    "/dashboard/game-library": "inventory.view",
     "/dashboard/import": "import",
     "/dashboard/certification": "certification",
   };
@@ -112,6 +113,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/checkout", label: "Checkout", icon: "◈", permission: "checkout" },
   { href: "/dashboard", label: "Dashboard", icon: "⌂", permission: "checkout" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "▦", permission: "inventory.view" },
+  { href: "/dashboard/game-library", label: "Game Library", icon: "♜", permission: "inventory.view" },
   { href: "/dashboard/preorders", label: "Preorders", icon: "⏳", permission: "inventory.adjust" },
   { href: "/dashboard/trade-ins", label: "Trade-Ins", icon: "⇄", permission: "trade_ins" },
   { href: "/dashboard/returns", label: "Returns", icon: "↩", permission: "returns" },

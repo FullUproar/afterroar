@@ -51,6 +51,7 @@ model PosStore {
   preorders       PosPreorder[]
   gift_cards      PosGiftCard[]
   suppliers       PosSupplier[]
+  game_checkouts  PosGameCheckout[]
 
   @@map("pos_stores")
 }
@@ -177,6 +178,7 @@ model PosStaff {
   import_jobs     PosImportJob[]
   certifications  PosCertification[]
   time_entries    PosTimeEntry[]
+  game_checkouts  PosGameCheckout[]
 
   @@unique([user_id, store_id])
   @@map("pos_staff")
@@ -226,6 +228,7 @@ model PosCustomer {
   event_checkins     PosEventCheckin[]
   loyalty_entries    PosLoyaltyEntry[]
   preorders          PosPreorder[]
+  game_checkouts     PosGameCheckout[]
 
   @@index([store_id])
   @@map("pos_customers")
@@ -312,6 +315,7 @@ model PosInventoryItem {
   trade_in_items   PosTradeInItem[]
   return_items     PosReturnItem[]
   inventory_levels PosInventoryLevel[]
+  game_checkouts   PosGameCheckout[]
 
   @@index([store_id])
   @@index([store_id, active])
@@ -592,4 +596,33 @@ model PosGiftCard {
   store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
 
   @@map("pos_gift_cards")
+}
+
+// ============================================================
+// POS GAME CHECKOUTS (lending/rental tracking)
+// ============================================================
+model PosGameCheckout {
+  id                String    @id @default(cuid())
+  store_id          String
+  inventory_item_id String
+  customer_id       String?
+  staff_id          String?
+  table_number      String?
+  checked_out_at    DateTime  @default(now()) @db.Timestamptz()
+  expected_return_at DateTime? @db.Timestamptz()
+  returned_at       DateTime? @db.Timestamptz()
+  return_condition  String?
+  return_notes      String?
+  status            String    @default("out") // out, returned, overdue
+  created_at        DateTime  @default(now()) @db.Timestamptz()
+
+  store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem @relation(fields: [inventory_item_id], references: [id])
+  customer       PosCustomer?     @relation(fields: [customer_id], references: [id])
+  staff          PosStaff?        @relation(fields: [staff_id], references: [id])
+
+  @@index([store_id])
+  @@index([store_id, status])
+  @@index([inventory_item_id])
+  @@map("pos_game_checkouts")
 }

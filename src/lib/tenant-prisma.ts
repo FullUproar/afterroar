@@ -27,6 +27,7 @@ const TENANT_MODELS = [
   "posLoyaltyEntry",
   "posImportJob",
   "posCertification",
+  "posGameCheckout",
 ] as const;
 
 type TenantModel = (typeof TENANT_MODELS)[number];
