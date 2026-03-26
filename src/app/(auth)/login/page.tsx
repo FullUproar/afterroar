@@ -14,14 +14,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     setError("");
     setLoading(true);
 
     const supabase = createClient();
 
     if (isSignUp) {
+      if (!storeName.trim()) {
+        setError("Store name is required");
+        setLoading(false);
+        return;
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -34,7 +39,6 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Create store + staff via API (uses service role)
         const res = await fetch("/api/setup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -72,6 +76,12 @@ export default function LoginPage() {
     setLoading(false);
   }
 
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && email && password.length >= 6) {
+      handleSubmit();
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950">
       <div className="w-full max-w-sm space-y-6 p-8">
@@ -80,7 +90,7 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-zinc-400">Store Ops</p>
         </div>
 
-        <form action="#" onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4" onKeyDown={handleKeyDown}>
           {isSignUp && (
             <>
               <input
@@ -88,7 +98,7 @@ export default function LoginPage() {
                 placeholder="Store name"
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
-                required
+                autoComplete="organization"
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
               />
               <input
@@ -96,6 +106,7 @@ export default function LoginPage() {
                 placeholder="Your name"
                 value={staffName}
                 onChange={(e) => setStaffName(e.target.value)}
+                autoComplete="name"
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
               />
             </>
@@ -105,7 +116,6 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
             autoFocus
             autoComplete="email"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
@@ -115,8 +125,6 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
             autoComplete={isSignUp ? "new-password" : "current-password"}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
           />
@@ -126,15 +134,17 @@ export default function LoginPage() {
           )}
 
           <button
-            type="submit"
+            type="button"
             disabled={loading}
+            onClick={handleSubmit}
             className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "..." : isSignUp ? "Create Store" : "Sign In"}
           </button>
-        </form>
+        </div>
 
         <button
+          type="button"
           onClick={() => {
             setIsSignUp(!isSignUp);
             setError("");
