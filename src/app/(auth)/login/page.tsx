@@ -80,7 +80,7 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-zinc-400">Store Ops</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form action="#" onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (
             <>
               <input
@@ -107,6 +107,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoFocus
+            autoComplete="email"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
           />
           <input
@@ -116,6 +117,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete={isSignUp ? "new-password" : "current-password"}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
           />
 
