@@ -78,6 +78,12 @@ export default function InventoryPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Sorting
+  type SortField = "name" | "price" | "quantity" | "category";
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
   // Stock adjustment modal
   const [adjust, setAdjust] = useState<AdjustState | null>(null);
 
@@ -305,6 +311,36 @@ export default function InventoryPage() {
     return "text-foreground";
   };
 
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }
+
+  function getSortArrow(field: SortField) {
+    if (sortField !== field) return "";
+    return sortDir === "asc" ? " \u25B2" : " \u25BC";
+  }
+
+  const sortedItems = [...items].sort((a, b) => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    switch (sortField) {
+      case "name":
+        return dir * a.name.localeCompare(b.name);
+      case "price":
+        return dir * (a.price_cents - b.price_cents);
+      case "quantity":
+        return dir * (a.quantity - b.quantity);
+      case "category":
+        return dir * a.category.localeCompare(b.category);
+      default:
+        return 0;
+    }
+  });
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -530,9 +566,31 @@ export default function InventoryPage() {
         </div>
       ) : (
         <>
+          {/* Mobile sort controls */}
+          <div className="md:hidden flex gap-2 flex-wrap">
+            {([
+              { field: "name" as SortField, label: "Name" },
+              { field: "price" as SortField, label: "Price" },
+              { field: "quantity" as SortField, label: "Qty" },
+              { field: "category" as SortField, label: "Category" },
+            ]).map((s) => (
+              <button
+                key={s.field}
+                onClick={() => handleSort(s.field)}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  sortField === s.field
+                    ? "border-accent bg-accent-light text-accent"
+                    : "border-card-border bg-card text-muted hover:border-accent/50"
+                }`}
+              >
+                {s.label}{getSortArrow(s.field)}
+              </button>
+            ))}
+          </div>
+
           {/* Mobile card view */}
           <div className="md:hidden space-y-3">
-            {items.map((item) => (
+            {sortedItems.map((item) => (
               <div
                 key={item.id}
                 className="rounded-xl border border-card-border bg-card p-4 shadow-sm dark:shadow-none"
@@ -599,11 +657,31 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800 bg-card text-left text-muted">
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Category</th>
-                  <th className="px-4 py-3 font-medium text-right">Price</th>
+                  <th
+                    className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors"
+                    onClick={() => handleSort("name")}
+                  >
+                    Name{getSortArrow("name")}
+                  </th>
+                  <th
+                    className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors"
+                    onClick={() => handleSort("category")}
+                  >
+                    Category{getSortArrow("category")}
+                  </th>
+                  <th
+                    className="px-4 py-3 font-medium text-right cursor-pointer hover:text-foreground select-none transition-colors"
+                    onClick={() => handleSort("price")}
+                  >
+                    Price{getSortArrow("price")}
+                  </th>
                   <th className="px-4 py-3 font-medium text-right">Cost</th>
-                  <th className="px-4 py-3 font-medium text-center">Qty</th>
+                  <th
+                    className="px-4 py-3 font-medium text-center cursor-pointer hover:text-foreground select-none transition-colors"
+                    onClick={() => handleSort("quantity")}
+                  >
+                    Qty{getSortArrow("quantity")}
+                  </th>
                   <th className="px-4 py-3 font-medium">Condition</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   {can("inventory.adjust") && (
@@ -612,7 +690,7 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {items.map((item) => (
+                {sortedItems.map((item) => (
                   <tr
                     key={item.id}
                     className="bg-background hover:bg-card/50 transition-colors"

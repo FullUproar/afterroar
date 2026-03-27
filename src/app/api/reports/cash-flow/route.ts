@@ -394,6 +394,10 @@ export async function GET() {
     const todayStr = now.toISOString().slice(0, 10);
     for (const item of allInventory) {
       if (item.quantity <= 0) continue;
+      // Exclude perpetual/service items (qty >= 900, e.g. cafe drinks at 999)
+      if (item.quantity >= 900) continue;
+      // Exclude food & drink category from dead stock analysis
+      if (item.category === "food_drink") continue;
       const salesIn30d = itemSalesCount.get(item.id) || 0;
       if (salesIn30d > 0) continue; // Not dead if sold recently
 

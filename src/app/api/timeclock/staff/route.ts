@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -7,17 +6,17 @@ import { requirePermission, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { storeId } = await requirePermission("staff.manage");
+    const { db } = await requirePermission("staff.manage");
 
-    const staff = await prisma.posStaff.findMany({
-      where: { store_id: storeId, active: true },
+    const staff = await db.posStaff.findMany({
+      where: { active: true },
       select: { id: true, name: true },
     });
 
     const result = await Promise.all(
       staff.map(async (s) => {
-        const openEntry = await prisma.posTimeEntry.findFirst({
-          where: { staff_id: s.id, store_id: storeId, clock_out: null },
+        const openEntry = await db.posTimeEntry.findFirst({
+          where: { staff_id: s.id, clock_out: null },
           orderBy: { clock_in: "desc" },
         });
         return {

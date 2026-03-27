@@ -100,6 +100,8 @@ export function handleAuthError(
   if (error instanceof ForbiddenError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  // Re-throw unknown errors
-  throw error;
+  // Log and return 500 for unknown errors instead of crashing the route
+  console.error("[API Error]", error);
+  const message = error instanceof Error ? error.message : "Internal server error";
+  return NextResponse.json({ error: message }, { status: 500 });
 }

@@ -156,14 +156,6 @@ export default function SettingsPage() {
     }
   }
 
-  if (!can('store.settings')) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to view settings.</p>
-      </div>
-    );
-  }
-
   // Auto-save a single field
   const saveField = useCallback(
     async (key: string, value: unknown) => {
@@ -220,6 +212,14 @@ export default function SettingsPage() {
 
   function updateLocal(key: string, value: unknown) {
     setSettings((prev) => ({ ...prev, [key]: value }));
+  }
+
+  if (!can('store.settings')) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-zinc-500">You don&apos;t have permission to view settings.</p>
+      </div>
+    );
   }
 
   return (

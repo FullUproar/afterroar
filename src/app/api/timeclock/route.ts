@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -7,17 +6,17 @@ import { requireStaff, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     // Find open time entry (clocked in but not out)
-    const openEntry = await prisma.posTimeEntry.findFirst({
-      where: { staff_id: staff.id, store_id: storeId, clock_out: null },
+    const openEntry = await db.posTimeEntry.findFirst({
+      where: { staff_id: staff.id, clock_out: null },
       orderBy: { clock_in: "desc" },
     });
 
     // Get recent entries
-    const recent = await prisma.posTimeEntry.findMany({
-      where: { staff_id: staff.id, store_id: storeId },
+    const recent = await db.posTimeEntry.findMany({
+      where: { staff_id: staff.id },
       orderBy: { clock_in: "desc" },
       take: 10,
     });
@@ -27,10 +26,9 @@ export async function GET() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
 
-    const weekEntries = await prisma.posTimeEntry.findMany({
+    const weekEntries = await db.posTimeEntry.findMany({
       where: {
         staff_id: staff.id,
-        store_id: storeId,
         clock_in: { gte: weekStart },
         clock_out: { not: null },
       },
@@ -57,7 +55,7 @@ export async function GET() {
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     let body: { action: "clock_in" | "clock_out"; notes?: string };
     try {
@@ -68,14 +66,14 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "clock_in") {
       // Check not already clocked in
-      const existing = await prisma.posTimeEntry.findFirst({
-        where: { staff_id: staff.id, store_id: storeId, clock_out: null },
+      const existing = await db.posTimeEntry.findFirst({
+        where: { staff_id: staff.id, clock_out: null },
       });
       if (existing) {
         return NextResponse.json({ error: "Already clocked in" }, { status: 400 });
       }
 
-      const entry = await prisma.posTimeEntry.create({
+      const entry = await db.posTimeEntry.create({
         data: {
           store_id: storeId,
           staff_id: staff.id,
@@ -88,8 +86,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.action === "clock_out") {
-      const openEntry = await prisma.posTimeEntry.findFirst({
-        where: { staff_id: staff.id, store_id: storeId, clock_out: null },
+      const openEntry = await db.posTimeEntry.findFirst({
+        where: { staff_id: staff.id, clock_out: null },
         orderBy: { clock_in: "desc" },
       });
 
@@ -100,7 +98,7 @@ export async function POST(request: NextRequest) {
       const clockOut = new Date();
       const hoursWorked = (clockOut.getTime() - new Date(openEntry.clock_in).getTime()) / 3600000;
 
-      const entry = await prisma.posTimeEntry.update({
+      const entry = await db.posTimeEntry.update({
         where: { id: openEntry.id },
         data: {
           clock_out: clockOut,

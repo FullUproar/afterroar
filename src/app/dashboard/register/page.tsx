@@ -142,6 +142,7 @@ export default function RegisterPage() {
   const [parkedCount, setParkedCount] = useState(0);
   const [parkConflictCart, setParkConflictCart] = useState<ParkedCart | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Cart persistence
   const cartIdRef = useRef<string>(createEmptyCart().id);
@@ -165,7 +166,7 @@ export default function RegisterPage() {
   // Only auto-focus inputs on desktop (prevents mobile keyboard popping up)
   const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
   const focusSearch = useCallback(() => {
-    if (!isTouchDevice) focusSearch();
+    if (!isTouchDevice) searchRef.current?.focus();
   }, [isTouchDevice]);
 
   // ---- Beep sound helper ----
@@ -1036,7 +1037,13 @@ export default function RegisterPage() {
             </button>
           )}
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => {
+              if (cart.length > 0) {
+                setShowExitConfirm(true);
+              } else {
+                router.push("/dashboard");
+              }
+            }}
             className="flex items-center justify-center w-8 h-8 rounded-lg text-muted hover:text-foreground hover:bg-card-hover transition-colors"
             title="Exit register"
           >
@@ -1508,18 +1515,47 @@ export default function RegisterPage() {
                     className="w-full rounded-xl border border-input-border bg-input-bg px-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none text-center font-bold font-mono"
                     style={{ height: 60, fontSize: 28 }}
                   />
-                  {tendered > 0 && tendered >= amountDue && (
-                    <div className="text-center text-xl font-bold text-green-400 tabular-nums font-mono">
-                      Change: {formatCents(change)}
-                    </div>
-                  )}
+                  {/* Quick-tender buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    {[100, 500, 1000, 2000, 5000, 10000].map((cents) => (
+                      <button
+                        key={cents}
+                        onClick={() => setTenderedInput((cents / 100).toFixed(2))}
+                        className="flex-1 min-w-[60px] rounded-lg border border-card-border bg-card-hover px-2 py-2 text-sm font-medium text-foreground hover:bg-accent-light transition-colors"
+                        style={{ minHeight: 40 }}
+                      >
+                        {formatCents(cents)}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setTenderedInput((amountDue / 100).toFixed(2))}
+                      className="flex-1 min-w-[60px] rounded-lg border border-accent bg-accent/20 px-2 py-2 text-sm font-medium text-accent hover:bg-accent/30 transition-colors"
+                      style={{ minHeight: 40 }}
+                    >
+                      Exact
+                    </button>
+                  </div>
+                  {/* Change display */}
+                  <div className={`text-center text-xl font-bold tabular-nums font-mono ${
+                    tendered > 0 && tendered >= amountDue ? "text-green-400" : tendered > 0 ? "text-red-400" : "text-muted"
+                  }`}>
+                    {tendered > 0 && tendered >= amountDue
+                      ? `Change: ${formatCents(change)}`
+                      : tendered > 0
+                        ? "Insufficient"
+                        : `Change: ${formatCents(0)}`}
+                  </div>
                   <button
                     onClick={() => handleCompleteSale("cash")}
                     disabled={processing || (amountDue > 0 && tendered < amountDue)}
                     className="w-full rounded-xl font-bold text-white disabled:opacity-30 transition-colors"
                     style={{ height: 56, fontSize: 18, backgroundColor: "#16a34a", minHeight: 56 }}
                   >
-                    {processing ? "Processing..." : "Done"}
+                    {processing
+                      ? "Processing..."
+                      : amountDue > 0 && tendered < amountDue
+                        ? "Insufficient"
+                        : `Done \u2014 Change ${formatCents(change)}`}
                   </button>
                 </div>
               ) : showCreditConfirm ? (
@@ -1765,6 +1801,56 @@ export default function RegisterPage() {
                   style={{ height: 44, backgroundColor: "var(--accent)", minHeight: 44 }}
                 >
                   Park
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====== EXIT CONFIRM DIALOG ====== */}
+      {showExitConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowExitConfirm(false)} />
+          <div className="relative bg-card rounded-2xl border border-card-border w-full max-w-sm mx-4">
+            <div className="p-5 space-y-4">
+              <div className="text-base font-bold text-foreground">Exit Register?</div>
+              <p className="text-sm text-muted">
+                You have {cartItemCount} item{cartItemCount !== 1 ? "s" : ""} ({formatCents(total)}) in your cart.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    handleParkCart();
+                    setShowExitConfirm(false);
+                    router.push("/dashboard");
+                  }}
+                  className="w-full rounded-xl font-medium text-white transition-colors"
+                  style={{ height: 44, backgroundColor: "var(--accent)", minHeight: 44 }}
+                >
+                  Park Cart
+                </button>
+                <button
+                  onClick={() => {
+                    setCart([]);
+                    setDiscounts([]);
+                    setCustomer(null);
+                    clearPersistedCart();
+                    cartIdRef.current = createEmptyCart().id;
+                    setShowExitConfirm(false);
+                    router.push("/dashboard");
+                  }}
+                  className="w-full rounded-xl border border-red-500/30 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                  style={{ minHeight: 44 }}
+                >
+                  Clear Cart
+                </button>
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="w-full rounded-xl border border-card-border px-4 py-2.5 text-sm font-medium text-muted hover:text-foreground hover:bg-card-hover transition-colors"
+                  style={{ minHeight: 44 }}
+                >
+                  Cancel
                 </button>
               </div>
             </div>
