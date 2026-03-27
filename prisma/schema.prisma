@@ -56,6 +56,7 @@ model PosStore {
   stock_counts    PosStockCount[]
   tournaments     PosTournament[]
   catalog_pricing PosCatalogPricing[]
+  orders          PosOrder[]
 
   @@map("pos_stores")
 }
@@ -235,6 +236,7 @@ model PosCustomer {
   preorders          PosPreorder[]
   game_checkouts     PosGameCheckout[]
   tournament_players PosTournamentPlayer[]
+  orders             PosOrder[]
 
   @@index([store_id])
   @@map("pos_customers")
@@ -328,6 +330,7 @@ model PosInventoryItem {
   game_checkouts       PosGameCheckout[]
   purchase_order_items PosPurchaseOrderItem[]
   stock_count_items    PosStockCountItem[]
+  order_items          PosOrderItem[]
 
   @@index([store_id])
   @@index([store_id, active])
@@ -858,4 +861,59 @@ model PosCatalogPricing {
 
   @@unique([catalog_product_id, store_id])
   @@map("pos_catalog_pricing")
+}
+
+// ============================================================
+// POS ORDERS (shipping & fulfillment)
+// ============================================================
+model PosOrder {
+  id              String    @id @default(cuid())
+  store_id        String
+  customer_id     String?
+  order_number    String
+  source          String    @default("pos") // pos, online, phone
+  status          String    @default("pending") // pending, processing, shipped, delivered, cancelled
+  subtotal_cents  Int       @default(0)
+  tax_cents       Int       @default(0)
+  shipping_cents  Int       @default(0)
+  discount_cents  Int       @default(0)
+  total_cents     Int       @default(0)
+  shipping_method String?
+  shipping_address Json?
+  tracking_number String?
+  tracking_url    String?
+  notes           String?
+  ledger_entry_id String?
+  fulfilled_at    DateTime? @db.Timestamptz()
+  shipped_at      DateTime? @db.Timestamptz()
+  delivered_at    DateTime? @db.Timestamptz()
+  created_at      DateTime  @default(now()) @db.Timestamptz()
+  updated_at      DateTime  @default(now()) @db.Timestamptz()
+
+  store    PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer PosCustomer? @relation(fields: [customer_id], references: [id])
+  items    PosOrderItem[]
+
+  @@index([store_id])
+  @@index([store_id, status])
+  @@index([order_number])
+  @@map("pos_orders")
+}
+
+model PosOrderItem {
+  id                String   @id @default(cuid())
+  order_id          String
+  inventory_item_id String?
+  name              String
+  quantity          Int      @default(1)
+  price_cents       Int
+  total_cents       Int
+  fulfilled         Boolean  @default(false)
+  created_at        DateTime @default(now()) @db.Timestamptz()
+
+  order          PosOrder          @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem? @relation(fields: [inventory_item_id], references: [id])
+
+  @@index([order_id])
+  @@map("pos_order_items")
 }

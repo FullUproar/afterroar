@@ -31,6 +31,7 @@ const TENANT_MODELS = [
   "posPurchaseOrder",
   "posStockCount",
   "posTournament",
+  "posOrder",
 ] as const;
 
 type TenantModel = (typeof TENANT_MODELS)[number];

@@ -95,6 +95,7 @@ export function canAccess(role: Role, path: string): boolean {
     "/dashboard/inventory/labels": "inventory.view",
     "/dashboard/import": "import",
     "/dashboard/certification": "certification",
+    "/dashboard/orders": "checkout",
   };
 
   // Find the matching route (longest prefix match)
@@ -133,6 +134,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/catalog", label: "Catalog", icon: "⊕", permission: "inventory.adjust" },
   { href: "/dashboard/import", label: "Import", icon: "⤓", permission: "import" },
   { href: "/dashboard/certification", label: "Certification", icon: "◉", permission: "certification" },
+  { href: "/dashboard/orders", label: "Orders", icon: "⊟", permission: "checkout" },
   { href: "/dashboard/drawer", label: "Drawer", icon: "▣", permission: "checkout" },
   { href: "/dashboard/timeclock", label: "Time Clock", icon: "◷", permission: "checkout" },
   { href: "/dashboard/gift-cards", label: "Gift Cards", icon: "◆", permission: "customers.edit" },

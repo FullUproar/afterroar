@@ -13,6 +13,7 @@ import {
 } from "@/lib/offline-db";
 import { useStoreName, useStoreSettings } from "@/lib/store-settings";
 import { CategoryBrowser } from "@/components/category-browser";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -95,6 +96,18 @@ export default function CheckoutPage() {
 
   // Browse mode (category navigation)
   const [browseMode, setBrowseMode] = useState(false);
+
+  // Barcode scanner state
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+
+  // Quick favorites state
+  const [favorites, setFavorites] = useState<InventoryItem[]>([]);
+
+  // Customer notes toast
+  const [showCustomerNotes, setShowCustomerNotes] = useState(false);
+
+  // Gift receipt toggle
+  const [giftReceipt, setGiftReceipt] = useState(false);
 
   // Discount state
   const [cartDiscount, setCartDiscount] = useState<{ type: "percent" | "flat"; value: string; reason: string }>({
@@ -195,6 +208,23 @@ export default function CheckoutPage() {
     paymentMethod === "cash" || paymentMethod === "split"
       ? Math.max(0, tendered - amountDue)
       : 0;
+
+  // ---- Load quick favorites on mount ----
+  useEffect(() => {
+    fetch("/api/inventory/favorites")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => {
+        if (Array.isArray(data)) setFavorites(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  // ---- Barcode scanner handler ----
+  function handleBarcodeScan(code: string, _format: string) {
+    setShowBarcodeScanner(false);
+    // Search for the barcode
+    setSearchQuery(code);
+  }
 
   // ---- Inventory search (IndexedDB first, network update) ----
   const doSearch = useCallback(
@@ -621,6 +651,7 @@ export default function CheckoutPage() {
     setGiftCardBalance(null);
     setGiftCardApply(false);
     setRedeemLoyalty(false);
+    setGiftReceipt(false);
   }
 
   // ---- Receipt helpers ----
@@ -847,7 +878,32 @@ export default function CheckoutPage() {
               >
                 Camera ID
               </button>
+              <button
+                onClick={() => setShowBarcodeScanner(true)}
+                className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+              >
+                Scan Barcode
+              </button>
             </div>
+
+            {/* Quick Favorites */}
+            {favorites.length > 0 && cart.length === 0 && !browseMode && !showUnlisted && (
+              <div>
+                <div className="text-xs text-zinc-500 mb-1.5">Quick Add</div>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {favorites.map((fav) => (
+                    <button
+                      key={fav.id}
+                      onClick={() => addToCart(fav)}
+                      className="shrink-0 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left hover:bg-zinc-800 active:bg-zinc-800 transition-colors min-h-[44px]"
+                    >
+                      <div className="text-xs font-medium text-white truncate max-w-[120px]">{fav.name}</div>
+                      <div className="text-[10px] text-emerald-400">{formatCents(fav.price_cents)}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Category browser */}
             {browseMode && (
@@ -920,26 +976,46 @@ export default function CheckoutPage() {
             {/* Customer attach */}
             <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
               {customer ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-zinc-400">Customer</div>
-                    <div className="font-medium text-white">{customer.name}</div>
-                    <div className="text-xs text-zinc-500">
-                      Credit: {formatCents(customer.credit_balance_cents)}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-zinc-400">Customer</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-white">{customer.name}</span>
+                        {customer.notes && (
+                          <button
+                            onClick={() => setShowCustomerNotes(!showCustomerNotes)}
+                            className="text-blue-400 hover:text-blue-300 text-xs min-h-0"
+                            title="View customer notes"
+                          >
+                            &#9432;
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-xs text-zinc-500">
+                        Credit: {formatCents(customer.credit_balance_cents)}
+                      </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        setCustomer(null);
+                        setApplyCredit(false);
+                        setCreditInput("");
+                        setShowCustomerNotes(false);
+                        if (paymentMethod === "store_credit")
+                          setPaymentMethod("cash");
+                      }}
+                      className="text-xs text-zinc-500 hover:text-red-400"
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      setCustomer(null);
-                      setApplyCredit(false);
-                      setCreditInput("");
-                      if (paymentMethod === "store_credit")
-                        setPaymentMethod("cash");
-                    }}
-                    className="text-xs text-zinc-500 hover:text-red-400"
-                  >
-                    Remove
-                  </button>
+                  {/* Customer notes toast */}
+                  {showCustomerNotes && customer.notes && (
+                    <div className="mt-2 rounded-md border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-300">
+                      {customer.notes}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
@@ -1573,6 +1649,15 @@ export default function CheckoutPage() {
           </div>
         )}
 
+        {/* Barcode scanner */}
+        {showBarcodeScanner && (
+          <BarcodeScanner
+            title="Scan Barcode"
+            onScan={handleBarcodeScan}
+            onClose={() => setShowBarcodeScanner(false)}
+          />
+        )}
+
         {/* Receipt modal — full screen on mobile */}
         {receipt && (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70">
@@ -1582,11 +1667,16 @@ export default function CheckoutPage() {
             >
               {/* Receipt header */}
               <div className="mb-4 text-center">
+                {giftReceipt && (
+                  <div className="mb-2 rounded-md bg-pink-500/20 px-2 py-1 text-xs font-bold text-pink-400 uppercase tracking-wider">
+                    Gift Receipt
+                  </div>
+                )}
                 <h2 className="text-xl font-bold text-white">{receipt.store_name}</h2>
                 <div className="text-sm text-zinc-400">
                   {new Date(receipt.date).toLocaleString()}
                 </div>
-                {receipt.customer_name && (
+                {receipt.customer_name && !giftReceipt && (
                   <div className="mt-1 text-sm text-zinc-300">
                     Customer: {receipt.customer_name}
                   </div>
@@ -1605,66 +1695,75 @@ export default function CheckoutPage() {
                         <span className="ml-1 text-zinc-500">x{item.quantity}</span>
                       )}
                     </div>
-                    <div className="text-zinc-300 font-mono">
-                      {formatCents(item.total_cents)}
-                    </div>
+                    {!giftReceipt && (
+                      <div className="text-zinc-300 font-mono">
+                        {formatCents(item.total_cents)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
 
               <div className="receipt-divider border-t border-dashed border-zinc-700" />
 
-              {/* Totals */}
-              <div className="my-3 space-y-1">
-                <div className="flex justify-between text-sm text-zinc-400">
-                  <span>Subtotal</span>
-                  <span className="font-mono">{formatCents(receipt.subtotal_cents)}</span>
-                </div>
-                {receipt.discount_cents != null && receipt.discount_cents > 0 && (
-                  <div className="flex justify-between text-sm text-amber-400">
-                    <span>Discount</span>
-                    <span className="font-mono">-{formatCents(receipt.discount_cents)}</span>
-                  </div>
-                )}
-                {receipt.tax_cents > 0 && (
+              {/* Totals — hidden on gift receipt */}
+              {!giftReceipt && (
+                <div className="my-3 space-y-1">
                   <div className="flex justify-between text-sm text-zinc-400">
-                    <span>Tax</span>
-                    <span className="font-mono">{formatCents(receipt.tax_cents)}</span>
+                    <span>Subtotal</span>
+                    <span className="font-mono">{formatCents(receipt.subtotal_cents)}</span>
                   </div>
-                )}
-                {receipt.loyalty_discount_cents != null && receipt.loyalty_discount_cents > 0 && (
-                  <div className="flex justify-between text-sm text-purple-400">
-                    <span>Loyalty Discount</span>
-                    <span className="font-mono">-{formatCents(receipt.loyalty_discount_cents)}</span>
+                  {receipt.discount_cents != null && receipt.discount_cents > 0 && (
+                    <div className="flex justify-between text-sm text-amber-400">
+                      <span>Discount</span>
+                      <span className="font-mono">-{formatCents(receipt.discount_cents)}</span>
+                    </div>
+                  )}
+                  {receipt.tax_cents > 0 && (
+                    <div className="flex justify-between text-sm text-zinc-400">
+                      <span>Tax</span>
+                      <span className="font-mono">{formatCents(receipt.tax_cents)}</span>
+                    </div>
+                  )}
+                  {receipt.loyalty_discount_cents != null && receipt.loyalty_discount_cents > 0 && (
+                    <div className="flex justify-between text-sm text-purple-400">
+                      <span>Loyalty Discount</span>
+                      <span className="font-mono">-{formatCents(receipt.loyalty_discount_cents)}</span>
+                    </div>
+                  )}
+                  {receipt.gift_card_applied_cents != null && receipt.gift_card_applied_cents > 0 && (
+                    <div className="flex justify-between text-sm text-teal-400">
+                      <span>Gift Card</span>
+                      <span className="font-mono">-{formatCents(receipt.gift_card_applied_cents)}</span>
+                    </div>
+                  )}
+                  {receipt.credit_applied_cents > 0 && (
+                    <div className="flex justify-between text-sm text-amber-400">
+                      <span>Store Credit</span>
+                      <span className="font-mono">-{formatCents(receipt.credit_applied_cents)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm text-zinc-400">
+                    <span>Payment</span>
+                    <span>{paymentMethodLabel(receipt.payment_method)}</span>
                   </div>
-                )}
-                {receipt.gift_card_applied_cents != null && receipt.gift_card_applied_cents > 0 && (
-                  <div className="flex justify-between text-sm text-teal-400">
-                    <span>Gift Card</span>
-                    <span className="font-mono">-{formatCents(receipt.gift_card_applied_cents)}</span>
+                  <div className="flex justify-between border-t border-zinc-800 pt-2 text-lg font-bold text-white">
+                    <span>Total</span>
+                    <span className="font-mono">{formatCents(receipt.total_cents)}</span>
                   </div>
-                )}
-                {receipt.credit_applied_cents > 0 && (
-                  <div className="flex justify-between text-sm text-amber-400">
-                    <span>Store Credit</span>
-                    <span className="font-mono">-{formatCents(receipt.credit_applied_cents)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm text-zinc-400">
-                  <span>Payment</span>
-                  <span>{paymentMethodLabel(receipt.payment_method)}</span>
+                  {receipt.change_cents > 0 && (
+                    <div className="flex justify-between text-sm font-semibold text-emerald-400">
+                      <span>Change</span>
+                      <span className="font-mono">{formatCents(receipt.change_cents)}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between border-t border-zinc-800 pt-2 text-lg font-bold text-white">
-                  <span>Total</span>
-                  <span className="font-mono">{formatCents(receipt.total_cents)}</span>
+              )}
+              {giftReceipt && (
+                <div className="my-3 text-center text-sm text-zinc-400">
+                  This is a gift receipt. No prices shown.
                 </div>
-                {receipt.change_cents > 0 && (
-                  <div className="flex justify-between text-sm font-semibold text-emerald-400">
-                    <span>Change</span>
-                    <span className="font-mono">{formatCents(receipt.change_cents)}</span>
-                  </div>
-                )}
-              </div>
+              )}
 
               <div className="receipt-divider border-t border-dashed border-zinc-700" />
 
@@ -1672,8 +1771,21 @@ export default function CheckoutPage() {
                 Thank you for shopping at {receipt.store_name}!
               </div>
 
+              {/* Gift receipt toggle (hidden in print) */}
+              <div className="no-print mt-4">
+                <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={giftReceipt}
+                    onChange={(e) => setGiftReceipt(e.target.checked)}
+                    className="rounded border-zinc-700 bg-zinc-950"
+                  />
+                  Gift Receipt (hide prices)
+                </label>
+              </div>
+
               {/* Actions (hidden in print) */}
-              <div className="no-print mt-5 space-y-2 md:space-y-0 md:grid md:grid-cols-3 md:gap-2 pb-safe">
+              <div className="no-print mt-3 space-y-2 md:space-y-0 md:grid md:grid-cols-3 md:gap-2 pb-safe">
                 <button
                   onClick={handleNewSale}
                   className="w-full rounded-xl md:rounded-md bg-blue-600 px-3 py-3 md:py-2 text-sm font-medium text-white hover:bg-blue-500 active:bg-blue-700"

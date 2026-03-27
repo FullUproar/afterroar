@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { Customer, formatCents, parseDollars } from '@/lib/types';
 import { useStoreSettings } from '@/lib/store-settings';
+import { BarcodeScanner } from '@/components/barcode-scanner';
 
 /* ---------- types ---------- */
 
@@ -52,6 +53,7 @@ export default function NewTradeInPage() {
   const [manualCategory, setManualCategory] = useState('');
   const nextKey = useRef(1);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   // Step 3 — payout
   const [payoutType, setPayoutType] = useState<'cash' | 'credit'>('cash');
@@ -378,16 +380,25 @@ export default function NewTradeInPage() {
 
           {/* search */}
           <div className="relative">
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search inventory to add item..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              autoFocus
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
-            />
+            <div className="flex gap-2">
+              <input
+                ref={searchRef}
+                type="text"
+                placeholder="Search inventory to add item..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                autoFocus
+                className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+              />
+              <button
+                onClick={() => setShowBarcodeScanner(true)}
+                className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-700 transition-colors min-h-[44px]"
+                title="Scan barcode"
+              >
+                Scan
+              </button>
+            </div>
             {searchResults.length > 0 && (
               <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 shadow-xl">
                 {searchResults.map((inv) => (
@@ -650,6 +661,17 @@ export default function NewTradeInPage() {
             </button>
           </div>
         </div>
+      )}
+      {/* Barcode scanner */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          title="Scan Item Barcode"
+          onScan={(code) => {
+            setShowBarcodeScanner(false);
+            setSearchQuery(code);
+          }}
+          onClose={() => setShowBarcodeScanner(false)}
+        />
       )}
     </div>
   );
