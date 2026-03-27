@@ -128,3 +128,12 @@ button:active, a:active, [role="button"]:active {
     overscroll-behavior: none;
   }
 }
+
+/* Register mode — bigger touch targets for POS screens */
+@media (min-width: 768px) {
+  .register-mode button,
+  .register-mode a,
+  .register-mode [role="button"] {
+    min-height: 56px;
+  }
+}

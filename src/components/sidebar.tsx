@@ -4,18 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useStore } from "@/lib/store-context";
+import { useMode } from "@/lib/mode-context";
 import { NAV_ITEMS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { store, staff, effectiveRole, isTestMode, can } = useStore();
+  const { mode, setMode } = useMode();
 
   function handleSignOut() {
     signOut({ callbackUrl: "/login" });
   }
 
   const visibleNav = NAV_ITEMS.filter((item) => can(item.permission));
+
+  // Hide sidebar in register mode
+  if (mode === "register") return null;
 
   return (
     <aside className="hidden md:flex h-screen w-56 flex-col border-r border-card-border bg-card">
@@ -67,6 +72,12 @@ export function Sidebar() {
           className="mt-2 text-xs text-muted hover:text-foreground transition-colors"
         >
           Sign out
+        </button>
+        <button
+          onClick={() => setMode("register")}
+          className="mt-2 w-full rounded-md border border-card-border px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-card-hover transition-colors"
+        >
+          Register Mode
         </button>
       </div>
     </aside>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
+import { useMode } from "@/lib/mode-context";
 import { NAV_ITEMS } from "@/lib/permissions";
 import { signOut } from "next-auth/react";
 import { useTheme } from "@/components/theme-provider";
@@ -12,7 +13,8 @@ import { useTheme } from "@/components/theme-provider";
 /*  All available nav items for favorites                              */
 /* ------------------------------------------------------------------ */
 const ALL_NAV_ITEMS = [
-  { href: "/dashboard/checkout", label: "Register", icon: "\u25C8" },
+  { href: "/dashboard/register", label: "Register", icon: "\u25C8" },
+  { href: "/dashboard/checkout", label: "Checkout (Full)", icon: "\u25C8" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "\u25A6" },
   { href: "/dashboard/customers", label: "Customers", icon: "\u265F" },
   { href: "/dashboard/events", label: "Events", icon: "\u2605" },
@@ -33,7 +35,7 @@ const ALL_NAV_ITEMS = [
 ];
 
 const DEFAULT_FAVORITES = [
-  "/dashboard/checkout",
+  "/dashboard/register",
   "/dashboard/inventory",
   "/dashboard/customers",
 ];
@@ -68,7 +70,8 @@ const MORE_GROUPS: NavGroup[] = [
   {
     label: "Sales",
     items: [
-      { href: "/dashboard/checkout", label: "Checkout", icon: "\u25C8", permission: "checkout" },
+      { href: "/dashboard/register", label: "Register", icon: "\u25C8", permission: "checkout" },
+      { href: "/dashboard/checkout", label: "Checkout (Full)", icon: "\u25C8", permission: "checkout" },
       { href: "/dashboard/drawer", label: "Drawer", icon: "\u25A3", permission: "checkout" },
       { href: "/dashboard/gift-cards", label: "Gift Cards", icon: "\u25C6", permission: "customers.edit" },
     ],
@@ -124,6 +127,7 @@ type PanelState = "closed" | "opening" | "open" | "closing";
 export function MobileNav() {
   const pathname = usePathname();
   const { can, staff, effectiveRole, isTestMode } = useStore();
+  const { mode, toggleMode } = useMode();
   const { resolvedTheme, setTheme } = useTheme();
   const [panelState, setPanelState] = useState<PanelState>("closed");
   const moreOpen = panelState === "open" || panelState === "opening";
@@ -189,6 +193,9 @@ export function MobileNav() {
   }
 
   const favTabs = favorites.map(getNavItem);
+
+  // In register mode, RegisterNav handles navigation
+  if (mode === "register") return null;
 
   return (
     <>
@@ -350,6 +357,20 @@ export function MobileNav() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Switch mode */}
+          <div className="border-t border-card-border px-4 py-3">
+            <button
+              onClick={() => {
+                toggleMode();
+                closeMore();
+              }}
+              className="w-full rounded-xl border border-card-border bg-card-hover px-4 py-3 text-sm font-medium text-foreground hover:bg-accent-light transition-colors"
+              style={{ minHeight: 44 }}
+            >
+              Switch to Register Mode
+            </button>
           </div>
 
           {/* Footer with staff info + sign out */}

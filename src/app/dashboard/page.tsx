@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 import Link from "next/link";
+import { DashboardModeGuard } from "@/components/dashboard-mode-guard";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
 
   // Cashiers go straight to the register — no dashboard stats for them
   if (staff.role === "cashier") {
-    redirect("/dashboard/checkout");
+    redirect("/dashboard/register");
   }
 
   const storeId = staff.store_id;
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
   const mobileLedger = recentLedger.slice(0, 5);
 
   return (
+    <DashboardModeGuard>
     <div className="space-y-6 md:space-y-8">
       <h1 className="hidden md:block text-xl md:text-2xl font-semibold text-foreground">Welcome back</h1>
 
@@ -182,5 +184,6 @@ export default async function DashboardPage() {
         )}
       </div>
     </div>
+    </DashboardModeGuard>
   );
 }

@@ -70,6 +70,7 @@ export function canAccess(role: Role, path: string): boolean {
   const routePermissions: Record<string, Permission> = {
     "/dashboard": "checkout", // everyone can see dashboard
     "/dashboard/checkout": "checkout",
+    "/dashboard/register": "checkout",
     "/dashboard/inventory": "inventory.view",
     "/dashboard/inventory/receive": "inventory.adjust",
     "/dashboard/preorders": "inventory.adjust",
@@ -116,7 +117,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard/checkout", label: "Checkout", icon: "◈", permission: "checkout" },
+  { href: "/dashboard/register", label: "Register", icon: "◈", permission: "checkout" },
+  { href: "/dashboard/checkout", label: "Checkout (Full)", icon: "◈", permission: "checkout" },
   { href: "/dashboard", label: "Dashboard", icon: "⌂", permission: "checkout" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "▦", permission: "inventory.view" },
   { href: "/dashboard/game-library", label: "Game Library", icon: "♜", permission: "inventory.view" },
