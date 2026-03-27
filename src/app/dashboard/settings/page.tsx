@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useStore } from '@/lib/store-context';
+import { type Role } from '@/lib/permissions';
 import {
   useStoreSettings,
   SETTINGS_SECTIONS,
@@ -20,7 +21,7 @@ interface VenueResult {
 }
 
 export default function SettingsPage() {
-  const { can, store } = useStore();
+  const { can, store, isGodAdmin, isTestMode, effectiveRole, setTestRole } = useStore();
   const { theme, setTheme } = useTheme();
   const currentSettings = useStoreSettings();
   const [settings, setSettings] = useState<StoreSettings>(currentSettings);
@@ -310,6 +311,43 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* GOD MODE — Role Simulation (admin only) */}
+      {isGodAdmin && (
+        <div className="max-w-2xl">
+          <div className="rounded-xl border border-purple-500/30 bg-purple-950/10 p-6 shadow-sm dark:shadow-none">
+            <h2 className="text-sm font-semibold text-purple-400">GOD MODE — Role Simulation</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              View the app as a different role. Sidebar and permissions will change immediately.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {([
+                { value: null, label: 'Off (actual role)' },
+                { value: 'owner' as const, label: 'Owner' },
+                { value: 'manager' as const, label: 'Manager' },
+                { value: 'cashier' as const, label: 'Cashier' },
+              ] as const).map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setTestRole(opt.value as Role | null)}
+                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                    (isTestMode ? effectiveRole : null) === opt.value
+                      ? 'border-purple-500 bg-purple-500/20 text-purple-300'
+                      : 'border-card-border bg-card text-muted hover:border-purple-500/50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {isTestMode && (
+              <p className="mt-3 text-xs text-purple-400">
+                Currently viewing as: <strong>{effectiveRole}</strong>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="max-w-2xl space-y-4">
         {SETTINGS_SECTIONS.map((section) => (

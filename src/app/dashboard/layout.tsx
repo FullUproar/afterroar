@@ -4,7 +4,6 @@ import { SessionProvider } from "next-auth/react";
 import { StoreProvider } from "@/lib/store-context";
 import { Sidebar } from "@/components/sidebar";
 import { MobileNav } from "@/components/mobile-nav";
-import { TestPanel } from "@/components/test-panel";
 import { NetworkStatusBar } from "@/components/network-status-bar";
 import { OfflineProvider } from "@/components/offline-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -36,7 +35,6 @@ export default function DashboardLayout({
             </main>
             <MobileNav />
           </div>
-          <TestPanel />
           <ShortcutsHelp />
         </ToastProvider>
         </OfflineProvider>
