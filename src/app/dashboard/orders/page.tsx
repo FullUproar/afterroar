@@ -174,7 +174,7 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
-      <h1 className="text-xl md:text-2xl font-bold text-white">Orders</h1>
+      <h1 className="text-xl md:text-2xl font-bold text-foreground">Orders</h1>
 
       {/* Status filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -183,10 +183,10 @@ export default function OrdersPage() {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
                 statusFilter === s
-                  ? "bg-blue-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white"
+                  ? "bg-blue-600 text-foreground"
+                  : "bg-card-hover text-muted hover:text-foreground transition-colors"
               }`}
             >
               {s || "All"}
@@ -197,11 +197,11 @@ export default function OrdersPage() {
 
       {/* Orders list */}
       {loading ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
           Loading orders...
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
           No orders found.
         </div>
       ) : (
@@ -210,23 +210,23 @@ export default function OrdersPage() {
             <button
               key={order.id}
               onClick={() => openOrder(order.id)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-left hover:bg-zinc-800/80 transition-colors"
+              className="w-full rounded-xl border border-card-border bg-card p-4 text-left hover:bg-card-hover/80 transition-colors"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-white text-sm">
+                    <span className="font-mono font-bold text-foreground text-sm">
                       {order.order_number}
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        STATUS_COLORS[order.status] || "bg-zinc-700 text-zinc-300"
+                        STATUS_COLORS[order.status] || "bg-zinc-700 text-foreground/70"
                       }`}
                     >
                       {order.status}
                     </span>
                   </div>
-                  <div className="text-xs text-zinc-500 mt-1">
+                  <div className="text-xs text-muted mt-1">
                     {order.customer?.name || "Guest"} &middot;{" "}
                     {order.items.length} item{order.items.length !== 1 ? "s" : ""} &middot;{" "}
                     {new Date(order.created_at).toLocaleDateString()}
@@ -245,22 +245,22 @@ export default function OrdersPage() {
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex md:justify-end">
           <div
-            className="absolute inset-0 bg-black/60 hidden md:block"
+            className="absolute inset-0 bg-overlay-bg hidden md:block"
             onClick={() => {
               setSelectedOrder(null);
               setShowPackShip(false);
             }}
           />
-          <div className="relative z-50 w-full md:max-w-lg flex flex-col bg-zinc-950 md:border-l md:border-zinc-800 shadow-2xl md:animate-slide-in-right animate-slide-up">
+          <div className="relative z-50 w-full md:max-w-lg flex flex-col bg-background md:border-l md:border-zinc-800 shadow-2xl md:animate-slide-in-right animate-slide-up">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4 shrink-0">
               <div>
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="text-lg font-bold text-foreground">
                   {selectedOrder.order_number}
                 </h2>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    STATUS_COLORS[selectedOrder.status] || "bg-zinc-700 text-zinc-300"
+                    STATUS_COLORS[selectedOrder.status] || "bg-zinc-700 text-foreground/70"
                   }`}
                 >
                   {selectedOrder.status}
@@ -271,7 +271,7 @@ export default function OrdersPage() {
                   setSelectedOrder(null);
                   setShowPackShip(false);
                 }}
-                className="text-zinc-500 hover:text-white text-xl leading-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="text-muted hover:text-foreground transition-colors text-xl leading-none min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 &times;
               </button>
@@ -281,22 +281,22 @@ export default function OrdersPage() {
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {/* Customer */}
               {selectedOrder.customer && (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="text-xs text-zinc-500 mb-1">Customer</div>
-                  <div className="text-sm font-medium text-white">
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="text-xs text-muted mb-1">Customer</div>
+                  <div className="text-sm font-medium text-foreground">
                     {selectedOrder.customer.name}
                   </div>
                   {selectedOrder.customer.email && (
-                    <div className="text-xs text-zinc-400">{selectedOrder.customer.email}</div>
+                    <div className="text-xs text-muted">{selectedOrder.customer.email}</div>
                   )}
                 </div>
               )}
 
               {/* Shipping address */}
               {selectedOrder.shipping_address && (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="text-xs text-zinc-500 mb-1">Ship To</div>
-                  <div className="text-sm text-zinc-300">
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="text-xs text-muted mb-1">Ship To</div>
+                  <div className="text-sm text-foreground/70">
                     {Object.values(selectedOrder.shipping_address).filter(Boolean).join(", ")}
                   </div>
                 </div>
@@ -304,20 +304,20 @@ export default function OrdersPage() {
 
               {/* Tracking */}
               {selectedOrder.tracking_number && (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="text-xs text-zinc-500 mb-1">Tracking</div>
-                  <div className="text-sm font-mono text-white">
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="text-xs text-muted mb-1">Tracking</div>
+                  <div className="text-sm font-mono text-foreground">
                     {selectedOrder.tracking_number}
                   </div>
                   {selectedOrder.shipping_method && (
-                    <div className="text-xs text-zinc-400">{selectedOrder.shipping_method}</div>
+                    <div className="text-xs text-muted">{selectedOrder.shipping_method}</div>
                   )}
                 </div>
               )}
 
               {/* Items */}
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                <div className="text-xs text-zinc-500 mb-2">Items</div>
+              <div className="rounded-xl border border-card-border bg-card p-4">
+                <div className="text-xs text-muted mb-2">Items</div>
                 <div className="space-y-2">
                   {selectedOrder.items.map((item) => (
                     <div
@@ -325,17 +325,17 @@ export default function OrdersPage() {
                       className="flex items-center justify-between text-sm"
                     >
                       <div className="min-w-0 flex-1 mr-2">
-                        <div className="text-zinc-300 truncate">
+                        <div className="text-foreground/70 truncate">
                           {item.name}
                           {item.quantity > 1 && (
-                            <span className="text-zinc-500 ml-1">x{item.quantity}</span>
+                            <span className="text-muted ml-1">x{item.quantity}</span>
                           )}
                         </div>
                         {item.fulfilled && (
                           <span className="text-[10px] text-emerald-400">Packed</span>
                         )}
                       </div>
-                      <span className="text-white font-mono shrink-0">
+                      <span className="text-foreground font-mono shrink-0">
                         {formatCents(item.total_cents)}
                       </span>
                     </div>
@@ -349,18 +349,18 @@ export default function OrdersPage() {
                     </div>
                   )}
                   {selectedOrder.shipping_cents > 0 && (
-                    <div className="flex justify-between text-xs text-zinc-400">
+                    <div className="flex justify-between text-xs text-muted">
                       <span>Shipping</span>
                       <span>{formatCents(selectedOrder.shipping_cents)}</span>
                     </div>
                   )}
                   {selectedOrder.tax_cents > 0 && (
-                    <div className="flex justify-between text-xs text-zinc-400">
+                    <div className="flex justify-between text-xs text-muted">
                       <span>Tax</span>
                       <span>{formatCents(selectedOrder.tax_cents)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm font-bold text-white pt-1">
+                  <div className="flex justify-between text-sm font-bold text-foreground pt-1">
                     <span>Total</span>
                     <span>{formatCents(selectedOrder.total_cents)}</span>
                   </div>
@@ -369,20 +369,20 @@ export default function OrdersPage() {
 
               {/* Notes */}
               {selectedOrder.notes && (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="text-xs text-zinc-500 mb-1">Notes</div>
-                  <div className="text-sm text-zinc-300">{selectedOrder.notes}</div>
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="text-xs text-muted mb-1">Notes</div>
+                  <div className="text-sm text-foreground/70">{selectedOrder.notes}</div>
                 </div>
               )}
 
               {/* Pack & Ship panel */}
               {showPackShip && (
-                <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4 space-y-3">
+                <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">Pack & Ship</h3>
+                    <h3 className="text-sm font-bold text-foreground">Pack & Ship</h3>
                     <button
                       onClick={() => setShowScanner(true)}
-                      className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-300 hover:text-white transition-colors min-h-[44px]"
+                      className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-foreground/70 hover:text-foreground transition-colors transition-colors min-h-[44px]"
                     >
                       Scan to Verify
                     </button>
@@ -393,18 +393,18 @@ export default function OrdersPage() {
                     {selectedOrder.items.map((item) => (
                       <label
                         key={item.id}
-                        className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-zinc-800/50 cursor-pointer min-h-[44px]"
+                        className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-card-hover/50 cursor-pointer min-h-[44px]"
                       >
                         <input
                           type="checkbox"
                           checked={packedItems.has(item.id)}
                           onChange={() => togglePacked(item.id)}
-                          className="rounded border-zinc-700 bg-zinc-950"
+                          className="rounded border-zinc-700 bg-background"
                         />
-                        <span className={`text-sm ${packedItems.has(item.id) ? "text-zinc-500 line-through" : "text-white"}`}>
+                        <span className={`text-sm ${packedItems.has(item.id) ? "text-muted line-through" : "text-foreground"}`}>
                           {item.name}
                           {item.quantity > 1 && (
-                            <span className="text-zinc-500 ml-1">x{item.quantity}</span>
+                            <span className="text-muted ml-1">x{item.quantity}</span>
                           )}
                         </span>
                       </label>
@@ -413,11 +413,11 @@ export default function OrdersPage() {
 
                   {/* Carrier */}
                   <div>
-                    <label className="text-xs text-zinc-500 block mb-1">Carrier</label>
+                    <label className="text-xs text-muted block mb-1">Carrier</label>
                     <select
                       value={carrier}
                       onChange={(e) => setCarrier(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:outline-none"
+                      className="w-full rounded-xl border border-zinc-700 bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
                     >
                       {CARRIERS.map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -427,13 +427,13 @@ export default function OrdersPage() {
 
                   {/* Tracking number */}
                   <div>
-                    <label className="text-xs text-zinc-500 block mb-1">Tracking Number</label>
+                    <label className="text-xs text-muted block mb-1">Tracking Number</label>
                     <input
                       type="text"
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
                       placeholder="Enter tracking number"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white font-mono placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-zinc-700 bg-card px-3 py-2 text-sm text-foreground font-mono placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -441,7 +441,7 @@ export default function OrdersPage() {
                   <button
                     onClick={handleMarkShipped}
                     disabled={shipping}
-                    className="w-full rounded-lg bg-purple-600 px-4 py-3 text-sm font-bold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors min-h-[44px]"
+                    className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-purple-500 disabled:opacity-50 transition-colors min-h-[44px]"
                   >
                     {shipping ? "Shipping..." : "Mark Shipped"}
                   </button>
@@ -461,7 +461,7 @@ export default function OrdersPage() {
                     );
                     setPackedItems(alreadyPacked);
                   }}
-                  className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-500 transition-colors min-h-[44px]"
+                  className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-blue-500 transition-colors min-h-[44px]"
                 >
                   Pack & Ship
                 </button>
@@ -475,7 +475,7 @@ export default function OrdersPage() {
                     );
                     setPackedItems(alreadyPacked);
                   }}
-                  className="w-full rounded-lg bg-purple-600 px-4 py-3 text-sm font-bold text-white hover:bg-purple-500 transition-colors min-h-[44px]"
+                  className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-purple-500 transition-colors min-h-[44px]"
                 >
                   Ship Order
                 </button>
@@ -485,7 +485,7 @@ export default function OrdersPage() {
                   onClick={() =>
                     updateOrder(selectedOrder.id, { status: "delivered" })
                   }
-                  className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-500 transition-colors min-h-[44px]"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-emerald-500 transition-colors min-h-[44px]"
                 >
                   Mark Delivered
                 </button>
@@ -495,7 +495,7 @@ export default function OrdersPage() {
                   onClick={() =>
                     updateOrder(selectedOrder.id, { status: "cancelled" })
                   }
-                  className="w-full rounded-lg border border-zinc-700 px-4 py-2 text-xs font-medium text-zinc-400 hover:text-red-400 hover:border-red-500/30 transition-colors min-h-[44px]"
+                  className="w-full rounded-xl border border-zinc-700 px-4 py-2 text-xs font-medium text-muted hover:text-red-400 hover:border-red-500/30 transition-colors min-h-[44px]"
                 >
                   Cancel Order
                 </button>

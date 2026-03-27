@@ -226,7 +226,7 @@ export default function GameLibraryPage() {
   if (!can("inventory.view")) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to view the game library.</p>
+        <p className="text-muted">You don&apos;t have permission to view the game library.</p>
       </div>
     );
   }
@@ -234,14 +234,14 @@ export default function GameLibraryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Game Library</h1>
-        <div className="flex gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Game Library</h1>
+        <div className="flex gap-1 rounded-xl border border-card-border bg-card p-1">
           <button
             onClick={() => setView("available")}
             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
               view === "available"
-                ? "bg-zinc-700 text-white"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "bg-card-hover text-foreground"
+                : "text-muted hover:text-zinc-200"
             }`}
           >
             Available Games
@@ -250,8 +250,8 @@ export default function GameLibraryPage() {
             onClick={() => setView("active")}
             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
               view === "active"
-                ? "bg-zinc-700 text-white"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "bg-card-hover text-foreground"
+                : "text-muted hover:text-zinc-200"
             }`}
           >
             Active Checkouts
@@ -263,11 +263,11 @@ export default function GameLibraryPage() {
       {view === "available" && (
         <>
           {gamesLoading ? (
-            <p className="text-zinc-400 text-center py-12">Loading game library...</p>
+            <p className="text-muted text-center py-12">Loading game library...</p>
           ) : games.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-              <p className="text-zinc-400 mb-2">No lendable games in inventory.</p>
-              <p className="text-zinc-500 text-sm">
+            <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
+              <p className="text-muted mb-2">No lendable games in inventory.</p>
+              <p className="text-muted text-sm">
                 Mark inventory items as &quot;lendable&quot; in Inventory to see them here.
               </p>
             </div>
@@ -276,10 +276,10 @@ export default function GameLibraryPage() {
               {games.map((game) => (
                 <div
                   key={game.id}
-                  className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 flex flex-col"
+                  className="rounded-xl border border-card-border bg-card p-4 flex flex-col"
                 >
                   {/* Image placeholder */}
-                  <div className="mb-3 flex h-32 items-center justify-center rounded-md bg-zinc-800 text-4xl text-zinc-600">
+                  <div className="mb-3 flex h-32 items-center justify-center rounded-md bg-card-hover text-4xl text-zinc-600">
                     {game.image_url ? (
                       <img
                         src={game.image_url}
@@ -291,10 +291,10 @@ export default function GameLibraryPage() {
                     )}
                   </div>
 
-                  <h3 className="font-semibold text-white text-sm mb-1 line-clamp-2">
+                  <h3 className="font-semibold text-foreground text-sm mb-1 line-clamp-2">
                     {game.name}
                   </h3>
-                  <p className="text-xs text-zinc-500 mb-3">{game.category}</p>
+                  <p className="text-xs text-muted mb-3">{game.category}</p>
 
                   {/* Availability badge */}
                   {game.available ? (
@@ -316,14 +316,14 @@ export default function GameLibraryPage() {
                         resetCheckoutForm();
                         setCheckoutModal(game);
                       }}
-                      className="mt-auto rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+                      className="mt-auto rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
                     >
                       Check Out
                     </button>
                   )}
 
                   {!game.available && game.checkout && (
-                    <div className="mt-auto text-xs text-zinc-500">
+                    <div className="mt-auto text-xs text-muted">
                       {game.checkout.customer_name && (
                         <p>{game.checkout.customer_name}</p>
                       )}
@@ -341,16 +341,16 @@ export default function GameLibraryPage() {
       {view === "active" && (
         <>
           {checkoutsLoading ? (
-            <p className="text-zinc-400 text-center py-12">Loading checkouts...</p>
+            <p className="text-muted text-center py-12">Loading checkouts...</p>
           ) : checkouts.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-              <p className="text-zinc-400">No checkouts recorded yet.</p>
+            <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
+              <p className="text-muted">No checkouts recorded yet.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-800">
+            <div className="overflow-x-auto rounded-xl border border-card-border">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                  <tr className="border-b border-card-border bg-card text-left text-muted">
                     <th className="px-4 py-3 font-medium">Game</th>
                     <th className="px-4 py-3 font-medium">Customer / Table</th>
                     <th className="px-4 py-3 font-medium">Checked Out</th>
@@ -372,31 +372,31 @@ export default function GameLibraryPage() {
                         key={co.id}
                         className={`transition-colors ${
                           co.status === "returned"
-                            ? "bg-zinc-950/50 text-zinc-500"
+                            ? "bg-background/50 text-muted"
                             : isOverdue
                             ? "bg-orange-950/20"
-                            : "bg-zinc-950 hover:bg-zinc-900/50"
+                            : "bg-background hover:bg-card-hover"
                         }`}
                       >
-                        <td className="px-4 py-3 text-white font-medium">
+                        <td className="px-4 py-3 text-foreground font-medium">
                           {co.inventory_item.name}
                         </td>
-                        <td className="px-4 py-3 text-zinc-300">
+                        <td className="px-4 py-3 text-foreground/70">
                           {co.customer?.name || "Walk-in"}
                           {co.table_number && (
-                            <span className="ml-2 text-zinc-500">
+                            <span className="ml-2 text-muted">
                               Table {co.table_number}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-zinc-400">
+                        <td className="px-4 py-3 text-muted">
                           {co.status !== "returned" ? (
                             <span>{formatElapsed(co.time_elapsed_minutes)} ago</span>
                           ) : (
                             new Date(co.checked_out_at).toLocaleString()
                           )}
                         </td>
-                        <td className="px-4 py-3 text-zinc-400">
+                        <td className="px-4 py-3 text-muted">
                           {co.expected_return_at
                             ? new Date(co.expected_return_at).toLocaleTimeString([], {
                                 hour: "2-digit",
@@ -406,7 +406,7 @@ export default function GameLibraryPage() {
                         </td>
                         <td className="px-4 py-3">
                           {co.status === "returned" ? (
-                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium text-zinc-400 bg-zinc-800/50 border-zinc-700">
+                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium text-muted bg-card-hover border-input-border">
                               Returned
                               {co.return_condition && co.return_condition !== "Good"
                                 ? ` (${co.return_condition})`
@@ -431,7 +431,7 @@ export default function GameLibraryPage() {
                                   setReturnNotes("");
                                   setReturnModal(co);
                                 }}
-                                className="rounded bg-zinc-800 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                                className="rounded bg-card-hover px-3 py-1 text-xs text-foreground/70 hover:bg-card-hover hover:text-foreground transition-colors"
                               >
                                 Return
                               </button>
@@ -461,31 +461,31 @@ export default function GameLibraryPage() {
       {/* ===== CHECKOUT MODAL ===== */}
       {checkoutModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setCheckoutModal(null)}
         >
           <div
-            className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-white mb-1">Check Out Game</h2>
-            <p className="text-sm text-zinc-400 mb-4">{checkoutModal.name}</p>
+            <h2 className="text-lg font-semibold text-foreground mb-1">Check Out Game</h2>
+            <p className="text-sm text-muted mb-4">{checkoutModal.name}</p>
 
             {/* Customer search */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Customer (optional)
               </label>
               {selectedCustomerName ? (
-                <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
-                  <span className="text-white text-sm flex-1">{selectedCustomerName}</span>
+                <div className="flex items-center gap-2 rounded-xl border border-card-border bg-background px-3 py-2">
+                  <span className="text-foreground text-sm flex-1">{selectedCustomerName}</span>
                   <button
                     onClick={() => {
                       setCheckoutCustomerId("");
                       setSelectedCustomerName("");
                       setCustomerSearch("");
                     }}
-                    className="text-zinc-500 hover:text-zinc-300 text-xs"
+                    className="text-muted hover:text-foreground/70 text-xs"
                   >
                     Clear
                   </button>
@@ -497,15 +497,15 @@ export default function GameLibraryPage() {
                     value={customerSearch}
                     onChange={(e) => setCustomerSearch(e.target.value)}
                     placeholder="Search customers..."
-                    className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white text-sm placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground text-sm placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   {customerSearching && (
-                    <span className="absolute right-3 top-2.5 text-xs text-zinc-500">
+                    <span className="absolute right-3 top-2.5 text-xs text-muted">
                       Searching...
                     </span>
                   )}
                   {customerResults.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 max-h-40 overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 shadow-lg z-10">
+                    <div className="absolute left-0 right-0 top-full mt-1 max-h-40 overflow-y-auto rounded-xl border border-input-border bg-card shadow-lg z-10">
                       {customerResults.map((c) => (
                         <button
                           key={c.id}
@@ -515,11 +515,11 @@ export default function GameLibraryPage() {
                             setCustomerSearch("");
                             setCustomerResults([]);
                           }}
-                          className="block w-full px-3 py-2 text-left text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          className="block w-full px-3 py-2 text-left text-sm text-foreground/70 hover:bg-card-hover hover:text-foreground"
                         >
                           {c.name}
                           {c.email && (
-                            <span className="ml-2 text-xs text-zinc-500">{c.email}</span>
+                            <span className="ml-2 text-xs text-muted">{c.email}</span>
                           )}
                         </button>
                       ))}
@@ -531,7 +531,7 @@ export default function GameLibraryPage() {
 
             {/* Table number */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Table Number (optional)
               </label>
               <input
@@ -539,19 +539,19 @@ export default function GameLibraryPage() {
                 value={checkoutTable}
                 onChange={(e) => setCheckoutTable(e.target.value)}
                 placeholder="e.g. 7"
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white text-sm placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground text-sm placeholder:text-muted focus:border-accent focus:outline-none"
               />
             </div>
 
             {/* Duration */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Duration
               </label>
               <select
                 value={checkoutDuration}
                 onChange={(e) => setCheckoutDuration(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               >
                 <option value="1">1 hour</option>
                 <option value="2">2 hours</option>
@@ -564,14 +564,14 @@ export default function GameLibraryPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setCheckoutModal(null)}
-                className="flex-1 rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-xl border border-input-border py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCheckout}
                 disabled={checkingOut}
-                className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {checkingOut ? "Checking Out..." : "Check Out"}
               </button>
@@ -583,26 +583,26 @@ export default function GameLibraryPage() {
       {/* ===== RETURN MODAL ===== */}
       {returnModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setReturnModal(null)}
         >
           <div
-            className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-white mb-1">Return Game</h2>
-            <p className="text-sm text-zinc-400 mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-1">Return Game</h2>
+            <p className="text-sm text-muted mb-4">
               {returnModal.inventory_item.name}
             </p>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Condition
               </label>
               <select
                 value={returnCondition}
                 onChange={(e) => setReturnCondition(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               >
                 <option value="Good">Good</option>
                 <option value="Minor Wear">Minor Wear</option>
@@ -612,7 +612,7 @@ export default function GameLibraryPage() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Notes (optional)
               </label>
               <textarea
@@ -620,21 +620,21 @@ export default function GameLibraryPage() {
                 onChange={(e) => setReturnNotes(e.target.value)}
                 placeholder="Any notes about the return..."
                 rows={3}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white text-sm placeholder-zinc-500 focus:border-blue-500 focus:outline-none resize-none"
+                className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground text-sm placeholder:text-muted focus:border-accent focus:outline-none resize-none"
               />
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setReturnModal(null)}
-                className="flex-1 rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-xl border border-input-border py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleReturn}
                 disabled={returning}
-                className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {returning ? "Returning..." : "Confirm Return"}
               </button>

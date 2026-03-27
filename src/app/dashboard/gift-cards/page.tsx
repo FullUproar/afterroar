@@ -99,7 +99,7 @@ export default function GiftCardsPage() {
   if (!can("customers.edit")) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to manage gift cards.</p>
+        <p className="text-muted">You don&apos;t have permission to manage gift cards.</p>
       </div>
     );
   }
@@ -107,10 +107,10 @@ export default function GiftCardsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Gift Cards</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Gift Cards</h1>
         <button
           onClick={() => setShowCreate(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
         >
           Create Gift Card
         </button>
@@ -122,15 +122,15 @@ export default function GiftCardsPage() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search by card code..."
-        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+        className="w-full rounded-xl border border-card-border bg-card px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
       />
 
       {/* Cards list */}
       {loading ? (
-        <p className="text-zinc-400 text-center py-12">Loading gift cards...</p>
+        <p className="text-muted text-center py-12">Loading gift cards...</p>
       ) : cards.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-          <p className="text-zinc-400">
+        <div className="rounded-xl border border-dashed border-card-border bg-card/50 p-12 text-center">
+          <p className="text-muted">
             {search ? "No gift cards match your search." : "No gift cards yet."}
           </p>
         </div>
@@ -142,19 +142,19 @@ export default function GiftCardsPage() {
               <button
                 key={card.id}
                 onClick={() => viewDetail(card.code)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+                className="w-full rounded-xl border border-card-border bg-card p-3 text-left min-h-11 active:bg-card-hover"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-white font-mono text-xs">{maskCode(card.code)}</span>
+                  <span className="text-foreground font-mono text-xs">{maskCode(card.code)}</span>
                   <span
                     className={`font-mono font-medium ${
-                      card.balance_cents > 0 ? "text-emerald-400" : "text-zinc-500"
+                      card.balance_cents > 0 ? "text-emerald-400" : "text-muted"
                     }`}
                   >
                     {formatCents(card.balance_cents)}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                <div className="mt-1 flex items-center justify-between text-xs text-muted">
                   <span>{card.active ? "Active" : "Inactive"}</span>
                   <span>of {formatCents(card.initial_balance_cents)}</span>
                 </div>
@@ -163,10 +163,10 @@ export default function GiftCardsPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                <tr className="border-b border-zinc-800 bg-card text-left text-muted">
                   <th className="px-4 py-3 font-medium">Code</th>
                   <th className="px-4 py-3 font-medium text-right">Balance</th>
                   <th className="px-4 py-3 font-medium text-right">Original</th>
@@ -177,40 +177,40 @@ export default function GiftCardsPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {cards.map((card) => (
-                  <tr key={card.id} className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-4 py-3 text-white font-mono text-xs">
+                  <tr key={card.id} className="bg-background hover:bg-card-hover transition-colors">
+                    <td className="px-4 py-3 text-foreground font-mono text-xs">
                       {maskCode(card.code)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono">
                       <span
                         className={
-                          card.balance_cents > 0 ? "text-emerald-400" : "text-zinc-500"
+                          card.balance_cents > 0 ? "text-emerald-400" : "text-muted"
                         }
                       >
                         {formatCents(card.balance_cents)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-zinc-400 font-mono">
+                    <td className="px-4 py-3 text-right text-muted font-mono">
                       {formatCents(card.initial_balance_cents)}
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                           card.active
-                            ? "bg-green-900/50 text-green-400"
-                            : "bg-zinc-800 text-zinc-500"
+                            ? "border-green-500/30 text-green-600 dark:text-green-400"
+                            : "bg-card-hover text-muted"
                         }`}
                       >
                         {card.active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-zinc-400">
+                    <td className="px-4 py-3 text-muted">
                       {new Date(card.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => viewDetail(card.code)}
-                        className="rounded bg-zinc-800 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                        className="rounded bg-card-hover px-3 py-1 text-xs text-foreground/80 hover:bg-card-hover hover:text-foreground transition-colors"
                       >
                         View
                       </button>
@@ -226,20 +226,20 @@ export default function GiftCardsPage() {
       {/* Create Modal */}
       {showCreate && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setShowCreate(false)}
         >
           <div
-            className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-sm rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-white mb-4">Create Gift Card</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4">Create Gift Card</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-zinc-500">$</span>
+                <span className="absolute left-3 top-2.5 text-muted">$</span>
                 <input
                   type="text"
                   value={createAmount}
@@ -247,21 +247,21 @@ export default function GiftCardsPage() {
                   placeholder="25.00"
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 pl-7 pr-4 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background pl-7 pr-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 />
               </div>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCreate(false)}
-                className="flex-1 rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-xl border border-card-border py-2 text-sm text-foreground/80 hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreate}
                 disabled={creating || !createAmount}
-                className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {creating ? "Creating..." : "Create"}
               </button>
@@ -273,53 +273,53 @@ export default function GiftCardsPage() {
       {/* Detail Modal */}
       {(detail || detailLoading) && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setDetail(null)}
         >
           <div
-            className="w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {detailLoading && !detail ? (
-              <p className="text-zinc-400">Loading...</p>
+              <p className="text-muted">Loading...</p>
             ) : detail ? (
               <>
-                <h2 className="text-lg font-bold text-white mb-1">Gift Card Detail</h2>
+                <h2 className="text-lg font-bold text-foreground mb-1">Gift Card Detail</h2>
                 <div className="mb-4 space-y-2">
                   <div className="text-sm">
-                    <span className="text-zinc-400">Code: </span>
-                    <span className="text-white font-mono">{detail.code}</span>
+                    <span className="text-muted">Code: </span>
+                    <span className="text-foreground font-mono">{detail.code}</span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-zinc-400">Balance: </span>
+                    <span className="text-muted">Balance: </span>
                     <span className="text-emerald-400 font-mono font-medium">
                       {formatCents(detail.balance_cents)}
                     </span>
-                    <span className="text-zinc-500 ml-2">
+                    <span className="text-muted ml-2">
                       of {formatCents(detail.initial_balance_cents)}
                     </span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-zinc-400">Status: </span>
-                    <span className={detail.active ? "text-green-400" : "text-zinc-500"}>
+                    <span className="text-muted">Status: </span>
+                    <span className={detail.active ? "text-green-400" : "text-muted"}>
                       {detail.active ? "Active" : "Inactive"}
                     </span>
                   </div>
                 </div>
 
-                <h3 className="text-sm font-semibold text-zinc-300 mb-2">Transaction History</h3>
+                <h3 className="text-sm font-semibold text-foreground/80 mb-2">Transaction History</h3>
                 {detail.history?.length === 0 ? (
-                  <p className="text-sm text-zinc-500">No transactions yet.</p>
+                  <p className="text-sm text-muted">No transactions yet.</p>
                 ) : (
                   <div className="space-y-1">
                     {detail.history?.map((h) => (
                       <div
                         key={h.id}
-                        className="flex justify-between text-sm rounded-md bg-zinc-950 px-3 py-2"
+                        className="flex justify-between text-sm rounded-md bg-background px-3 py-2"
                       >
                         <div>
-                          <div className="text-zinc-300">{h.description}</div>
-                          <div className="text-xs text-zinc-500">
+                          <div className="text-foreground/80">{h.description}</div>
+                          <div className="text-xs text-muted">
                             {new Date(h.created_at).toLocaleString()}
                           </div>
                         </div>
@@ -338,7 +338,7 @@ export default function GiftCardsPage() {
 
                 <button
                   onClick={() => setDetail(null)}
-                  className="mt-4 w-full rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                  className="mt-4 w-full rounded-xl border border-card-border py-2 text-sm text-foreground/80 hover:bg-card-hover transition-colors"
                 >
                   Close
                 </button>

@@ -88,18 +88,18 @@ function TimeClock() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-muted">Loading...</p>
       </div>
     );
   }
 
   if (status !== 'authenticated') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-xl text-zinc-400">Sign in to use the time clock</p>
-          <a href="/login" className="mt-4 inline-block rounded-lg bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-500">
+          <p className="text-xl text-muted">Sign in to use the time clock</p>
+          <a href="/login" className="mt-4 inline-block rounded-xl bg-indigo-600 px-6 py-3 text-foreground hover:bg-indigo-500">
             Sign In
           </a>
         </div>
@@ -108,20 +108,20 @@ function TimeClock() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
       {/* Current time — BIG */}
-      <div className="text-6xl font-bold tabular-nums text-white sm:text-8xl">
+      <div className="text-6xl font-bold tabular-nums text-foreground sm:text-8xl">
         {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </div>
-      <div className="mt-2 text-lg text-zinc-400">
+      <div className="mt-2 text-lg text-muted">
         {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
       </div>
 
       {/* Staff name */}
-      <div className="mt-8 text-2xl font-medium text-white">{staffName}</div>
+      <div className="mt-8 text-2xl font-medium text-foreground">{staffName}</div>
 
       {/* Status */}
-      <div className="mt-2 text-sm text-zinc-400">
+      <div className="mt-2 text-sm text-muted">
         {clockedIn ? (
           <span className="text-green-400">
             Clocked in · {elapsedHours}h {elapsedMins}m
@@ -137,7 +137,7 @@ function TimeClock() {
       <button
         onClick={handleToggle}
         disabled={processing}
-        className={`mt-10 h-40 w-40 rounded-full text-2xl font-bold text-white shadow-xl transition-all active:scale-95 disabled:opacity-50 sm:h-52 sm:w-52 sm:text-3xl ${
+        className={`mt-10 h-40 w-40 rounded-full text-2xl font-bold text-foreground shadow-xl transition-all active:scale-95 disabled:opacity-50 sm:h-52 sm:w-52 sm:text-3xl ${
           clockedIn
             ? 'bg-red-600 hover:bg-red-500 shadow-red-600/30'
             : 'bg-green-600 hover:bg-green-500 shadow-green-600/30'
@@ -152,13 +152,13 @@ function TimeClock() {
 
       {/* Message */}
       {message && (
-        <div className="mt-6 rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300">
+        <div className="mt-6 rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70">
           {message}
         </div>
       )}
 
       {/* Tiny link to main app */}
-      <a href="/dashboard" className="mt-12 text-xs text-zinc-600 hover:text-zinc-400">
+      <a href="/dashboard" className="mt-12 text-xs text-zinc-600 hover:text-muted">
         Open Store Ops
       </a>
     </div>

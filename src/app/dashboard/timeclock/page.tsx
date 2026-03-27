@@ -99,33 +99,33 @@ export default function TimeclockPage() {
   if (!can("checkout")) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to access time clock.</p>
+        <p className="text-muted">You don&apos;t have permission to access time clock.</p>
       </div>
     );
   }
 
   if (loading) {
-    return <p className="text-zinc-400 py-12 text-center">Loading time clock...</p>;
+    return <p className="text-muted py-12 text-center">Loading time clock...</p>;
   }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <h1 className="hidden md:block text-2xl font-bold text-white">Time Clock</h1>
+      <h1 className="hidden md:block text-2xl font-semibold text-foreground">Time Clock</h1>
 
       {data && (
         <>
           {/* Current Status + Clock Button */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+          <div className="rounded-xl border border-card-border bg-card p-6">
             <div className="text-center space-y-4">
               <div>
-                <div className="text-sm text-zinc-400">Welcome, {data.staff_name}</div>
+                <div className="text-sm text-muted">Welcome, {data.staff_name}</div>
                 <div className="mt-1">
                   {data.clocked_in ? (
                     <span className="rounded-full bg-emerald-900/50 px-3 py-1 text-sm font-medium text-emerald-400">
                       Clocked In
                     </span>
                   ) : (
-                    <span className="rounded-full bg-zinc-800 px-3 py-1 text-sm font-medium text-zinc-400">
+                    <span className="rounded-full bg-card-hover px-3 py-1 text-sm font-medium text-muted">
                       Clocked Out
                     </span>
                   )}
@@ -134,11 +134,11 @@ export default function TimeclockPage() {
 
               {data.clocked_in && data.current_entry && (
                 <div>
-                  <div className="text-sm text-zinc-400">Current shift started</div>
-                  <div className="text-white font-medium">
+                  <div className="text-sm text-muted">Current shift started</div>
+                  <div className="text-foreground font-medium">
                     {new Date(data.current_entry.clock_in).toLocaleTimeString()}
                   </div>
-                  <div className="text-sm text-zinc-500">
+                  <div className="text-sm text-muted">
                     {formatDuration(data.current_entry.clock_in)} so far
                   </div>
                 </div>
@@ -149,10 +149,10 @@ export default function TimeclockPage() {
                   handleClockAction(data.clocked_in ? "clock_out" : "clock_in")
                 }
                 disabled={processing}
-                className={`w-full max-w-xs mx-auto rounded-lg py-4 text-lg font-bold transition-colors ${
+                className={`w-full max-w-xs mx-auto rounded-xl py-4 text-lg font-bold transition-colors ${
                   data.clocked_in
-                    ? "bg-red-600 text-white hover:bg-red-500"
-                    : "bg-emerald-600 text-white hover:bg-emerald-500"
+                    ? "bg-red-600 text-foreground hover:bg-red-500"
+                    : "bg-emerald-600 text-foreground hover:bg-emerald-500"
                 } disabled:opacity-50`}
               >
                 {processing
@@ -165,10 +165,10 @@ export default function TimeclockPage() {
           </div>
 
           {/* This Week Summary */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+          <div className="rounded-xl border border-card-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">This Week</span>
-              <span className="text-lg font-bold text-white">
+              <span className="text-sm text-muted">This Week</span>
+              <span className="text-lg font-semibold text-foreground">
                 {formatHours(data.hours_this_week)}
               </span>
             </div>
@@ -176,9 +176,9 @@ export default function TimeclockPage() {
 
           {/* Manager view: all staff status */}
           {can("staff.manage") && allStaff.length > 0 && (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-              <div className="border-b border-zinc-800 px-4 py-3">
-                <h3 className="text-sm font-semibold text-zinc-300">All Staff Status</h3>
+            <div className="rounded-xl border border-card-border bg-card">
+              <div className="border-b border-card-border px-4 py-3">
+                <h3 className="text-sm font-semibold text-foreground/70">All Staff Status</h3>
               </div>
               <div className="divide-y divide-zinc-800">
                 {allStaff.map((s) => (
@@ -186,7 +186,7 @@ export default function TimeclockPage() {
                     key={s.staff_id}
                     className="flex items-center justify-between px-4 py-3"
                   >
-                    <div className="text-sm text-white">{s.staff_name}</div>
+                    <div className="text-sm text-foreground">{s.staff_name}</div>
                     <div>
                       {s.clocked_in ? (
                         <div className="text-right">
@@ -194,13 +194,13 @@ export default function TimeclockPage() {
                             In
                           </span>
                           {s.clock_in_time && (
-                            <div className="text-xs text-zinc-500 mt-0.5">
+                            <div className="text-xs text-muted mt-0.5">
                               since {new Date(s.clock_in_time).toLocaleTimeString()}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                        <span className="rounded-full bg-card-hover px-2 py-0.5 text-xs font-medium text-muted">
                           Out
                         </span>
                       )}
@@ -212,12 +212,12 @@ export default function TimeclockPage() {
           )}
 
           {/* Recent History */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-            <div className="border-b border-zinc-800 px-4 py-3">
-              <h3 className="text-sm font-semibold text-zinc-300">Recent Shifts</h3>
+          <div className="rounded-xl border border-card-border bg-card">
+            <div className="border-b border-card-border px-4 py-3">
+              <h3 className="text-sm font-semibold text-foreground/70">Recent Shifts</h3>
             </div>
             {data.recent.length === 0 ? (
-              <p className="px-4 py-4 text-sm text-zinc-500">No shifts recorded yet.</p>
+              <p className="px-4 py-4 text-sm text-muted">No shifts recorded yet.</p>
             ) : (
               <>
                 {/* Mobile card view */}
@@ -225,16 +225,16 @@ export default function TimeclockPage() {
                   {data.recent.map((entry) => (
                     <div key={entry.id} className="px-4 py-3 min-h-11">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-foreground">
                           {new Date(entry.clock_in).toLocaleDateString()}
                         </span>
-                        <span className="text-sm font-mono text-white">
+                        <span className="text-sm font-mono text-foreground">
                           {entry.hours_worked !== null
                             ? formatHours(Number(entry.hours_worked))
                             : "---"}
                         </span>
                       </div>
-                      <div className="mt-0.5 text-xs text-zinc-500">
+                      <div className="mt-0.5 text-xs text-muted">
                         {new Date(entry.clock_in).toLocaleTimeString()} &mdash;{" "}
                         {entry.clock_out
                           ? new Date(entry.clock_out).toLocaleTimeString()
@@ -248,7 +248,7 @@ export default function TimeclockPage() {
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                      <tr className="border-b border-card-border text-muted text-left">
                         <th className="px-4 py-2 font-medium">Date</th>
                         <th className="px-4 py-2 font-medium">Clock In</th>
                         <th className="px-4 py-2 font-medium">Clock Out</th>
@@ -257,8 +257,8 @@ export default function TimeclockPage() {
                     </thead>
                     <tbody className="divide-y divide-zinc-800">
                       {data.recent.map((entry) => (
-                        <tr key={entry.id} className="text-white">
-                          <td className="px-4 py-2 text-zinc-300">
+                        <tr key={entry.id} className="text-foreground">
+                          <td className="px-4 py-2 text-foreground/70">
                             {new Date(entry.clock_in).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-2">

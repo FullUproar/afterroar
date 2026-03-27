@@ -164,7 +164,7 @@ function trendArrow(change: number) {
 }
 
 function trendColor(change: number, positiveIsGood = true) {
-  if (change === 0) return 'text-zinc-400';
+  if (change === 0) return 'text-muted';
   const isPositive = change > 0;
   return (isPositive === positiveIsGood) ? 'text-green-400' : 'text-red-400';
 }
@@ -199,14 +199,14 @@ function StatCard({
     red: 'border-red-500/20',
     yellow: 'border-yellow-500/20',
     indigo: 'border-indigo-500/20',
-    default: 'border-zinc-800',
+    default: 'border-card-border',
   };
   const accentText = {
     green: 'text-green-400',
     red: 'text-red-400',
     yellow: 'text-yellow-400',
     indigo: 'text-indigo-400',
-    default: 'text-white',
+    default: 'text-foreground',
   };
   const accentGlow = {
     green: 'shadow-green-500/5',
@@ -216,15 +216,15 @@ function StatCard({
     default: '',
   };
   return (
-    <div className={`rounded-xl border ${accentBorder[accent ?? 'default']} bg-zinc-900/80 p-5 shadow-lg ${accentGlow[accent ?? 'default']} backdrop-blur-sm transition-all hover:border-zinc-700`}>
+    <div className={`rounded-xl border ${accentBorder[accent ?? 'default']} bg-card/80 p-5 shadow-lg ${accentGlow[accent ?? 'default']} backdrop-blur-sm transition-all hover:border-input-border`}>
       <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-zinc-400">{label}</p>
+        <p className="text-sm font-medium text-muted">{label}</p>
         {icon && <span className="text-lg">{icon}</span>}
       </div>
       <p className={`mt-2 text-2xl font-bold tabular-nums tracking-tight ${accentText[accent ?? 'default']}`}>
         {value}
       </p>
-      {sub && <p className="mt-1.5 text-xs text-zinc-500">{sub}</p>}
+      {sub && <p className="mt-1.5 text-xs text-muted">{sub}</p>}
     </div>
   );
 }
@@ -232,8 +232,8 @@ function StatCard({
 function SectionHeader({ children, sub }: { children: React.ReactNode; sub?: string }) {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-white">{children}</h2>
-      {sub && <p className="mt-0.5 text-sm text-zinc-500">{sub}</p>}
+      <h2 className="text-lg font-semibold text-foreground">{children}</h2>
+      {sub && <p className="mt-0.5 text-sm text-muted">{sub}</p>}
     </div>
   );
 }
@@ -250,28 +250,28 @@ function RevenueChart({ data, onHover }: { data: DailyRevenueRow[]; onHover?: (d
   const chartHeight = 200;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+    <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-white">Revenue Flow</h3>
-          <p className="text-xs text-zinc-500">Last 30 days — daily revenue vs payouts</p>
+          <h3 className="font-semibold text-foreground">Revenue Flow</h3>
+          <p className="text-xs text-muted">Last 30 days — daily revenue vs payouts</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-indigo-500" />
-            <span className="text-zinc-400">Revenue</span>
+            <span className="text-muted">Revenue</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-rose-500/60" />
-            <span className="text-zinc-400">Payouts</span>
+            <span className="text-muted">Payouts</span>
           </div>
         </div>
       </div>
 
       {/* Hovered day tooltip */}
       {hoveredIdx !== null && data[hoveredIdx] && (
-        <div className="mb-3 rounded-lg bg-zinc-800/80 px-3 py-2 text-xs">
-          <span className="font-medium text-white">{formatDayLabel(data[hoveredIdx].date)}</span>
+        <div className="mb-3 rounded-xl bg-card-hover/80 px-3 py-2 text-xs">
+          <span className="font-medium text-foreground">{formatDayLabel(data[hoveredIdx].date)}</span>
           <span className="mx-2 text-zinc-600">|</span>
           <span className="text-indigo-400">Revenue: {formatCents(data[hoveredIdx].revenue_cents)}</span>
           <span className="mx-2 text-zinc-600">|</span>
@@ -321,7 +321,7 @@ function RevenueChart({ data, onHover }: { data: DailyRevenueRow[]; onHover?: (d
                     isHovered
                       ? 'bg-indigo-400'
                       : isWeekend
-                        ? 'bg-indigo-600/60'
+                        ? 'bg-accent/60'
                         : 'bg-indigo-500/80'
                   }`}
                   style={{ height: Math.max(revenueH, 1) }}
@@ -353,12 +353,12 @@ function CategoryBars({ categories, totalCost }: { categories: CategoryRow[]; to
             <div className="mb-1 flex items-center justify-between text-sm">
               <span className="font-medium text-zinc-200">{catLabel(cat.category)}</span>
               <div className="flex items-center gap-3">
-                <span className="text-zinc-500 tabular-nums">{cat.item_count} SKUs</span>
-                <span className="font-medium text-white tabular-nums">{formatCents(cat.cost_basis_cents)}</span>
-                <span className="w-12 text-right text-xs text-zinc-400 tabular-nums">{pct.toFixed(0)}%</span>
+                <span className="text-muted tabular-nums">{cat.item_count} SKUs</span>
+                <span className="font-medium text-foreground tabular-nums">{formatCents(cat.cost_basis_cents)}</span>
+                <span className="w-12 text-right text-xs text-muted tabular-nums">{pct.toFixed(0)}%</span>
               </div>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-card-hover">
               <div
                 className={`h-full rounded-full transition-all ${catColor(cat.category)}`}
                 style={{ width: `${Math.max(pct, 0.5)}%` }}
@@ -394,7 +394,7 @@ export default function CashFlowPage() {
   if (!can('cash_flow')) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to view cash flow data.</p>
+        <p className="text-muted">You don&apos;t have permission to view cash flow data.</p>
       </div>
     );
   }
@@ -404,7 +404,7 @@ export default function CashFlowPage() {
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-          <p className="text-zinc-400">Loading cash flow intelligence...</p>
+          <p className="text-muted">Loading cash flow intelligence...</p>
         </div>
       </div>
     );
@@ -432,18 +432,18 @@ export default function CashFlowPage() {
       {/* ---- HEADER ---- */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="hidden md:block text-2xl font-bold tracking-tight text-white">Cash Flow Intelligence</h1>
-          <p className="mt-1 text-sm text-zinc-500">Where your money is, where it&apos;s going, and where it&apos;s stuck.</p>
+          <h1 className="hidden md:block text-2xl font-bold tracking-tight text-foreground">Cash Flow Intelligence</h1>
+          <p className="mt-1 text-sm text-muted">Where your money is, where it&apos;s going, and where it&apos;s stuck.</p>
         </div>
-        <div className="flex gap-1 rounded-xl bg-zinc-800/80 p-1 shadow-inner">
+        <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 shadow-inner">
           {(['today', 'this_week', 'this_month'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`rounded-xl px-3 py-1.5 text-sm font-medium transition-all ${
                 period === p
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-700/50'
+                  ? 'bg-accent text-foreground shadow-md'
+                  : 'text-muted hover:text-foreground hover:bg-card-hover/50'
               }`}
             >
               {periodLabels[p]}
@@ -486,9 +486,9 @@ export default function CashFlowPage() {
 
       {/* ---- MONTH TREND ---- */}
       {data.month_trend.revenue_change_percent !== null && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 px-5 py-3 shadow-lg backdrop-blur-sm">
+        <div className="rounded-xl border border-card-border bg-card/80 px-5 py-3 shadow-lg backdrop-blur-sm">
           <div className="flex items-center gap-6 text-sm">
-            <span className="text-zinc-500 font-medium">Month-over-month</span>
+            <span className="text-muted font-medium">Month-over-month</span>
             <span className={trendColor(data.month_trend.revenue_change_cents)}>
               {trendArrow(data.month_trend.revenue_change_cents)} Revenue{' '}
               {data.month_trend.revenue_change_percent > 0 ? '+' : ''}
@@ -509,21 +509,21 @@ export default function CashFlowPage() {
       {/* ---- INVENTORY BY CATEGORY + VELOCITY ---- */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left: Inventory by Category */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+        <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
           <SectionHeader sub="Where your capital is tied up">Inventory by Category</SectionHeader>
           <div className="mt-5">
             <CategoryBars categories={data.category_breakdown} totalCost={data.inventory.cost_basis_cents} />
           </div>
-          <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4 text-sm">
-            <span className="text-zinc-400">Total cost basis</span>
-            <span className="font-semibold text-white tabular-nums">{formatCents(data.inventory.cost_basis_cents)}</span>
+          <div className="mt-4 flex items-center justify-between border-t border-card-border pt-4 text-sm">
+            <span className="text-muted">Total cost basis</span>
+            <span className="font-semibold text-foreground tabular-nums">{formatCents(data.inventory.cost_basis_cents)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">Total retail value</span>
-            <span className="text-zinc-300 tabular-nums">{formatCents(data.inventory.retail_value_cents)}</span>
+            <span className="text-muted">Total retail value</span>
+            <span className="text-foreground/70 tabular-nums">{formatCents(data.inventory.retail_value_cents)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">Potential margin</span>
+            <span className="text-muted">Potential margin</span>
             <span className="text-green-400 tabular-nums">{formatCents(data.inventory.potential_margin_cents)}</span>
           </div>
         </div>
@@ -531,10 +531,10 @@ export default function CashFlowPage() {
         {/* Right: Velocity */}
         <div className="space-y-6">
           {/* Fast Movers */}
-          <div className="rounded-xl border border-green-500/10 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+          <div className="rounded-xl border border-green-500/10 bg-card/80 p-5 shadow-lg backdrop-blur-sm">
             <SectionHeader sub="Top sellers in the last 30 days">Fast Movers</SectionHeader>
             {data.fast_movers.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-500">No sales data yet for velocity analysis.</p>
+              <p className="mt-4 text-sm text-muted">No sales data yet for velocity analysis.</p>
             ) : (
               <div className="mt-4 space-y-2.5">
                 {data.fast_movers.slice(0, 5).map((item, i) => (
@@ -544,11 +544,11 @@ export default function CashFlowPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-zinc-200">{item.name}</p>
-                      <p className="text-xs text-zinc-500">{catLabel(item.category)}</p>
+                      <p className="text-xs text-muted">{catLabel(item.category)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-green-400 tabular-nums">{item.sales_per_week}/wk</p>
-                      <p className="text-xs text-zinc-500 tabular-nums">
+                      <p className="text-xs text-muted tabular-nums">
                         {item.current_stock} left
                         {item.days_of_stock !== null && item.days_of_stock <= 14 && (
                           <span className="ml-1 text-yellow-400">({item.days_of_stock}d)</span>
@@ -562,18 +562,18 @@ export default function CashFlowPage() {
           </div>
 
           {/* Dead Stock */}
-          <div className="rounded-xl border border-yellow-500/10 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+          <div className="rounded-xl border border-yellow-500/10 bg-card/80 p-5 shadow-lg backdrop-blur-sm">
             <SectionHeader sub="Items with no sales in 30+ days">Dead Stock</SectionHeader>
             {data.dead_stock.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-500">No dead stock detected. Everything is moving.</p>
+              <p className="mt-4 text-sm text-muted">No dead stock detected. Everything is moving.</p>
             ) : (
               <>
                 <div className="mt-3 mb-4 flex gap-3 text-xs">
-                  <div className="rounded-lg bg-yellow-500/10 px-2.5 py-1.5 text-yellow-400">
+                  <div className="rounded-xl bg-yellow-500/10 px-2.5 py-1.5 text-yellow-400">
                     {data.dead_stock_summary.count_30d} items / {formatCents(data.dead_stock_summary.value_30d)} stuck 30d+
                   </div>
                   {data.dead_stock_summary.count_90d > 0 && (
-                    <div className="rounded-lg bg-red-500/10 px-2.5 py-1.5 text-red-400">
+                    <div className="rounded-xl bg-red-500/10 px-2.5 py-1.5 text-red-400">
                       {data.dead_stock_summary.count_90d} items / {formatCents(data.dead_stock_summary.value_90d)} stuck 90d+
                     </div>
                   )}
@@ -586,13 +586,13 @@ export default function CashFlowPage() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-zinc-200">{item.name}</p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-muted">
                           {catLabel(item.category)} &middot; qty {item.quantity}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-yellow-400 tabular-nums">{formatCents(item.cost_trapped_cents)}</p>
-                        <p className="text-xs text-zinc-500 tabular-nums">
+                        <p className="text-xs text-muted tabular-nums">
                           {item.days_since_sale !== null
                             ? `${item.days_since_sale}d ago`
                             : 'Never sold'}
@@ -602,7 +602,7 @@ export default function CashFlowPage() {
                   ))}
                 </div>
                 {totalDeadStockValue > 0 && (
-                  <div className="mt-4 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-3 py-2 text-xs text-yellow-300">
+                  <div className="mt-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-2 text-xs text-yellow-300">
                     Top {data.dead_stock.length} dead items = {formatCents(totalDeadStockValue)} trapped capital.
                     Consider markdowns to free this cash.
                   </div>
@@ -614,14 +614,14 @@ export default function CashFlowPage() {
       </div>
 
       {/* ---- MARGIN ANALYSIS ---- */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+      <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
         <SectionHeader sub="Actual margins from the last 30 days of sales">Margin Analysis by Category</SectionHeader>
         {data.margin_analysis.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-500">No sales data yet for margin analysis.</p>
+          <p className="mt-4 text-sm text-muted">No sales data yet for margin analysis.</p>
         ) : (
-          <div className="mt-4 overflow-hidden rounded-lg">
+          <div className="mt-4 overflow-hidden rounded-xl">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-800 text-zinc-400">
+              <thead className="border-b border-card-border text-muted">
                 <tr>
                   <th className="px-4 py-3 font-medium">Category</th>
                   <th className="px-4 py-3 font-medium text-right">Units Sold</th>
@@ -634,16 +634,16 @@ export default function CashFlowPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
                 {data.margin_analysis.map((row) => (
-                  <tr key={row.category} className="text-white transition-colors hover:bg-zinc-800/30">
+                  <tr key={row.category} className="text-foreground transition-colors hover:bg-card-hover/30">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className={`h-2.5 w-2.5 rounded-full ${catColor(row.category)}`} />
                         <span className="font-medium">{catLabel(row.category)}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-zinc-300">{row.units_sold}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-foreground/70">{row.units_sold}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{formatCents(row.revenue_cents)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-zinc-400">{formatCents(row.cost_cents)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-muted">{formatCents(row.cost_cents)}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-green-400">{formatCents(row.profit_cents)}</td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
@@ -654,7 +654,7 @@ export default function CashFlowPage() {
                         {row.margin_percent}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-zinc-400">
+                    <td className="px-4 py-3 text-right tabular-nums text-muted">
                       {data.avg_days_to_sell[row.category] !== null && data.avg_days_to_sell[row.category] !== undefined
                         ? `${data.avg_days_to_sell[row.category]}d`
                         : '--'}
@@ -670,31 +670,31 @@ export default function CashFlowPage() {
       {/* ---- TRADE-IN ROI + WHERE YOUR MONEY IS ---- */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Trade-In ROI */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+        <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
           <SectionHeader sub="All-time trade-in performance">Trade-In ROI</SectionHeader>
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Spent on trade-ins</span>
+              <span className="text-sm text-muted">Spent on trade-ins</span>
               <span className="text-sm font-medium text-red-400 tabular-nums">{formatCents(data.trade_in_roi.total_cost_cents)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Sold from trade-ins</span>
+              <span className="text-sm text-muted">Sold from trade-ins</span>
               <span className="text-sm font-medium text-green-400 tabular-nums">{formatCents(data.trade_in_roi.estimated_revenue_cents)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Outstanding inventory</span>
+              <span className="text-sm text-muted">Outstanding inventory</span>
               <span className="text-sm font-medium text-yellow-400 tabular-nums">{formatCents(data.trade_in_roi.outstanding_value_cents)}</span>
             </div>
-            <div className="border-t border-zinc-800 pt-3">
+            <div className="border-t border-card-border pt-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-zinc-300">ROI</span>
+                <span className="text-sm font-medium text-foreground/70">ROI</span>
                 <span className={`text-lg font-bold tabular-nums ${
                   data.trade_in_roi.roi_percent >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
                   {data.trade_in_roi.roi_percent > 0 ? '+' : ''}{data.trade_in_roi.roi_percent}%
                 </span>
               </div>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-muted">
                 {data.trade_in_roi.total_items_received} items received all-time
               </p>
             </div>
@@ -702,24 +702,24 @@ export default function CashFlowPage() {
         </div>
 
         {/* Trade-Ins This Month */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+        <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
           <SectionHeader sub="Incoming inventory via trade-ins">Trade-Ins This Month</SectionHeader>
           <div className="mt-4 space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-zinc-400">Count</span>
-              <span className="text-white tabular-nums">{data.trade_ins.count}</span>
+              <span className="text-muted">Count</span>
+              <span className="text-foreground tabular-nums">{data.trade_ins.count}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Total Offer Value</span>
-              <span className="text-white tabular-nums">{formatCents(data.trade_ins.total_offer_cents)}</span>
+              <span className="text-muted">Total Offer Value</span>
+              <span className="text-foreground tabular-nums">{formatCents(data.trade_ins.total_offer_cents)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Total Paid Out</span>
+              <span className="text-muted">Total Paid Out</span>
               <span className="text-red-400 tabular-nums">{formatCents(data.trade_ins.total_payout_cents)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Cash / Credit</span>
-              <span className="text-zinc-300 tabular-nums">
+              <span className="text-muted">Cash / Credit</span>
+              <span className="text-foreground/70 tabular-nums">
                 {data.trade_ins.cash_payouts} / {data.trade_ins.credit_payouts}
               </span>
             </div>
@@ -727,24 +727,24 @@ export default function CashFlowPage() {
         </div>
 
         {/* Returns This Month */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg backdrop-blur-sm">
+        <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
           <SectionHeader sub="Refunds and restocking">Returns This Month</SectionHeader>
           <div className="mt-4 space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-zinc-400">Count</span>
-              <span className="text-white tabular-nums">{data.returns.count}</span>
+              <span className="text-muted">Count</span>
+              <span className="text-foreground tabular-nums">{data.returns.count}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Total Refunded</span>
+              <span className="text-muted">Total Refunded</span>
               <span className="text-red-400 tabular-nums">{formatCents(data.returns.total_refunded_cents)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Restocking Fees Collected</span>
+              <span className="text-muted">Restocking Fees Collected</span>
               <span className="text-green-400 tabular-nums">{formatCents(data.returns.restocking_fees_collected_cents)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Cash / Credit</span>
-              <span className="text-zinc-300 tabular-nums">
+              <span className="text-muted">Cash / Credit</span>
+              <span className="text-foreground/70 tabular-nums">
                 {data.returns.cash_refunds} / {data.returns.credit_refunds}
               </span>
             </div>
@@ -777,7 +777,7 @@ export default function CashFlowPage() {
       {/* ---- AI INSIGHTS ---- */}
       <div className="rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-6 shadow-lg">
         <h3 className="font-semibold text-indigo-300">AI Insights</h3>
-        <div className="mt-3 space-y-2 text-sm text-zinc-400">
+        <div className="mt-3 space-y-2 text-sm text-muted">
           {data.dead_stock.length > 0 && totalDeadStockValue > 0 && (
             <p>
               You have {formatCents(totalDeadStockValue)} trapped in dead stock.
@@ -796,7 +796,7 @@ export default function CashFlowPage() {
               Consider loyalty promotions to convert credit balances into sales.
             </p>
           )}
-          <p className="text-zinc-500 italic">
+          <p className="text-muted italic">
             More AI-powered recommendations coming soon based on your cash flow patterns.
           </p>
         </div>

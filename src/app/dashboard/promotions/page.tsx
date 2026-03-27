@@ -61,7 +61,7 @@ export default function PromotionsPage() {
   if (!can('inventory.adjust')) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to manage promotions.</p>
+        <p className="text-muted">You don&apos;t have permission to manage promotions.</p>
       </div>
     );
   }
@@ -155,25 +155,25 @@ export default function PromotionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Promotions & Discounts</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Promotions & Discounts</h1>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
         >
           {showCreate ? 'Cancel' : 'New Promotion'}
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       {/* Create form */}
       {showCreate && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-white">Create Promotion</h2>
+        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">Create Promotion</h2>
 
           <input
             type="text"
@@ -181,32 +181,32 @@ export default function PromotionsPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
           />
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs text-zinc-400">Type</label>
+              <label className="mb-1 block text-xs text-muted">Type</label>
               <select value={type} onChange={(e) => setType(e.target.value)}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
                 {PROMOTION_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs text-zinc-400">
+              <label className="mb-1 block text-xs text-muted">
                 Value ({type === 'percent_off' ? '%' : '$'})
               </label>
               <input type="number" min="0" step={type === 'percent_off' ? '1' : '0.01'}
                 value={value} onChange={(e) => setValue(e.target.value)}
                 placeholder={type === 'percent_off' ? '20' : '5.00'}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none" />
+                className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none" />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-zinc-400">Applies to</label>
+              <label className="mb-1 block text-xs text-muted">Applies to</label>
               <select value={scope} onChange={(e) => { setScope(e.target.value); setScopeValue(''); }}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
                 {PROMOTION_SCOPES.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
@@ -216,7 +216,7 @@ export default function PromotionsPage() {
 
           {needsScopeValue && (
             <div>
-              <label className="mb-1 block text-xs text-zinc-400">
+              <label className="mb-1 block text-xs text-muted">
                 {scope === 'category' ? 'Category' :
                  scope === 'customer_tag' ? 'Customer Group' :
                  scope === 'coupon' ? 'Coupon Code' :
@@ -226,7 +226,7 @@ export default function PromotionsPage() {
               </label>
               {scope === 'category' ? (
                 <select value={scopeValue} onChange={(e) => setScopeValue(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                  className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
                   <option value="">Select category</option>
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -234,7 +234,7 @@ export default function PromotionsPage() {
                 </select>
               ) : scope === 'customer_tag' ? (
                 <select value={scopeValue} onChange={(e) => setScopeValue(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                  className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
                   <option value="">Select group</option>
                   {CUSTOMER_DISCOUNT_TAGS.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -243,26 +243,26 @@ export default function PromotionsPage() {
               ) : (
                 <input type="text" value={scopeValue} onChange={(e) => setScopeValue(e.target.value)}
                   placeholder={scope === 'coupon' ? 'FNMNIGHT' : scope === 'quantity_min' ? '3' : ''}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                  className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               )}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-xs text-zinc-400">Starts (optional)</label>
+              <label className="mb-1 block text-xs text-muted">Starts (optional)</label>
               <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none" />
+                className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none" />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-zinc-400">Ends (optional)</label>
+              <label className="mb-1 block text-xs text-muted">Ends (optional)</label>
               <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none" />
+                className="w-full rounded-xl border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none" />
             </div>
           </div>
 
           <button onClick={handleCreate} disabled={!name.trim() || !value || saving}
-            className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50 transition-colors">
+            className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors">
             {saving ? 'Creating...' : 'Create Promotion'}
           </button>
         </div>
@@ -270,9 +270,9 @@ export default function PromotionsPage() {
 
       {/* Promotions list */}
       {loading ? (
-        <div className="text-zinc-400">Loading promotions...</div>
+        <div className="text-muted">Loading promotions...</div>
       ) : promos.length === 0 ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-400">
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
           <p className="text-lg font-medium">No promotions yet</p>
           <p className="mt-2 text-sm">Create a sale, discount, or coupon to get started.</p>
         </div>
@@ -283,21 +283,21 @@ export default function PromotionsPage() {
             return (
               <div
                 key={promo.id}
-                className={`rounded-lg border p-4 transition-colors ${
+                className={`rounded-xl border p-4 transition-colors ${
                   !promo.active || isExpired
-                    ? 'border-zinc-800 bg-zinc-900/50 opacity-60'
-                    : 'border-zinc-800 bg-zinc-900'
+                    ? 'border-card-border bg-card-hover opacity-60'
+                    : 'border-card-border bg-card'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-white">{promo.name}</span>
+                      <span className="font-medium text-foreground">{promo.name}</span>
                       <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-300 border border-indigo-500/30">
                         {formatPromoValue(promo)}
                       </span>
                     </div>
-                    <div className="mt-1 text-sm text-zinc-400">
+                    <div className="mt-1 text-sm text-muted">
                       {formatScope(promo)}
                       {promo.starts_at && (
                         <> · Starts {new Date(promo.starts_at).toLocaleDateString()}</>
@@ -313,7 +313,7 @@ export default function PromotionsPage() {
                   <button
                     onClick={() => toggleActive(promo.id, !promo.active)}
                     className={`relative h-6 w-11 rounded-full transition-colors ${
-                      promo.active ? 'bg-green-600' : 'bg-zinc-700'
+                      promo.active ? 'bg-green-600' : 'bg-card-hover'
                     }`}
                   >
                     <span

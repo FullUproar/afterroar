@@ -91,7 +91,7 @@ export function NotificationCenter() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative rounded-lg p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="relative rounded-xl p-2 text-muted hover:text-foreground hover:bg-card-hover transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         aria-label="Notifications"
       >
         {/* Bell icon */}
@@ -111,7 +111,7 @@ export function NotificationCenter() {
 
         {/* Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -119,13 +119,13 @@ export function NotificationCenter() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 max-h-[70vh] rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden z-50">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
-            <h3 className="text-sm font-bold text-white">Notifications</h3>
+        <div className="absolute right-0 top-full mt-2 w-80 max-h-[70vh] rounded-xl border border-card-border bg-card shadow-2xl overflow-hidden z-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-card-border">
+            <h3 className="text-sm font-bold text-foreground">Notifications</h3>
             {fetched && (
               <button
                 onClick={fetchNotifications}
-                className="text-xs text-zinc-500 hover:text-white transition-colors"
+                className="text-xs text-muted hover:text-foreground transition-colors"
               >
                 Refresh
               </button>
@@ -134,11 +134,11 @@ export function NotificationCenter() {
 
           <div className="overflow-y-auto max-h-80">
             {loading && !fetched && (
-              <div className="px-4 py-6 text-center text-sm text-zinc-500">Loading...</div>
+              <div className="px-4 py-6 text-center text-sm text-muted">Loading...</div>
             )}
 
             {fetched && notifications.length === 0 && (
-              <div className="px-4 py-6 text-center text-sm text-zinc-500">
+              <div className="px-4 py-6 text-center text-sm text-muted">
                 All clear — no alerts right now.
               </div>
             )}
@@ -150,14 +150,14 @@ export function NotificationCenter() {
                   setOpen(false);
                   router.push(n.href);
                 }}
-                className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-zinc-800 transition-colors border-b border-zinc-800/50 last:border-b-0"
+                className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-card-hover transition-colors border-b border-card-border/50 last:border-b-0"
               >
                 <span className={`text-lg mt-0.5 shrink-0 ${typeColor(n.type)}`}>
                   {typeIcon(n.type)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-white truncate">{n.title}</div>
-                  <div className="text-xs text-zinc-500 truncate">{n.detail}</div>
+                  <div className="text-sm font-medium text-foreground truncate">{n.title}</div>
+                  <div className="text-xs text-muted truncate">{n.detail}</div>
                 </div>
               </button>
             ))}

@@ -759,13 +759,13 @@ export default function CheckoutPage() {
       `}</style>
 
       <div className="relative mx-auto max-w-7xl h-full flex flex-col">
-        <h1 className="hidden md:block mb-3 md:mb-4 text-xl md:text-2xl font-bold text-white">Register</h1>
+        <h1 className="hidden md:block mb-3 md:mb-4 text-xl md:text-2xl font-semibold text-foreground">Register</h1>
 
         <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-4 md:gap-6 min-h-0">
           {/* ============ LEFT: Search + Results ============ */}
           <div className="flex flex-col gap-3 md:gap-4">
             {/* Search bar — sticky on mobile, full width, large tap target */}
-            <div className="sticky top-0 z-10 bg-zinc-950 -mx-4 px-4 md:mx-0 md:px-0 py-1 md:py-0 md:static">
+            <div className="sticky top-0 z-10 bg-background -mx-4 px-4 md:mx-0 md:px-0 py-1 md:py-0 md:static">
               <div className="relative">
               <input
                 ref={searchRef}
@@ -777,25 +777,25 @@ export default function CheckoutPage() {
                 onKeyDown={handleSearchKeyDown}
                 onFocus={() => searchResults.length > 0 && setShowResults(true)}
                 placeholder="Scan barcode or search...  (F2)"
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 md:py-4 text-base md:text-lg text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 h-12 md:h-auto"
+                className="w-full rounded-xl border border-card-border bg-card px-4 py-3 md:py-4 text-base md:text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-blue-500 h-12 md:h-auto"
               />
 
               {/* Search results dropdown */}
               {showResults && searchResults.length > 0 && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[60vh] md:max-h-80 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl">
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[60vh] md:max-h-80 overflow-y-auto rounded-xl border border-card-border bg-card shadow-xl">
                   {searchResults.map((item, idx) => (
                     <button
                       key={item.id}
                       onClick={() => addToCart(item)}
                       className={`flex w-full items-center justify-between px-4 py-3 md:py-3 min-h-13 text-left transition-colors ${
                         idx === selectedIndex
-                          ? "bg-zinc-800 text-white"
-                          : "text-zinc-300 hover:bg-zinc-800 active:bg-zinc-800"
+                          ? "bg-card-hover text-foreground"
+                          : "text-foreground/70 hover:bg-card-hover active:bg-card-hover"
                       }`}
                     >
                       <div className="min-w-0 flex-1 mr-3">
                         <div className="font-medium truncate">{item.name}</div>
-                        <div className="text-xs text-zinc-500">
+                        <div className="text-xs text-muted">
                           {item.category} &middot;{" "}
                           <span
                             className={
@@ -803,7 +803,7 @@ export default function CheckoutPage() {
                                 ? "text-red-400 font-medium"
                                 : item.quantity <= (item.low_stock_threshold ?? 5)
                                   ? "text-yellow-400"
-                                  : "text-zinc-500"
+                                  : "text-muted"
                             }
                           >
                             {item.quantity} in stock
@@ -820,18 +820,18 @@ export default function CheckoutPage() {
               )}
 
               {showResults && searchQuery && searchResults.length === 0 && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-400">
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-xl border border-card-border bg-card px-4 py-3 text-sm text-muted">
                   No items found for &quot;{searchQuery}&quot;
                   <div className="mt-2 flex gap-2">
                     <button
                       onClick={() => { setShowUnlisted(true); setShowResults(false); }}
-                      className="rounded bg-zinc-700 px-3 py-2 md:px-2 md:py-1 text-xs text-zinc-200 hover:bg-zinc-600 active:bg-zinc-600"
+                      className="rounded bg-card-hover px-3 py-2 md:px-2 md:py-1 text-xs text-zinc-200 hover:bg-card-hover active:bg-zinc-600"
                     >
                       Sell as unlisted item
                     </button>
                     <button
                       onClick={() => { setShowCamera(true); setShowResults(false); }}
-                      className="rounded bg-zinc-700 px-3 py-2 md:px-2 md:py-1 text-xs text-zinc-200 hover:bg-zinc-600 active:bg-zinc-600"
+                      className="rounded bg-card-hover px-3 py-2 md:px-2 md:py-1 text-xs text-zinc-200 hover:bg-card-hover active:bg-zinc-600"
                     >
                       Try camera ID
                     </button>
@@ -851,10 +851,10 @@ export default function CheckoutPage() {
                     setShowResults(false);
                   }
                 }}
-                className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                   browseMode
-                    ? "bg-emerald-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:text-white"
+                    ? "bg-emerald-600 text-foreground"
+                    : "bg-card-hover text-muted hover:text-foreground"
                 }`}
               >
                 Browse
@@ -864,23 +864,23 @@ export default function CheckoutPage() {
                   setShowUnlisted(!showUnlisted);
                   if (!showUnlisted) setBrowseMode(false);
                 }}
-                className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                   showUnlisted
-                    ? "bg-indigo-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:text-white"
+                    ? "bg-accent text-foreground"
+                    : "bg-card-hover text-muted hover:text-foreground"
                 }`}
               >
                 + Unlisted Item
               </button>
               <button
                 onClick={() => setShowCamera(true)}
-                className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+                className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-muted hover:text-foreground transition-colors"
               >
                 Camera ID
               </button>
               <button
                 onClick={() => setShowBarcodeScanner(true)}
-                className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+                className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-muted hover:text-foreground transition-colors"
               >
                 Scan Barcode
               </button>
@@ -889,15 +889,15 @@ export default function CheckoutPage() {
             {/* Quick Favorites */}
             {favorites.length > 0 && cart.length === 0 && !browseMode && !showUnlisted && (
               <div>
-                <div className="text-xs text-zinc-500 mb-1.5">Quick Add</div>
+                <div className="text-xs text-muted mb-1.5">Quick Add</div>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
                   {favorites.map((fav) => (
                     <button
                       key={fav.id}
                       onClick={() => addToCart(fav)}
-                      className="shrink-0 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left hover:bg-zinc-800 active:bg-zinc-800 transition-colors min-h-[44px]"
+                      className="shrink-0 rounded-xl border border-card-border bg-card px-3 py-2 text-left hover:bg-card-hover active:bg-card-hover transition-colors min-h-[44px]"
                     >
-                      <div className="text-xs font-medium text-white truncate max-w-[120px]">{fav.name}</div>
+                      <div className="text-xs font-medium text-foreground truncate max-w-[120px]">{fav.name}</div>
                       <div className="text-[10px] text-emerald-400">{formatCents(fav.price_cents)}</div>
                     </button>
                   ))}
@@ -907,7 +907,7 @@ export default function CheckoutPage() {
 
             {/* Category browser */}
             {browseMode && (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+              <div className="rounded-xl border border-card-border bg-card p-3">
                 <CategoryBrowser
                   onAddToCart={(item) => {
                     addToCart(item);
@@ -918,8 +918,8 @@ export default function CheckoutPage() {
 
             {/* Unlisted item form */}
             {showUnlisted && (
-              <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-3">
-                <div className="text-sm font-medium text-white">Sell Unlisted Item</div>
+              <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-3">
+                <div className="text-sm font-medium text-foreground">Sell Unlisted Item</div>
                 <input
                   type="text"
                   placeholder="Item name (e.g. Small dragon figurine)"
@@ -927,11 +927,11 @@ export default function CheckoutPage() {
                   onChange={(e) => setUnlistedName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addUnlistedItem()}
                   autoFocus
-                  className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 />
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-2 text-zinc-500">$</span>
+                    <span className="absolute left-3 top-2 text-muted">$</span>
                     <input
                       type="number"
                       step="0.01"
@@ -940,19 +940,19 @@ export default function CheckoutPage() {
                       value={unlistedPrice}
                       onChange={(e) => setUnlistedPrice(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addUnlistedItem()}
-                      className="w-full rounded-lg border border-zinc-600 bg-zinc-900 pl-7 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                      className="w-full rounded-xl border border-zinc-600 bg-card pl-7 pr-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                     />
                   </div>
                   <button
                     onClick={addUnlistedItem}
                     disabled={!unlistedName.trim() || !unlistedPrice.trim()}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                    className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
                   >
                     Add
                   </button>
                   <button
                     onClick={() => { setShowUnlisted(false); setUnlistedName(""); setUnlistedPrice(""); }}
-                    className="rounded-lg bg-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-600 transition-colors"
+                    className="rounded-xl bg-card-hover px-3 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
                   >
                     Cancel
                   </button>
@@ -962,11 +962,11 @@ export default function CheckoutPage() {
 
             {/* Camera AI result */}
             {cameraResult && (
-              <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm text-indigo-300">
+              <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm text-indigo-300">
                 {cameraProcessing ? "Identifying..." : cameraResult}
                 <button
                   onClick={() => setCameraResult(null)}
-                  className="ml-2 text-xs text-zinc-500 hover:text-white"
+                  className="ml-2 text-xs text-muted hover:text-foreground"
                 >
                   dismiss
                 </button>
@@ -974,14 +974,14 @@ export default function CheckoutPage() {
             )}
 
             {/* Customer attach */}
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+            <div className="rounded-xl border border-card-border bg-card p-4">
               {customer ? (
                 <div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-zinc-400">Customer</div>
+                      <div className="text-sm text-muted">Customer</div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-medium text-white">{customer.name}</span>
+                        <span className="font-medium text-foreground">{customer.name}</span>
                         {customer.notes && (
                           <button
                             onClick={() => setShowCustomerNotes(!showCustomerNotes)}
@@ -992,7 +992,7 @@ export default function CheckoutPage() {
                           </button>
                         )}
                       </div>
-                      <div className="text-xs text-zinc-500">
+                      <div className="text-xs text-muted">
                         Credit: {formatCents(customer.credit_balance_cents)}
                       </div>
                     </div>
@@ -1005,7 +1005,7 @@ export default function CheckoutPage() {
                         if (paymentMethod === "store_credit")
                           setPaymentMethod("cash");
                       }}
-                      className="text-xs text-zinc-500 hover:text-red-400"
+                      className="text-xs text-muted hover:text-red-400"
                     >
                       Remove
                     </button>
@@ -1021,11 +1021,11 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowCustomerSearch(true)}
-                    className="flex-1 rounded-md border border-zinc-800 px-3 py-2 text-sm text-zinc-400 hover:border-zinc-600 hover:text-white"
+                    className="flex-1 rounded-md border border-card-border px-3 py-2 text-sm text-muted hover:border-zinc-600 hover:text-foreground"
                   >
                     + Attach Customer
                   </button>
-                  <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-300">
+                  <span className="rounded-full bg-card-hover px-3 py-1 text-xs font-medium text-foreground/70">
                     Guest
                   </span>
                 </div>
@@ -1047,16 +1047,16 @@ export default function CheckoutPage() {
               <div>
                 <button
                   onClick={() => setShowCartDiscount(!showCartDiscount)}
-                  className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                  className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                     showCartDiscount
-                      ? "bg-amber-600 text-white"
-                      : "bg-zinc-800 text-zinc-400 hover:text-white"
+                      ? "bg-amber-600 text-foreground"
+                      : "bg-card-hover text-muted hover:text-foreground"
                   }`}
                 >
                   {showCartDiscount ? "Remove Discount" : "Apply Discount"}
                 </button>
                 {showCartDiscount && (
-                  <div className="mt-2 rounded-lg border border-zinc-700 bg-zinc-800 p-3 space-y-2">
+                  <div className="mt-2 rounded-xl border border-input-border bg-card-hover p-3 space-y-2">
                     <div className="flex gap-2">
                       <select
                         value={cartDiscount.type}
@@ -1066,7 +1066,7 @@ export default function CheckoutPage() {
                             type: e.target.value as "percent" | "flat",
                           })
                         }
-                        className="rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-xs text-white focus:outline-none"
+                        className="rounded border border-zinc-600 bg-card px-2 py-1 text-xs text-foreground focus:outline-none"
                       >
                         <option value="percent">% Off</option>
                         <option value="flat">$ Off</option>
@@ -1080,7 +1080,7 @@ export default function CheckoutPage() {
                           setCartDiscount({ ...cartDiscount, value: e.target.value })
                         }
                         placeholder={cartDiscount.type === "percent" ? "10" : "5.00"}
-                        className="flex-1 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                        className="flex-1 rounded border border-zinc-600 bg-card px-2 py-1 text-xs text-foreground placeholder:text-muted focus:outline-none"
                       />
                     </div>
                     <input
@@ -1090,7 +1090,7 @@ export default function CheckoutPage() {
                         setCartDiscount({ ...cartDiscount, reason: e.target.value })
                       }
                       placeholder="Reason (optional)"
-                      className="w-full rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                      className="w-full rounded border border-zinc-600 bg-card px-2 py-1 text-xs text-foreground placeholder:text-muted focus:outline-none"
                     />
                     {cartDiscountCents > 0 && (
                       <div className="text-xs text-amber-400">
@@ -1103,13 +1103,13 @@ export default function CheckoutPage() {
             )}
 
             {/* Subtotal bar — hidden on mobile when cart empty (shown in fixed bottom instead) */}
-            <div className="hidden md:block rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-              <div className="flex justify-between text-lg font-bold text-white">
+            <div className="hidden md:block rounded-xl border border-card-border bg-card p-4">
+              <div className="flex justify-between text-lg font-semibold text-foreground">
                 <span>Subtotal</span>
                 <span>{formatCents(subtotal)}</span>
               </div>
               {cartItemCount > 0 && (
-                <div className="text-sm text-zinc-500 mt-1">
+                <div className="text-sm text-muted mt-1">
                   {cartItemCount} item{cartItemCount !== 1 ? "s" : ""}
                   {totalDiscountCents > 0 && (
                     <span className="text-amber-400 ml-2">
@@ -1119,7 +1119,7 @@ export default function CheckoutPage() {
                 </div>
               )}
               {taxCents > 0 && (
-                <div className="flex justify-between text-sm text-zinc-400 mt-1">
+                <div className="flex justify-between text-sm text-muted mt-1">
                   <span>Tax ({taxRate}%)</span>
                   <span>{formatCents(taxCents)}</span>
                 </div>
@@ -1137,10 +1137,10 @@ export default function CheckoutPage() {
                 setShowPayPanel(true);
               }}
               disabled={cart.length === 0}
-              className={`hidden md:block w-full rounded-lg py-5 text-xl font-bold transition-colors ${
+              className={`hidden md:block w-full rounded-xl py-5 text-xl font-bold transition-colors ${
                 cart.length > 0
-                  ? "bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700"
-                  : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                  ? "bg-emerald-600 text-foreground hover:bg-emerald-500 active:bg-emerald-700"
+                  : "bg-card-hover text-zinc-600 cursor-not-allowed"
               }`}
             >
               PAY {subtotal > 0 ? formatCents(subtotal + taxCents) : ""}
@@ -1150,11 +1150,11 @@ export default function CheckoutPage() {
 
         {/* ============ MOBILE: Fixed bottom subtotal + PAY ============ */}
         {cart.length > 0 && (
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-sm px-4 pb-safe md:hidden">
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-card-border bg-background/95 backdrop-blur-sm px-4 pb-safe md:hidden">
             {/* Compact subtotal row */}
             <div className="flex items-center justify-between py-2">
               <div>
-                <span className="text-sm text-zinc-400">
+                <span className="text-sm text-muted">
                   {cartItemCount} item{cartItemCount !== 1 ? "s" : ""}
                 </span>
                 {totalDiscountCents > 0 && (
@@ -1163,19 +1163,19 @@ export default function CheckoutPage() {
                   </span>
                 )}
                 {taxCents > 0 && (
-                  <span className="text-xs text-zinc-500 ml-2">
+                  <span className="text-xs text-muted ml-2">
                     +{formatCents(taxCents)} tax
                   </span>
                 )}
               </div>
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-semibold text-foreground">
                 {formatCents(subtotal + taxCents)}
               </span>
             </div>
             {/* Customer attach — compact on mobile */}
             {customer && (
-              <div className="flex items-center justify-between py-1 text-xs text-zinc-400">
-                <span>Customer: <span className="text-white">{customer.name}</span></span>
+              <div className="flex items-center justify-between py-1 text-xs text-muted">
+                <span>Customer: <span className="text-foreground">{customer.name}</span></span>
                 <button
                   onClick={() => {
                     setCustomer(null);
@@ -1199,7 +1199,7 @@ export default function CheckoutPage() {
                 }
                 setShowPayPanel(true);
               }}
-              className="w-full rounded-xl bg-emerald-600 py-4 text-lg font-bold text-white active:bg-emerald-700 transition-colors mb-2"
+              className="w-full rounded-xl bg-emerald-600 py-4 text-lg font-semibold text-foreground active:bg-emerald-700 transition-colors mb-2"
             >
               PAY {formatCents(subtotal + taxCents)}
             </button>
@@ -1216,13 +1216,13 @@ export default function CheckoutPage() {
             />
 
             {/* Panel — full screen on mobile, side panel on desktop */}
-            <div className="relative z-50 flex w-full md:max-w-md flex-col bg-zinc-950 md:border-l md:border-zinc-800 shadow-2xl md:animate-slide-in-right animate-slide-up">
+            <div className="relative z-50 flex w-full md:max-w-md flex-col bg-background md:border-l md:border-card-border shadow-2xl md:animate-slide-in-right animate-slide-up">
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
-                <h2 className="text-lg font-bold text-white">Payment</h2>
+              <div className="flex items-center justify-between border-b border-card-border px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">Payment</h2>
                 <button
                   onClick={() => setShowPayPanel(false)}
-                  className="text-zinc-500 hover:text-white text-xl leading-none"
+                  className="text-muted hover:text-foreground text-xl leading-none"
                 >
                   &times;
                 </button>
@@ -1231,40 +1231,40 @@ export default function CheckoutPage() {
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 {/* Order summary */}
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="text-sm font-medium text-zinc-400 mb-2">Order Summary</div>
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="text-sm font-medium text-muted mb-2">Order Summary</div>
                   <div className="space-y-1 max-h-40 overflow-y-auto">
                     {cart.map((item) => (
                       <div
                         key={item.inventory_item_id}
                         className="flex justify-between text-sm"
                       >
-                        <span className="text-zinc-300 truncate mr-2">
+                        <span className="text-foreground/70 truncate mr-2">
                           {item.name}
                           {item.quantity > 1 && (
-                            <span className="text-zinc-500 ml-1">
+                            <span className="text-muted ml-1">
                               x{item.quantity}
                             </span>
                           )}
                         </span>
-                        <span className="text-white font-mono shrink-0">
+                        <span className="text-foreground font-mono shrink-0">
                           {formatCents(item.price_cents * item.quantity)}
                         </span>
                       </div>
                     ))}
                   </div>
                   {totalDiscountCents > 0 && (
-                    <div className="mt-2 pt-2 border-t border-zinc-800 flex justify-between text-sm text-amber-400">
+                    <div className="mt-2 pt-2 border-t border-card-border flex justify-between text-sm text-amber-400">
                       <span>Discount</span>
                       <span className="font-mono">-{formatCents(totalDiscountCents)}</span>
                     </div>
                   )}
-                  <div className={`${totalDiscountCents > 0 ? "mt-1" : "mt-2 pt-2 border-t border-zinc-800"} flex justify-between text-sm font-medium text-white`}>
+                  <div className={`${totalDiscountCents > 0 ? "mt-1" : "mt-2 pt-2 border-t border-card-border"} flex justify-between text-sm font-medium text-foreground`}>
                     <span>Subtotal</span>
                     <span className="font-mono">{formatCents(subtotal)}</span>
                   </div>
                   {taxCents > 0 && (
-                    <div className="flex justify-between text-sm text-zinc-400 mt-1">
+                    <div className="flex justify-between text-sm text-muted mt-1">
                       <span>Tax ({taxRate}%)</span>
                       <span className="font-mono">{formatCents(taxCents)}</span>
                     </div>
@@ -1273,13 +1273,13 @@ export default function CheckoutPage() {
 
                 {/* Loyalty points toggle */}
                 {customer && loyaltyCanRedeem && (
-                  <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                    <label className="flex items-center gap-2 text-sm text-zinc-300">
+                  <div className="rounded-xl border border-card-border bg-card p-4">
+                    <label className="flex items-center gap-2 text-sm text-foreground/70">
                       <input
                         type="checkbox"
                         checked={redeemLoyalty}
                         onChange={(e) => setRedeemLoyalty(e.target.checked)}
-                        className="rounded border-zinc-700 bg-zinc-950"
+                        className="rounded border-input-border bg-background"
                       />
                       Use {loyaltyPointsAvailable} loyalty points ({formatCents(
                         Math.floor(loyaltyPointsAvailable / storeSettings.loyalty_redeem_points_per_dollar) * 100
@@ -1295,8 +1295,8 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Gift card */}
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="text-sm text-zinc-400 mb-2">Gift Card</div>
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="text-sm text-muted mb-2">Gift Card</div>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1307,7 +1307,7 @@ export default function CheckoutPage() {
                         setGiftCardApply(false);
                       }}
                       placeholder="Enter card code"
-                      className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white font-mono placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                      className="flex-1 rounded border border-card-border bg-background px-3 py-2 text-sm text-foreground font-mono placeholder:text-muted focus:border-accent focus:outline-none"
                     />
                     <button
                       onClick={async () => {
@@ -1329,19 +1329,19 @@ export default function CheckoutPage() {
                         }
                       }}
                       disabled={!giftCardCode.trim() || giftCardLookingUp}
-                      className="rounded bg-zinc-700 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+                      className="rounded bg-card-hover px-3 py-2 text-xs text-zinc-200 hover:bg-card-hover disabled:opacity-50 transition-colors"
                     >
                       {giftCardLookingUp ? "..." : "Look Up"}
                     </button>
                   </div>
                   {giftCardBalance !== null && giftCardBalance > 0 && (
                     <div className="mt-2">
-                      <label className="flex items-center gap-2 text-sm text-zinc-300">
+                      <label className="flex items-center gap-2 text-sm text-foreground/70">
                         <input
                           type="checkbox"
                           checked={giftCardApply}
                           onChange={(e) => setGiftCardApply(e.target.checked)}
-                          className="rounded border-zinc-700 bg-zinc-950"
+                          className="rounded border-input-border bg-background"
                         />
                         Apply {formatCents(giftCardBalance)} balance
                       </label>
@@ -1354,14 +1354,14 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   {giftCardBalance === 0 && (
-                    <div className="mt-2 text-sm text-zinc-500">No balance on this card.</div>
+                    <div className="mt-2 text-sm text-muted">No balance on this card.</div>
                   )}
                 </div>
 
                 {/* Store credit toggle -- only when customer attached with balance */}
                 {customer && customer.credit_balance_cents > 0 && (
-                  <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                    <label className="flex items-center gap-2 text-sm text-zinc-300">
+                  <div className="rounded-xl border border-card-border bg-card p-4">
+                    <label className="flex items-center gap-2 text-sm text-foreground/70">
                       <input
                         type="checkbox"
                         checked={applyCredit}
@@ -1378,18 +1378,18 @@ export default function CheckoutPage() {
                             );
                           }
                         }}
-                        className="rounded border-zinc-700 bg-zinc-950"
+                        className="rounded border-input-border bg-background"
                       />
                       Apply Store Credit ({formatCents(customer.credit_balance_cents)} available)
                     </label>
                     {applyCredit && (
                       <div className="mt-2 flex items-center gap-1">
-                        <span className="text-sm text-zinc-400">$</span>
+                        <span className="text-sm text-muted">$</span>
                         <input
                           type="text"
                           value={creditInput}
                           onChange={(e) => setCreditInput(e.target.value)}
-                          className="w-24 rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-sm text-white"
+                          className="w-24 rounded border border-card-border bg-background px-2 py-1 text-sm text-foreground"
                         />
                       </div>
                     )}
@@ -1403,8 +1403,8 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Payment method */}
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="mb-3 text-sm text-zinc-400">Payment Method</div>
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="mb-3 text-sm text-muted">Payment Method</div>
                   <div className="grid grid-cols-3 gap-2">
                     {(
                       [
@@ -1442,10 +1442,10 @@ export default function CheckoutPage() {
                         }}
                         className={`rounded-md px-3 py-3 md:py-2 text-sm font-medium transition-colors ${
                           paymentMethod === m.value
-                            ? "bg-blue-600 text-white"
+                            ? "bg-accent text-foreground"
                             : m.disabled
-                            ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                            : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 active:bg-zinc-700"
+                            ? "bg-card-hover text-zinc-600 cursor-not-allowed"
+                            : "bg-card-hover text-foreground/70 hover:bg-card-hover active:bg-card-hover"
                         }`}
                       >
                         {m.label}
@@ -1457,25 +1457,25 @@ export default function CheckoutPage() {
                   {(paymentMethod === "cash" || paymentMethod === "split") && (
                     <div className="mt-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-sm text-zinc-400">
+                        <label className="text-sm text-muted">
                           Amount Tendered
                         </label>
                         <div className="flex items-center gap-1">
-                          <span className="text-zinc-400">$</span>
+                          <span className="text-muted">$</span>
                           <input
                             tabIndex={4}
                             type="text"
                             value={tenderedInput}
                             onChange={(e) => setTenderedInput(e.target.value)}
                             placeholder="0.00"
-                            className="w-28 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-right text-lg font-mono text-white focus:border-blue-500 focus:outline-none"
+                            className="w-28 rounded border border-card-border bg-background px-3 py-2 text-right text-lg font-mono text-foreground focus:border-accent focus:outline-none"
                             autoFocus
                           />
                         </div>
                       </div>
                       {tendered > 0 && tendered >= amountDue && (
-                        <div className="flex items-center justify-between rounded-md bg-zinc-800 px-3 py-2">
-                          <span className="text-sm text-zinc-400">Change</span>
+                        <div className="flex items-center justify-between rounded-md bg-card-hover px-3 py-2">
+                          <span className="text-sm text-muted">Change</span>
                           <span className="text-lg font-bold text-emerald-400">
                             {formatCents(change)}
                           </span>
@@ -1486,8 +1486,8 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Total due */}
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <div className="flex justify-between text-lg font-bold text-white">
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  <div className="flex justify-between text-lg font-semibold text-foreground">
                     <span>Total Due</span>
                     <span>{formatCents(amountDue)}</span>
                   </div>
@@ -1495,7 +1495,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Bottom actions — safe area padding on mobile */}
-              <div className="border-t border-zinc-800 px-6 py-4 pb-safe space-y-2">
+              <div className="border-t border-card-border px-6 py-4 pb-safe space-y-2">
                 <button
                   tabIndex={5}
                   onClick={() => {
@@ -1509,8 +1509,8 @@ export default function CheckoutPage() {
                   disabled={!canComplete}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 md:py-4 text-lg font-bold transition-colors ${
                     canComplete
-                      ? "bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700"
-                      : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                      ? "bg-emerald-600 text-foreground hover:bg-emerald-500 active:bg-emerald-700"
+                      : "bg-card-hover text-zinc-600 cursor-not-allowed"
                   }`}
                 >
                   {processing && (
@@ -1523,7 +1523,7 @@ export default function CheckoutPage() {
                 </button>
                 <button
                   onClick={() => setShowPayPanel(false)}
-                  className="w-full rounded-xl border border-zinc-800 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-900 hover:text-white active:bg-zinc-900 transition-colors"
+                  className="w-full rounded-xl border border-card-border py-3 text-sm font-medium text-muted hover:bg-card hover:text-foreground active:bg-card transition-colors"
                 >
                   Cancel
                 </button>
@@ -1542,7 +1542,7 @@ export default function CheckoutPage() {
             }}
           >
             <div
-              className="w-full h-full md:h-auto md:max-w-md rounded-none md:rounded-lg border-0 md:border border-zinc-800 bg-zinc-900 p-4 shadow-2xl"
+              className="w-full h-full md:h-auto md:max-w-md rounded-none md:rounded-xl border-0 md:border border-card-border bg-card p-4 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <input
@@ -1554,7 +1554,7 @@ export default function CheckoutPage() {
                   setShowNewCustomerForm(false);
                 }}
                 placeholder="Search customers by name..."
-                className="mb-3 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                className="mb-3 w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
               />
               <div className="max-h-64 space-y-1 overflow-y-auto">
                 {customerResults.map((c) => (
@@ -1567,15 +1567,15 @@ export default function CheckoutPage() {
                       setCustomerResults([]);
                       setShowNewCustomerForm(false);
                     }}
-                    className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-zinc-300 hover:bg-zinc-800"
+                    className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-foreground/70 hover:bg-card-hover"
                   >
                     <div>
-                      <div className="font-medium text-white">{c.name}</div>
+                      <div className="font-medium text-foreground">{c.name}</div>
                       {c.email && (
-                        <div className="text-xs text-zinc-500">{c.email}</div>
+                        <div className="text-xs text-muted">{c.email}</div>
                       )}
                     </div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-muted">
                       {formatCents(c.credit_balance_cents)}
                     </div>
                   </button>
@@ -1583,13 +1583,13 @@ export default function CheckoutPage() {
 
                 {customerQuery && customerResults.length === 0 && !showNewCustomerForm && (
                   <div className="space-y-2 px-3 py-2">
-                    <div className="text-sm text-zinc-500">No customers found</div>
+                    <div className="text-sm text-muted">No customers found</div>
                     <button
                       onClick={() => {
                         setShowNewCustomerForm(true);
                         setNewCustName(customerQuery);
                       }}
-                      className="w-full rounded-md border border-blue-600 bg-blue-600/10 px-3 py-2 text-sm font-medium text-blue-400 hover:bg-blue-600/20"
+                      className="w-full rounded-md border border-blue-600 bg-accent/10 px-3 py-2 text-sm font-medium text-blue-400 hover:bg-accent/20"
                     >
                       + Create New Customer
                     </button>
@@ -1599,8 +1599,8 @@ export default function CheckoutPage() {
 
               {/* Inline new customer form */}
               {showNewCustomerForm && (
-                <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
-                  <div className="text-sm font-medium text-zinc-300">New Customer</div>
+                <div className="mt-3 space-y-2 border-t border-card-border pt-3">
+                  <div className="text-sm font-medium text-foreground/70">New Customer</div>
                   <input
                     ref={newCustNameRef}
                     type="text"
@@ -1610,7 +1610,7 @@ export default function CheckoutPage() {
                       if (e.key === "Enter") handleCreateCustomer();
                     }}
                     placeholder="Name (required)"
-                    className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   <input
                     type="email"
@@ -1620,7 +1620,7 @@ export default function CheckoutPage() {
                       if (e.key === "Enter") handleCreateCustomer();
                     }}
                     placeholder="Email (optional)"
-                    className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   <input
                     type="tel"
@@ -1630,15 +1630,15 @@ export default function CheckoutPage() {
                       if (e.key === "Enter") handleCreateCustomer();
                     }}
                     placeholder="Phone (optional)"
-                    className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   <button
                     onClick={handleCreateCustomer}
                     disabled={!newCustName.trim() || creatingCustomer}
                     className={`w-full rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       newCustName.trim() && !creatingCustomer
-                        ? "bg-blue-600 text-white hover:bg-blue-500"
-                        : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        ? "bg-accent text-foreground hover:bg-blue-500"
+                        : "bg-card-hover text-zinc-600 cursor-not-allowed"
                     }`}
                   >
                     {creatingCustomer ? "Saving..." : "Save & Attach"}
@@ -1660,10 +1660,10 @@ export default function CheckoutPage() {
 
         {/* Receipt modal — full screen on mobile */}
         {receipt && (
-          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70">
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-overlay-bg">
             <div
               id="receipt-printable"
-              className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border-0 md:border border-zinc-800 bg-zinc-900 p-5 md:p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full md:max-w-md rounded-t-2xl md:rounded-xl border-0 md:border border-card-border bg-card p-5 md:p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               {/* Receipt header */}
               <div className="mb-4 text-center">
@@ -1672,31 +1672,31 @@ export default function CheckoutPage() {
                     Gift Receipt
                   </div>
                 )}
-                <h2 className="text-xl font-bold text-white">{receipt.store_name}</h2>
-                <div className="text-sm text-zinc-400">
+                <h2 className="text-xl font-semibold text-foreground">{receipt.store_name}</h2>
+                <div className="text-sm text-muted">
                   {new Date(receipt.date).toLocaleString()}
                 </div>
                 {receipt.customer_name && !giftReceipt && (
-                  <div className="mt-1 text-sm text-zinc-300">
+                  <div className="mt-1 text-sm text-foreground/70">
                     Customer: {receipt.customer_name}
                   </div>
                 )}
               </div>
 
-              <div className="receipt-divider border-t border-dashed border-zinc-700" />
+              <div className="receipt-divider border-t border-dashed border-input-border" />
 
               {/* Items */}
               <div className="my-3 space-y-2">
                 {receipt.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
-                    <div className="text-zinc-300">
+                    <div className="text-foreground/70">
                       <span>{item.name}</span>
                       {item.quantity > 1 && (
-                        <span className="ml-1 text-zinc-500">x{item.quantity}</span>
+                        <span className="ml-1 text-muted">x{item.quantity}</span>
                       )}
                     </div>
                     {!giftReceipt && (
-                      <div className="text-zinc-300 font-mono">
+                      <div className="text-foreground/70 font-mono">
                         {formatCents(item.total_cents)}
                       </div>
                     )}
@@ -1704,12 +1704,12 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="receipt-divider border-t border-dashed border-zinc-700" />
+              <div className="receipt-divider border-t border-dashed border-input-border" />
 
               {/* Totals — hidden on gift receipt */}
               {!giftReceipt && (
                 <div className="my-3 space-y-1">
-                  <div className="flex justify-between text-sm text-zinc-400">
+                  <div className="flex justify-between text-sm text-muted">
                     <span>Subtotal</span>
                     <span className="font-mono">{formatCents(receipt.subtotal_cents)}</span>
                   </div>
@@ -1720,7 +1720,7 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   {receipt.tax_cents > 0 && (
-                    <div className="flex justify-between text-sm text-zinc-400">
+                    <div className="flex justify-between text-sm text-muted">
                       <span>Tax</span>
                       <span className="font-mono">{formatCents(receipt.tax_cents)}</span>
                     </div>
@@ -1743,11 +1743,11 @@ export default function CheckoutPage() {
                       <span className="font-mono">-{formatCents(receipt.credit_applied_cents)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm text-zinc-400">
+                  <div className="flex justify-between text-sm text-muted">
                     <span>Payment</span>
                     <span>{paymentMethodLabel(receipt.payment_method)}</span>
                   </div>
-                  <div className="flex justify-between border-t border-zinc-800 pt-2 text-lg font-bold text-white">
+                  <div className="flex justify-between border-t border-card-border pt-2 text-lg font-semibold text-foreground">
                     <span>Total</span>
                     <span className="font-mono">{formatCents(receipt.total_cents)}</span>
                   </div>
@@ -1760,25 +1760,25 @@ export default function CheckoutPage() {
                 </div>
               )}
               {giftReceipt && (
-                <div className="my-3 text-center text-sm text-zinc-400">
+                <div className="my-3 text-center text-sm text-muted">
                   This is a gift receipt. No prices shown.
                 </div>
               )}
 
-              <div className="receipt-divider border-t border-dashed border-zinc-700" />
+              <div className="receipt-divider border-t border-dashed border-input-border" />
 
-              <div className="mt-2 text-center text-xs text-zinc-500">
+              <div className="mt-2 text-center text-xs text-muted">
                 Thank you for shopping at {receipt.store_name}!
               </div>
 
               {/* Gift receipt toggle (hidden in print) */}
               <div className="no-print mt-4">
-                <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
                   <input
                     type="checkbox"
                     checked={giftReceipt}
                     onChange={(e) => setGiftReceipt(e.target.checked)}
-                    className="rounded border-zinc-700 bg-zinc-950"
+                    className="rounded border-input-border bg-background"
                   />
                   Gift Receipt (hide prices)
                 </label>
@@ -1788,13 +1788,13 @@ export default function CheckoutPage() {
               <div className="no-print mt-3 space-y-2 md:space-y-0 md:grid md:grid-cols-3 md:gap-2 pb-safe">
                 <button
                   onClick={handleNewSale}
-                  className="w-full rounded-xl md:rounded-md bg-blue-600 px-3 py-3 md:py-2 text-sm font-medium text-white hover:bg-blue-500 active:bg-blue-700"
+                  className="w-full rounded-xl md:rounded-md bg-accent px-3 py-3 md:py-2 text-sm font-medium text-foreground hover:bg-blue-500 active:bg-blue-700"
                 >
                   New Sale
                 </button>
                 <button
                   onClick={handlePrintReceipt}
-                  className="w-full rounded-xl md:rounded-md bg-zinc-800 px-3 py-3 md:py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white active:bg-zinc-700"
+                  className="w-full rounded-xl md:rounded-md bg-card-hover px-3 py-3 md:py-2 text-sm font-medium text-foreground/70 hover:bg-card-hover hover:text-foreground active:bg-card-hover"
                 >
                   Print Receipt
                 </button>
@@ -1806,8 +1806,8 @@ export default function CheckoutPage() {
                       emailSent
                         ? "bg-emerald-900/40 text-emerald-400 cursor-default"
                         : emailSending
-                        ? "bg-zinc-800 text-zinc-500 cursor-wait"
-                        : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white active:bg-zinc-700"
+                        ? "bg-card-hover text-muted cursor-wait"
+                        : "bg-card-hover text-foreground/70 hover:bg-card-hover hover:text-foreground active:bg-card-hover"
                     }`}
                   >
                     {emailSent ? "Email Sent" : emailSending ? "Sending..." : "Email Receipt"}
@@ -1815,7 +1815,7 @@ export default function CheckoutPage() {
                 ) : (
                   <button
                     disabled
-                    className="w-full rounded-xl md:rounded-md bg-zinc-800 px-3 py-3 md:py-2 text-sm font-medium text-zinc-600 cursor-not-allowed"
+                    className="w-full rounded-xl md:rounded-md bg-card-hover px-3 py-3 md:py-2 text-sm font-medium text-zinc-600 cursor-not-allowed"
                     title="No customer email"
                   >
                     Email Receipt
@@ -1833,17 +1833,17 @@ export default function CheckoutPage() {
   function renderCart() {
     if (cart.length === 0) {
       return (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 md:p-8 text-center text-zinc-500">
+        <div className="rounded-xl border border-card-border bg-card p-6 md:p-8 text-center text-muted">
           Cart is empty. Scan or search to add items.
         </div>
       );
     }
 
     return (
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-        <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-2">
-          <span className="text-sm font-medium text-zinc-400">Cart</span>
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-bold text-white">
+      <div className="rounded-xl border border-card-border bg-card">
+        <div className="flex items-center gap-2 border-b border-card-border px-4 py-2">
+          <span className="text-sm font-medium text-muted">Cart</span>
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-foreground">
             {cartItemCount}
           </span>
         </div>
@@ -1856,10 +1856,10 @@ export default function CheckoutPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-white">
+                    <div className="truncate text-sm font-medium text-foreground">
                       {item.name}
                     </div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-muted">
                       {formatCents(item.price_cents)} each
                       {itemDiscounts[item.inventory_item_id] && itemDiscounts[item.inventory_item_id].value && (
                         <span className="text-amber-400 ml-1">
@@ -1870,7 +1870,7 @@ export default function CheckoutPage() {
                       )}
                     </div>
                   </div>
-                  <div className="shrink-0 text-sm font-semibold text-white">
+                  <div className="shrink-0 text-sm font-semibold text-foreground">
                     {formatCents(item.price_cents * item.quantity)}
                   </div>
                 </div>
@@ -1904,7 +1904,7 @@ export default function CheckoutPage() {
                           },
                         })
                       }
-                      className="rounded border border-zinc-700 bg-zinc-900 px-1 py-0.5 text-[10px] text-white focus:outline-none min-h-0"
+                      className="rounded border border-input-border bg-card px-1 py-0.5 text-[10px] text-foreground focus:outline-none min-h-0"
                     >
                       <option value="percent">%</option>
                       <option value="flat">$</option>
@@ -1924,7 +1924,7 @@ export default function CheckoutPage() {
                         })
                       }
                       placeholder="0"
-                      className="w-14 rounded border border-zinc-700 bg-zinc-900 px-1 py-0.5 text-[10px] text-white placeholder-zinc-600 focus:outline-none min-h-0"
+                      className="w-14 rounded border border-input-border bg-card px-1 py-0.5 text-[10px] text-foreground placeholder:text-muted focus:outline-none min-h-0"
                     />
                   </div>
                 )}
@@ -1933,17 +1933,17 @@ export default function CheckoutPage() {
                   <button
                     tabIndex={2}
                     onClick={() => updateQty(item.inventory_item_id, -1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700 text-base font-bold min-h-0"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-card-hover text-muted active:bg-card-hover text-base font-bold min-h-0"
                   >
                     -
                   </button>
-                  <span className="w-8 text-center text-sm font-medium text-white">
+                  <span className="w-8 text-center text-sm font-medium text-foreground">
                     {item.quantity}
                   </span>
                   <button
                     tabIndex={2}
                     onClick={() => updateQty(item.inventory_item_id, 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700 text-base font-bold min-h-0"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-card-hover text-muted active:bg-card-hover text-base font-bold min-h-0"
                   >
                     +
                   </button>
@@ -1951,7 +1951,7 @@ export default function CheckoutPage() {
                   <button
                     tabIndex={2}
                     onClick={() => removeItem(item.inventory_item_id)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 active:bg-red-900/40 active:text-red-400 text-lg min-h-0"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-600 active:bg-red-900/40 active:text-red-400 text-lg min-h-0"
                   >
                     &times;
                   </button>
@@ -1962,22 +1962,22 @@ export default function CheckoutPage() {
                 <button
                   tabIndex={2}
                   onClick={() => updateQty(item.inventory_item_id, -1)}
-                  className="flex h-7 w-7 items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                  className="flex h-7 w-7 items-center justify-center rounded bg-card-hover text-muted hover:bg-card-hover hover:text-foreground"
                 >
                   -
                 </button>
-                <span className="w-8 text-center text-sm font-medium text-white">
+                <span className="w-8 text-center text-sm font-medium text-foreground">
                   {item.quantity}
                 </span>
                 <button
                   tabIndex={2}
                   onClick={() => updateQty(item.inventory_item_id, 1)}
-                  className="flex h-7 w-7 items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                  className="flex h-7 w-7 items-center justify-center rounded bg-card-hover text-muted hover:bg-card-hover hover:text-foreground"
                 >
                   +
                 </button>
               </div>
-              <div className="hidden md:block w-20 text-right text-sm font-semibold text-white">
+              <div className="hidden md:block w-20 text-right text-sm font-semibold text-foreground">
                 {formatCents(item.price_cents * item.quantity)}
               </div>
               <button

@@ -47,7 +47,7 @@ export default function CertificationPage() {
   if (!can('store.settings')) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to run certifications.</p>
+        <p className="text-muted">You don&apos;t have permission to run certifications.</p>
       </div>
     );
   }
@@ -72,22 +72,22 @@ export default function CertificationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="hidden md:block text-2xl font-bold text-white">Data Certification</h1>
-          <p className="mt-1 text-sm text-zinc-400">
+          <h1 className="hidden md:block text-2xl font-semibold text-foreground">Data Certification</h1>
+          <p className="mt-1 text-sm text-muted">
             Verify your store&apos;s data isolation, integrity, and consistency.
           </p>
         </div>
         <button
           onClick={runCertification}
           disabled={running}
-          className="rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+          className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
         >
           {running ? 'Running Checks...' : 'Run Certification'}
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-400">
           {error}
         </div>
       )}
@@ -96,7 +96,7 @@ export default function CertificationPage() {
         <>
           {/* Summary banner */}
           <div
-            className={`rounded-lg border p-6 ${
+            className={`rounded-xl border p-6 ${
               result.status === 'passed'
                 ? 'border-green-500/30 bg-green-500/10'
                 : result.status === 'failed'
@@ -117,7 +117,7 @@ export default function CertificationPage() {
                 {result.status === 'passed' ? '✓' : result.status === 'failed' ? '✗' : '⚠'}
               </span>
               <div>
-                <div className="text-lg font-bold text-white capitalize">
+                <div className="text-lg font-semibold text-foreground capitalize">
                   {result.status === 'passed'
                     ? 'All Checks Passed'
                     : result.status === 'failed'
@@ -125,7 +125,7 @@ export default function CertificationPage() {
                       : 'Passed with Warnings'}
                 </div>
                 {result.summary && (
-                  <div className="text-sm text-zinc-300">
+                  <div className="text-sm text-foreground/70">
                     {result.summary.passed} passed · {result.summary.failed} failed ·{' '}
                     {result.summary.warnings} warnings
                   </div>
@@ -141,21 +141,21 @@ export default function CertificationPage() {
               if (categoryChecks.length === 0) return null;
               return (
                 <div key={category}>
-                  <h3 className="mb-2 text-sm font-medium text-zinc-400">
+                  <h3 className="mb-2 text-sm font-medium text-muted">
                     {categoryLabels[category] ?? category}
                   </h3>
                   <div className="space-y-2">
                     {categoryChecks.map((check, idx) => (
                       <div
                         key={idx}
-                        className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4"
+                        className="flex items-start gap-3 rounded-xl border border-card-border bg-card p-4"
                       >
                         <span className={`text-lg ${statusColor[check.status]}`}>
                           {statusIcon[check.status]}
                         </span>
                         <div className="flex-1">
-                          <div className="font-medium text-white">{check.name}</div>
-                          <div className="text-sm text-zinc-400">{check.details}</div>
+                          <div className="font-medium text-foreground">{check.name}</div>
+                          <div className="text-sm text-muted">{check.details}</div>
                         </div>
                       </div>
                     ))}
@@ -168,9 +168,9 @@ export default function CertificationPage() {
       )}
 
       {!result && !running && (
-        <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-          <p className="text-lg font-medium text-zinc-400">Ready to certify</p>
-          <p className="mt-2 text-sm text-zinc-500">
+        <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
+          <p className="text-lg font-medium text-muted">Ready to certify</p>
+          <p className="mt-2 text-sm text-muted">
             Run a certification to verify your data is isolated, complete, and consistent.
             This checks for cross-store data leaks, ledger balance integrity, and more.
           </p>

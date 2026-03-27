@@ -50,7 +50,7 @@ interface TournamentMatch {
 const STATUS_COLORS: Record<string, string> = {
   registration: 'bg-blue-900 text-blue-300',
   active: 'bg-green-900 text-green-300',
-  completed: 'bg-zinc-700 text-zinc-300',
+  completed: 'bg-card-hover text-foreground/70',
 };
 
 export default function TournamentsPage() {
@@ -223,19 +223,19 @@ export default function TournamentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <button onClick={() => setActiveTournament(null)} className="text-sm text-zinc-400 hover:text-white mb-2 block">
+            <button onClick={() => setActiveTournament(null)} className="text-sm text-muted hover:text-foreground mb-2 block">
               &larr; Back to tournaments
             </button>
-            <h1 className="text-2xl font-bold text-white">{activeTournament.name}</h1>
+            <h1 className="text-2xl font-semibold text-foreground">{activeTournament.name}</h1>
             <div className="flex items-center gap-3 mt-1">
               {activeTournament.format && (
-                <span className="text-sm text-zinc-400">Format: {activeTournament.format}</span>
+                <span className="text-sm text-muted">Format: {activeTournament.format}</span>
               )}
-              <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[activeTournament.status] || 'bg-zinc-700 text-zinc-300'}`}>
+              <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[activeTournament.status] || 'bg-card-hover text-foreground/70'}`}>
                 {activeTournament.status}
               </span>
               {activeTournament.current_round > 0 && (
-                <span className="text-sm text-zinc-400">
+                <span className="text-sm text-muted">
                   Round {activeTournament.current_round}/{activeTournament.total_rounds}
                 </span>
               )}
@@ -244,7 +244,7 @@ export default function TournamentsPage() {
           {activeTournament.status === 'registration' && players.length >= 2 && (
             <button
               onClick={handleStart}
-              className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded text-sm font-medium"
+              className="px-4 py-2 bg-green-700 hover:bg-green-600 text-foreground rounded text-sm font-medium"
             >
               Start Tournament ({players.length} players)
             </button>
@@ -253,8 +253,8 @@ export default function TournamentsPage() {
 
         {/* Registration phase: add players */}
         {activeTournament.status === 'registration' && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-white">Players ({players.length}{activeTournament.max_players ? `/${activeTournament.max_players}` : ''})</h2>
+          <div className="bg-card border border-card-border rounded-xl p-4 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">Players ({players.length}{activeTournament.max_players ? `/${activeTournament.max_players}` : ''})</h2>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -262,12 +262,12 @@ export default function TournamentsPage() {
                 onChange={(e) => setPlayerName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()}
                 placeholder="Player name"
-                className="flex-1 max-w-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="flex-1 max-w-xs bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
               />
               <button
                 onClick={handleAddPlayer}
                 disabled={addingPlayer || !playerName.trim()}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm"
+                className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm"
               >
                 Add Player
               </button>
@@ -275,7 +275,7 @@ export default function TournamentsPage() {
             {players.length > 0 && (
               <div className="space-y-1">
                 {players.map((p, i) => (
-                  <div key={p.id} className="flex items-center justify-between bg-zinc-800 rounded px-3 py-2 text-sm text-white">
+                  <div key={p.id} className="flex items-center justify-between bg-card-hover rounded px-3 py-2 text-sm text-foreground">
                     <span>{i + 1}. {p.player_name}</span>
                     <button onClick={() => handleDropPlayer(p.id)} className="text-red-500 hover:text-red-400 text-xs">
                       Remove
@@ -289,12 +289,12 @@ export default function TournamentsPage() {
 
         {/* Active / Completed: Bracket */}
         {(activeTournament.status === 'active' || activeTournament.status === 'completed') && roundNumbers.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-sm font-semibold text-white mb-4">Bracket</h2>
+          <div className="bg-card border border-card-border rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-foreground mb-4">Bracket</h2>
             <div className="flex gap-8 overflow-x-auto pb-4">
               {roundNumbers.map((round) => (
                 <div key={round} className="min-w-55">
-                  <h3 className="text-xs text-zinc-400 uppercase tracking-wide mb-3">
+                  <h3 className="text-xs text-muted uppercase tracking-wide mb-3">
                     {round === (activeTournament.total_rounds || 1) ? 'Finals' : `Round ${round}`}
                   </h3>
                   <div className="space-y-4">
@@ -305,29 +305,29 @@ export default function TournamentsPage() {
                           key={match.id}
                           className={`rounded border ${
                             match.status === 'completed'
-                              ? 'border-zinc-700 bg-zinc-800'
+                              ? 'border-input-border bg-card-hover'
                               : isActive
-                              ? 'border-indigo-700 bg-zinc-800'
-                              : 'border-zinc-800 bg-zinc-900'
+                              ? 'border-indigo-700 bg-card-hover'
+                              : 'border-card-border bg-card'
                           }`}
                         >
                           {/* Player 1 */}
-                          <div className={`px-3 py-2 text-sm flex items-center justify-between border-b border-zinc-700 ${
-                            match.winner_id === match.player1_id ? 'text-green-400 font-medium' : 'text-white'
+                          <div className={`px-3 py-2 text-sm flex items-center justify-between border-b border-input-border ${
+                            match.winner_id === match.player1_id ? 'text-green-400 font-medium' : 'text-foreground'
                           }`}>
                             <span>{match.player1_id ? getPlayerName(match.player1_id) : 'TBD'}</span>
-                            {match.status === 'completed' && <span className="text-xs text-zinc-400">{match.player1_score}</span>}
+                            {match.status === 'completed' && <span className="text-xs text-muted">{match.player1_score}</span>}
                           </div>
                           {/* Player 2 */}
                           <div className={`px-3 py-2 text-sm flex items-center justify-between ${
-                            match.winner_id === match.player2_id ? 'text-green-400 font-medium' : 'text-white'
+                            match.winner_id === match.player2_id ? 'text-green-400 font-medium' : 'text-foreground'
                           }`}>
                             <span>{match.player2_id ? getPlayerName(match.player2_id) : 'TBD'}</span>
-                            {match.status === 'completed' && <span className="text-xs text-zinc-400">{match.player2_score}</span>}
+                            {match.status === 'completed' && <span className="text-xs text-muted">{match.player2_score}</span>}
                           </div>
                           {/* Report button */}
                           {isActive && activeTournament.status === 'active' && (
-                            <div className="border-t border-zinc-700 px-3 py-1.5">
+                            <div className="border-t border-input-border px-3 py-1.5">
                               <button
                                 onClick={() => {
                                   setReportMatch(match);
@@ -340,7 +340,7 @@ export default function TournamentsPage() {
                                 Report Result
                               </button>
                               {match.table_number && (
-                                <span className="text-xs text-zinc-500 ml-2">{match.table_number}</span>
+                                <span className="text-xs text-muted ml-2">{match.table_number}</span>
                               )}
                             </div>
                           )}
@@ -356,13 +356,13 @@ export default function TournamentsPage() {
 
         {/* Standings */}
         {(activeTournament.status === 'active' || activeTournament.status === 'completed') && standings.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-sm font-semibold text-white mb-3">
+          <div className="bg-card border border-card-border rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-foreground mb-3">
               {activeTournament.status === 'completed' ? 'Final Standings' : 'Current Standings'}
             </h2>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-zinc-400 text-left">
+                <tr className="text-muted text-left">
                   <th className="pb-2 font-medium">#</th>
                   <th className="pb-2 font-medium">Player</th>
                   <th className="pb-2 font-medium text-center">W</th>
@@ -372,8 +372,8 @@ export default function TournamentsPage() {
               </thead>
               <tbody>
                 {standings.map((p, i) => (
-                  <tr key={p.id} className={`border-t border-zinc-800 ${
-                    p.standing === 1 ? 'text-yellow-400' : 'text-white'
+                  <tr key={p.id} className={`border-t border-card-border ${
+                    p.standing === 1 ? 'text-yellow-400' : 'text-foreground'
                   }`}>
                     <td className="py-2">{p.standing || i + 1}</td>
                     <td className="py-2 font-medium">
@@ -384,7 +384,7 @@ export default function TournamentsPage() {
                     </td>
                     <td className="py-2 text-center text-green-400">{p.wins}</td>
                     <td className="py-2 text-center text-red-400">{p.losses}</td>
-                    <td className="py-2 text-center text-zinc-400">{p.draws}</td>
+                    <td className="py-2 text-center text-muted">{p.draws}</td>
                   </tr>
                 ))}
               </tbody>
@@ -394,12 +394,12 @@ export default function TournamentsPage() {
 
         {/* Report Match Modal */}
         {reportMatch && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setReportMatch(null)}>
-            <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-lg p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-lg font-semibold text-white mb-4">Report Match Result</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReportMatch(null)}>
+            <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Report Match Result</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Winner</label>
+                  <label className="block text-sm text-muted mb-1">Winner</label>
                   <div className="grid grid-cols-2 gap-2">
                     {[reportMatch.player1_id, reportMatch.player2_id].filter(Boolean).map((pid) => (
                       <button
@@ -407,8 +407,8 @@ export default function TournamentsPage() {
                         onClick={() => setReportWinnerId(pid!)}
                         className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                           reportWinnerId === pid
-                            ? 'bg-green-700 text-white'
-                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                            ? 'bg-green-700 text-foreground'
+                            : 'bg-card-hover text-foreground/70 hover:bg-card-hover'
                         }`}
                       >
                         {getPlayerName(pid!)}
@@ -418,34 +418,34 @@ export default function TournamentsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-zinc-400 mb-1">{getPlayerName(reportMatch.player1_id)} Score</label>
+                    <label className="block text-xs text-muted mb-1">{getPlayerName(reportMatch.player1_id)} Score</label>
                     <input
                       type="number"
                       min={0}
                       value={reportP1Score}
                       onChange={(e) => setReportP1Score(e.target.value)}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                      className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-400 mb-1">{getPlayerName(reportMatch.player2_id)} Score</label>
+                    <label className="block text-xs text-muted mb-1">{getPlayerName(reportMatch.player2_id)} Score</label>
                     <input
                       type="number"
                       min={0}
                       value={reportP2Score}
                       onChange={(e) => setReportP2Score(e.target.value)}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                      className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                     />
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setReportMatch(null)} className="flex-1 px-3 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm">
+                  <button onClick={() => setReportMatch(null)} className="flex-1 px-3 py-2 bg-card-hover hover:bg-card-hover text-foreground rounded text-sm">
                     Cancel
                   </button>
                   <button
                     onClick={handleReportMatch}
                     disabled={reporting || !reportWinnerId}
-                    className="flex-1 px-3 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded text-sm font-medium"
+                    className="flex-1 px-3 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-foreground rounded text-sm font-medium"
                   >
                     {reporting ? 'Saving...' : 'Submit'}
                   </button>
@@ -462,54 +462,54 @@ export default function TournamentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Tournaments</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Tournaments</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+          className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
         >
           {showForm ? 'Cancel' : 'New Tournament'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
+        <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Name *</label>
+              <label className="block text-sm text-muted mb-1">Name *</label>
               <input
                 required
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                 placeholder="Friday Night Magic"
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Format</label>
+              <label className="block text-sm text-muted mb-1">Format</label>
               <input
                 value={formFormat}
                 onChange={(e) => setFormFormat(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                 placeholder="Standard, Modern, Draft..."
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Max Players</label>
+              <label className="block text-sm text-muted mb-1">Max Players</label>
               <input
                 type="number"
                 min={2}
                 value={formMaxPlayers}
                 onChange={(e) => setFormMaxPlayers(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                 placeholder="No limit"
               />
             </div>
           </div>
           <div className="flex gap-3">
-            <button type="submit" disabled={saving} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm font-medium">
+            <button type="submit" disabled={saving} className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium">
               {saving ? 'Creating...' : 'Create Tournament'}
             </button>
-            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm">
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-card-hover hover:bg-card-hover text-foreground rounded text-sm">
               Cancel
             </button>
           </div>
@@ -517,9 +517,9 @@ export default function TournamentsPage() {
       )}
 
       {loading ? (
-        <p className="text-zinc-400">Loading tournaments...</p>
+        <p className="text-muted">Loading tournaments...</p>
       ) : tournaments.length === 0 ? (
-        <p className="text-zinc-400">No tournaments yet. Create one to get started.</p>
+        <p className="text-muted">No tournaments yet. Create one to get started.</p>
       ) : (
         <>
           {/* Mobile card view */}
@@ -528,15 +528,15 @@ export default function TournamentsPage() {
               <button
                 key={t.id}
                 onClick={() => openTournament(t.id)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+                className="w-full rounded-xl border border-card-border bg-card p-3 text-left min-h-11 active:bg-card-hover"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-white truncate mr-2">{t.name}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                  <span className="font-medium text-foreground truncate mr-2">{t.name}</span>
+                  <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-card-hover text-foreground/70'}`}>
                     {t.status}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                <div className="mt-1 flex items-center justify-between text-xs text-muted">
                   <span>{t.format || 'No format'} &middot; {t._count?.players || 0} players</span>
                   <span>{new Date(t.created_at).toLocaleDateString()}</span>
                 </div>
@@ -545,10 +545,10 @@ export default function TournamentsPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="hidden md:block bg-card border border-card-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                <tr className="border-b border-card-border text-muted text-left">
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Format</th>
                   <th className="px-4 py-3 font-medium text-center">Players</th>
@@ -561,22 +561,22 @@ export default function TournamentsPage() {
                   <tr
                     key={t.id}
                     onClick={() => openTournament(t.id)}
-                    className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
+                    className="border-b border-card-border hover:bg-card-hover cursor-pointer text-foreground"
                   >
                     <td className="px-4 py-3 font-medium">
                       {t.name}
                       {t.event && (
-                        <span className="ml-2 text-xs text-zinc-500">({t.event.name})</span>
+                        <span className="ml-2 text-xs text-muted">({t.event.name})</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-zinc-300">{t.format || '--'}</td>
-                    <td className="px-4 py-3 text-center text-zinc-300">
+                    <td className="px-4 py-3 text-foreground/70">{t.format || '--'}</td>
+                    <td className="px-4 py-3 text-center text-foreground/70">
                       {t._count?.players || 0}
-                      {t.max_players && <span className="text-zinc-500">/{t.max_players}</span>}
+                      {t.max_players && <span className="text-muted">/{t.max_players}</span>}
                     </td>
-                    <td className="px-4 py-3 text-zinc-300">{new Date(t.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-foreground/70">{new Date(t.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs capitalize ${STATUS_COLORS[t.status] || 'bg-card-hover text-foreground/70'}`}>
                         {t.status}
                       </span>
                     </td>

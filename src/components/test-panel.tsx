@@ -54,7 +54,7 @@ export function TestPanel() {
       <button
         onClick={() => setMinimized(false)}
         style={{ left: pos.x, top: pos.y }}
-        className="fixed z-50 flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white shadow-lg hover:bg-purple-700"
+        className="fixed z-50 flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-foreground shadow-lg hover:bg-purple-700"
         title="Open Test Panel"
       >
         T
@@ -65,7 +65,7 @@ export function TestPanel() {
   return (
     <div
       style={{ left: pos.x, top: pos.y }}
-      className="fixed z-50 w-64 rounded-lg border border-purple-700/50 bg-zinc-900/95 shadow-2xl backdrop-blur"
+      className="fixed z-50 w-64 rounded-xl border border-purple-700/50 bg-card/95 shadow-2xl backdrop-blur"
     >
       {/* Drag handle */}
       <div
@@ -77,7 +77,7 @@ export function TestPanel() {
         </span>
         <button
           onClick={() => setMinimized(true)}
-          className="text-xs text-purple-400 hover:text-white"
+          className="text-xs text-purple-400 hover:text-foreground"
         >
           _
         </button>
@@ -85,13 +85,13 @@ export function TestPanel() {
 
       <div className="space-y-3 p-3">
         {/* Actual role */}
-        <div className="text-xs text-zinc-500">
-          Actual: <span className="text-zinc-300">{actualRole}</span>
+        <div className="text-xs text-muted">
+          Actual: <span className="text-foreground/70">{actualRole}</span>
         </div>
 
         {/* Role switcher */}
         <div>
-          <label className="mb-1 block text-xs text-zinc-400">
+          <label className="mb-1 block text-xs text-muted">
             Simulate Role
           </label>
           <select
@@ -100,7 +100,7 @@ export function TestPanel() {
               const val = e.target.value;
               setTestRole(val === "off" ? null : (val as Role));
             }}
-            className="w-full rounded border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs text-white focus:border-purple-500 focus:outline-none"
+            className="w-full rounded border border-input-border bg-card-hover px-2 py-1.5 text-xs text-foreground focus:border-purple-500 focus:outline-none"
           >
             {ROLES.map((r) => (
               <option key={r.value} value={r.value}>

@@ -43,9 +43,9 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+        className="w-full rounded-xl border border-card-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-blue-500 focus:outline-none"
       />
-      <kbd className="absolute right-3 top-2 hidden rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-500 sm:inline">
+      <kbd className="absolute right-3 top-2 hidden rounded bg-card-hover px-1.5 py-0.5 text-[10px] text-muted sm:inline">
         Ctrl+K
       </kbd>
     </div>

@@ -38,7 +38,7 @@ export function NetworkStatusBar() {
   }
 
   return (
-    <div className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs ${config.bg}`}>
+    <div className={`flex items-center gap-3 rounded-xl border px-3 py-2 text-xs ${config.bg}`}>
       {/* Status dot */}
       <span className={`h-2 w-2 rounded-full ${config.dot}`} />
 
@@ -47,20 +47,20 @@ export function NetworkStatusBar() {
 
       {/* Context details */}
       {status.state === 'offline' && (
-        <span className="text-zinc-400">
+        <span className="text-muted">
           Sales will queue locally
           {status.pendingTxCount > 0 && ` · ${status.pendingTxCount} pending`}
         </span>
       )}
 
       {status.state === 'syncing' && (
-        <span className="text-zinc-400">
+        <span className="text-muted">
           {status.pendingTxCount} transaction{status.pendingTxCount !== 1 ? 's' : ''} syncing...
         </span>
       )}
 
       {status.state === 'degraded' && (
-        <span className="text-zinc-400">
+        <span className="text-muted">
           Offline &gt;1hr · Cash payments only · {status.offlineMinutes}m
         </span>
       )}
@@ -91,7 +91,7 @@ export function NetworkDot() {
     <div className="flex items-center gap-2" title={config.label}>
       <span className={`h-2 w-2 rounded-full ${config.dot}`} />
       {status.state !== 'online' && (
-        <span className="text-xs text-zinc-400">{config.label}</span>
+        <span className="text-xs text-muted">{config.label}</span>
       )}
       {status.pendingTxCount > 0 && (
         <span className="text-xs tabular-nums text-yellow-400">

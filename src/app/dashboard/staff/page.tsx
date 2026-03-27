@@ -101,7 +101,7 @@ export default function StaffPage() {
   if (!can("staff.manage")) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to manage staff.</p>
+        <p className="text-muted">You don&apos;t have permission to manage staff.</p>
       </div>
     );
   }
@@ -109,26 +109,26 @@ export default function StaffPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Staff</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Staff</h1>
         <button
           onClick={() => setShowInvite(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
         >
           Invite Staff
         </button>
       </div>
 
       {loading ? (
-        <p className="text-zinc-400 py-12 text-center">Loading staff...</p>
+        <p className="text-muted py-12 text-center">Loading staff...</p>
       ) : staffList.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-          <p className="text-zinc-400">No staff members yet.</p>
+        <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
+          <p className="text-muted">No staff members yet.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
+        <div className="overflow-x-auto rounded-xl border border-card-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+              <tr className="border-b border-card-border bg-card text-left text-muted">
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Role</th>
@@ -143,7 +143,7 @@ export default function StaffPage() {
                 return (
                   <tr
                     key={member.id}
-                    className={`bg-zinc-950 hover:bg-zinc-900/50 transition-colors ${
+                    className={`bg-background hover:bg-card-hover transition-colors ${
                       !member.active ? "opacity-60" : ""
                     }`}
                   >
@@ -156,22 +156,22 @@ export default function StaffPage() {
                             className="h-7 w-7 rounded-full"
                           />
                         ) : (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 text-xs text-zinc-400">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-card-hover text-xs text-muted">
                             {member.name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className="text-white font-medium">
+                        <span className="text-foreground font-medium">
                           {member.name}
                           {isCurrentUser && (
-                            <span className="ml-2 text-xs text-zinc-500">(you)</span>
+                            <span className="ml-2 text-xs text-muted">(you)</span>
                           )}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-zinc-400">{member.email}</td>
+                    <td className="px-4 py-3 text-muted">{member.email}</td>
                     <td className="px-4 py-3">
                       {member.role === "owner" || isCurrentUser ? (
-                        <span className="inline-block rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300 capitalize">
+                        <span className="inline-block rounded-full bg-card-hover px-2 py-0.5 text-xs font-medium text-foreground/70 capitalize">
                           {member.role}
                         </span>
                       ) : (
@@ -180,7 +180,7 @@ export default function StaffPage() {
                           onChange={(e) =>
                             handleRoleChange(member.id, e.target.value)
                           }
-                          className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none"
+                          className="rounded border border-input-border bg-card-hover px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none"
                         >
                           <option value="manager">Manager</option>
                           <option value="cashier">Cashier</option>
@@ -192,13 +192,13 @@ export default function StaffPage() {
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                           member.active
                             ? "bg-green-900/50 text-green-400"
-                            : "bg-zinc-800 text-zinc-500"
+                            : "bg-card-hover text-muted"
                         }`}
                       >
                         {member.active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-zinc-400">
+                    <td className="px-4 py-3 text-muted">
                       {new Date(member.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -228,17 +228,17 @@ export default function StaffPage() {
       {/* Invite Modal */}
       {showInvite && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setShowInvite(false)}
         >
           <div
-            className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-white mb-4">Invite Staff Member</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Invite Staff Member</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Name
                 </label>
                 <input
@@ -247,11 +247,11 @@ export default function StaffPage() {
                   onChange={(e) => setInviteName(e.target.value)}
                   placeholder="Staff member's name"
                   autoFocus
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Email
                 </label>
                 <input
@@ -259,17 +259,17 @@ export default function StaffPage() {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="staff@example.com"
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Role
                 </label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                 >
                   <option value="cashier">Cashier</option>
                   <option value="manager">Manager</option>
@@ -279,14 +279,14 @@ export default function StaffPage() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowInvite(false)}
-                className="flex-1 rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-xl border border-input-border py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleInvite}
                 disabled={inviting || !inviteEmail.trim() || !inviteName.trim()}
-                className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {inviting ? "Inviting..." : "Invite"}
               </button>

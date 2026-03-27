@@ -52,14 +52,14 @@ export function ShortcutsHelp() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-sm mx-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+        className="w-full max-w-sm mx-4 rounded-xl border border-card-border bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">Keyboard Shortcuts</h2>
+          <h2 className="text-lg font-bold text-foreground">Keyboard Shortcuts</h2>
           <button
             onClick={() => setOpen(false)}
-            className="text-zinc-500 hover:text-white text-xl leading-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="text-muted hover:text-foreground text-xl leading-none min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             &times;
           </button>
@@ -71,15 +71,15 @@ export function ShortcutsHelp() {
               key={s.keys}
               className="flex items-center justify-between py-2 px-1"
             >
-              <span className="text-sm text-zinc-300">{s.description}</span>
-              <kbd className="rounded bg-zinc-800 border border-zinc-700 px-2 py-1 text-xs font-mono text-zinc-400">
+              <span className="text-sm text-foreground/70">{s.description}</span>
+              <kbd className="rounded bg-card-hover border border-input-border px-2 py-1 text-xs font-mono text-muted">
                 {s.keys}
               </kbd>
             </div>
           ))}
         </div>
 
-        <div className="mt-4 pt-3 border-t border-zinc-800 text-center text-xs text-zinc-600">
+        <div className="mt-4 pt-3 border-t border-card-border text-center text-xs text-zinc-600">
           Press Escape or F1 to close
         </div>
       </div>

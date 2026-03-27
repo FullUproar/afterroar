@@ -15,7 +15,7 @@ export default function OpsPage() {
   }, [count]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black text-foreground">
       <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
         Future home of the best friendly local POS&hellip;
       </h1>

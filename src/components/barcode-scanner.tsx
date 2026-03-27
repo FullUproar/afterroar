@@ -183,18 +183,18 @@ export function BarcodeScanner({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90">
       {/* Full-screen on mobile, modal on desktop */}
-      <div className="relative w-full h-full md:h-auto md:max-w-lg md:max-h-[80vh] md:rounded-xl bg-zinc-950 md:border md:border-zinc-800 flex flex-col overflow-hidden">
+      <div className="relative w-full h-full md:h-auto md:max-w-lg md:max-h-[80vh] md:rounded-xl bg-background md:border md:border-card-border flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-base font-bold text-white">{title}</h2>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-card-border shrink-0">
+          <h2 className="text-base font-bold text-foreground">{title}</h2>
           <div className="flex items-center gap-2">
             {torchSupported && !manualMode && (
               <button
                 onClick={toggleTorch}
-                className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                   torchOn
                     ? "bg-yellow-500 text-black"
-                    : "bg-zinc-800 text-zinc-400 hover:text-white"
+                    : "bg-card-hover text-muted hover:text-foreground"
                 }`}
               >
                 {torchOn ? "Light ON" : "Light"}
@@ -202,7 +202,7 @@ export function BarcodeScanner({
             )}
             <button
               onClick={handleClose}
-              className="rounded-lg bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="rounded-xl bg-card-hover px-3 py-2 text-sm font-medium text-foreground/70 hover:bg-card-hover hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               Close
             </button>
@@ -231,7 +231,7 @@ export function BarcodeScanner({
                   <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-3 border-r-3 border-emerald-400 rounded-br-lg" />
                 </div>
                 <div className="absolute bottom-6 text-center">
-                  <div className="text-sm text-white/70">
+                  <div className="text-sm text-foreground/70">
                     {hasDetector
                       ? "Point camera at barcode"
                       : "Auto-detect not available"}
@@ -242,7 +242,7 @@ export function BarcodeScanner({
 
             {!cameraReady && !cameraError && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-zinc-400 text-sm">Starting camera...</div>
+                <div className="text-muted text-sm">Starting camera...</div>
               </div>
             )}
           </div>
@@ -252,11 +252,11 @@ export function BarcodeScanner({
         {manualMode && (
           <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
             {cameraError && (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400 text-center max-w-sm">
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400 text-center max-w-sm">
                 {cameraError}
               </div>
             )}
-            <div className="text-zinc-400 text-sm text-center">
+            <div className="text-muted text-sm text-center">
               Enter the barcode number manually
             </div>
             <div className="w-full max-w-xs flex gap-2">
@@ -268,12 +268,12 @@ export function BarcodeScanner({
                 onChange={(e) => setManualCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleManualSubmit()}
                 placeholder="e.g. 0123456789012"
-                className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-base text-white font-mono placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                className="flex-1 rounded-xl border border-input-border bg-card px-4 py-3 text-base text-foreground font-mono placeholder:text-muted focus:border-blue-500 focus:outline-none"
               />
               <button
                 onClick={handleManualSubmit}
                 disabled={!manualCode.trim()}
-                className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors min-h-[44px]"
+                className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-medium text-foreground hover:bg-emerald-500 disabled:opacity-50 transition-colors min-h-[44px]"
               >
                 Go
               </button>
@@ -282,7 +282,7 @@ export function BarcodeScanner({
         )}
 
         {/* Bottom actions */}
-        <div className="border-t border-zinc-800 px-4 py-3 pb-safe shrink-0">
+        <div className="border-t border-card-border px-4 py-3 pb-safe shrink-0">
           <button
             onClick={() => {
               if (manualMode) {
@@ -293,7 +293,7 @@ export function BarcodeScanner({
                 setManualMode(true);
               }
             }}
-            className="w-full rounded-lg border border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors min-h-[44px]"
+            className="w-full rounded-xl border border-input-border px-4 py-3 text-sm font-medium text-foreground/70 hover:bg-card-hover hover:text-foreground transition-colors min-h-[44px]"
           >
             {manualMode ? "Try Camera Instead" : "Enter Code Manually"}
           </button>

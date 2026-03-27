@@ -9,6 +9,7 @@ import {
   formatCents,
   parseDollars,
 } from "@/lib/types";
+import { StatusBadge } from "@/components/mobile-card";
 
 const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: "tcg_single", label: "TCG Single" },
@@ -300,23 +301,23 @@ export default function InventoryPage() {
   const getStockColor = (qty: number) => {
     if (qty === 0) return "text-red-500";
     if (qty <= 3) return "text-orange-400";
-    return "text-white";
+    return "text-foreground";
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Inventory</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Inventory</h1>
         <div className="flex gap-2">
           <a
             href="/dashboard/inventory/labels"
-            className="rounded-md border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors"
+            className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
           >
             Print Labels
           </a>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
           >
             {showAddForm ? "Cancel" : "Add Item"}
           </button>
@@ -330,8 +331,8 @@ export default function InventoryPage() {
       />
 
       {showAddForm && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-white">New Item</h2>
+        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4 shadow-sm dark:shadow-none">
+          <h2 className="text-lg font-semibold text-foreground">New Item</h2>
 
           {error && (
             <p className="text-sm text-red-400">{error}</p>
@@ -339,20 +340,20 @@ export default function InventoryPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Name *
               </label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="Item name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Category
               </label>
               <select
@@ -360,7 +361,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, category: e.target.value as ItemCategory })
                 }
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>
@@ -371,33 +372,33 @@ export default function InventoryPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Price ($)
               </label>
               <input
                 type="text"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="0.00"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Cost ($)
               </label>
               <input
                 type="text"
                 value={form.cost}
                 onChange={(e) => setForm({ ...form, cost: e.target.value })}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="0.00"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Quantity
               </label>
               <input
@@ -407,25 +408,25 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, quantity: parseInt(e.target.value) || 0 })
                 }
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Barcode
               </label>
               <input
                 type="text"
                 value={form.barcode}
                 onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="Scan or type barcode"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Condition
               </label>
               <select
@@ -433,7 +434,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, condition: e.target.value })
                 }
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
               >
                 {CONDITIONS.map((c) => (
                   <option key={c} value={c}>
@@ -444,38 +445,38 @@ export default function InventoryPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Language
               </label>
               <input
                 type="text"
                 value={form.language}
                 onChange={(e) => setForm({ ...form, language: e.target.value })}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="English"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Set Name
               </label>
               <input
                 type="text"
                 value={form.set_name}
                 onChange={(e) => setForm({ ...form, set_name: e.target.value })}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="Set or expansion name"
               />
             </div>
 
             <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.foil}
                   onChange={(e) => setForm({ ...form, foil: e.target.checked })}
-                  className="rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-zinc-700 bg-background text-indigo-600 focus:ring-indigo-500"
                 />
                 Foil / Holographic
               </label>
@@ -489,14 +490,14 @@ export default function InventoryPage() {
                 setForm({ ...EMPTY_FORM });
                 setError(null);
               }}
-              className="rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+              className="rounded-xl border border-card-border px-4 py-2 text-sm text-muted hover:bg-card-hover transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleCreate}
               disabled={submitting}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
             >
               {submitting ? "Creating..." : "Create Item"}
             </button>
@@ -505,11 +506,11 @@ export default function InventoryPage() {
       )}
 
       {loading ? (
-        <div className="text-center text-zinc-500 py-12">
+        <div className="text-center text-muted py-12">
           Loading inventory...
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center text-zinc-500 py-12">
+        <div className="text-center text-muted py-12">
           {searchQuery
             ? "No items match your search."
             : "No inventory items yet. Add your first item above."}
@@ -517,37 +518,31 @@ export default function InventoryPage() {
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-2">
+          <div className="md:hidden space-y-3">
             {items.map((item) => (
               <div
                 key={item.id}
-                className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+                className="rounded-xl border border-card-border bg-card p-4 shadow-sm dark:shadow-none"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-white truncate mr-2">
+                  <span className="font-semibold text-foreground truncate mr-2 leading-snug">
                     {item.name}
                     {Boolean((item.attributes as Record<string, unknown>)?.foil) && (
-                      <span className="ml-1.5 inline-block rounded bg-yellow-900/50 px-1.5 py-0.5 text-xs text-yellow-400">
-                        Foil
-                      </span>
+                      <StatusBadge variant="pending" className="ml-1.5">Foil</StatusBadge>
                     )}
                     {item.shared_to_catalog && (
-                      <span className="ml-1.5 inline-block rounded bg-blue-900/50 px-1.5 py-0.5 text-xs text-blue-400">
-                        Shared
-                      </span>
+                      <StatusBadge variant="info" className="ml-1.5">Shared</StatusBadge>
                     )}
                     {item.catalog_product_id && !item.shared_to_catalog && (
-                      <span className="ml-1.5 inline-block rounded bg-zinc-700 px-1.5 py-0.5 text-xs text-zinc-400">
-                        Linked
-                      </span>
+                      <StatusBadge variant="info" className="ml-1.5">Linked</StatusBadge>
                     )}
                   </span>
-                  <span className="text-sm font-medium text-white whitespace-nowrap">
+                  <span className="text-sm font-semibold text-foreground whitespace-nowrap tabular-nums">
                     {formatCents(item.price_cents)}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span className="text-xs text-zinc-500">{getCategoryLabel(item.category)}</span>
+                <div className="mt-1.5 flex items-center justify-between">
+                  <span className="text-xs text-muted">{getCategoryLabel(item.category)}</span>
                   <div className="flex items-center gap-3">
                     <span className={`text-sm font-medium ${getStockColor(item.quantity)}`}>
                       Qty: {item.quantity}
@@ -559,7 +554,7 @@ export default function InventoryPage() {
                           className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-h-11 flex items-center ${
                             item.shared_to_catalog
                               ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
-                              : "bg-zinc-700/50 text-zinc-400 hover:bg-zinc-700"
+                              : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
                           }`}
                         >
                           {item.shared_to_catalog ? "Unshare" : "Share"}
@@ -587,10 +582,10 @@ export default function InventoryPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                <tr className="border-b border-zinc-800 bg-card text-left text-muted">
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Category</th>
                   <th className="px-4 py-3 font-medium text-right">Price</th>
@@ -607,9 +602,9 @@ export default function InventoryPage() {
                 {items.map((item) => (
                   <tr
                     key={item.id}
-                    className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors"
+                    className="bg-background hover:bg-card/50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-white font-medium">
+                    <td className="px-4 py-3 text-foreground font-medium">
                       {item.name}
                       {Boolean((item.attributes as Record<string, unknown>)?.foil) && (
                         <span className="ml-2 inline-block rounded bg-yellow-900/50 px-1.5 py-0.5 text-xs text-yellow-400">
@@ -622,18 +617,18 @@ export default function InventoryPage() {
                         </span>
                       )}
                       {item.catalog_product_id && !item.shared_to_catalog && (
-                        <span className="ml-2 inline-block rounded bg-zinc-700 px-1.5 py-0.5 text-xs text-zinc-400">
+                        <span className="ml-2 inline-block rounded bg-zinc-700 px-1.5 py-0.5 text-xs text-muted">
                           Linked
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-zinc-400">
+                    <td className="px-4 py-3 text-muted">
                       {getCategoryLabel(item.category)}
                     </td>
-                    <td className="px-4 py-3 text-right text-white">
+                    <td className="px-4 py-3 text-right text-foreground">
                       {formatCents(item.price_cents)}
                     </td>
-                    <td className="px-4 py-3 text-right text-zinc-400">
+                    <td className="px-4 py-3 text-right text-muted">
                       {formatCents(item.cost_cents)}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -668,8 +663,8 @@ export default function InventoryPage() {
                       {showLocationBreakdown === item.id && locationLevels.length > 0 && (
                         <div className="mt-1 space-y-0.5">
                           {locationLevels.map((ll) => (
-                            <div key={ll.location_id} className="text-[10px] text-zinc-400">
-                              {ll.location_name}: <span className="text-white">{ll.quantity}</span>
+                            <div key={ll.location_id} className="text-[10px] text-muted">
+                              {ll.location_name}: <span className="text-foreground">{ll.quantity}</span>
                             </div>
                           ))}
                         </div>
@@ -678,19 +673,13 @@ export default function InventoryPage() {
                         <div className="mt-1 text-[10px] text-zinc-500">No location data</div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-zinc-400">
+                    <td className="px-4 py-3 text-muted">
                       {String((item.attributes as Record<string, unknown>)?.condition ?? "\u2014")}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                          item.active
-                            ? "bg-green-900/50 text-green-400"
-                            : "bg-zinc-800 text-zinc-500"
-                        }`}
-                      >
+                      <StatusBadge variant={item.active ? "success" : "info"}>
                         {item.active ? "Active" : "Inactive"}
-                      </span>
+                      </StatusBadge>
                     </td>
                     {can("inventory.adjust") && (
                       <td className="px-4 py-3 text-center">
@@ -700,7 +689,7 @@ export default function InventoryPage() {
                             className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
                               item.shared_to_catalog
                                 ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
-                                : "bg-zinc-700/50 text-zinc-400 hover:bg-zinc-700"
+                                : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
                             }`}
                           >
                             {item.shared_to_catalog ? "Unshare" : "Share"}
@@ -733,25 +722,25 @@ export default function InventoryPage() {
       {/* Stock Adjustment Modal */}
       {adjust && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => {
             setAdjust(null);
             setAdjustError(null);
           }}
         >
           <div
-            className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold text-foreground mb-1">
               Adjust Stock
             </h2>
-            <p className="text-sm text-zinc-400 mb-4">{adjust.item.name}</p>
+            <p className="text-sm text-muted mb-4">{adjust.item.name}</p>
 
             {/* Current quantity */}
-            <div className="mb-4 rounded-md bg-zinc-950 border border-zinc-800 px-4 py-3 flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Current Quantity</span>
-              <span className="text-lg font-bold text-white">
+            <div className="mb-4 rounded-md bg-background border border-card-border px-4 py-3 flex items-center justify-between">
+              <span className="text-sm text-muted">Current Quantity</span>
+              <span className="text-lg font-bold text-foreground">
                 {adjust.item.quantity}
               </span>
             </div>
@@ -766,8 +755,8 @@ export default function InventoryPage() {
                 onClick={() => setAdjust({ ...adjust, type: "add" })}
                 className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   adjust.type === "add"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                    ? "bg-emerald-600 text-foreground"
+                    : "bg-zinc-800 text-muted hover:bg-zinc-700"
                 }`}
               >
                 Add
@@ -776,8 +765,8 @@ export default function InventoryPage() {
                 onClick={() => setAdjust({ ...adjust, type: "remove" })}
                 className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   adjust.type === "remove"
-                    ? "bg-red-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                    ? "bg-red-600 text-foreground"
+                    : "bg-zinc-800 text-muted hover:bg-zinc-700"
                 }`}
               >
                 Remove
@@ -786,7 +775,7 @@ export default function InventoryPage() {
 
             {/* Amount */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Amount
               </label>
               <input
@@ -796,7 +785,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setAdjust({ ...adjust, amount: e.target.value })
                 }
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 placeholder="Enter quantity"
                 autoFocus
               />
@@ -804,7 +793,7 @@ export default function InventoryPage() {
 
             {/* Reason */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Reason *
               </label>
               <select
@@ -812,7 +801,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setAdjust({ ...adjust, reason: e.target.value })
                 }
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">Select a reason...</option>
                 {ADJUSTMENT_REASONS.map((r) => (
@@ -825,7 +814,7 @@ export default function InventoryPage() {
 
             {/* Notes */}
             <div className="mb-5">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Notes (optional)
               </label>
               <textarea
@@ -834,16 +823,16 @@ export default function InventoryPage() {
                   setAdjust({ ...adjust, notes: e.target.value })
                 }
                 rows={2}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none resize-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none resize-none"
                 placeholder="Additional details..."
               />
             </div>
 
             {/* Preview */}
             {adjust.amount && parseInt(adjust.amount, 10) > 0 && (
-              <div className="mb-4 rounded-md bg-zinc-950 border border-zinc-800 px-4 py-3 flex items-center justify-between">
-                <span className="text-sm text-zinc-400">New Quantity</span>
-                <span className="text-lg font-bold text-white">
+              <div className="mb-4 rounded-md bg-background border border-card-border px-4 py-3 flex items-center justify-between">
+                <span className="text-sm text-muted">New Quantity</span>
+                <span className="text-lg font-bold text-foreground">
                   {adjust.type === "add"
                     ? adjust.item.quantity + parseInt(adjust.amount, 10)
                     : Math.max(
@@ -861,14 +850,14 @@ export default function InventoryPage() {
                   setAdjust(null);
                   setAdjustError(null);
                 }}
-                className="flex-1 rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-xl border border-card-border px-4 py-2 text-sm text-muted hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAdjustSubmit}
                 disabled={adjustSubmitting}
-                className={`flex-1 rounded-md px-4 py-2 text-sm font-medium text-white transition-colors ${
+                className={`flex-1 rounded-md px-4 py-2 text-sm font-medium text-foreground transition-colors ${
                   adjust.type === "add"
                     ? "bg-emerald-600 hover:bg-emerald-500"
                     : "bg-red-600 hover:bg-red-500"

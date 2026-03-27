@@ -162,56 +162,56 @@ export default function TransfersPage() {
       case "in_transit":
         return "bg-blue-900/50 text-blue-400";
       case "cancelled":
-        return "bg-zinc-800 text-zinc-500";
+        return "bg-card-hover text-muted";
       default:
-        return "bg-zinc-800 text-zinc-400";
+        return "bg-card-hover text-muted";
     }
   };
 
   if (!can("inventory.adjust")) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-500">You don&apos;t have permission to manage transfers.</p>
+        <p className="text-muted">You don&apos;t have permission to manage transfers.</p>
       </div>
     );
   }
 
   if (loading) {
-    return <p className="text-zinc-400 py-12 text-center">Loading transfers...</p>;
+    return <p className="text-muted py-12 text-center">Loading transfers...</p>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Transfers</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Transfers</h1>
         <button
           onClick={() => setShowNew(true)}
           disabled={locations.length < 2}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           New Transfer
         </button>
       </div>
 
       {locations.length < 2 && (
-        <div className="rounded-lg border border-yellow-800/50 bg-yellow-900/10 p-4 text-sm text-yellow-400">
+        <div className="rounded-xl border border-yellow-800/50 bg-yellow-900/10 p-4 text-sm text-yellow-400">
           You need at least 2 locations to create transfers. Add locations in Settings first.
         </div>
       )}
 
       {/* Transfer list */}
       {transfers.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-          <p className="text-zinc-400">No transfers yet.</p>
+        <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
+          <p className="text-muted">No transfers yet.</p>
         </div>
       ) : (
         <>
           {/* Mobile card view */}
           <div className="md:hidden space-y-2">
             {transfers.map((t) => (
-              <div key={t.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 min-h-11">
+              <div key={t.id} className="rounded-xl border border-card-border bg-card p-3 min-h-11">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-white">
+                  <span className="text-sm text-foreground">
                     {locationMap[t.from_location_id] || 'Unknown'} &rarr; {locationMap[t.to_location_id] || 'Unknown'}
                   </span>
                   <span
@@ -220,7 +220,7 @@ export default function TransfersPage() {
                     {t.status}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                <div className="mt-1 flex items-center justify-between text-xs text-muted">
                   <span>{Array.isArray(t.items) ? t.items.length : 0} items</span>
                   <span>{new Date(t.created_at).toLocaleDateString()}</span>
                 </div>
@@ -229,10 +229,10 @@ export default function TransfersPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-zinc-400">
+                <tr className="border-b border-card-border bg-card text-left text-muted">
                   <th className="px-4 py-3 font-medium">From</th>
                   <th className="px-4 py-3 font-medium">To</th>
                   <th className="px-4 py-3 font-medium text-center">Items</th>
@@ -242,14 +242,14 @@ export default function TransfersPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {transfers.map((t) => (
-                  <tr key={t.id} className="bg-zinc-950 hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-4 py-3 text-white">
+                  <tr key={t.id} className="bg-background hover:bg-card-hover transition-colors">
+                    <td className="px-4 py-3 text-foreground">
                       {locationMap[t.from_location_id] || t.from_location_id}
                     </td>
-                    <td className="px-4 py-3 text-white">
+                    <td className="px-4 py-3 text-foreground">
                       {locationMap[t.to_location_id] || t.to_location_id}
                     </td>
-                    <td className="px-4 py-3 text-center text-zinc-300">
+                    <td className="px-4 py-3 text-center text-foreground/70">
                       {Array.isArray(t.items) ? t.items.length : 0}
                     </td>
                     <td className="px-4 py-3">
@@ -259,7 +259,7 @@ export default function TransfersPage() {
                         {t.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-zinc-400">
+                    <td className="px-4 py-3 text-muted">
                       {new Date(t.created_at).toLocaleDateString()}
                     </td>
                   </tr>
@@ -273,24 +273,24 @@ export default function TransfersPage() {
       {/* New Transfer Modal */}
       {showNew && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setShowNew(false)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-white mb-4">New Transfer</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">New Transfer</h2>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   From Location
                 </label>
                 <select
                   value={fromLocationId}
                   onChange={(e) => setFromLocationId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                 >
                   <option value="">Select...</option>
                   {locations
@@ -303,13 +303,13 @@ export default function TransfersPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   To Location
                 </label>
                 <select
                   value={toLocationId}
                   onChange={(e) => setToLocationId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                 >
                   <option value="">Select...</option>
                   {locations
@@ -325,7 +325,7 @@ export default function TransfersPage() {
 
             {/* Add items */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Add Items
               </label>
               <div className="relative">
@@ -334,18 +334,18 @@ export default function TransfersPage() {
                   value={itemSearch}
                   onChange={(e) => setItemSearch(e.target.value)}
                   placeholder="Search inventory..."
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 />
                 {itemResults.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl">
+                  <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-xl border border-card-border bg-card shadow-xl">
                     {itemResults.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => addTransferItem(item)}
-                        className="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+                        className="flex w-full items-center justify-between px-3 py-2 text-sm text-foreground/70 hover:bg-card-hover"
                       >
                         <span>{item.name}</span>
-                        <span className="text-xs text-zinc-500">{item.quantity} in stock</span>
+                        <span className="text-xs text-muted">{item.quantity} in stock</span>
                       </button>
                     ))}
                   </div>
@@ -359,9 +359,9 @@ export default function TransfersPage() {
                 {transferItems.map((item) => (
                   <div
                     key={item.inventory_item_id}
-                    className="flex items-center justify-between rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2"
+                    className="flex items-center justify-between rounded-xl bg-background border border-card-border px-3 py-2"
                   >
-                    <span className="text-sm text-white truncate mr-2">{item.name}</span>
+                    <span className="text-sm text-foreground truncate mr-2">{item.name}</span>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
@@ -381,7 +381,7 @@ export default function TransfersPage() {
                             )
                           );
                         }}
-                        className="w-16 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-white text-center focus:border-blue-500 focus:outline-none"
+                        className="w-16 rounded border border-input-border bg-card px-2 py-1 text-sm text-foreground text-center focus:border-accent focus:outline-none"
                       />
                       <button
                         onClick={() =>
@@ -391,7 +391,7 @@ export default function TransfersPage() {
                             )
                           )
                         }
-                        className="text-zinc-500 hover:text-red-400 text-sm"
+                        className="text-muted hover:text-red-400 text-sm"
                       >
                         &times;
                       </button>
@@ -403,21 +403,21 @@ export default function TransfersPage() {
 
             {/* Notes */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-muted mb-1">
                 Notes (optional)
               </label>
               <textarea
                 value={transferNotes}
                 onChange={(e) => setTransferNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none resize-none"
+                className="w-full rounded-xl border border-card-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none resize-none"
               />
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setShowNew(false)}
-                className="flex-1 rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-xl border border-input-border py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
@@ -429,7 +429,7 @@ export default function TransfersPage() {
                   !toLocationId ||
                   transferItems.length === 0
                 }
-                className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {submitting ? "Transferring..." : "Submit Transfer"}
               </button>

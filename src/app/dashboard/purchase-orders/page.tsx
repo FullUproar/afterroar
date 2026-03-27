@@ -43,7 +43,7 @@ interface InventorySearchItem {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-zinc-700 text-zinc-300',
+  draft: 'bg-card-hover text-foreground/70',
   submitted: 'bg-blue-900 text-blue-300',
   partially_received: 'bg-yellow-900 text-yellow-300',
   received: 'bg-green-900 text-green-300',
@@ -234,20 +234,20 @@ export default function PurchaseOrdersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Purchase Orders</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Purchase Orders</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+          className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
         >
           {showForm ? 'Cancel' : 'New PO'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
+        <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Supplier</label>
+              <label className="block text-sm text-muted mb-1">Supplier</label>
               <select
                 value={formSupplierId}
                 onChange={(e) => {
@@ -255,7 +255,7 @@ export default function PurchaseOrdersPage() {
                   const s = suppliers.find((s) => s.id === e.target.value);
                   if (s) setFormSupplier(s.name);
                 }}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
               >
                 <option value="">-- Select or type below --</option>
                 {suppliers.map((s) => (
@@ -267,33 +267,33 @@ export default function PurchaseOrdersPage() {
                 value={formSupplier}
                 onChange={(e) => { setFormSupplier(e.target.value); setFormSupplierId(''); }}
                 placeholder="Or type supplier name"
-                className="mt-2 w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="mt-2 w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Expected Delivery</label>
+              <label className="block text-sm text-muted mb-1">Expected Delivery</label>
               <input
                 type="date"
                 value={formDelivery}
                 onChange={(e) => setFormDelivery(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Notes</label>
+            <label className="block text-sm text-muted mb-1">Notes</label>
             <textarea
               value={formNotes}
               onChange={(e) => setFormNotes(e.target.value)}
               rows={2}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+              className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm text-zinc-400">Items</label>
+              <label className="text-sm text-muted">Items</label>
               <button
                 type="button"
                 onClick={() =>
@@ -318,7 +318,7 @@ export default function PurchaseOrdersPage() {
                       }}
                       onFocus={() => setActiveItemIndex(i)}
                       placeholder="Item name (type to search)"
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                      className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                     />
                     {activeItemIndex === i && item.name.length >= 2 && (
                       <div className="relative">
@@ -327,18 +327,18 @@ export default function PurchaseOrdersPage() {
                           value={itemSearch}
                           onChange={(e) => setItemSearch(e.target.value)}
                           placeholder="Search inventory..."
-                          className="w-full mt-1 bg-zinc-950 border border-zinc-700 rounded px-3 py-1 text-white text-xs"
+                          className="w-full mt-1 bg-background border border-input-border rounded px-3 py-1 text-foreground text-xs"
                         />
                         {searchResults.length > 0 && (
-                          <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-700 rounded mt-1 max-h-32 overflow-y-auto">
+                          <div className="absolute z-10 w-full bg-card-hover border border-input-border rounded mt-1 max-h-32 overflow-y-auto">
                             {searchResults.map((r) => (
                               <button
                                 key={r.id}
                                 type="button"
                                 onClick={() => selectSearchItem(r, i)}
-                                className="w-full text-left px-3 py-1.5 hover:bg-zinc-700 text-sm text-white"
+                                className="w-full text-left px-3 py-1.5 hover:bg-card-hover text-sm text-foreground"
                               >
-                                {r.name} {r.sku && <span className="text-zinc-500 text-xs ml-1">({r.sku})</span>}
+                                {r.name} {r.sku && <span className="text-muted text-xs ml-1">({r.sku})</span>}
                               </button>
                             ))}
                           </div>
@@ -357,7 +357,7 @@ export default function PurchaseOrdersPage() {
                         setFormItems(updated);
                       }}
                       placeholder="Qty"
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                      className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                     />
                   </div>
                   <div className="col-span-3">
@@ -374,11 +374,11 @@ export default function PurchaseOrdersPage() {
                         setFormItems(updated);
                       }}
                       placeholder="Cost ($)"
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                      className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                     />
                   </div>
                   <div className="col-span-2 flex items-center gap-1">
-                    <span className="text-sm text-zinc-400">
+                    <span className="text-sm text-muted">
                       {formatCents(item.cost_cents * item.quantity_ordered)}
                     </span>
                     {formItems.length > 1 && (
@@ -394,7 +394,7 @@ export default function PurchaseOrdersPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-2 text-right text-sm text-zinc-300">
+            <div className="mt-2 text-right text-sm text-foreground/70">
               Total: {formatCents(formItems.reduce((s, i) => s + i.cost_cents * i.quantity_ordered, 0))}
             </div>
           </div>
@@ -403,11 +403,11 @@ export default function PurchaseOrdersPage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm font-medium"
+              className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
             >
               {saving ? 'Creating...' : 'Create PO'}
             </button>
-            <button type="button" onClick={resetForm} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm">
+            <button type="button" onClick={resetForm} className="px-4 py-2 bg-card-hover hover:bg-card-hover text-foreground rounded text-sm">
               Cancel
             </button>
           </div>
@@ -415,9 +415,9 @@ export default function PurchaseOrdersPage() {
       )}
 
       {loading ? (
-        <p className="text-zinc-400">Loading purchase orders...</p>
+        <p className="text-muted">Loading purchase orders...</p>
       ) : orders.length === 0 ? (
-        <p className="text-zinc-400">No purchase orders yet.</p>
+        <p className="text-muted">No purchase orders yet.</p>
       ) : (
         <>
           {/* Mobile card view */}
@@ -426,45 +426,45 @@ export default function PurchaseOrdersPage() {
               <div key={po.id}>
                 <button
                   onClick={() => expandedId === po.id ? setExpandedId(null) : loadDetail(po.id)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+                  className="w-full rounded-xl border border-card-border bg-card p-3 text-left min-h-11 active:bg-card-hover"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-white truncate mr-2">{po.supplier_name}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                    <span className="font-medium text-foreground truncate mr-2">{po.supplier_name}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-card-hover text-foreground/70'}`}>
                       {STATUS_LABELS[po.status] || po.status}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="mt-1 flex items-center justify-between text-xs text-muted">
                     <span>{po.item_count} items</span>
-                    <span className="text-white font-medium">{formatCents(po.total_cost_cents)}</span>
+                    <span className="text-foreground font-medium">{formatCents(po.total_cost_cents)}</span>
                   </div>
                 </button>
                 {expandedId === po.id && detailPO && (
-                  <div className="bg-zinc-950 border border-zinc-800 border-t-0 rounded-b-lg px-3 py-3 space-y-3">
+                  <div className="bg-background border border-card-border border-t-0 rounded-b-lg px-3 py-3 space-y-3">
                     <div className="flex gap-2 flex-wrap">
                       {detailPO.status === 'draft' && (
                         <>
-                          <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs min-h-11">
+                          <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1.5 bg-blue-700 hover:bg-accent text-foreground rounded text-xs min-h-11">
                             Submit Order
                           </button>
-                          <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs min-h-11">
+                          <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-foreground rounded text-xs min-h-11">
                             Cancel
                           </button>
                         </>
                       )}
                     </div>
                     {detailPO.items.map((item) => (
-                      <div key={item.id} className="rounded border border-zinc-800 bg-zinc-900 p-2 text-sm">
-                        <div className="flex items-center justify-between text-white">
+                      <div key={item.id} className="rounded border border-card-border bg-card p-2 text-sm">
+                        <div className="flex items-center justify-between text-foreground">
                           <span className="truncate mr-2">{item.name}</span>
-                          <span className="text-zinc-400 whitespace-nowrap">{formatCents(item.cost_cents)}</span>
+                          <span className="text-muted whitespace-nowrap">{formatCents(item.cost_cents)}</span>
                         </div>
-                        <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
-                          <span>Ordered: {item.quantity_ordered} / Received: <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-zinc-400'}>{item.quantity_received}</span></span>
+                        <div className="mt-1 flex items-center justify-between text-xs text-muted">
+                          <span>Ordered: {item.quantity_ordered} / Received: <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-muted'}>{item.quantity_received}</span></span>
                           {['submitted', 'partially_received'].includes(detailPO.status) && item.quantity_received < item.quantity_ordered && (
                             <button
                               onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
-                              className="px-2 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded text-xs min-h-11 flex items-center"
+                              className="px-2 py-1.5 bg-green-700 hover:bg-green-600 text-foreground rounded text-xs min-h-11 flex items-center"
                             >
                               Receive
                             </button>
@@ -479,10 +479,10 @@ export default function PurchaseOrdersPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="hidden md:block bg-card border border-card-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                <tr className="border-b border-card-border text-muted text-left">
                   <th className="px-4 py-3 font-medium">Supplier</th>
                   <th className="px-4 py-3 font-medium">Items</th>
                   <th className="px-4 py-3 font-medium">Total</th>
@@ -497,50 +497,50 @@ export default function PurchaseOrdersPage() {
                     <tr
                       key={po.id}
                       onClick={() => expandedId === po.id ? setExpandedId(null) : loadDetail(po.id)}
-                      className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
+                      className="border-b border-card-border hover:bg-card-hover cursor-pointer text-foreground"
                     >
                       <td className="px-4 py-3 font-medium">{po.supplier_name}</td>
-                      <td className="px-4 py-3 text-zinc-300">{po.item_count}</td>
-                      <td className="px-4 py-3 text-zinc-300">{formatCents(po.total_cost_cents)}</td>
-                      <td className="px-4 py-3 text-zinc-300">
+                      <td className="px-4 py-3 text-foreground/70">{po.item_count}</td>
+                      <td className="px-4 py-3 text-foreground/70">{formatCents(po.total_cost_cents)}</td>
+                      <td className="px-4 py-3 text-foreground/70">
                         {new Date(po.order_date).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 text-zinc-300">
+                      <td className="px-4 py-3 text-foreground/70">
                         {po.expected_delivery ? new Date(po.expected_delivery).toLocaleDateString() : '--'}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-zinc-700 text-zinc-300'}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-card-hover text-foreground/70'}`}>
                           {STATUS_LABELS[po.status] || po.status}
                         </span>
                       </td>
                     </tr>
                     {expandedId === po.id && detailPO && (
                       <tr key={`${po.id}-detail`}>
-                        <td colSpan={6} className="bg-zinc-950 px-4 py-4 border-b border-zinc-800">
+                        <td colSpan={6} className="bg-background px-4 py-4 border-b border-card-border">
                           <div className="space-y-4">
                             <div className="flex gap-2 flex-wrap">
                               {detailPO.status === 'draft' && (
                                 <>
-                                  <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs">
+                                  <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1 bg-blue-700 hover:bg-accent text-foreground rounded text-xs">
                                     Submit Order
                                   </button>
-                                  <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs">
+                                  <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-foreground rounded text-xs">
                                     Cancel
                                   </button>
                                 </>
                               )}
                               {detailPO.status === 'submitted' && (
-                                <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs">
+                                <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-foreground rounded text-xs">
                                   Cancel
                                 </button>
                               )}
                             </div>
                             {detailPO.notes && (
-                              <p className="text-sm text-zinc-400">Notes: {detailPO.notes}</p>
+                              <p className="text-sm text-muted">Notes: {detailPO.notes}</p>
                             )}
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="text-zinc-500 text-left text-xs">
+                                <tr className="text-muted text-left text-xs">
                                   <th className="pb-2">Item</th>
                                   <th className="pb-2">SKU</th>
                                   <th className="pb-2 text-center">Ordered</th>
@@ -554,23 +554,23 @@ export default function PurchaseOrdersPage() {
                               </thead>
                               <tbody>
                                 {detailPO.items.map((item) => (
-                                  <tr key={item.id} className="border-t border-zinc-800 text-white">
+                                  <tr key={item.id} className="border-t border-card-border text-foreground">
                                     <td className="py-2">{item.name}</td>
-                                    <td className="py-2 text-zinc-400">{item.sku || '--'}</td>
+                                    <td className="py-2 text-muted">{item.sku || '--'}</td>
                                     <td className="py-2 text-center">{item.quantity_ordered}</td>
                                     <td className="py-2 text-center">
-                                      <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-zinc-400'}>
+                                      <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-muted'}>
                                         {item.quantity_received}
                                       </span>
                                     </td>
-                                    <td className="py-2 text-right text-zinc-300">{formatCents(item.cost_cents)}</td>
-                                    <td className="py-2 text-right text-zinc-300">{formatCents(item.cost_cents * item.quantity_ordered)}</td>
+                                    <td className="py-2 text-right text-foreground/70">{formatCents(item.cost_cents)}</td>
+                                    <td className="py-2 text-right text-foreground/70">{formatCents(item.cost_cents * item.quantity_ordered)}</td>
                                     {['submitted', 'partially_received'].includes(detailPO.status) && (
                                       <td className="py-2 text-center">
                                         {item.quantity_received < item.quantity_ordered && (
                                           <button
                                             onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
-                                            className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs"
+                                            className="px-2 py-1 bg-green-700 hover:bg-green-600 text-foreground rounded text-xs"
                                           >
                                             Receive
                                           </button>
@@ -595,11 +595,11 @@ export default function PurchaseOrdersPage() {
 
       {/* Receive Modal */}
       {receiveItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setReceiveItem(null)}>
-          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-lg p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-white mb-1">Receive Items</h2>
-            <p className="text-sm text-zinc-400 mb-4">{receiveItem.name}</p>
-            <p className="text-xs text-zinc-500 mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReceiveItem(null)}>
+          <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-foreground mb-1">Receive Items</h2>
+            <p className="text-sm text-muted mb-4">{receiveItem.name}</p>
+            <p className="text-xs text-muted mb-3">
               Ordered: {receiveItem.quantity_ordered} | Already received: {receiveItem.quantity_received} | Remaining: {receiveItem.quantity_ordered - receiveItem.quantity_received}
             </p>
             <input
@@ -608,14 +608,14 @@ export default function PurchaseOrdersPage() {
               max={receiveItem.quantity_ordered - receiveItem.quantity_received}
               value={receiveQty}
               onChange={(e) => setReceiveQty(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm mb-4"
+              className="w-full bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm mb-4"
               autoFocus
             />
             <div className="flex gap-3">
-              <button onClick={() => setReceiveItem(null)} className="flex-1 px-3 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm">
+              <button onClick={() => setReceiveItem(null)} className="flex-1 px-3 py-2 bg-card-hover hover:bg-card-hover text-foreground rounded text-sm">
                 Cancel
               </button>
-              <button onClick={handleReceive} disabled={receiving} className="flex-1 px-3 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded text-sm font-medium">
+              <button onClick={handleReceive} disabled={receiving} className="flex-1 px-3 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-foreground rounded text-sm font-medium">
                 {receiving ? 'Receiving...' : 'Confirm'}
               </button>
             </div>

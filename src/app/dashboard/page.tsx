@@ -10,7 +10,7 @@ export default async function DashboardPage() {
   if (!session?.user?.id) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-400">Not authenticated. Please sign in.</p>
+        <p className="text-muted">Not authenticated. Please sign in.</p>
       </div>
     );
   }
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   if (!staff) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-zinc-400">No store found. Please contact support.</p>
+        <p className="text-muted">No store found. Please contact support.</p>
       </div>
     );
   }
@@ -64,29 +64,29 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <h1 className="hidden md:block text-xl md:text-2xl font-bold text-white">Welcome back</h1>
+      <h1 className="hidden md:block text-xl md:text-2xl font-semibold text-foreground">Welcome back</h1>
 
       {/* Quick Actions — mobile-first, most common staff tasks */}
-      <div className="grid grid-cols-3 gap-2 md:hidden">
+      <div className="grid grid-cols-3 gap-3 md:hidden">
         <Link
           href="/dashboard/checkout"
-          className="flex flex-col items-center gap-2 rounded-xl bg-emerald-600 px-3 py-4 text-white active:bg-emerald-700 transition-colors"
+          className="flex flex-col items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-600 px-3 py-4 text-white active:bg-emerald-700 transition-colors shadow-sm"
         >
           <span className="text-2xl">{"\u25C8"}</span>
           <span className="text-xs font-semibold">New Sale</span>
         </Link>
         <Link
           href="/dashboard/trade-ins"
-          className="flex flex-col items-center gap-2 rounded-xl bg-blue-600 px-3 py-4 text-white active:bg-blue-700 transition-colors"
+          className="flex flex-col items-center gap-2 rounded-xl border border-accent/20 bg-card px-3 py-4 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
         >
-          <span className="text-2xl">{"\u21C4"}</span>
+          <span className="text-2xl text-accent">{"\u21C4"}</span>
           <span className="text-xs font-semibold">Trade-In</span>
         </Link>
         <Link
           href="/dashboard/events"
-          className="flex flex-col items-center gap-2 rounded-xl bg-purple-600 px-3 py-4 text-white active:bg-purple-700 transition-colors"
+          className="flex flex-col items-center gap-2 rounded-xl border border-accent/20 bg-card px-3 py-4 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
         >
-          <span className="text-2xl">{"\u2605"}</span>
+          <span className="text-2xl text-accent">{"\u2605"}</span>
           <span className="text-xs font-semibold">Check In</span>
         </Link>
       </div>
@@ -97,10 +97,10 @@ export default async function DashboardPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 md:p-6 active:bg-zinc-800 transition-colors"
+            className="rounded-xl border border-card-border bg-card p-4 md:p-6 active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
           >
-            <p className="text-xs md:text-sm text-zinc-400">{stat.label}</p>
-            <p className="mt-1 md:mt-2 text-2xl md:text-3xl font-semibold text-white">
+            <p className="text-xs md:text-sm text-muted">{stat.label}</p>
+            <p className="mt-1 md:mt-2 text-2xl md:text-3xl font-semibold tabular-nums text-foreground">
               {stat.value}
             </p>
           </Link>
@@ -109,38 +109,38 @@ export default async function DashboardPage() {
 
       {/* Recent Ledger Entries */}
       <div>
-        <h2 className="mb-3 md:mb-4 text-base md:text-lg font-semibold text-white">
+        <h2 className="mb-3 md:mb-4 text-base md:text-lg font-semibold text-foreground">
           Recent Activity
         </h2>
         {recentLedger.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center">
-            <p className="text-zinc-400">No ledger entries yet.</p>
+          <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
+            <p className="text-muted">No ledger entries yet.</p>
           </div>
         ) : (
           <>
             {/* Mobile: card list (no table) */}
-            <div className="space-y-0 rounded-lg border border-zinc-800 bg-zinc-900 md:hidden">
+            <div className="space-y-3 md:hidden">
               {mobileLedger.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between border-b border-zinc-800 last:border-b-0 px-4 py-3"
+                  className="flex items-center justify-between rounded-xl border border-card-border bg-card px-4 py-3.5 shadow-sm dark:shadow-none"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300">
+                      <span className="rounded-full border border-card-border px-2 py-0.5 text-[10px] font-medium text-muted">
                         {entry.type}
                       </span>
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-muted">
                         {new Date(entry.created_at).toLocaleDateString()}
                       </span>
                     </div>
                     {entry.description && (
-                      <div className="mt-0.5 truncate text-xs text-zinc-400">
+                      <div className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400 leading-snug">
                         {entry.description}
                       </div>
                     )}
                   </div>
-                  <div className="ml-3 shrink-0 text-sm font-semibold text-white">
+                  <div className="ml-3 shrink-0 text-sm font-semibold tabular-nums text-foreground">
                     {formatCents(entry.amount_cents)}
                   </div>
                 </div>
@@ -148,29 +148,29 @@ export default async function DashboardPage() {
             </div>
 
             {/* Desktop: full table */}
-            <div className="hidden md:block overflow-x-auto rounded-lg border border-zinc-800">
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border shadow-sm dark:shadow-none">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-zinc-800 bg-zinc-900">
+                <thead className="border-b border-card-border bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-zinc-400">Date</th>
-                    <th className="px-4 py-3 text-zinc-400">Type</th>
-                    <th className="px-4 py-3 text-zinc-400">Description</th>
-                    <th className="px-4 py-3 text-right text-zinc-400">Amount</th>
+                    <th className="px-4 py-3 text-muted font-medium">Date</th>
+                    <th className="px-4 py-3 text-muted font-medium">Type</th>
+                    <th className="px-4 py-3 text-muted font-medium">Description</th>
+                    <th className="px-4 py-3 text-right text-muted font-medium">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800 bg-zinc-950">
+                <tbody className="divide-y divide-card-border bg-background">
                   {recentLedger.map((entry) => (
                     <tr key={entry.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-zinc-300">
+                      <td className="whitespace-nowrap px-4 py-3 text-zinc-500 dark:text-zinc-300">
                         {new Date(entry.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
+                        <span className="rounded-full border border-card-border px-2 py-0.5 text-xs text-muted font-medium">
                           {entry.type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-zinc-300">{entry.description ?? "\u2014"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-white">
+                      <td className="px-4 py-3 text-zinc-500 dark:text-zinc-300">{entry.description ?? "\u2014"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums text-foreground">
                         {formatCents(entry.amount_cents)}
                       </td>
                     </tr>

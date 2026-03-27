@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { TradeIn, formatCents } from '@/lib/types';
+import { formatCents } from '@/lib/types';
+import { StatusBadge } from '@/components/mobile-card';
 
 interface TradeInRow {
   id: string;
@@ -15,11 +16,11 @@ interface TradeInRow {
   status: 'pending' | 'accepted' | 'completed' | 'rejected';
 }
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  accepted: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  completed: 'bg-green-500/20 text-green-400 border-green-500/30',
-  rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
+const statusVariants: Record<string, 'pending' | 'info' | 'success' | 'error'> = {
+  pending: 'pending',
+  accepted: 'info',
+  completed: 'success',
+  rejected: 'error',
 };
 
 export default function TradeInsPage() {
@@ -41,53 +42,51 @@ export default function TradeInsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Trade-Ins</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Trade-Ins</h1>
         <Link
           href="/dashboard/trade-ins/new"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
         >
           New Trade-In
         </Link>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-zinc-400">Loading trade-ins...</div>
+        <div className="text-muted">Loading trade-ins...</div>
       ) : tradeIns.length === 0 ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-400">
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted shadow-sm dark:shadow-none">
           No trade-ins yet. Create your first one to get started.
         </div>
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-2">
+          <div className="md:hidden space-y-3">
             {tradeIns.map((ti) => (
-              <div key={ti.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 min-h-11">
+              <div key={ti.id} className="rounded-xl border border-card-border bg-card p-4 min-h-11 shadow-sm dark:shadow-none">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-white">{ti.customer_name}</span>
-                  <span
-                    className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${statusColors[ti.status] ?? ''}`}
-                  >
+                  <span className="font-semibold text-foreground leading-snug">{ti.customer_name}</span>
+                  <StatusBadge variant={statusVariants[ti.status] ?? 'info'} className="capitalize">
                     {ti.status}
-                  </span>
+                  </StatusBadge>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
                   <span>{ti.item_count} items &middot; {ti.payout_type}</span>
-                  <span className="text-white font-medium">{formatCents(ti.total_offer_cents)}</span>
+                  <span className="text-foreground font-semibold tabular-nums">{formatCents(ti.total_offer_cents)}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+          <div className="hidden md:block overflow-hidden rounded-xl border border-card-border bg-card shadow-sm dark:shadow-none">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-800 text-zinc-400">
+              <thead className="border-b border-card-border text-muted">
                 <tr>
                   <th className="px-4 py-3 font-medium">Date</th>
                   <th className="px-4 py-3 font-medium">Customer</th>
@@ -97,26 +96,24 @@ export default function TradeInsPage() {
                   <th className="px-4 py-3 font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-card-border">
                 {tradeIns.map((ti) => (
-                  <tr key={ti.id} className="text-white hover:bg-zinc-800/50 transition-colors">
-                    <td className="px-4 py-3 text-zinc-300">
+                  <tr key={ti.id} className="text-foreground hover:bg-card-hover transition-colors">
+                    <td className="px-4 py-3 text-muted">
                       {new Date(ti.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3">{ti.customer_name}</td>
+                    <td className="px-4 py-3 font-medium">{ti.customer_name}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{ti.item_count}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className="px-4 py-3 text-right tabular-nums font-semibold">
                       {formatCents(ti.total_offer_cents)}
                     </td>
                     <td className="px-4 py-3">
                       <span className="capitalize">{ti.payout_type}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${statusColors[ti.status] ?? ''}`}
-                      >
+                      <StatusBadge variant={statusVariants[ti.status] ?? 'info'} className="capitalize">
                         {ti.status}
-                      </span>
+                      </StatusBadge>
                     </td>
                   </tr>
                 ))}

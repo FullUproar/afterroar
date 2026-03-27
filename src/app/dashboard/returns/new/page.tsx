@@ -178,22 +178,22 @@ export default function NewReturnPage() {
   if (success && resultData) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-8">
+        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-8">
           <h2 className="text-xl font-bold text-green-400">Return Processed</h2>
-          <p className="mt-2 text-zinc-300">
+          <p className="mt-2 text-foreground/70">
             {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} &middot;{' '}
             {formatCents(resultData.total_refund_cents)}{' '}
             {resultData.refund_method === 'store_credit' ? 'store credit' : 'cash refund'}
           </p>
           {selectedSale?.customer_name && selectedSale.customer_name !== 'Guest' && (
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-muted">
               Customer: {selectedSale.customer_name}
             </p>
           )}
         </div>
         <Link
           href="/dashboard/returns"
-          className="inline-block rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700 transition-colors"
+          className="inline-block rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors"
         >
           Back to Returns
         </Link>
@@ -204,7 +204,7 @@ export default function NewReturnPage() {
   /* ---- render ---- */
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold text-white">New Return</h1>
+      <h1 className="text-2xl font-semibold text-foreground">New Return</h1>
 
       {/* progress */}
       <div className="flex gap-2 text-sm">
@@ -213,10 +213,10 @@ export default function NewReturnPage() {
             key={s}
             className={`flex-1 rounded-full py-1 text-center font-medium transition-colors ${
               s === step
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-accent text-foreground'
                 : s < step
-                  ? 'bg-indigo-600/30 text-indigo-300'
-                  : 'bg-zinc-800 text-zinc-500'
+                  ? 'bg-accent/30 text-indigo-300'
+                  : 'bg-card-hover text-muted'
             }`}
           >
             Step {s}
@@ -225,15 +225,15 @@ export default function NewReturnPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       {/* ============ STEP 1: FIND SALE ============ */}
       {step === 1 && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-white">Find Original Sale</h2>
+        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Find Original Sale</h2>
 
           <input
             type="text"
@@ -241,10 +241,10 @@ export default function NewReturnPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
           />
 
-          {salesLoading && <div className="text-sm text-zinc-400">Searching...</div>}
+          {salesLoading && <div className="text-sm text-muted">Searching...</div>}
 
           {sales.length > 0 && (
             <div className="space-y-2">
@@ -255,16 +255,16 @@ export default function NewReturnPage() {
                     key={sale.id}
                     onClick={() => hasReturnableItems && selectSale(sale)}
                     disabled={!hasReturnableItems}
-                    className={`w-full rounded-lg border p-4 text-left transition-colors ${
+                    className={`w-full rounded-xl border p-4 text-left transition-colors ${
                       hasReturnableItems
-                        ? 'border-zinc-700 bg-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-750'
-                        : 'border-zinc-800 bg-zinc-900 opacity-50 cursor-not-allowed'
+                        ? 'border-input-border bg-card-hover hover:border-indigo-500/50 hover:bg-zinc-750'
+                        : 'border-card-border bg-card opacity-50 cursor-not-allowed'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-medium text-white">{sale.customer_name}</span>
-                        <span className="ml-3 text-sm text-zinc-400">
+                        <span className="font-medium text-foreground">{sale.customer_name}</span>
+                        <span className="ml-3 text-sm text-muted">
                           {new Date(sale.created_at).toLocaleDateString()}{' '}
                           {new Date(sale.created_at).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -272,11 +272,11 @@ export default function NewReturnPage() {
                           })}
                         </span>
                       </div>
-                      <span className="font-medium tabular-nums text-white">
+                      <span className="font-medium tabular-nums text-foreground">
                         {formatCents(sale.amount_cents)}
                       </span>
                     </div>
-                    <div className="mt-1 text-sm text-zinc-400">
+                    <div className="mt-1 text-sm text-muted">
                       {sale.items.map((i) => i.name).join(', ')}
                     </div>
                     {!hasReturnableItems && (
@@ -292,9 +292,9 @@ export default function NewReturnPage() {
 
       {/* ============ STEP 2: SELECT ITEMS ============ */}
       {step === 2 && selectedSale && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-white">Select Items to Return</h2>
-          <div className="text-sm text-zinc-400">
+        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Select Items to Return</h2>
+          <div className="text-sm text-muted">
             Sale to {selectedSale.customer_name} on{' '}
             {new Date(selectedSale.created_at).toLocaleDateString()} &middot;{' '}
             {formatCents(selectedSale.amount_cents)}
@@ -305,10 +305,10 @@ export default function NewReturnPage() {
             {returnItems.map((item, idx) => (
               <div
                 key={item.inventory_item_id}
-                className={`rounded-lg border p-4 transition-colors ${
+                className={`rounded-xl border p-4 transition-colors ${
                   item.selected
-                    ? 'border-indigo-500/50 bg-zinc-800'
-                    : 'border-zinc-700 bg-zinc-800/50'
+                    ? 'border-indigo-500/50 bg-card-hover'
+                    : 'border-input-border bg-card-hover'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -316,25 +316,25 @@ export default function NewReturnPage() {
                     type="checkbox"
                     checked={item.selected}
                     onChange={() => toggleItem(idx)}
-                    className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-indigo-600 focus:ring-indigo-500"
+                    className="mt-1 h-4 w-4 rounded border-zinc-600 bg-card text-indigo-600 focus:ring-indigo-500"
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <div className="font-medium text-white">{item.name}</div>
-                      <div className="text-sm tabular-nums text-zinc-300">
+                      <div className="font-medium text-foreground">{item.name}</div>
+                      <div className="text-sm tabular-nums text-foreground/70">
                         {formatCents(item.price_cents)} ea
                       </div>
                     </div>
                     {item.category && (
-                      <div className="text-xs text-zinc-500">{item.category}</div>
+                      <div className="text-xs text-muted">{item.category}</div>
                     )}
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-muted">
                       Max returnable: {item.max_returnable}
                     </div>
 
                     {item.selected && (
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                        <label className="flex items-center gap-1.5 text-zinc-400">
+                        <label className="flex items-center gap-1.5 text-muted">
                           Qty
                           <input
                             type="number"
@@ -349,23 +349,23 @@ export default function NewReturnPage() {
                                 ),
                               })
                             }
-                            className="w-16 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                            className="w-16 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
                           />
                         </label>
 
-                        <label className="flex items-center gap-1.5 text-zinc-400">
+                        <label className="flex items-center gap-1.5 text-muted">
                           <input
                             type="checkbox"
                             checked={item.restock}
                             onChange={(e) =>
                               updateItem(idx, { restock: e.target.checked })
                             }
-                            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-indigo-600 focus:ring-indigo-500"
+                            className="h-3.5 w-3.5 rounded border-zinc-600 bg-card text-indigo-600 focus:ring-indigo-500"
                           />
                           Restock
                         </label>
 
-                        <div className="ml-auto font-medium text-white tabular-nums">
+                        <div className="ml-auto font-medium text-foreground tabular-nums">
                           {formatCents(item.price_cents * item.quantity)}
                         </div>
                       </div>
@@ -378,11 +378,11 @@ export default function NewReturnPage() {
 
           {/* reason */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">Reason *</label>
+            <label className="block text-sm font-medium text-foreground/70">Reason *</label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value as ReturnReason)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground focus:border-accent focus:outline-none"
             >
               {RETURN_REASONS.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -397,15 +397,15 @@ export default function NewReturnPage() {
             value={reasonNotes}
             onChange={(e) => setReasonNotes(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
           />
 
           {/* running total */}
-          <div className="flex items-center justify-between border-t border-zinc-700 pt-4">
-            <span className="text-zinc-400">
+          <div className="flex items-center justify-between border-t border-input-border pt-4">
+            <span className="text-muted">
               Return Subtotal ({selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''})
             </span>
-            <span className="text-lg font-bold text-white tabular-nums">
+            <span className="text-lg font-semibold text-foreground tabular-nums">
               {formatCents(subtotalCents)}
             </span>
           </div>
@@ -413,14 +413,14 @@ export default function NewReturnPage() {
           <div className="flex justify-between">
             <button
               onClick={() => setStep(1)}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
             >
               Back
             </button>
             <button
               onClick={() => setStep(3)}
               disabled={selectedItems.length === 0}
-              className="rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
             >
               Next: Refund Method
             </button>
@@ -430,8 +430,8 @@ export default function NewReturnPage() {
 
       {/* ============ STEP 3: REFUND METHOD ============ */}
       {step === 3 && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-white">Refund Method</h2>
+        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Refund Method</h2>
 
           {/* toggle */}
           <div className="flex gap-2">
@@ -439,10 +439,10 @@ export default function NewReturnPage() {
               <button
                 key={m}
                 onClick={() => setRefundMethod(m)}
-                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+                className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${
                   refundMethod === m
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    ? 'bg-accent text-foreground'
+                    : 'bg-card-hover text-muted hover:bg-card-hover'
                 }`}
               >
                 {m === 'store_credit' ? 'Store Credit' : 'Cash'}
@@ -451,8 +451,8 @@ export default function NewReturnPage() {
           </div>
 
           {refundMethod === 'store_credit' && (
-            <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-2">
-              <label className="flex items-center gap-2 text-sm text-zinc-300">
+            <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2">
+              <label className="flex items-center gap-2 text-sm text-foreground/70">
                 Credit Bonus %
                 <input
                   type="number"
@@ -460,15 +460,15 @@ export default function NewReturnPage() {
                   max="100"
                   value={creditBonus}
                   onChange={(e) => setCreditBonus(Math.max(0, Number(e.target.value)))}
-                  className="w-20 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                  className="w-20 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
                 />
               </label>
             </div>
           )}
 
           {/* restocking fee */}
-          <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
-            <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <div className="rounded-xl border border-input-border bg-card-hover p-4">
+            <label className="flex items-center gap-2 text-sm text-foreground/70">
               Restocking Fee %
               <input
                 type="number"
@@ -476,33 +476,33 @@ export default function NewReturnPage() {
                 max="100"
                 value={restockingFee}
                 onChange={(e) => setRestockingFee(Math.max(0, Number(e.target.value)))}
-                className="w-20 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                className="w-20 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
               />
             </label>
           </div>
 
           {/* summary */}
-          <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-2 text-sm">
-            <h3 className="font-medium text-white">Summary</h3>
-            <div className="text-zinc-400">
-              Customer: <span className="text-white">{selectedSale?.customer_name ?? 'Guest'}</span>
+          <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2 text-sm">
+            <h3 className="font-medium text-foreground">Summary</h3>
+            <div className="text-muted">
+              Customer: <span className="text-foreground">{selectedSale?.customer_name ?? 'Guest'}</span>
             </div>
-            <div className="text-zinc-400">
+            <div className="text-muted">
               Original Sale:{' '}
-              <span className="text-white">
+              <span className="text-foreground">
                 {selectedSale && new Date(selectedSale.created_at).toLocaleDateString()}
               </span>
             </div>
-            <div className="text-zinc-400">
+            <div className="text-muted">
               Reason:{' '}
-              <span className="text-white">
+              <span className="text-foreground">
                 {RETURN_REASONS.find((r) => r.value === reason)?.label}
               </span>
             </div>
 
-            <ul className="space-y-1 border-t border-zinc-700 pt-2">
+            <ul className="space-y-1 border-t border-input-border pt-2">
               {selectedItems.map((item) => (
-                <li key={item.inventory_item_id} className="flex justify-between text-zinc-300">
+                <li key={item.inventory_item_id} className="flex justify-between text-foreground/70">
                   <span>
                     {item.name} &times;{item.quantity}
                     {!item.restock && (
@@ -516,20 +516,20 @@ export default function NewReturnPage() {
               ))}
             </ul>
 
-            <div className="flex justify-between border-t border-zinc-700 pt-2 text-zinc-300">
+            <div className="flex justify-between border-t border-input-border pt-2 text-foreground/70">
               <span>Subtotal</span>
               <span className="tabular-nums">{formatCents(subtotalCents)}</span>
             </div>
 
             {restockingFeeCents > 0 && (
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-muted">
                 <span>Restocking Fee ({restockingFee}%)</span>
                 <span className="tabular-nums">-{formatCents(restockingFeeCents)}</span>
               </div>
             )}
 
             {refundMethod === 'store_credit' && creditBonus > 0 && (
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-muted">
                 <span>Credit Bonus (+{creditBonus}%)</span>
                 <span className="tabular-nums text-green-400">
                   +{formatCents(totalRefundCents - refundAmountCents)}
@@ -537,7 +537,7 @@ export default function NewReturnPage() {
               </div>
             )}
 
-            <div className="flex justify-between font-bold text-white">
+            <div className="flex justify-between font-semibold text-foreground">
               <span>
                 Total Refund ({refundMethod === 'store_credit' ? 'Store Credit' : 'Cash'})
               </span>
@@ -550,14 +550,14 @@ export default function NewReturnPage() {
           <div className="flex justify-between">
             <button
               onClick={() => setStep(2)}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
             >
               Back
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting || selectedItems.length === 0}
-              className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Processing...' : 'Process Return'}
             </button>

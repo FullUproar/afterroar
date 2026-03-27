@@ -220,16 +220,16 @@ export default function NewTradeInPage() {
   if (success) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-8">
+        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-8">
           <h2 className="text-xl font-bold text-green-400">Trade-In Complete</h2>
-          <p className="mt-2 text-zinc-300">
+          <p className="mt-2 text-foreground/70">
             {items.length} item{items.length !== 1 ? 's' : ''} &middot;{' '}
             {formatCents(totalPayoutCents)} {payoutType === 'credit' ? 'store credit' : 'cash'}
           </p>
         </div>
         <Link
           href="/dashboard/trade-ins"
-          className="inline-block rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700 transition-colors"
+          className="inline-block rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors"
         >
           Back to Trade-Ins
         </Link>
@@ -240,7 +240,7 @@ export default function NewTradeInPage() {
   /* ---- render ---- */
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold text-white">New Trade-In</h1>
+      <h1 className="text-2xl font-semibold text-foreground">New Trade-In</h1>
 
       {/* progress */}
       <div className="flex gap-2 text-sm">
@@ -249,10 +249,10 @@ export default function NewTradeInPage() {
             key={s}
             className={`flex-1 rounded-full py-1 text-center font-medium transition-colors ${
               s === step
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-accent text-foreground'
                 : s < step
-                  ? 'bg-indigo-600/30 text-indigo-300'
-                  : 'bg-zinc-800 text-zinc-500'
+                  ? 'bg-accent/30 text-indigo-300'
+                  : 'bg-card-hover text-muted'
             }`}
           >
             Step {s}
@@ -261,27 +261,27 @@ export default function NewTradeInPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       {/* ============ STEP 1: CUSTOMER ============ */}
       {step === 1 && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-white">Select Customer</h2>
+        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Select Customer</h2>
 
           {selectedCustomer ? (
-            <div className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-input-border bg-card-hover p-4">
               <div>
-                <div className="font-medium text-white">{selectedCustomer.name}</div>
+                <div className="font-medium text-foreground">{selectedCustomer.name}</div>
                 {selectedCustomer.email && (
-                  <div className="text-sm text-zinc-400">{selectedCustomer.email}</div>
+                  <div className="text-sm text-muted">{selectedCustomer.email}</div>
                 )}
               </div>
               <button
                 onClick={() => setSelectedCustomer(null)}
-                className="text-sm text-zinc-400 hover:text-white"
+                className="text-sm text-muted hover:text-foreground"
               >
                 Change
               </button>
@@ -294,13 +294,13 @@ export default function NewTradeInPage() {
                 value={customerQuery}
                 onChange={(e) => setCustomerQuery(e.target.value)}
                 autoFocus
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
               />
 
-              {customerLoading && <div className="text-sm text-zinc-400">Searching...</div>}
+              {customerLoading && <div className="text-sm text-muted">Searching...</div>}
 
               {customerResults.length > 0 && (
-                <div className="space-y-1 rounded-lg border border-zinc-700 bg-zinc-800 p-2">
+                <div className="space-y-1 rounded-xl border border-input-border bg-card-hover p-2">
                   {customerResults.map((c) => (
                     <button
                       key={c.id}
@@ -309,10 +309,10 @@ export default function NewTradeInPage() {
                         setCustomerQuery('');
                         setCustomerResults([]);
                       }}
-                      className="w-full rounded px-3 py-2 text-left text-sm text-white hover:bg-zinc-700 transition-colors"
+                      className="w-full rounded px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors"
                     >
                       <span className="font-medium">{c.name}</span>
-                      {c.email && <span className="ml-2 text-zinc-400">{c.email}</span>}
+                      {c.email && <span className="ml-2 text-muted">{c.email}</span>}
                     </button>
                   ))}
                 </div>
@@ -326,32 +326,32 @@ export default function NewTradeInPage() {
               </button>
 
               {showCreate && (
-                <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+                <div className="space-y-3 rounded-xl border border-input-border bg-card-hover p-4">
                   <input
                     type="text"
                     placeholder="Name *"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   <input
                     type="email"
                     placeholder="Email"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   <input
                     type="tel"
                     placeholder="Phone"
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   <button
                     onClick={createCustomer}
                     disabled={!newName.trim() || customerLoading}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                    className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
                   >
                     Create & Select
                   </button>
@@ -364,7 +364,7 @@ export default function NewTradeInPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setStep(2)}
-                className="rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+                className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
               >
                 Next: Add Items
               </button>
@@ -375,8 +375,8 @@ export default function NewTradeInPage() {
 
       {/* ============ STEP 2: ITEMS ============ */}
       {step === 2 && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-white">Add Items</h2>
+        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Add Items</h2>
 
           {/* search */}
           <div className="relative">
@@ -389,27 +389,27 @@ export default function NewTradeInPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 autoFocus
-                className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="flex-1 rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
               />
               <button
                 onClick={() => setShowBarcodeScanner(true)}
-                className="rounded-lg bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white border border-zinc-700 transition-colors min-h-[44px]"
+                className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-muted hover:text-foreground border border-input-border transition-colors min-h-[44px]"
                 title="Scan barcode"
               >
                 Scan
               </button>
             </div>
             {searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 shadow-xl">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-input-border bg-card-hover shadow-xl">
                 {searchResults.map((inv) => (
                   <button
                     key={inv.id}
                     onClick={() => addItemFromSearch(inv)}
-                    className="w-full px-4 py-2 text-left text-sm text-white hover:bg-zinc-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors first:rounded-t-lg last:rounded-b-lg"
                   >
                     <span className="font-medium">{inv.name}</span>
-                    <span className="ml-2 text-zinc-400">{inv.category}</span>
-                    <span className="ml-2 text-zinc-500">{formatCents(inv.price_cents)}</span>
+                    <span className="ml-2 text-muted">{inv.category}</span>
+                    <span className="ml-2 text-muted">{formatCents(inv.price_cents)}</span>
                   </button>
                 ))}
               </div>
@@ -431,7 +431,7 @@ export default function NewTradeInPage() {
                 value={manualName}
                 onChange={(e) => setManualName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addManualItem()}
-                className="flex-1 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="flex-1 rounded-xl border border-zinc-600 bg-card-hover px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
               />
               <input
                 type="text"
@@ -439,12 +439,12 @@ export default function NewTradeInPage() {
                 value={manualCategory}
                 onChange={(e) => setManualCategory(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addManualItem()}
-                className="w-36 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-36 rounded-xl border border-zinc-600 bg-card-hover px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
               />
               <button
                 onClick={addManualItem}
                 disabled={!manualName.trim()}
-                className="rounded-lg bg-zinc-700 px-3 py-2 text-sm text-white hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+                className="rounded-xl bg-card-hover px-3 py-2 text-sm text-foreground hover:bg-card-hover disabled:opacity-50 transition-colors"
               >
                 Add
               </button>
@@ -457,23 +457,23 @@ export default function NewTradeInPage() {
               {items.map((item) => (
                 <div
                   key={item.key}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-2"
+                  className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-medium text-white">{item.name}</div>
+                      <div className="font-medium text-foreground">{item.name}</div>
                       {item.category && (
-                        <div className="text-xs text-zinc-400">{item.category}</div>
+                        <div className="text-xs text-muted">{item.category}</div>
                       )}
                       {item.market_price_cents > 0 && (
-                        <div className="text-xs text-zinc-500">
+                        <div className="text-xs text-muted">
                           Market: {formatCents(item.market_price_cents)}
                         </div>
                       )}
                     </div>
                     <button
                       onClick={() => removeItem(item.key)}
-                      className="text-zinc-500 hover:text-red-400 transition-colors"
+                      className="text-muted hover:text-red-400 transition-colors"
                       title="Remove item"
                     >
                       &times;
@@ -481,7 +481,7 @@ export default function NewTradeInPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <label className="flex items-center gap-1.5 text-zinc-400">
+                    <label className="flex items-center gap-1.5 text-muted">
                       Offer $
                       <input
                         type="number"
@@ -493,16 +493,16 @@ export default function NewTradeInPage() {
                             offer_price_cents: parseDollars(e.target.value),
                           })
                         }
-                        className="w-24 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                        className="w-24 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
                       />
                     </label>
 
-                    <label className="flex items-center gap-1.5 text-zinc-400">
+                    <label className="flex items-center gap-1.5 text-muted">
                       Cond
                       <select
                         value={item.condition}
                         onChange={(e) => updateItem(item.key, { condition: e.target.value })}
-                        className="rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white focus:border-indigo-500 focus:outline-none"
+                        className="rounded border border-zinc-600 bg-card px-2 py-1 text-foreground focus:border-accent focus:outline-none"
                       >
                         {CONDITIONS.map((c) => (
                           <option key={c} value={c}>
@@ -512,7 +512,7 @@ export default function NewTradeInPage() {
                       </select>
                     </label>
 
-                    <label className="flex items-center gap-1.5 text-zinc-400">
+                    <label className="flex items-center gap-1.5 text-muted">
                       Qty
                       <input
                         type="number"
@@ -521,11 +521,11 @@ export default function NewTradeInPage() {
                         onChange={(e) =>
                           updateItem(item.key, { quantity: Math.max(1, Number(e.target.value)) })
                         }
-                        className="w-16 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                        className="w-16 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
                       />
                     </label>
 
-                    <div className="ml-auto font-medium text-white tabular-nums">
+                    <div className="ml-auto font-medium text-foreground tabular-nums">
                       {formatCents(item.offer_price_cents * item.quantity)}
                     </div>
                   </div>
@@ -535,9 +535,9 @@ export default function NewTradeInPage() {
           )}
 
           {/* running total */}
-          <div className="flex items-center justify-between border-t border-zinc-700 pt-4">
-            <span className="text-zinc-400">Running Total</span>
-            <span className="text-lg font-bold text-white tabular-nums">
+          <div className="flex items-center justify-between border-t border-input-border pt-4">
+            <span className="text-muted">Running Total</span>
+            <span className="text-lg font-semibold text-foreground tabular-nums">
               {formatCents(totalOfferCents)}
             </span>
           </div>
@@ -545,14 +545,14 @@ export default function NewTradeInPage() {
           <div className="flex justify-between">
             <button
               onClick={() => setStep(1)}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
             >
               Back
             </button>
             <button
               onClick={() => setStep(3)}
               disabled={items.length === 0}
-              className="rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
             >
               Next: Payout
             </button>
@@ -562,8 +562,8 @@ export default function NewTradeInPage() {
 
       {/* ============ STEP 3: PAYOUT ============ */}
       {step === 3 && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-white">Payout</h2>
+        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Payout</h2>
 
           {/* toggle */}
           <div className="flex gap-2">
@@ -571,10 +571,10 @@ export default function NewTradeInPage() {
               <button
                 key={t}
                 onClick={() => setPayoutType(t)}
-                className={`flex-1 rounded-lg py-2 text-sm font-medium capitalize transition-colors ${
+                className={`flex-1 rounded-xl py-2 text-sm font-medium capitalize transition-colors ${
                   payoutType === t
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    ? 'bg-accent text-foreground'
+                    : 'bg-card-hover text-muted hover:bg-card-hover'
                 }`}
               >
                 {t === 'credit' ? 'Store Credit' : 'Cash'}
@@ -583,8 +583,8 @@ export default function NewTradeInPage() {
           </div>
 
           {payoutType === 'credit' && (
-            <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-2">
-              <label className="flex items-center gap-2 text-sm text-zinc-300">
+            <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2">
+              <label className="flex items-center gap-2 text-sm text-foreground/70">
                 Credit Bonus %
                 <input
                   type="number"
@@ -592,10 +592,10 @@ export default function NewTradeInPage() {
                   max="100"
                   value={creditBonus}
                   onChange={(e) => setCreditBonus(Math.max(0, Number(e.target.value)))}
-                  className="w-20 rounded border border-zinc-600 bg-zinc-900 px-2 py-1 text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                  className="w-20 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
                 />
               </label>
-              <div className="text-sm text-zinc-400">
+              <div className="text-sm text-muted">
                 Base: {formatCents(totalOfferCents)} + {creditBonus}% bonus ={' '}
                 <span className="font-medium text-green-400">{formatCents(totalPayoutCents)}</span>
               </div>
@@ -608,22 +608,22 @@ export default function NewTradeInPage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
           />
 
           {/* summary */}
-          <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-2 text-sm">
-            <h3 className="font-medium text-white">Summary</h3>
-            <div className="text-zinc-400">
-              Customer: <span className="text-white">{selectedCustomer?.name}</span>
+          <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2 text-sm">
+            <h3 className="font-medium text-foreground">Summary</h3>
+            <div className="text-muted">
+              Customer: <span className="text-foreground">{selectedCustomer?.name}</span>
             </div>
-            <div className="text-zinc-400">
-              Items: <span className="text-white">{items.length}</span> (
+            <div className="text-muted">
+              Items: <span className="text-foreground">{items.length}</span> (
               {items.reduce((s, i) => s + i.quantity, 0)} total qty)
             </div>
-            <ul className="space-y-1 border-t border-zinc-700 pt-2">
+            <ul className="space-y-1 border-t border-input-border pt-2">
               {items.map((item) => (
-                <li key={item.key} className="flex justify-between text-zinc-300">
+                <li key={item.key} className="flex justify-between text-foreground/70">
                   <span>
                     {item.name} ({item.condition}) &times;{item.quantity}
                   </span>
@@ -633,11 +633,11 @@ export default function NewTradeInPage() {
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between border-t border-zinc-700 pt-2 font-medium text-white">
+            <div className="flex justify-between border-t border-input-border pt-2 font-medium text-foreground">
               <span>Total Offer</span>
               <span className="tabular-nums">{formatCents(totalOfferCents)}</span>
             </div>
-            <div className="flex justify-between font-bold text-white">
+            <div className="flex justify-between font-semibold text-foreground">
               <span>
                 Payout ({payoutType === 'credit' ? `Credit +${creditBonus}%` : 'Cash'})
               </span>
@@ -648,14 +648,14 @@ export default function NewTradeInPage() {
           <div className="flex justify-between">
             <button
               onClick={() => setStep(2)}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
             >
               Back
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Processing...' : 'Complete Trade-In'}
             </button>

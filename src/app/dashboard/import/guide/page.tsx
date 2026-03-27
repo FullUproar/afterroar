@@ -293,16 +293,16 @@ export default function ExportGuidePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Export Guide</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Export Guide</h1>
         <Link
           href="/dashboard/import/new"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
         >
           I Have My Files → Start Import
         </Link>
       </div>
 
-      <p className="text-zinc-400">
+      <p className="text-muted">
         Select your current POS system below and we&apos;ll show you exactly how to export your data.
       </p>
 
@@ -312,15 +312,15 @@ export default function ExportGuidePage() {
           <button
             key={sys.name}
             onClick={() => setSelectedSystem(sys.name)}
-            className={`rounded-lg border p-4 text-left transition-colors ${
+            className={`rounded-xl border p-4 text-left transition-colors ${
               selectedSystem === sys.name
                 ? 'border-indigo-500 bg-indigo-500/10'
-                : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
+                : 'border-input-border bg-card-hover hover:border-zinc-600'
             }`}
           >
             <div className="text-2xl">{sys.logo}</div>
-            <div className="mt-1 text-sm font-medium text-white">{sys.label}</div>
-            <div className="mt-0.5 text-xs text-zinc-400">~{sys.estimatedTime}</div>
+            <div className="mt-1 text-sm font-medium text-foreground">{sys.label}</div>
+            <div className="mt-0.5 text-xs text-muted">~{sys.estimatedTime}</div>
           </button>
         ))}
       </div>
@@ -329,34 +329,34 @@ export default function ExportGuidePage() {
       {guide && (
         <div className="space-y-6">
           {/* Header */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+          <div className="rounded-xl border border-card-border bg-card p-6">
             <div className="flex items-center gap-4">
               <span className="text-4xl">{guide.logo}</span>
               <div>
-                <h2 className="text-xl font-bold text-white">{guide.label}</h2>
+                <h2 className="text-xl font-semibold text-foreground">{guide.label}</h2>
                 <div className="mt-1 flex gap-4 text-sm">
-                  <span className="text-zinc-400">Time: <span className="text-white">{guide.estimatedTime}</span></span>
-                  <span className="text-zinc-400">Difficulty: <span className={difficultyColors[guide.difficulty]}>{guide.difficulty}</span></span>
+                  <span className="text-muted">Time: <span className="text-foreground">{guide.estimatedTime}</span></span>
+                  <span className="text-muted">Difficulty: <span className={difficultyColors[guide.difficulty]}>{guide.difficulty}</span></span>
                 </div>
               </div>
             </div>
-            <p className="mt-4 text-sm text-zinc-300">{guide.overview}</p>
+            <p className="mt-4 text-sm text-foreground/70">{guide.overview}</p>
           </div>
 
           {/* Inventory export steps */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-            <h3 className="text-lg font-semibold text-white">Export Inventory / Products</h3>
+          <div className="rounded-xl border border-card-border bg-card p-6">
+            <h3 className="text-lg font-semibold text-foreground">Export Inventory / Products</h3>
             <div className="mt-4 space-y-4">
               {guide.inventorySteps.map((step, idx) => (
                 <div key={idx} className="flex gap-4">
-                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-foreground">
                     {idx + 1}
                   </div>
                   <div>
-                    <div className="font-medium text-white">{step.title}</div>
-                    <div className="mt-1 text-sm text-zinc-300">{step.description}</div>
+                    <div className="font-medium text-foreground">{step.title}</div>
+                    <div className="mt-1 text-sm text-foreground/70">{step.description}</div>
                     {step.tip && (
-                      <div className="mt-2 rounded bg-zinc-800 px-3 py-2 text-xs text-indigo-300">
+                      <div className="mt-2 rounded bg-card-hover px-3 py-2 text-xs text-indigo-300">
                         Tip: {step.tip}
                       </div>
                     )}
@@ -367,19 +367,19 @@ export default function ExportGuidePage() {
           </div>
 
           {/* Customer export steps */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-            <h3 className="text-lg font-semibold text-white">Export Customers</h3>
+          <div className="rounded-xl border border-card-border bg-card p-6">
+            <h3 className="text-lg font-semibold text-foreground">Export Customers</h3>
             <div className="mt-4 space-y-4">
               {guide.customerSteps.map((step, idx) => (
                 <div key={idx} className="flex gap-4">
-                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-foreground">
                     {idx + 1}
                   </div>
                   <div>
-                    <div className="font-medium text-white">{step.title}</div>
-                    <div className="mt-1 text-sm text-zinc-300">{step.description}</div>
+                    <div className="font-medium text-foreground">{step.title}</div>
+                    <div className="mt-1 text-sm text-foreground/70">{step.description}</div>
                     {step.tip && (
-                      <div className="mt-2 rounded bg-zinc-800 px-3 py-2 text-xs text-indigo-300">
+                      <div className="mt-2 rounded bg-card-hover px-3 py-2 text-xs text-indigo-300">
                         Tip: {step.tip}
                       </div>
                     )}
@@ -390,19 +390,19 @@ export default function ExportGuidePage() {
           </div>
 
           {/* Store credit note */}
-          <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4">
+          <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4">
             <h4 className="text-sm font-medium text-yellow-400">About Store Credit</h4>
-            <p className="mt-1 text-sm text-zinc-300">{guide.storeCreditNote}</p>
+            <p className="mt-1 text-sm text-foreground/70">{guide.storeCreditNote}</p>
           </div>
 
           {/* Gotchas */}
           {guide.gotchas.length > 0 && (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-              <h3 className="text-sm font-medium text-zinc-400">Things to Watch For</h3>
+            <div className="rounded-xl border border-card-border bg-card p-6">
+              <h3 className="text-sm font-medium text-muted">Things to Watch For</h3>
               <ul className="mt-3 space-y-2">
                 {guide.gotchas.map((gotcha, idx) => (
-                  <li key={idx} className="flex gap-2 text-sm text-zinc-300">
-                    <span className="text-zinc-500">•</span>
+                  <li key={idx} className="flex gap-2 text-sm text-foreground/70">
+                    <span className="text-muted">•</span>
                     {gotcha}
                   </li>
                 ))}
@@ -414,7 +414,7 @@ export default function ExportGuidePage() {
           <div className="flex justify-center">
             <Link
               href="/dashboard/import/new"
-              className="rounded-lg bg-green-600 px-8 py-3 text-sm font-medium text-white hover:bg-green-500 transition-colors"
+              className="rounded-xl bg-green-600 px-8 py-3 text-sm font-medium text-foreground hover:bg-green-500 transition-colors"
             >
               I&apos;ve Got My Files — Start Import
             </Link>

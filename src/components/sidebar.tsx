@@ -18,11 +18,11 @@ export function Sidebar() {
   const visibleNav = NAV_ITEMS.filter((item) => can(item.permission));
 
   return (
-    <aside className="hidden md:flex h-screen w-56 flex-col border-r border-zinc-800 bg-zinc-950">
-      <div className="border-b border-zinc-800 px-4 py-4">
-        <h1 className="text-lg font-bold text-white">Afterroar</h1>
+    <aside className="hidden md:flex h-screen w-56 flex-col border-r border-card-border bg-card">
+      <div className="border-b border-card-border px-4 py-4">
+        <h1 className="text-lg font-bold text-foreground">Afterroar</h1>
         {store && (
-          <p className="truncate text-xs text-zinc-500">{store.name}</p>
+          <p className="truncate text-xs text-muted">{store.name}</p>
         )}
       </div>
 
@@ -39,8 +39,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-zinc-800 text-white"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                  ? "bg-accent-light text-accent font-medium"
+                  : "text-muted hover:bg-card-hover hover:text-foreground"
               )}
             >
               <span className="w-5 text-center">{item.icon}</span>
@@ -50,9 +50,9 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-zinc-800 px-4 py-3">
+      <div className="border-t border-card-border px-4 py-3">
         {staff && (
-          <p className="truncate text-xs text-zinc-400">
+          <p className="truncate text-xs text-muted">
             {staff.name} &middot;{" "}
             <span className={isTestMode ? "text-purple-400" : ""}>
               {effectiveRole}
@@ -64,7 +64,7 @@ export function Sidebar() {
         )}
         <button
           onClick={handleSignOut}
-          className="mt-2 text-xs text-zinc-500 hover:text-white"
+          className="mt-2 text-xs text-muted hover:text-foreground transition-colors"
         >
           Sign out
         </button>

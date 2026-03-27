@@ -33,7 +33,7 @@ interface AddModalState {
 const CONDITIONS = ["NM", "LP", "MP", "HP", "DMG"] as const;
 
 const RARITY_COLORS: Record<string, string> = {
-  common: "text-zinc-400",
+  common: "text-muted",
   uncommon: "text-slate-300",
   rare: "text-amber-400",
   mythic: "text-orange-500",
@@ -42,7 +42,7 @@ const RARITY_COLORS: Record<string, string> = {
 };
 
 const RARITY_BG: Record<string, string> = {
-  common: "bg-zinc-800",
+  common: "bg-card-hover",
   uncommon: "bg-slate-800",
   rare: "bg-amber-900/40",
   mythic: "bg-orange-900/40",
@@ -224,8 +224,8 @@ export default function CatalogPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="hidden md:block text-2xl font-bold text-white">Catalog</h1>
-        <p className="text-sm text-zinc-400 mt-1">
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Catalog</h1>
+        <p className="text-sm text-muted mt-1">
           Search external product databases and add items to inventory
         </p>
       </div>
@@ -241,12 +241,12 @@ export default function CatalogPage() {
           }}
           placeholder="Search MTG cards on Scryfall..."
           autoFocus
-          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-5 py-3 text-lg text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-xl border border-input-border bg-card px-5 py-3 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
         <button
           onClick={handleSearch}
           disabled={loading || !query.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
         >
           {loading ? "Searching..." : "Search"}
         </button>
@@ -254,7 +254,7 @@ export default function CatalogPage() {
 
       {/* Results info */}
       {searched && !loading && (
-        <div className="text-sm text-zinc-400">
+        <div className="text-sm text-muted">
           {cards.length === 0
             ? "No cards found. Try a different search."
             : `Showing ${cards.length} of ${total.toLocaleString()} results`}
@@ -270,7 +270,7 @@ export default function CatalogPage() {
 
       {/* Loading */}
       {loading && (
-        <div className="text-center text-zinc-500 py-12">
+        <div className="text-center text-muted py-12">
           Searching Scryfall...
         </div>
       )}
@@ -281,11 +281,11 @@ export default function CatalogPage() {
           {cards.map((card) => (
             <div
               key={`${card.scryfall_id}-${card.set_code}`}
-              className="rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden hover:border-zinc-600 transition-colors"
+              className="rounded-xl border border-card-border bg-card overflow-hidden hover:border-zinc-600 transition-colors"
             >
               {/* Card Image */}
               {card.image_url ? (
-                <div className="relative aspect-[488/680] bg-zinc-950">
+                <div className="relative aspect-[488/680] bg-background">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={card.image_url}
@@ -294,13 +294,13 @@ export default function CatalogPage() {
                     loading="lazy"
                   />
                   {isInInventory(card) && (
-                    <div className="absolute top-2 right-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white shadow">
+                    <div className="absolute top-2 right-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-foreground shadow">
                       In Inventory
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="aspect-[488/680] bg-zinc-950 flex items-center justify-center text-zinc-600 text-sm">
+                <div className="aspect-[488/680] bg-background flex items-center justify-center text-zinc-600 text-sm">
                   No Image
                 </div>
               )}
@@ -308,10 +308,10 @@ export default function CatalogPage() {
               {/* Card Info */}
               <div className="p-3 space-y-2">
                 <div>
-                  <h3 className="text-sm font-semibold text-white leading-tight">
+                  <h3 className="text-sm font-semibold text-foreground leading-tight">
                     {card.name}
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-muted mt-0.5">
                     {card.set_name}{" "}
                     <span className="text-zinc-600">#{card.collector_number}</span>
                   </p>
@@ -320,8 +320,8 @@ export default function CatalogPage() {
                 <div className="flex items-center justify-between">
                   <span
                     className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium capitalize ${
-                      RARITY_BG[card.rarity] || "bg-zinc-800"
-                    } ${RARITY_COLORS[card.rarity] || "text-zinc-400"}`}
+                      RARITY_BG[card.rarity] || "bg-card-hover"
+                    } ${RARITY_COLORS[card.rarity] || "text-muted"}`}
                   >
                     {card.rarity}
                   </span>
@@ -338,7 +338,7 @@ export default function CatalogPage() {
                       </span>
                     )}
                     {!card.price_usd && !card.price_usd_foil && (
-                      <span className="text-xs text-zinc-500">No price</span>
+                      <span className="text-xs text-muted">No price</span>
                     )}
                   </div>
                 </div>
@@ -347,7 +347,7 @@ export default function CatalogPage() {
                 {can("inventory.adjust") && (
                   <button
                     onClick={() => openAddModal(card)}
-                    className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+                    className="w-full rounded-md bg-accent px-3 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
                   >
                     {isInInventory(card)
                       ? "Update Inventory"
@@ -364,7 +364,7 @@ export default function CatalogPage() {
       {!loading && !searched && (
         <div className="text-center py-16">
           <div className="text-4xl mb-3 opacity-30">&#x2318;</div>
-          <p className="text-zinc-500 text-sm">
+          <p className="text-muted text-sm">
             Search for MTG cards by name, set, or collector number.
           </p>
           <p className="text-zinc-600 text-xs mt-1">
@@ -376,17 +376,17 @@ export default function CatalogPage() {
       {/* Add to Inventory Modal */}
       {addModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => {
             setAddModal(null);
             setError(null);
           }}
         >
           <div
-            className="w-full max-w-lg rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="w-full max-w-lg rounded-xl border border-card-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Add to Inventory
             </h2>
 
@@ -405,18 +405,18 @@ export default function CatalogPage() {
 
               {/* Card details */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-white font-semibold text-sm">
+                <h3 className="text-foreground font-semibold text-sm">
                   {addModal.card.name}
                 </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   {addModal.card.set_name}
                 </p>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   #{addModal.card.collector_number} --{" "}
                   <span className="capitalize">{addModal.card.rarity}</span>
                 </p>
                 {addModal.card.type_line && (
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     {addModal.card.type_line}
                   </p>
                 )}
@@ -442,7 +442,7 @@ export default function CatalogPage() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Quantity */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Quantity
                 </label>
                 <input
@@ -455,13 +455,13 @@ export default function CatalogPage() {
                       quantity: Math.max(1, parseInt(e.target.value) || 1),
                     })
                   }
-                  className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                 />
               </div>
 
               {/* Cost */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Cost ($)
                 </label>
                 <input
@@ -470,14 +470,14 @@ export default function CatalogPage() {
                   onChange={(e) =>
                     setAddModal({ ...addModal, cost: e.target.value })
                   }
-                  className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   placeholder="What you paid"
                 />
               </div>
 
               {/* Price */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Sell Price ($)
                 </label>
                 <input
@@ -486,14 +486,14 @@ export default function CatalogPage() {
                   onChange={(e) =>
                     setAddModal({ ...addModal, price: e.target.value })
                   }
-                  className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   placeholder="0.00"
                 />
               </div>
 
               {/* Condition */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className="block text-sm font-medium text-muted mb-1">
                   Condition
                 </label>
                 <select
@@ -501,7 +501,7 @@ export default function CatalogPage() {
                   onChange={(e) =>
                     setAddModal({ ...addModal, condition: e.target.value })
                   }
-                  className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                 >
                   {CONDITIONS.map((c) => (
                     <option key={c} value={c}>
@@ -514,7 +514,7 @@ export default function CatalogPage() {
 
             {/* Foil toggle */}
             <div className="mb-5">
-              <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
                 <input
                   type="checkbox"
                   checked={addModal.foil}
@@ -524,7 +524,7 @@ export default function CatalogPage() {
                       ? !addModal.card.nonfoil
                       : !addModal.card.foil
                   }
-                  className="rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-input-border bg-background text-indigo-600 focus:ring-indigo-500"
                 />
                 Foil
                 {addModal.foil && (
@@ -540,14 +540,14 @@ export default function CatalogPage() {
                   setAddModal(null);
                   setError(null);
                 }}
-                className="flex-1 rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="flex-1 rounded-md border border-input-border px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAdd}
                 disabled={submitting}
-                className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {submitting
                   ? "Adding..."
@@ -562,7 +562,7 @@ export default function CatalogPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-foreground shadow-lg animate-in slide-in-from-bottom-4">
           {toast}
         </div>
       )}

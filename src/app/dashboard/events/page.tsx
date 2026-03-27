@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store-context';
 import { GameEvent, EventCheckin, Customer, formatCents, parseDollars } from '@/lib/types';
+import { StatusBadge } from '@/components/mobile-card';
 
 type EventWithCount = GameEvent & { checkin_count: number; rsvp_count: number | null };
 
@@ -36,28 +37,27 @@ function statusBadge(event: EventWithCount) {
   const end = event.ends_at ? new Date(event.ends_at) : null;
 
   if (end && now > end) {
-    return <span className="px-2 py-0.5 rounded text-xs bg-zinc-700 text-zinc-400">Past</span>;
+    return <StatusBadge variant="info">Past</StatusBadge>;
   }
   if (now >= start) {
-    return <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-300">Active</span>;
+    return <StatusBadge variant="success">Active</StatusBadge>;
   }
-  return <span className="px-2 py-0.5 rounded text-xs bg-blue-900 text-blue-300">Upcoming</span>;
+  return <StatusBadge variant="pending">Upcoming</StatusBadge>;
 }
 
 function typeBadge(type: string) {
-  const colors: Record<string, string> = {
-    fnm: 'bg-purple-900 text-purple-300',
-    prerelease: 'bg-amber-900 text-amber-300',
-    tournament: 'bg-red-900 text-red-300',
-    casual: 'bg-green-900 text-green-300',
-    draft: 'bg-blue-900 text-blue-300',
-    league: 'bg-cyan-900 text-cyan-300',
-    other: 'bg-zinc-700 text-zinc-300',
+  const variants: Record<string, 'special' | 'pending' | 'error' | 'success' | 'info'> = {
+    fnm: 'special',
+    prerelease: 'pending',
+    tournament: 'error',
+    casual: 'success',
+    draft: 'info',
+    league: 'info',
   };
   return (
-    <span className={`px-2 py-0.5 rounded text-xs uppercase ${colors[type] || colors.other}`}>
+    <StatusBadge variant={variants[type] || 'info'} className="uppercase">
       {type}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -132,9 +132,9 @@ export default function EventsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="hidden md:block text-2xl font-bold text-white">Events</h1>
+          <h1 className="hidden md:block text-2xl font-semibold text-foreground">Events</h1>
           {isConnected && (
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-muted">
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
                 Connected to {venueName || 'Afterroar'}
@@ -146,14 +146,14 @@ export default function EventsPage() {
           {isConnected && (
             <button
               onClick={() => { setShowForm(true); setCreateAsHQ(true); }}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
             >
               New Afterroar Event
             </button>
           )}
           <button
             onClick={() => { setShowForm(!showForm); setCreateAsHQ(false); }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+            className="px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
           >
             {showForm && !createAsHQ ? 'Cancel' : 'New Event'}
           </button>
@@ -161,29 +161,29 @@ export default function EventsPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
+        <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4 shadow-sm dark:shadow-none">
           {createAsHQ && (
-            <div className="flex items-center gap-2 text-sm text-indigo-400 bg-indigo-900/20 border border-indigo-800/30 rounded px-3 py-2">
-              <span className="h-2 w-2 rounded-full bg-indigo-400" />
+            <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 rounded-lg px-3 py-2">
+              <span className="h-2 w-2 rounded-full bg-purple-500" />
               This event will also be created on your Afterroar venue page. Players can RSVP online.
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Name</label>
+              <label className="block text-sm text-muted mb-1">Name</label>
               <input
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Event Type</label>
+              <label className="block text-sm text-muted mb-1">Event Type</label>
               <select
                 value={form.event_type}
                 onChange={(e) => setForm({ ...form, event_type: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               >
                 <option value="fnm">FNM</option>
                 <option value="prerelease">Prerelease</option>
@@ -195,65 +195,65 @@ export default function EventsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Starts At</label>
+              <label className="block text-sm text-muted mb-1">Starts At</label>
               <input
                 required
                 type="datetime-local"
                 value={form.starts_at}
                 onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Ends At</label>
+              <label className="block text-sm text-muted mb-1">Ends At</label>
               <input
                 type="datetime-local"
                 value={form.ends_at}
                 onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Entry Fee ($)</label>
+              <label className="block text-sm text-muted mb-1">Entry Fee ($)</label>
               <input
                 type="text"
                 placeholder="0.00"
                 value={form.entry_fee}
                 onChange={(e) => setForm({ ...form, entry_fee: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-400 mb-1">Max Players</label>
+              <label className="block text-sm text-muted mb-1">Max Players</label>
               <input
                 type="number"
                 value={form.max_players}
                 onChange={(e) => setForm({ ...form, max_players: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Description</label>
+            <label className="block text-sm text-muted mb-1">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={2}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+              className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
             />
           </div>
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={saving}
-              className={`px-4 py-2 ${createAsHQ ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'} disabled:opacity-50 text-white rounded text-sm font-medium`}
+              className={`px-4 py-2 ${createAsHQ ? 'bg-purple-600 hover:bg-purple-700' : 'bg-accent hover:opacity-90'} disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors`}
             >
               {saving ? 'Creating...' : createAsHQ ? 'Create Afterroar Event' : 'Create Event'}
             </button>
             <button
               type="button"
               onClick={() => { setShowForm(false); setCreateAsHQ(false); }}
-              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded text-sm font-medium"
+              className="px-4 py-2 border border-card-border bg-card hover:bg-card-hover text-foreground rounded-lg text-sm font-medium transition-colors"
             >
               Cancel
             </button>
@@ -262,38 +262,36 @@ export default function EventsPage() {
       )}
 
       {loading ? (
-        <p className="text-zinc-400">Loading events...</p>
+        <p className="text-muted">Loading events...</p>
       ) : events.length === 0 ? (
-        <p className="text-zinc-400">No events yet. Create one to get started.</p>
+        <p className="text-muted">No events yet. Create one to get started.</p>
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-2">
+          <div className="md:hidden space-y-3">
             {events.map((event) => (
               <div key={event.id}>
                 <button
                   onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left min-h-11 active:bg-zinc-800"
+                  className="w-full rounded-xl border border-card-border bg-card p-4 text-left min-h-11 active:bg-card-hover shadow-sm dark:shadow-none transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-white truncate mr-2">
+                    <span className="font-semibold text-foreground truncate mr-2 leading-snug">
                       {event.name}
                       {Boolean(event.afterroar_event_id) && (
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] bg-indigo-900/40 text-indigo-400 border border-indigo-800/30 font-normal">
-                          AR
-                        </span>
+                        <StatusBadge variant="special" className="ml-1.5 text-[10px]">AR</StatusBadge>
                       )}
                     </span>
                     {statusBadge(event)}
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
+                  <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
                     {typeBadge(event.event_type)}
                     <span>{new Date(event.starts_at).toLocaleDateString()}</span>
                     <span>{event.checkin_count} players</span>
                   </div>
                 </button>
                 {expandedId === event.id && (
-                  <div className="bg-zinc-950 border border-zinc-800 border-t-0 rounded-b-lg px-3 py-3">
+                  <div className="bg-card border border-card-border border-t-0 rounded-b-xl px-4 py-3">
                     <MobileEventDetail event={event} />
                   </div>
                 )}
@@ -302,10 +300,10 @@ export default function EventsPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="hidden md:block bg-card border border-card-border rounded-xl overflow-hidden shadow-sm dark:shadow-none">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+                <tr className="border-b border-card-border text-muted text-left">
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">Date/Time</th>
@@ -336,22 +334,22 @@ function MobileEventDetail({ event }: { event: EventWithCount }) {
   const isHQLinked = Boolean(event.afterroar_event_id);
   return (
     <div className="space-y-2 text-sm">
-      <div className="flex items-center justify-between text-zinc-400">
+      <div className="flex items-center justify-between text-muted">
         <span>Entry Fee: {event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}</span>
         <span>{new Date(event.starts_at).toLocaleString()}</span>
       </div>
-      <div className="flex items-center gap-2 text-zinc-400">
+      <div className="flex items-center gap-2 text-muted">
         <span>Players: {event.checkin_count}</span>
-        {event.rsvp_count !== null && <span className="text-zinc-500">({event.rsvp_count} RSVP)</span>}
+        {event.rsvp_count !== null && <span className="text-zinc-500 dark:text-zinc-500">({event.rsvp_count} RSVP)</span>}
       </div>
       {isHQLinked && (
-        <div className="flex items-center gap-1.5 text-xs text-indigo-400">
-          <span className="h-2 w-2 rounded-full bg-indigo-400" />
+        <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400">
+          <span className="h-2 w-2 rounded-full bg-purple-500" />
           Afterroar linked event
         </div>
       )}
       {event.description && (
-        <p className="text-xs text-zinc-500">{event.description}</p>
+        <p className="text-xs text-muted">{event.description}</p>
       )}
     </div>
   );
@@ -383,7 +381,6 @@ function EventRow({
         .then(setCheckins)
         .catch(() => {});
 
-      // If HQ-linked, also load RSVP guest list
       if (isHQLinked) {
         setLoadingGuests(true);
         fetch(`/api/events/${event.id}/guests`)
@@ -442,7 +439,6 @@ function EventRow({
         body: JSON.stringify({ guest_id: guestId }),
       });
       if (res.ok) {
-        // Reload both lists
         const [checkinRes, guestRes] = await Promise.all([
           fetch(`/api/events/${event.id}/checkin`),
           fetch(`/api/events/${event.id}/guests`),
@@ -462,50 +458,47 @@ function EventRow({
     <>
       <tr
         onClick={onToggle}
-        className="border-b border-zinc-800 hover:bg-zinc-800/50 cursor-pointer text-white"
+        className="border-b border-card-border hover:bg-card-hover cursor-pointer text-foreground"
       >
         <td className="px-4 py-3 font-medium">
           <span className="flex items-center gap-2">
             {event.name}
             {isHQLinked && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] bg-indigo-900/40 text-indigo-400 border border-indigo-800/30 font-normal">
-                Afterroar
-              </span>
+              <StatusBadge variant="special" className="text-[10px]">Afterroar</StatusBadge>
             )}
           </span>
         </td>
         <td className="px-4 py-3">{typeBadge(event.event_type)}</td>
-        <td className="px-4 py-3 text-zinc-300">
+        <td className="px-4 py-3 text-muted">
           {new Date(event.starts_at).toLocaleString()}
         </td>
-        <td className="px-4 py-3 text-zinc-300">
+        <td className="px-4 py-3 text-muted tabular-nums">
           {event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}
         </td>
-        <td className="px-4 py-3 text-zinc-300">
+        <td className="px-4 py-3 text-muted">
           <span>{event.checkin_count}</span>
           {event.rsvp_count !== null && (
-            <span className="text-zinc-500 ml-1">/ {event.rsvp_count} RSVP</span>
+            <span className="text-zinc-500 dark:text-zinc-500 ml-1">/ {event.rsvp_count} RSVP</span>
           )}
         </td>
         <td className="px-4 py-3">{statusBadge(event)}</td>
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={6} className="bg-zinc-950 px-4 py-4 border-b border-zinc-800">
+          <td colSpan={6} className="bg-background px-4 py-4 border-b border-card-border">
             <div className="space-y-4">
-              {/* HQ RSVP Guest List */}
               {isHQLinked && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white mb-2">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">
                     RSVP Guest List
-                    {loadingGuests && <span className="ml-2 text-zinc-500 font-normal">Loading...</span>}
+                    {loadingGuests && <span className="ml-2 text-muted font-normal">Loading...</span>}
                   </h3>
                   {hqGuests.length > 0 ? (
                     <div className="space-y-1">
                       {hqGuests.map((guest) => (
                         <div
                           key={guest.id}
-                          className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-sm"
+                          className="flex items-center justify-between bg-card border border-card-border rounded-lg px-3 py-2 text-sm"
                         >
                           <div className="flex items-center gap-2">
                             {guest.avatarUrl ? (
@@ -515,27 +508,22 @@ function EventRow({
                                 className="h-6 w-6 rounded-full"
                               />
                             ) : (
-                              <div className="h-6 w-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs text-zinc-400">
+                              <div className="h-6 w-6 rounded-full bg-card-hover flex items-center justify-center text-xs text-muted">
                                 {guest.name.charAt(0).toUpperCase()}
                               </div>
                             )}
-                            <span className="text-white">{guest.name}</span>
-                            {/* Trust badge */}
+                            <span className="text-foreground">{guest.name}</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${trustBadgeClasses(guest.trustBadge.level)}`}>
                               {guest.trustBadge.label}
                             </span>
-                            {/* Verified badge */}
                             {guest.identityVerified && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-900/30 text-blue-400 font-medium">
-                                Verified
-                              </span>
+                              <StatusBadge variant="info" className="text-[10px]">Verified</StatusBadge>
                             )}
-                            {/* RSVP status */}
-                            <span className="text-zinc-500 text-xs uppercase">{guest.status}</span>
+                            <span className="text-muted text-xs uppercase">{guest.status}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {guest.checkedIn ? (
-                              <span className="text-green-400 text-xs font-medium">Checked In</span>
+                              <span className="text-green-600 dark:text-green-400 text-xs font-medium">Checked In</span>
                             ) : (
                               <button
                                 onClick={(e) => {
@@ -543,7 +531,7 @@ function EventRow({
                                   handleQRCheckin(guest.id);
                                 }}
                                 disabled={checkingIn}
-                                className="px-3 py-1 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded text-xs font-medium"
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors"
                               >
                                 Check In
                               </button>
@@ -553,14 +541,13 @@ function EventRow({
                       ))}
                     </div>
                   ) : !loadingGuests ? (
-                    <p className="text-sm text-zinc-500">No RSVPs yet.</p>
+                    <p className="text-sm text-muted">No RSVPs yet.</p>
                   ) : null}
                 </div>
               )}
 
-              {/* Walk-in check-in search */}
               <div>
-                <h3 className="text-sm font-semibold text-white mb-2">
+                <h3 className="text-sm font-semibold text-foreground mb-2">
                   {isHQLinked ? 'Walk-in Check-In' : 'Check-In Players'}
                 </h3>
                 <div className="relative">
@@ -569,22 +556,22 @@ function EventRow({
                     placeholder="Search customers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full max-w-md bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                    className="w-full max-w-md bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm placeholder:text-muted focus:border-accent focus:outline-none"
                   />
                   {searching && (
-                    <p className="text-xs text-zinc-500 mt-1">Searching...</p>
+                    <p className="text-xs text-muted mt-1">Searching...</p>
                   )}
                   {searchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full max-w-md bg-zinc-800 border border-zinc-700 rounded shadow-lg">
+                    <div className="absolute z-10 mt-1 w-full max-w-md bg-card border border-card-border rounded-lg shadow-lg">
                       {searchResults.map((c) => (
                         <button
                           key={c.id}
                           onClick={() => handleCheckin(c.id)}
                           disabled={checkingIn}
-                          className="w-full text-left px-3 py-2 hover:bg-zinc-700 text-sm text-white flex justify-between items-center"
+                          className="w-full text-left px-3 py-2 hover:bg-card-hover text-sm text-foreground flex justify-between items-center"
                         >
                           <span>{c.name}</span>
-                          <span className="text-zinc-400 text-xs">{c.email}</span>
+                          <span className="text-muted text-xs">{c.email}</span>
                         </button>
                       ))}
                     </div>
@@ -592,26 +579,25 @@ function EventRow({
                 </div>
               </div>
 
-              {/* Checked-in list */}
               {checkins.length > 0 ? (
                 <div className="space-y-1">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide">
+                  <p className="text-xs text-muted uppercase tracking-wide">
                     Checked In ({checkins.length})
                   </p>
                   {checkins.map((ci) => (
                     <div
                       key={ci.id}
-                      className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-sm"
+                      className="flex items-center justify-between bg-card border border-card-border rounded-lg px-3 py-2 text-sm"
                     >
-                      <span className="text-white">{ci.customer_name || ci.customer_id}</span>
-                      <span className="text-zinc-500 text-xs">
+                      <span className="text-foreground">{ci.customer_name || ci.customer_id}</span>
+                      <span className="text-muted text-xs">
                         {new Date(ci.checked_in_at).toLocaleTimeString()}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-500">No players checked in yet.</p>
+                <p className="text-sm text-muted">No players checked in yet.</p>
               )}
             </div>
           </td>

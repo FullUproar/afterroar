@@ -110,48 +110,48 @@ export default function LabelsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <a href="/dashboard/inventory" className="text-sm text-zinc-400 hover:text-white mb-2 block">
+          <a href="/dashboard/inventory" className="text-sm text-muted hover:text-foreground mb-2 block">
             &larr; Back to Inventory
           </a>
-          <h1 className="text-2xl font-bold text-white">Print Labels</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Print Labels</h1>
         </div>
         <button
           onClick={handlePrint}
           disabled={printing || selected.size === 0}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm font-medium"
+          className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
         >
           {printing ? 'Preparing...' : `Print ${totalLabels} Label${totalLabels !== 1 ? 's' : ''}`}
         </button>
       </div>
 
       {/* Settings */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-wrap gap-6 items-center">
+      <div className="bg-card border border-card-border rounded-xl p-4 flex flex-wrap gap-6 items-center">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Label Size</label>
+          <label className="block text-xs text-muted mb-1">Label Size</label>
           <select
             value={labelSize}
             onChange={(e) => setLabelSize(e.target.value as 'small' | 'medium')}
-            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+            className="bg-card-hover border border-input-border rounded px-3 py-1.5 text-foreground text-sm"
           >
             <option value="small">Small (1.5&quot; x 1&quot;)</option>
             <option value="medium">Medium (2&quot; x 1&quot;)</option>
           </select>
         </div>
-        <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
           <input
             type="checkbox"
             checked={includePrice}
             onChange={(e) => setIncludePrice(e.target.checked)}
-            className="rounded border-zinc-700 bg-zinc-800 text-indigo-600"
+            className="rounded border-input-border bg-card-hover text-indigo-600"
           />
           Include Price
         </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
           <input
             type="checkbox"
             checked={includeBarcode}
             onChange={(e) => setIncludeBarcode(e.target.checked)}
-            className="rounded border-zinc-700 bg-zinc-800 text-indigo-600"
+            className="rounded border-input-border bg-card-hover text-indigo-600"
           />
           Include Barcode
         </label>
@@ -159,13 +159,13 @@ export default function LabelsPage() {
 
       {/* Selected items */}
       {selected.size > 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-white mb-3">
+        <div className="bg-card border border-card-border rounded-xl p-4">
+          <h2 className="text-sm font-semibold text-foreground mb-3">
             Selected ({selected.size} items, {totalLabels} labels)
           </h2>
           <div className="space-y-2">
             {Array.from(selected.values()).map(({ item, quantity }) => (
-              <div key={item.id} className="flex items-center justify-between bg-zinc-800 rounded px-3 py-2 text-sm">
+              <div key={item.id} className="flex items-center justify-between bg-card-hover rounded px-3 py-2 text-sm">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleItem(item)}
@@ -173,17 +173,17 @@ export default function LabelsPage() {
                   >
                     X
                   </button>
-                  <span className="text-white">{item.name}</span>
-                  <span className="text-zinc-400">{formatCents(item.price_cents)}</span>
+                  <span className="text-foreground">{item.name}</span>
+                  <span className="text-muted">{formatCents(item.price_cents)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-zinc-400">Labels:</label>
+                  <label className="text-xs text-muted">Labels:</label>
                   <input
                     type="number"
                     min={1}
                     value={quantity}
                     onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
-                    className="w-16 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-white text-sm text-center"
+                    className="w-16 bg-card border border-input-border rounded px-2 py-1 text-foreground text-sm text-center"
                   />
                 </div>
               </div>
@@ -199,14 +199,14 @@ export default function LabelsPage() {
       />
 
       {loading ? (
-        <p className="text-zinc-400">Loading inventory...</p>
+        <p className="text-muted">Loading inventory...</p>
       ) : items.length === 0 ? (
-        <p className="text-zinc-400">No items found.</p>
+        <p className="text-muted">No items found.</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="bg-card border border-card-border rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-left">
+              <tr className="border-b border-card-border text-muted text-left">
                 <th className="px-4 py-3 w-10"></th>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">SKU</th>
@@ -219,22 +219,22 @@ export default function LabelsPage() {
                 <tr
                   key={item.id}
                   onClick={() => toggleItem(item)}
-                  className={`border-b border-zinc-800 cursor-pointer transition-colors ${
-                    selected.has(item.id) ? 'bg-indigo-900/20' : 'hover:bg-zinc-800/50'
-                  } text-white`}
+                  className={`border-b border-card-border cursor-pointer transition-colors ${
+                    selected.has(item.id) ? 'bg-indigo-900/20' : 'hover:bg-card-hover'
+                  } text-foreground`}
                 >
                   <td className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={selected.has(item.id)}
                       onChange={() => toggleItem(item)}
-                      className="rounded border-zinc-700 bg-zinc-800 text-indigo-600"
+                      className="rounded border-input-border bg-card-hover text-indigo-600"
                     />
                   </td>
                   <td className="px-4 py-3 font-medium">{item.name}</td>
-                  <td className="px-4 py-3 text-zinc-400">{item.sku || '--'}</td>
+                  <td className="px-4 py-3 text-muted">{item.sku || '--'}</td>
                   <td className="px-4 py-3 text-right">{formatCents(item.price_cents)}</td>
-                  <td className="px-4 py-3 text-zinc-400 text-xs">{item.barcode || '--'}</td>
+                  <td className="px-4 py-3 text-muted text-xs">{item.barcode || '--'}</td>
                 </tr>
               ))}
             </tbody>

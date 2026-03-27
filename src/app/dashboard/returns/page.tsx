@@ -37,38 +37,38 @@ export default function ReturnsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-bold text-white">Returns</h1>
+        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Returns</h1>
         <Link
           href="/dashboard/returns/new"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
         >
           New Return
         </Link>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-zinc-400">Loading returns...</div>
+        <div className="text-muted">Loading returns...</div>
       ) : returns.length === 0 ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-400">
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted shadow-sm dark:shadow-none">
           No returns yet.
         </div>
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-2">
+          <div className="md:hidden space-y-3">
             {returns.map((r) => (
-              <div key={r.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 min-h-11">
+              <div key={r.id} className="rounded-xl border border-card-border bg-card p-4 min-h-11 shadow-sm dark:shadow-none">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-white">{r.customer_name}</span>
-                  <span className="text-sm text-red-400 font-medium">-{formatCents(r.total_refund_cents)}</span>
+                  <span className="font-semibold text-foreground leading-snug">{r.customer_name}</span>
+                  <span className="text-sm text-red-600 dark:text-red-400 font-semibold tabular-nums">-{formatCents(r.total_refund_cents)}</span>
                 </div>
-                <div className="mt-1 text-xs text-zinc-500">
+                <div className="mt-1 text-xs text-muted">
                   {r.item_count} items &middot; {r.refund_method === 'store_credit' ? 'Store Credit' : 'Cash'} &middot; {reasonLabel(r.reason)}
                 </div>
               </div>
@@ -76,9 +76,9 @@ export default function ReturnsPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+          <div className="hidden md:block overflow-hidden rounded-xl border border-card-border bg-card shadow-sm dark:shadow-none">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-800 text-zinc-400">
+              <thead className="border-b border-card-border text-muted">
                 <tr>
                   <th className="px-4 py-3 font-medium">Date</th>
                   <th className="px-4 py-3 font-medium">Customer</th>
@@ -88,21 +88,21 @@ export default function ReturnsPage() {
                   <th className="px-4 py-3 font-medium">Reason</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-card-border">
                 {returns.map((r) => (
-                  <tr key={r.id} className="text-white hover:bg-zinc-800/50 transition-colors">
-                    <td className="px-4 py-3 text-zinc-300">
+                  <tr key={r.id} className="text-foreground hover:bg-card-hover transition-colors">
+                    <td className="px-4 py-3 text-muted">
                       {new Date(r.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3">{r.customer_name}</td>
+                    <td className="px-4 py-3 font-medium">{r.customer_name}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{r.item_count}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-red-400">
+                    <td className="px-4 py-3 text-right tabular-nums text-red-600 dark:text-red-400 font-semibold">
                       -{formatCents(r.total_refund_cents)}
                     </td>
                     <td className="px-4 py-3">
                       {r.refund_method === 'store_credit' ? 'Store Credit' : 'Cash'}
                     </td>
-                    <td className="px-4 py-3 text-zinc-300">{reasonLabel(r.reason)}</td>
+                    <td className="px-4 py-3 text-muted">{reasonLabel(r.reason)}</td>
                   </tr>
                 ))}
               </tbody>

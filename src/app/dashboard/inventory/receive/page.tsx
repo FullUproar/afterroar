@@ -250,21 +250,21 @@ export default function ReceivePage() {
   if (success && result) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-8">
+        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-8">
           <h2 className="text-xl font-bold text-green-400">Inventory Received</h2>
-          <div className="mt-4 space-y-1 text-sm text-zinc-300">
+          <div className="mt-4 space-y-1 text-sm text-foreground/70">
             <p><span className="font-medium text-green-400">{result.totalUnitsReceived}</span> units received</p>
             <p><span className="font-medium text-blue-400">{result.created}</span> new items created</p>
-            <p><span className="font-medium text-zinc-400">{result.updated}</span> existing items updated</p>
+            <p><span className="font-medium text-muted">{result.updated}</span> existing items updated</p>
           </div>
         </div>
         <div className="flex justify-center gap-3">
-          <Link href="/dashboard/inventory" className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700 transition-colors">
+          <Link href="/dashboard/inventory" className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors">
             View Inventory
           </Link>
           <button
             onClick={() => { setSuccess(false); setResult(null); setItems([]); }}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-500 transition-colors"
+            className="rounded-xl bg-accent px-4 py-2 text-sm text-foreground hover:opacity-90 transition-colors"
           >
             Receive More
           </button>
@@ -277,16 +277,16 @@ export default function ReceivePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Receive Inventory</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Receive Inventory</h1>
         {items.length > 0 && (
-          <div className="text-sm text-zinc-400">
+          <div className="text-sm text-muted">
             {items.length} items · {totalUnits} units · {formatCents(totalCost)} cost
           </div>
         )}
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
           {error}
         </div>
       )}
@@ -308,11 +308,11 @@ export default function ReceivePage() {
             }}
             autoFocus
             placeholder="Scan barcode or type item name..."
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-lg text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+            className="flex-1 rounded-xl border border-input-border bg-card px-4 py-3 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
           />
           <button
             onClick={() => handleScan(scanInput)}
-            className="rounded-lg bg-zinc-800 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors"
+            className="rounded-xl bg-card-hover px-4 py-3 text-sm font-medium text-foreground/70 hover:bg-card-hover transition-colors"
           >
             Add
           </button>
@@ -322,16 +322,16 @@ export default function ReceivePage() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowManual(!showManual)}
-            className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-              showManual ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+              showManual ? 'bg-accent text-foreground' : 'bg-card-hover text-muted hover:text-foreground'
             }`}
           >
             + Manual Entry
           </button>
           <button
             onClick={() => setShowInvoice(!showInvoice)}
-            className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-              showInvoice ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+              showInvoice ? 'bg-accent text-foreground' : 'bg-card-hover text-muted hover:text-foreground'
             }`}
           >
             Import Invoice (AI)
@@ -340,13 +340,13 @@ export default function ReceivePage() {
 
         {/* Manual entry form */}
         {showManual && (
-          <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-3">
-            <div className="text-sm font-medium text-white">Add Item Manually</div>
+          <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-3">
+            <div className="text-sm font-medium text-foreground">Add Item Manually</div>
             <div className="grid grid-cols-2 gap-2">
               <input type="text" placeholder="Name *" value={manualName} onChange={(e) => setManualName(e.target.value)}
-                className="col-span-2 rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                className="col-span-2 rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <select value={manualCategory} onChange={(e) => setManualCategory(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
                 <option value="tcg_single">TCG Single</option>
                 <option value="sealed">Sealed Product</option>
                 <option value="board_game">Board Game</option>
@@ -356,23 +356,23 @@ export default function ReceivePage() {
                 <option value="other">Other</option>
               </select>
               <input type="text" placeholder="Qty" value={manualQty} onChange={(e) => setManualQty(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="SKU" value={manualSku} onChange={(e) => setManualSku(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="Barcode" value={manualBarcode} onChange={(e) => setManualBarcode(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="Retail $" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="Cost $" value={manualCost} onChange={(e) => setManualCost(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none" />
+                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
             </div>
             <div className="flex gap-2">
               <button onClick={addManualItem} disabled={!manualName.trim()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors">
+                className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors">
                 Add
               </button>
               <button onClick={() => setShowManual(false)}
-                className="rounded-lg bg-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-600 transition-colors">
+                className="rounded-xl bg-card-hover px-3 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors">
                 Cancel
               </button>
             </div>
@@ -381,9 +381,9 @@ export default function ReceivePage() {
 
         {/* Invoice import */}
         {showInvoice && (
-          <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-3">
-            <div className="text-sm font-medium text-white">Import from Invoice</div>
-            <p className="text-xs text-zinc-400">
+          <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-3">
+            <div className="text-sm font-medium text-foreground">Import from Invoice</div>
+            <p className="text-xs text-muted">
               Paste your distributor invoice, packing list, or order confirmation. AI will extract all items.
             </p>
             <textarea
@@ -391,15 +391,15 @@ export default function ReceivePage() {
               onChange={(e) => setInvoiceText(e.target.value)}
               rows={6}
               placeholder="Paste invoice text here..."
-              className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
             />
             <div className="flex gap-2">
               <button onClick={handleInvoiceImport} disabled={!invoiceText.trim() || processing}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors">
+                className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors">
                 {processing ? 'Extracting...' : 'Extract Items'}
               </button>
               <button onClick={() => { setShowInvoice(false); setInvoiceText(''); }}
-                className="rounded-lg bg-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-600 transition-colors">
+                className="rounded-xl bg-card-hover px-3 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors">
                 Cancel
               </button>
             </div>
@@ -410,9 +410,9 @@ export default function ReceivePage() {
       {/* Items list */}
       {items.length > 0 && (
         <div className="space-y-2">
-          <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+          <div className="overflow-hidden rounded-xl border border-card-border bg-card">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-800 text-zinc-400">
+              <thead className="border-b border-card-border text-muted">
                 <tr>
                   <th className="px-4 py-2 font-medium">Item</th>
                   <th className="px-4 py-2 font-medium text-right">Qty</th>
@@ -424,10 +424,10 @@ export default function ReceivePage() {
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {items.map((item) => (
-                  <tr key={item.key} className="text-white">
+                  <tr key={item.key} className="text-foreground">
                     <td className="px-4 py-2">
                       <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-zinc-500">
+                      <div className="text-xs text-muted">
                         {item.category}
                         {item.sku && ` · ${item.sku}`}
                         {item.barcode && ` · ${item.barcode}`}
@@ -439,10 +439,10 @@ export default function ReceivePage() {
                         min="1"
                         value={item.quantity}
                         onChange={(e) => updateItem(item.key, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
-                        className="w-16 rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-right text-sm text-white tabular-nums focus:border-indigo-500 focus:outline-none"
+                        className="w-16 rounded border border-input-border bg-card-hover px-2 py-1 text-right text-sm text-foreground tabular-nums focus:border-accent focus:outline-none"
                       />
                     </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-zinc-300">
+                    <td className="px-4 py-2 text-right tabular-nums text-foreground/70">
                       {item.cost_cents > 0 ? formatCents(item.cost_cents) : '—'}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums">
@@ -466,7 +466,7 @@ export default function ReceivePage() {
                     <td className="px-4 py-2 text-right">
                       <button
                         onClick={() => removeItem(item.key)}
-                        className="text-zinc-500 hover:text-red-400 transition-colors"
+                        className="text-muted hover:text-red-400 transition-colors"
                       >
                         ×
                       </button>
@@ -479,13 +479,13 @@ export default function ReceivePage() {
 
           {/* Submit */}
           <div className="flex items-center justify-between pt-4">
-            <div className="text-sm text-zinc-400">
+            <div className="text-sm text-muted">
               {items.filter((i) => i.matched).length} existing · {items.filter((i) => !i.matched).length} new
             </div>
             <button
               onClick={handleSubmit}
               disabled={processing || items.length === 0}
-              className="rounded-lg bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-green-600 px-6 py-3 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors"
             >
               {processing ? 'Receiving...' : `Receive ${totalUnits} Units`}
             </button>
@@ -495,9 +495,9 @@ export default function ReceivePage() {
 
       {/* Empty state */}
       {items.length === 0 && (
-        <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-          <p className="text-lg font-medium text-zinc-400">Ready to receive</p>
-          <p className="mt-2 text-sm text-zinc-500">
+        <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
+          <p className="text-lg font-medium text-muted">Ready to receive</p>
+          <p className="mt-2 text-sm text-muted">
             Scan barcodes, add items manually, or import a distributor invoice.
           </p>
         </div>

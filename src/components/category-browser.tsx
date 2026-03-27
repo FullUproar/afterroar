@@ -182,7 +182,7 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
 
   if (!treeLoaded) {
     return (
-      <div className="py-8 text-center text-zinc-500 text-sm">
+      <div className="py-8 text-center text-muted text-sm">
         Loading categories...
       </div>
     );
@@ -190,7 +190,7 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
 
   if (categoryTree.length === 0) {
     return (
-      <div className="py-8 text-center text-zinc-500 text-sm">
+      <div className="py-8 text-center text-muted text-sm">
         No categories available. Categories will be created when you first use the catalog.
       </div>
     );
@@ -218,13 +218,13 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
                   {crumb.name}
                 </button>
               ) : (
-                <span className="text-white font-medium">{crumb.name}</span>
+                <span className="text-foreground font-medium">{crumb.name}</span>
               )}
             </span>
           ))}
           <button
             onClick={navigateBack}
-            className="ml-auto rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 active:bg-zinc-700 transition-colors"
+            className="ml-auto rounded-xl bg-card-hover px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-card-hover active:bg-card-hover transition-colors"
           >
             Back
           </button>
@@ -238,16 +238,16 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
             <button
               key={cat.id}
               onClick={() => navigateToCategory(cat)}
-              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-4 min-h-[64px] text-center hover:bg-zinc-800 hover:border-zinc-700 active:bg-zinc-800 transition-colors"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-card-border bg-card px-3 py-4 min-h-[64px] text-center hover:bg-card-hover hover:border-input-border active:bg-card-hover transition-colors"
             >
               {cat.icon && (
                 <span className="text-xl leading-none">{cat.icon}</span>
               )}
-              <span className="text-sm font-medium text-white leading-tight">
+              <span className="text-sm font-medium text-foreground leading-tight">
                 {cat.name}
               </span>
               {cat.children.length > 0 && (
-                <span className="text-[10px] text-zinc-500">
+                <span className="text-[10px] text-muted">
                   {cat.children.length} subcategories
                 </span>
               )}
@@ -260,11 +260,11 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
       {currentChildren.length === 0 && (
         <>
           {loadingProducts ? (
-            <div className="py-8 text-center text-zinc-500 text-sm">
+            <div className="py-8 text-center text-muted text-sm">
               Loading products...
             </div>
           ) : products.length === 0 ? (
-            <div className="py-8 text-center text-zinc-500 text-sm">
+            <div className="py-8 text-center text-muted text-sm">
               No in-stock items in this category.
             </div>
           ) : (
@@ -272,28 +272,28 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
               {products.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 hover:bg-zinc-800 transition-colors"
+                  className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-3 py-2 hover:bg-card-hover transition-colors"
                 >
                   {/* Small image */}
                   {item.image_url ? (
                     <img
                       src={item.image_url}
                       alt=""
-                      className="w-10 h-10 rounded object-cover shrink-0 bg-zinc-800"
+                      className="w-10 h-10 rounded object-cover shrink-0 bg-card-hover"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600 text-xs">
+                    <div className="w-10 h-10 rounded bg-card-hover shrink-0 flex items-center justify-center text-zinc-600 text-xs">
                       --
                     </div>
                   )}
 
                   {/* Name + details */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">
+                    <div className="text-sm font-medium text-foreground truncate">
                       {item.name}
                     </div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-muted">
                       {item.quantity} in stock
                     </div>
                   </div>
@@ -305,7 +305,7 @@ export function CategoryBrowser({ onAddToCart }: CategoryBrowserProps) {
                     </span>
                     <button
                       onClick={() => onAddToCart(item)}
-                      className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-500 active:bg-emerald-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-foreground hover:bg-emerald-500 active:bg-emerald-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       +
                     </button>
