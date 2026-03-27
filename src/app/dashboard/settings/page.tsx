@@ -20,6 +20,16 @@ interface VenueResult {
   state: string | null;
 }
 
+interface StripeConnectStatus {
+  connected: boolean;
+  account_id: string | null;
+  details_submitted: boolean | null;
+  charges_enabled: boolean | null;
+  payouts_enabled: boolean | null;
+  business_profile?: { name?: string } | null;
+  note?: string;
+}
+
 export default function SettingsPage() {
   const { can, store, isGodAdmin, isTestMode, effectiveRole, setTestRole } = useStore();
   const { theme, setTheme } = useTheme();
@@ -37,6 +47,11 @@ export default function SettingsPage() {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
+
+  // Stripe Connect state
+  const [stripeStatus, setStripeStatus] = useState<StripeConnectStatus | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(true);
+  const [stripeConnecting, setStripeConnecting] = useState(false);
 
   // Sync when store context loads
   useEffect(() => {
@@ -60,6 +75,46 @@ export default function SettingsPage() {
     }, 300);
     return () => clearTimeout(timeout);
   }, [venueSearch]);
+
+  // Fetch Stripe Connect status
+  useEffect(() => {
+    async function fetchStripeStatus() {
+      try {
+        const res = await fetch('/api/stripe/connect');
+        if (res.ok) {
+          setStripeStatus(await res.json());
+        }
+      } catch {
+        // Stripe not configured — that's fine
+      } finally {
+        setStripeLoading(false);
+      }
+    }
+    fetchStripeStatus();
+  }, []);
+
+  async function startStripeOnboarding() {
+    setStripeConnecting(true);
+    setError('');
+    try {
+      const res = await fetch('/api/stripe/connect', {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.onboarding_url) {
+          window.location.href = data.onboarding_url;
+        }
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to start Stripe onboarding');
+      }
+    } catch {
+      setError('Failed to connect to Stripe');
+    } finally {
+      setStripeConnecting(false);
+    }
+  }
 
   async function connectVenue(venueId: string) {
     setConnecting(true);
@@ -280,6 +335,83 @@ export default function SettingsPage() {
               </div>
             );
           })()}
+        </div>
+      </div>
+
+      {/* Payments / Stripe Section */}
+      <div className="max-w-2xl">
+        <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
+          <h2 className="text-sm font-semibold text-foreground">Payments</h2>
+          <p className="mt-0.5 text-xs text-muted">
+            Stripe integration for card payments. Tax is calculated using your configured tax rate above.
+          </p>
+
+          <div className="mt-4 space-y-4">
+            {stripeLoading ? (
+              <p className="text-sm text-muted">Checking Stripe status...</p>
+            ) : stripeStatus?.connected ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${stripeStatus.charges_enabled ? 'bg-green-500' : 'bg-amber-500'}`} />
+                  <span className={`text-sm font-medium ${stripeStatus.charges_enabled ? 'text-green-400' : 'text-amber-400'}`}>
+                    {stripeStatus.charges_enabled ? 'Connected' : 'Pending Setup'}
+                  </span>
+                  {stripeStatus.business_profile?.name && (
+                    <span className="text-sm text-foreground">&mdash; {stripeStatus.business_profile.name}</span>
+                  )}
+                </div>
+                <div className="text-xs text-muted space-y-1">
+                  <p>Account: {stripeStatus.account_id}</p>
+                  <p>Charges: {stripeStatus.charges_enabled ? 'Enabled' : 'Not yet enabled'}</p>
+                  <p>Payouts: {stripeStatus.payouts_enabled ? 'Enabled' : 'Not yet enabled'}</p>
+                  {stripeStatus.details_submitted === false && (
+                    <p className="text-amber-400">Complete your Stripe onboarding to start accepting payments.</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {stripeStatus.details_submitted === false && (
+                    <button
+                      onClick={startStripeOnboarding}
+                      disabled={stripeConnecting}
+                      className="px-3 py-1.5 bg-accent hover:opacity-90 disabled:opacity-50 text-white rounded text-xs font-medium"
+                    >
+                      {stripeConnecting ? 'Loading...' : 'Complete Onboarding'}
+                    </button>
+                  )}
+                  <a
+                    href="https://dashboard.stripe.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-card-hover hover:bg-zinc-600 text-foreground rounded text-xs font-medium inline-flex items-center gap-1"
+                  >
+                    Stripe Dashboard
+                    <span className="text-muted">&nearr;</span>
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-zinc-500" />
+                  <span className="text-sm text-muted">No Stripe account connected</span>
+                </div>
+                <p className="text-xs text-muted">
+                  Connect a Stripe account to accept card payments directly. Without Stripe Connect,
+                  card payments use {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? 'the platform Stripe account (test mode)' : 'simulated processing'}.
+                </p>
+                <button
+                  onClick={startStripeOnboarding}
+                  disabled={stripeConnecting}
+                  className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-white rounded-xl text-sm font-medium"
+                >
+                  {stripeConnecting ? 'Connecting...' : 'Connect Stripe'}
+                </button>
+                <p className="text-xs text-muted italic">
+                  Stripe Tax auto-calculation is coming soon. For now, configure your tax rate manually in the Tax section below.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

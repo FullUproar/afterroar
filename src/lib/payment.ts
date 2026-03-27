@@ -40,11 +40,21 @@ function generateTransactionId(prefix: string): string {
 
 /** Check if we should use real Stripe or simulated */
 export function isLivePayments(): boolean {
+  // If STRIPE_SECRET_KEY is set directly, always use real Stripe
+  if (process.env.STRIPE_SECRET_KEY) return true;
   return process.env.PAYMENT_MODE === "live" || process.env.PAYMENT_MODE === "test";
 }
 
 export function isTestPayments(): boolean {
+  // Auto-detect from key prefix
+  const key = process.env.STRIPE_SECRET_KEY ?? "";
+  if (key.startsWith("sk_test_")) return true;
   return process.env.PAYMENT_MODE === "test";
+}
+
+/** Check if Stripe is configured at all */
+export function isStripeAvailable(): boolean {
+  return !!(process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY_TEST);
 }
 
 /* ------------------------------------------------------------------ */
@@ -90,6 +100,127 @@ export class SimulatedCardProvider implements PaymentProvider {
       provider: "simulated",
       live: false,
     };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Stripe Direct — real card payments on the platform account          */
+/*  Used when no Connected account is set up yet.                       */
+/*  In test mode, auto-confirms with pm_card_visa.                      */
+/*  Server-side: creates PaymentIntent directly via Stripe SDK.         */
+/* ------------------------------------------------------------------ */
+export class StripePaymentProvider implements PaymentProvider {
+  name = "stripe_direct";
+
+  async charge(
+    amount_cents: number,
+    metadata?: Record<string, unknown>
+  ): Promise<PaymentResult> {
+    try {
+      const Stripe = (await import("stripe")).default;
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeKey) {
+        return {
+          success: false,
+          transaction_id: "",
+          method: "card",
+          provider: "stripe_direct",
+          error: "Stripe is not configured",
+          live: false,
+        };
+      }
+
+      const stripe = new Stripe(stripeKey);
+      const isTest = stripeKey.startsWith("sk_test_");
+
+      // Create and auto-confirm a PaymentIntent
+      // In test mode: use pm_card_visa (always succeeds)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount_cents,
+        currency: "usd",
+        ...(isTest
+          ? {
+              payment_method: "pm_card_visa",
+              confirm: true,
+              automatic_payment_methods: {
+                enabled: true,
+                allow_redirects: "never",
+              },
+            }
+          : {
+              automatic_payment_methods: {
+                enabled: true,
+                allow_redirects: "never",
+              },
+            }),
+        metadata: {
+          ...Object.fromEntries(
+            Object.entries(metadata || {}).map(([k, v]) => [k, String(v)])
+          ),
+          source: "afterroar_store_ops",
+          ...(isTest ? { test_mode: "true" } : {}),
+        },
+      });
+
+      return {
+        success: true,
+        transaction_id: paymentIntent.id,
+        method: "card",
+        provider: "stripe_direct",
+        stripe_payment_intent_id: paymentIntent.id,
+        live: !isTest,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        transaction_id: "",
+        method: "card",
+        provider: "stripe_direct",
+        error: err instanceof Error ? err.message : "Stripe payment failed",
+        live: false,
+      };
+    }
+  }
+
+  async refund(
+    transaction_id: string,
+    amount_cents: number
+  ): Promise<PaymentResult> {
+    try {
+      const Stripe = (await import("stripe")).default;
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeKey) {
+        return {
+          success: false,
+          transaction_id: "",
+          method: "card",
+          provider: "stripe_direct",
+          error: "Stripe is not configured",
+          live: false,
+        };
+      }
+      const stripe = new Stripe(stripeKey);
+      const refund = await stripe.refunds.create({
+        payment_intent: transaction_id,
+        amount: amount_cents,
+      });
+      return {
+        success: true,
+        transaction_id: refund.id,
+        method: "card",
+        provider: "stripe_direct",
+        live: !isTestPayments(),
+      };
+    } catch (err) {
+      return {
+        success: false,
+        transaction_id: "",
+        method: "card",
+        provider: "stripe_direct",
+        error: err instanceof Error ? err.message : "Stripe refund failed",
+        live: false,
+      };
+    }
   }
 }
 
@@ -305,10 +436,12 @@ export async function processPayment(
       break;
 
     case "card": {
-      // Use Stripe Connect if configured, otherwise simulated
+      // Use Stripe Connect if configured, otherwise direct Stripe, otherwise simulated
       const connectedId = options?.stripe_connected_account_id;
       if (connectedId && isLivePayments()) {
         provider = new StripeConnectProvider(connectedId);
+      } else if (isStripeAvailable()) {
+        provider = new StripePaymentProvider();
       } else {
         provider = new SimulatedCardProvider();
       }
@@ -323,16 +456,19 @@ export async function processPayment(
       provider = new StoreCreditProvider(options?.customer_credit_balance_cents ?? 0);
       break;
 
-    case "split":
+    case "split": {
       // For split payments the API route handles the two legs separately;
       // this just validates the card portion succeeds.
       const splitConnectedId = options?.stripe_connected_account_id;
       if (splitConnectedId && isLivePayments()) {
         provider = new StripeConnectProvider(splitConnectedId);
+      } else if (isStripeAvailable()) {
+        provider = new StripePaymentProvider();
       } else {
         provider = new SimulatedCardProvider();
       }
       break;
+    }
 
     default:
       return {
@@ -385,6 +521,11 @@ export async function processRefund(
     const connectedId = options?.stripe_connected_account_id;
     if (connectedId) {
       const provider = new StripeConnectProvider(connectedId);
+      return provider.refund!(original_transaction_id, amount_cents);
+    }
+    // Direct Stripe refund (no connected account)
+    if (isStripeAvailable()) {
+      const provider = new StripePaymentProvider();
       return provider.refund!(original_transaction_id, amount_cents);
     }
   }

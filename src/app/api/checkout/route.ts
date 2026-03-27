@@ -223,6 +223,8 @@ export async function POST(request: NextRequest) {
             transaction_id: paymentResult.transaction_id,
             amount_tendered_cents,
             tax_cents,
+            ...(paymentResult.stripe_payment_intent_id ? { stripe_payment_intent_id: paymentResult.stripe_payment_intent_id } : {}),
+            ...(paymentResult.provider ? { payment_provider: paymentResult.provider } : {}),
             ...(discount_cents > 0 ? { discount_cents, discount_reason } : {}),
             ...(giftCardApplied > 0 ? { gift_card_code, gift_card_amount_cents: giftCardApplied } : {}),
             ...(loyaltyApplied > 0 ? { loyalty_points_redeemed: loyalty_points_redeem, loyalty_discount_cents: loyaltyApplied } : {}),

@@ -994,6 +994,11 @@ export default function RegisterPage() {
           >
             {storeName}
           </button>
+          {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test_") && (
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-semibold uppercase tracking-wider border border-amber-500/30">
+              Test Mode
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
