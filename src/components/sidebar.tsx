@@ -44,8 +44,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-accent-light text-accent font-medium"
-                  : "text-muted hover:bg-card-hover hover:text-foreground"
+                  ? "bg-card-hover text-foreground font-medium border-l-2 border-accent"
+                  : "text-muted hover:bg-card-hover hover:text-foreground border-l-2 border-transparent"
               )}
             >
               <span className="w-5 text-center">{item.icon}</span>

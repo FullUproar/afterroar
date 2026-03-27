@@ -484,11 +484,14 @@ export default function RegisterPage() {
 
         <button
           onClick={() => setShowScanner(true)}
-          className="shrink-0 flex items-center justify-center rounded-xl border border-input-border bg-card text-foreground hover:bg-card-hover transition-colors"
-          style={{ width: 52, height: 52, fontSize: 22, minHeight: 56 }}
-          title="Scan barcode"
+          className="shrink-0 flex items-center justify-center rounded-xl border border-input-border bg-card text-muted hover:text-foreground hover:bg-card-hover transition-colors"
+          style={{ width: 52, height: 52, minHeight: 56 }}
+          title="Scan Barcode"
         >
-          {"\uD83D\uDCF7"}
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75H16.5v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75H16.5v-.75z" />
+          </svg>
         </button>
 
         <button
@@ -504,13 +507,13 @@ export default function RegisterPage() {
           className={`shrink-0 flex items-center justify-center rounded-xl border transition-colors ${
             customer
               ? "border-accent bg-accent-light text-accent"
-              : "border-input-border bg-card text-foreground hover:bg-card-hover"
+              : "border-input-border bg-card text-muted hover:text-foreground hover:bg-card-hover"
           }`}
-          style={{ height: 52, minWidth: 52, minHeight: 56, fontSize: customer ? 14 : 22, padding: customer ? "0 12px" : 0 }}
-          title={customer ? `${customer.name} - tap to remove` : "Attach customer"}
+          style={{ height: 52, minWidth: 52, minHeight: 56, padding: customer ? "0 12px" : "0" }}
+          title={customer ? `${customer.name} - tap to remove` : "Attach Customer"}
         >
           {customer ? (
-            <span className="truncate max-w-[100px]">
+            <span className="truncate max-w-[100px] text-sm">
               {customer.name}
               {customer.credit_balance_cents > 0 && (
                 <span className="ml-1 text-xs opacity-70">
@@ -519,7 +522,9 @@ export default function RegisterPage() {
               )}
             </span>
           ) : (
-            "\uD83D\uDC64"
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
           )}
         </button>
       </div>
