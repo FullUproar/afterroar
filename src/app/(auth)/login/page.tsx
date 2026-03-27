@@ -100,9 +100,7 @@ function LoginContent() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-2xl font-bold text-white">
-          A
-        </div>
+        <img src="/logo-ring.png" alt="Afterroar" className="mx-auto mb-3 h-14 w-14 object-contain" />
         <h1 className="text-2xl font-bold text-white">
           {isSignUp ? "Create your store" : "Welcome back"}
         </h1>

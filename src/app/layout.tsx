@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Afterroar Store Ops",
   description: "The POS platform built for friendly local game stores.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo-ring-favicon.png",
+    apple: "/logo-ring.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

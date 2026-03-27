@@ -64,11 +64,7 @@ export default function BrandGuidePage() {
       <div className="sticky top-0 z-10 border-b backdrop-blur-sm" style={{ borderColor: cardBorder, backgroundColor: `${bg}ee` }}>
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center">
-              <svg viewBox="0 0 100 100" className="h-8 w-8">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#FF8200" strokeWidth="8" strokeLinecap="round" strokeDasharray="220 30" />
-              </svg>
-            </div>
+            <img src="/logo-ring.png" alt="Afterroar" className="h-10 w-10 object-contain" />
             <div>
               <h1 className="text-lg font-semibold">Afterroar Store Ops</h1>
               <p className="text-xs" style={{ color: muted }}>Brand Style Guide</p>
@@ -125,13 +121,7 @@ export default function BrandGuidePage() {
                 className="flex flex-col items-center gap-2 rounded-xl border p-6"
                 style={{ borderColor: cardBorder, backgroundColor: variant.bg }}
               >
-                <svg viewBox="0 0 100 100" className="h-16 w-16">
-                  <circle
-                    cx="50" cy="50" r="40" fill="none"
-                    stroke={variant.bg === "#FF8200" ? "#fff" : "#FF8200"}
-                    strokeWidth="8" strokeLinecap="round" strokeDasharray="220 30"
-                  />
-                </svg>
+                <img src="/logo-ring.png" alt="Afterroar Ring" className="h-16 w-16 object-contain" />
                 <span className="text-xs" style={{ color: variant.bg === "#0a0a0a" || variant.bg === "#1a1a2e" ? "#94a3b8" : variant.bg === "#FF8200" ? "#fff" : "#6b7280" }}>
                   {variant.label}
                 </span>
