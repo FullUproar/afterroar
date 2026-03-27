@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store-context';
+import { PageHeader } from '@/components/page-header';
 import { formatCents } from '@/lib/types';
 import {
   PROMOTION_TYPES,
@@ -154,15 +155,17 @@ export default function PromotionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Promotions & Discounts</h1>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-        >
-          {showCreate ? 'Cancel' : 'New Promotion'}
-        </button>
-      </div>
+      <PageHeader
+        title="Promotions & Discounts"
+        action={
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+          >
+            {showCreate ? 'Cancel' : 'New Promotion'}
+          </button>
+        }
+      />
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">

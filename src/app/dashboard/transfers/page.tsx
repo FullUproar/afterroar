@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
 import { formatCents } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
 
 interface Location {
   id: string;
@@ -182,16 +183,18 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Transfers</h1>
-        <button
-          onClick={() => setShowNew(true)}
-          disabled={locations.length < 2}
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          New Transfer
-        </button>
-      </div>
+      <PageHeader
+        title="Transfers"
+        action={
+          <button
+            onClick={() => setShowNew(true)}
+            disabled={locations.length < 2}
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            New Transfer
+          </button>
+        }
+      />
 
       {locations.length < 2 && (
         <div className="rounded-xl border border-yellow-800/50 bg-yellow-900/10 p-4 text-sm text-yellow-400">
@@ -275,12 +278,21 @@ export default function TransfersPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setShowNew(false)}
+          onKeyDown={(e) => e.key === "Escape" && setShowNew(false)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-foreground mb-4">New Transfer</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">New Transfer</h2>
+              <button
+                onClick={() => setShowNew(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg"
+              >
+                &times;
+              </button>
+            </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>

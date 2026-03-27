@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { formatCents, parseDollars } from '@/lib/types';
+import { PageHeader } from '@/components/page-header';
 
 interface POItem {
   id: string;
@@ -233,15 +234,17 @@ export default function PurchaseOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Purchase Orders</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
-        >
-          {showForm ? 'Cancel' : 'New PO'}
-        </button>
-      </div>
+      <PageHeader
+        title="Purchase Orders"
+        action={
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+          >
+            {showForm ? 'Cancel' : 'New PO'}
+          </button>
+        }
+      />
 
       {showForm && (
         <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4">
@@ -595,9 +598,12 @@ export default function PurchaseOrdersPage() {
 
       {/* Receive Modal */}
       {receiveItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReceiveItem(null)}>
-          <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-foreground mb-1">Receive Items</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReceiveItem(null)} onKeyDown={(e) => e.key === "Escape" && setReceiveItem(null)}>
+          <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold text-foreground">Receive Items</h2>
+              <button onClick={() => setReceiveItem(null)} className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg">&times;</button>
+            </div>
             <p className="text-sm text-muted mb-4">{receiveItem.name}</p>
             <p className="text-xs text-muted mb-3">
               Ordered: {receiveItem.quantity_ordered} | Already received: {receiveItem.quantity_received} | Remaining: {receiveItem.quantity_ordered - receiveItem.quantity_received}

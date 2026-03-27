@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
+import { PageHeader } from "@/components/page-header";
 
 interface InventoryItem {
   id: string;
@@ -234,7 +235,7 @@ export default function GameLibraryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Game Library</h1>
+        <PageHeader title="Game Library" />
         <div className="flex gap-1 rounded-xl border border-card-border bg-card p-1">
           <button
             onClick={() => setView("available")}
@@ -463,12 +464,16 @@ export default function GameLibraryPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setCheckoutModal(null)}
+          onKeyDown={(e) => e.key === "Escape" && setCheckoutModal(null)}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-foreground mb-1">Check Out Game</h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold text-foreground">Check Out Game</h2>
+              <button onClick={() => setCheckoutModal(null)} className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg">&times;</button>
+            </div>
             <p className="text-sm text-muted mb-4">{checkoutModal.name}</p>
 
             {/* Customer search */}
@@ -585,12 +590,16 @@ export default function GameLibraryPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setReturnModal(null)}
+          onKeyDown={(e) => e.key === "Escape" && setReturnModal(null)}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-foreground mb-1">Return Game</h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold text-foreground">Return Game</h2>
+              <button onClick={() => setReturnModal(null)} className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg">&times;</button>
+            </div>
             <p className="text-sm text-muted mb-4">
               {returnModal.inventory_item.name}
             </p>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatCents, parseDollars } from "@/lib/types";
 import type { InventoryItem, Customer } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
 import type { PaymentMethod } from "@/lib/payment";
 import {
   searchInventoryLocal,
@@ -759,7 +760,7 @@ export default function CheckoutPage() {
       `}</style>
 
       <div className="relative mx-auto max-w-7xl h-full flex flex-col">
-        <h1 className="hidden md:block mb-3 md:mb-4 text-xl md:text-2xl font-semibold text-foreground">Register</h1>
+        <div className="hidden md:block mb-3 md:mb-4"><PageHeader title="Register" /></div>
 
         <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-4 md:gap-6 min-h-0">
           {/* ============ LEFT: Search + Results ============ */}

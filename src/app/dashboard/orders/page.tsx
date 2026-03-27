@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatCents } from "@/lib/types";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { PageHeader } from "@/components/page-header";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -174,7 +175,7 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
-      <h1 className="text-xl md:text-2xl font-bold text-foreground">Orders</h1>
+      <PageHeader title="Orders" />
 
       {/* Status filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -202,7 +203,15 @@ export default function OrdersPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
-          No orders found.
+          <p>No orders found.</p>
+          {statusFilter && (
+            <button
+              onClick={() => setStatusFilter("")}
+              className="mt-3 text-sm text-accent hover:underline"
+            >
+              Clear filter to see all orders
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">

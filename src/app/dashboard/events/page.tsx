@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store-context';
 import { GameEvent, EventCheckin, Customer, formatCents, parseDollars } from '@/lib/types';
 import { StatusBadge } from '@/components/mobile-card';
+import { PageHeader } from '@/components/page-header';
 
 type EventWithCount = GameEvent & { checkin_count: number; rsvp_count: number | null };
 
@@ -130,34 +131,36 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="hidden md:block text-2xl font-semibold text-foreground">Events</h1>
-          {isConnected && (
-            <p className="mt-1 text-sm text-muted">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                Connected to {venueName || 'Afterroar'}
-              </span>
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          {isConnected && (
-            <button
-              onClick={() => { setShowForm(true); setCreateAsHQ(true); }}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              New Afterroar Event
-            </button>
-          )}
-          <button
-            onClick={() => { setShowForm(!showForm); setCreateAsHQ(false); }}
-            className="px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            {showForm && !createAsHQ ? 'Cancel' : 'New Event'}
-          </button>
-        </div>
+      <div className="space-y-1">
+        <PageHeader
+          title="Events"
+          action={
+            <div className="flex gap-2">
+              {isConnected && (
+                <button
+                  onClick={() => { setShowForm(true); setCreateAsHQ(true); }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  New Afterroar Event
+                </button>
+              )}
+              <button
+                onClick={() => { setShowForm(!showForm); setCreateAsHQ(false); }}
+                className="px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                {showForm && !createAsHQ ? 'Cancel' : 'New Event'}
+              </button>
+            </div>
+          }
+        />
+        {isConnected && (
+          <p className="text-sm text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-green-500" />
+              Connected to {venueName || 'Afterroar'}
+            </span>
+          </p>
+        )}
       </div>
 
       {showForm && (
@@ -264,7 +267,15 @@ export default function EventsPage() {
       {loading ? (
         <p className="text-muted">Loading events...</p>
       ) : events.length === 0 ? (
-        <p className="text-muted">No events yet. Create one to get started.</p>
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
+          <p className="text-muted">No events yet.</p>
+          <button
+            onClick={() => { setShowForm(true); setCreateAsHQ(false); }}
+            className="mt-3 px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            Create Your First Event
+          </button>
+        </div>
       ) : (
         <>
           {/* Mobile card view */}

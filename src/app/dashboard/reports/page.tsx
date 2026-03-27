@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
 
 export default async function ReportsPage() {
   const session = await auth();
@@ -42,7 +43,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="hidden md:block text-2xl font-semibold text-foreground">Event ROI</h1>
+      <PageHeader title="Event ROI" />
 
       {results.length === 0 ? (
         <div className="rounded-xl border border-card-border bg-card p-8 text-center">

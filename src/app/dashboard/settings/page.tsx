@@ -9,6 +9,7 @@ import {
   type StoreSettings,
 } from '@/lib/store-settings';
 import { useTheme } from '@/components/theme-provider';
+import { PageHeader } from '@/components/page-header';
 
 interface VenueResult {
   id: string;
@@ -167,14 +168,10 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="hidden md:block text-2xl font-semibold text-foreground">Store Settings</h1>
-          <p className="mt-1 text-sm text-muted">
-            {store?.name} &middot; Changes save automatically
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Store Settings" backHref="/dashboard" />
+      <p className="text-sm text-muted -mt-4">
+        {store?.name} &middot; Changes save automatically
+      </p>
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/page-header';
 
 interface StockCountItem {
   id: string;
@@ -165,10 +166,7 @@ export default function StockCountsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <button onClick={() => setActiveCount(null)} className="text-sm text-muted hover:text-foreground mb-2 block">
-              &larr; Back to counts
-            </button>
-            <h1 className="text-2xl font-semibold text-foreground">Stock Count</h1>
+            <PageHeader title="Stock Count" backHref="/dashboard/stock-counts" />
             <p className="text-sm text-muted mt-1">
               Started {new Date(activeCount.started_at).toLocaleString()}
               {activeCount.category_filter && ` | Category: ${activeCount.category_filter}`}
@@ -315,15 +313,17 @@ export default function StockCountsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Stock Counts</h1>
-        <button
-          onClick={() => setShowNew(!showNew)}
-          className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
-        >
-          {showNew ? 'Cancel' : 'New Count'}
-        </button>
-      </div>
+      <PageHeader
+        title="Stock Counts"
+        action={
+          <button
+            onClick={() => setShowNew(!showNew)}
+            className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+          >
+            {showNew ? 'Cancel' : 'New Count'}
+          </button>
+        }
+      />
 
       {showNew && (
         <div className="bg-card border border-card-border rounded-xl p-4 space-y-4">

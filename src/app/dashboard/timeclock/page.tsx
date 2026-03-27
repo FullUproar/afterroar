@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
+import { PageHeader } from "@/components/page-header";
 
 interface TimeEntry {
   id: string;
@@ -110,7 +111,7 @@ export default function TimeclockPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <h1 className="hidden md:block text-2xl font-semibold text-foreground">Time Clock</h1>
+      <PageHeader title="Time Clock" />
 
       {data && (
         <>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Customer, formatCents } from '@/lib/types';
 import { StatusBadge } from '@/components/mobile-card';
+import { PageHeader } from '@/components/page-header';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -50,15 +51,17 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Customers</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
-        >
-          {showForm ? 'Cancel' : 'Add Customer'}
-        </button>
-      </div>
+      <PageHeader
+        title="Customers"
+        action={
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            {showForm ? 'Cancel' : 'Add Customer'}
+          </button>
+        }
+      />
 
       {showForm && (
         <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4 shadow-sm dark:shadow-none">
@@ -114,7 +117,17 @@ export default function CustomersPage() {
       {loading ? (
         <p className="text-muted">Loading customers...</p>
       ) : customers.length === 0 ? (
-        <p className="text-muted">No customers found.</p>
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
+          <p className="text-muted">{search ? 'No customers match your search.' : 'No customers yet.'}</p>
+          {!search && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="mt-3 px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Add Your First Customer
+            </button>
+          )}
+        </div>
       ) : (
         <>
           {/* Mobile card view */}

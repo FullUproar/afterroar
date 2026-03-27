@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
 import { formatCents, parseDollars } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
 
 interface DrawerSession {
   id: string;
@@ -163,7 +164,7 @@ export default function DrawerPage() {
   if (zReport) {
     return (
       <div className="space-y-6 max-w-2xl mx-auto">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Z-Report</h1>
+        <PageHeader title="Z-Report" />
 
         <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -259,7 +260,7 @@ export default function DrawerPage() {
   if (!drawerOpen) {
     return (
       <div className="space-y-6 max-w-lg mx-auto">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Cash Drawer</h1>
+        <PageHeader title="Cash Drawer" />
 
         <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
           <div className="text-center">
@@ -299,7 +300,7 @@ export default function DrawerPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Cash Drawer</h1>
+        <PageHeader title="Cash Drawer" />
         <span className="rounded-full bg-emerald-900/50 px-3 py-1 text-xs font-medium text-emerald-400">
           Open
         </span>
@@ -361,12 +362,21 @@ export default function DrawerPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
           onClick={() => setShowCloseModal(false)}
+          onKeyDown={(e) => e.key === "Escape" && setShowCloseModal(false)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-foreground mb-4">Count the Drawer</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Count the Drawer</h2>
+              <button
+                onClick={() => setShowCloseModal(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg"
+              >
+                &times;
+              </button>
+            </div>
 
             <label className="flex items-center gap-2 text-sm text-muted mb-4">
               <input

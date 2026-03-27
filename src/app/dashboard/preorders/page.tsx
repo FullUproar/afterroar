@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCents } from '@/lib/types';
+import { PageHeader } from '@/components/page-header';
 
 interface Preorder {
   id: string;
@@ -61,13 +62,15 @@ export default function PreordersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Preorders</h1>
-        <Link href="/dashboard/preorders/new"
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors">
-          New Preorder
-        </Link>
-      </div>
+      <PageHeader
+        title="Preorders"
+        action={
+          <Link href="/dashboard/preorders/new"
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors">
+            New Preorder
+          </Link>
+        }
+      />
 
       {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>}
 

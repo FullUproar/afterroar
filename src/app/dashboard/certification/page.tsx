@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@/lib/store-context';
+import { PageHeader } from '@/components/page-header';
 
 interface CheckResult {
   name: string;
@@ -72,7 +73,7 @@ export default function CertificationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="hidden md:block text-2xl font-semibold text-foreground">Data Certification</h1>
+          <PageHeader title="Data Certification" />
           <p className="mt-1 text-sm text-muted">
             Verify your store&apos;s data isolation, integrity, and consistency.
           </p>

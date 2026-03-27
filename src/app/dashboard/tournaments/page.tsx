@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/page-header';
 
 interface Tournament {
   id: string;
@@ -223,10 +224,7 @@ export default function TournamentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <button onClick={() => setActiveTournament(null)} className="text-sm text-muted hover:text-foreground mb-2 block">
-              &larr; Back to tournaments
-            </button>
-            <h1 className="text-2xl font-semibold text-foreground">{activeTournament.name}</h1>
+            <PageHeader title={activeTournament.name} backHref="/dashboard/tournaments" />
             <div className="flex items-center gap-3 mt-1">
               {activeTournament.format && (
                 <span className="text-sm text-muted">Format: {activeTournament.format}</span>
@@ -394,9 +392,12 @@ export default function TournamentsPage() {
 
         {/* Report Match Modal */}
         {reportMatch && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReportMatch(null)}>
-            <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-lg font-semibold text-foreground mb-4">Report Match Result</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReportMatch(null)} onKeyDown={(e) => e.key === "Escape" && setReportMatch(null)}>
+            <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">Report Match Result</h2>
+                <button onClick={() => setReportMatch(null)} className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg">&times;</button>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-muted mb-1">Winner</label>
@@ -461,15 +462,17 @@ export default function TournamentsPage() {
   // Tournament list view
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Tournaments</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
-        >
-          {showForm ? 'Cancel' : 'New Tournament'}
-        </button>
-      </div>
+      <PageHeader
+        title="Tournaments"
+        action={
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+          >
+            {showForm ? 'Cancel' : 'New Tournament'}
+          </button>
+        }
+      />
 
       {showForm && (
         <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4">

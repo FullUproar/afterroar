@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { getSourceSystems, INVENTORY_TARGET_FIELDS, CUSTOMER_TARGET_FIELDS } from '@/lib/import/field-maps';
 import { formatCents } from '@/lib/types';
+import { PageHeader } from '@/components/page-header';
 
 /* ---------- types ---------- */
 interface ImportJobResult {
@@ -226,7 +227,7 @@ export default function NewImportPage() {
   /* ---- render ---- */
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">New Import</h1>
+      <PageHeader title="New Import" backHref="/dashboard/import" />
 
       {/* progress */}
       <div className="flex gap-2 text-sm">

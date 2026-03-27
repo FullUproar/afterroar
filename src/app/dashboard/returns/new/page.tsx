@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatCents, RETURN_REASONS, ReturnReason } from '@/lib/types';
 import { useStoreSettings } from '@/lib/store-settings';
+import { PageHeader } from '@/components/page-header';
 
 /* ---------- types ---------- */
 
@@ -204,7 +205,7 @@ export default function NewReturnPage() {
   /* ---- render ---- */
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">New Return</h1>
+      <PageHeader title="New Return" backHref="/dashboard/returns" />
 
       {/* progress */}
       <div className="flex gap-2 text-sm">

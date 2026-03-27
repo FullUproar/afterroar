@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { formatCents, parseDollars } from '@/lib/types';
+import { PageHeader } from '@/components/page-header';
 
 /* ---------- types ---------- */
 
@@ -276,14 +277,17 @@ export default function ReceivePage() {
   /* ---- Main UI ---- */
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Receive Inventory</h1>
-        {items.length > 0 && (
-          <div className="text-sm text-muted">
-            {items.length} items · {totalUnits} units · {formatCents(totalCost)} cost
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="Receive Inventory"
+        backHref="/dashboard/inventory"
+        action={
+          items.length > 0 ? (
+            <div className="text-sm text-muted">
+              {items.length} items · {totalUnits} units · {formatCents(totalCost)} cost
+            </div>
+          ) : undefined
+        }
+      />
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
 
 /* ------------------------------------------------------------------ */
 /*  Export guides — step-by-step instructions per source POS            */
@@ -292,15 +293,18 @@ export default function ExportGuidePage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Export Guide</h1>
-        <Link
-          href="/dashboard/import/new"
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-        >
-          I Have My Files → Start Import
-        </Link>
-      </div>
+      <PageHeader
+        title="Export Guide"
+        backHref="/dashboard/import"
+        action={
+          <Link
+            href="/dashboard/import/new"
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+          >
+            Start Import
+          </Link>
+        }
+      />
 
       <p className="text-muted">
         Select your current POS system below and we&apos;ll show you exactly how to export your data.

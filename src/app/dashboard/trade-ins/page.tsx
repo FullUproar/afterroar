@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCents } from '@/lib/types';
 import { StatusBadge } from '@/components/mobile-card';
+import { PageHeader } from '@/components/page-header';
 
 interface TradeInRow {
   id: string;
@@ -41,15 +42,17 @@ export default function TradeInsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Trade-Ins</h1>
-        <Link
-          href="/dashboard/trade-ins/new"
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
-        >
-          New Trade-In
-        </Link>
-      </div>
+      <PageHeader
+        title="Trade-Ins"
+        action={
+          <Link
+            href="/dashboard/trade-ins/new"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
+          >
+            New Trade-In
+          </Link>
+        }
+      />
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-red-600 dark:text-red-400">
@@ -60,8 +63,14 @@ export default function TradeInsPage() {
       {loading ? (
         <div className="text-muted">Loading trade-ins...</div>
       ) : tradeIns.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted shadow-sm dark:shadow-none">
-          No trade-ins yet. Create your first one to get started.
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
+          <p className="text-muted">No trade-ins yet.</p>
+          <Link
+            href="/dashboard/trade-ins/new"
+            className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
+          >
+            Start Your First Trade-In
+          </Link>
         </div>
       ) : (
         <>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Customer, formatCents, parseDollars } from '@/lib/types';
 import { useStoreSettings } from '@/lib/store-settings';
 import { BarcodeScanner } from '@/components/barcode-scanner';
+import { PageHeader } from '@/components/page-header';
 
 /* ---------- types ---------- */
 
@@ -240,7 +241,7 @@ export default function NewTradeInPage() {
   /* ---- render ---- */
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">New Trade-In</h1>
+      <PageHeader title="New Trade-In" backHref="/dashboard/trade-ins" />
 
       {/* progress */}
       <div className="flex gap-2 text-sm">
@@ -393,7 +394,7 @@ export default function NewTradeInPage() {
               />
               <button
                 onClick={() => setShowBarcodeScanner(true)}
-                className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-muted hover:text-foreground border border-input-border transition-colors min-h-[44px]"
+                className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-muted hover:text-foreground border border-input-border transition-colors min-h-11"
                 title="Scan barcode"
               >
                 Scan

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { SearchInput } from '@/components/search-input';
 import { InventoryItem, formatCents } from '@/lib/types';
+import { PageHeader } from '@/components/page-header';
 
 interface LabelItem {
   item: InventoryItem;
@@ -108,21 +109,19 @@ export default function LabelsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <a href="/dashboard/inventory" className="text-sm text-muted hover:text-foreground mb-2 block">
-            &larr; Back to Inventory
-          </a>
-          <h1 className="text-2xl font-semibold text-foreground">Print Labels</h1>
-        </div>
-        <button
-          onClick={handlePrint}
-          disabled={printing || selected.size === 0}
-          className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
-        >
-          {printing ? 'Preparing...' : `Print ${totalLabels} Label${totalLabels !== 1 ? 's' : ''}`}
-        </button>
-      </div>
+      <PageHeader
+        title="Print Labels"
+        backHref="/dashboard/inventory"
+        action={
+          <button
+            onClick={handlePrint}
+            disabled={printing || selected.size === 0}
+            className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
+          >
+            {printing ? 'Preparing...' : `Print ${totalLabels} Label${totalLabels !== 1 ? 's' : ''}`}
+          </button>
+        }
+      />
 
       {/* Settings */}
       <div className="bg-card border border-card-border rounded-xl p-4 flex flex-wrap gap-6 items-center">

@@ -119,17 +119,39 @@ const MORE_GROUPS: NavGroup[] = [
   },
 ];
 
+type PanelState = "closed" | "opening" | "open" | "closing";
+
 export function MobileNav() {
   const pathname = usePathname();
   const { can, staff, effectiveRole, isTestMode } = useStore();
   const { resolvedTheme, setTheme } = useTheme();
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [panelState, setPanelState] = useState<PanelState>("closed");
+  const moreOpen = panelState === "open" || panelState === "opening";
   const [favorites, setFavorites] = useState<string[]>(DEFAULT_FAVORITES);
   const [replacingFav, setReplacingFav] = useState<string | null>(null); // href of item to add
 
   useEffect(() => {
     setFavorites(loadFavorites());
   }, []);
+
+  function openMore() {
+    setPanelState("opening");
+    // Allow opening animation to play
+    requestAnimationFrame(() => {
+      setPanelState("open");
+    });
+  }
+
+  function closeMore() {
+    setPanelState("closing");
+    setReplacingFav(null);
+    setTimeout(() => setPanelState("closed"), 200);
+  }
+
+  function setMoreOpen(open: boolean) {
+    if (open) openMore();
+    else closeMore();
+  }
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -194,12 +216,18 @@ export function MobileNav() {
             );
           })}
 
-          {/* More button */}
+          {/* More button — only opens on deliberate tap, not scroll/drag */}
           <button
-            onClick={() => setMoreOpen(true)}
+            onPointerUp={(e) => {
+              // Only respond to deliberate taps (not drags)
+              if (e.pointerType === "touch" || e.pointerType === "mouse") {
+                openMore();
+              }
+            }}
             className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors ${
               moreOpen ? "text-accent" : "text-muted"
             }`}
+            style={{ touchAction: "manipulation" }}
           >
             {moreOpen && (
               <span className="absolute top-0 left-3 right-3 h-0.5 rounded-b bg-accent" />
@@ -211,8 +239,13 @@ export function MobileNav() {
       </nav>
 
       {/* "More" full-screen sheet */}
-      {moreOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background md:hidden">
+      {panelState !== "closed" && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col bg-background md:hidden transition-opacity duration-200 ${
+            panelState === "closing" ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+          style={{ touchAction: panelState === "open" ? "auto" : "none" }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-card-border px-4 py-3">
             <h2 className="text-lg font-semibold text-foreground">Menu</h2>
@@ -225,7 +258,7 @@ export function MobileNav() {
                 {resolvedTheme === 'dark' ? '\u2600' : '\u263E'}
               </button>
               <button
-                onClick={() => { setMoreOpen(false); setReplacingFav(null); }}
+                onClick={() => closeMore()}
                 className="flex h-10 w-10 items-center justify-center rounded-full text-xl text-muted hover:text-foreground active:bg-card-hover transition-colors"
               >
                 &times;

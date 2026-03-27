@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useStore } from "@/lib/store-context";
 import { formatCents, parseDollars } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
 
 interface CatalogCard {
   scryfall_id: string;
@@ -224,7 +225,7 @@ export default function CatalogPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Catalog</h1>
+        <PageHeader title="Catalog" />
         <p className="text-sm text-muted mt-1">
           Search external product databases and add items to inventory
         </p>
@@ -381,14 +382,25 @@ export default function CatalogPage() {
             setAddModal(null);
             setError(null);
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") { setAddModal(null); setError(null); }
+          }}
         >
           <div
-            className="w-full max-w-lg rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            className="w-full max-w-lg rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-foreground mb-4">
-              Add to Inventory
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">
+                Add to Inventory
+              </h2>
+              <button
+                onClick={() => { setAddModal(null); setError(null); }}
+                className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg"
+              >
+                &times;
+              </button>
+            </div>
 
             <div className="flex gap-4 mb-5">
               {/* Card image */}

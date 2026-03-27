@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
 
 interface ImportJob {
   id: string;
@@ -42,15 +43,17 @@ export default function ImportPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Data Import</h1>
-        <Link
-          href="/dashboard/import/new"
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-        >
-          New Import
-        </Link>
-      </div>
+      <PageHeader
+        title="Data Import"
+        action={
+          <Link
+            href="/dashboard/import/new"
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+          >
+            New Import
+          </Link>
+        }
+      />
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-400">

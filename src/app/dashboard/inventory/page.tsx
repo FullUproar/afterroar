@@ -10,6 +10,7 @@ import {
   parseDollars,
 } from "@/lib/types";
 import { StatusBadge } from "@/components/mobile-card";
+import { PageHeader } from "@/components/page-header";
 
 const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: "tcg_single", label: "TCG Single" },
@@ -306,23 +307,25 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-2xl font-semibold text-foreground">Inventory</h1>
-        <div className="flex gap-2">
-          <a
-            href="/dashboard/inventory/labels"
-            className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
-          >
-            Print Labels
-          </a>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-          >
-            {showAddForm ? "Cancel" : "Add Item"}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Inventory"
+        action={
+          <div className="flex gap-2">
+            <a
+              href="/dashboard/inventory/labels"
+              className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+            >
+              Print Labels
+            </a>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+            >
+              {showAddForm ? "Cancel" : "Add Item"}
+            </button>
+          </div>
+        }
+      />
 
       <SearchInput
         value={searchQuery}
@@ -510,10 +513,20 @@ export default function InventoryPage() {
           Loading inventory...
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center text-muted py-12">
-          {searchQuery
-            ? "No items match your search."
-            : "No inventory items yet. Add your first item above."}
+        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
+          <p className="text-muted">
+            {searchQuery
+              ? "No items match your search."
+              : "No inventory items yet."}
+          </p>
+          {!searchQuery && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="mt-3 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+            >
+              Add Your First Item
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -727,14 +740,31 @@ export default function InventoryPage() {
             setAdjust(null);
             setAdjustError(null);
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setAdjust(null);
+              setAdjustError(null);
+            }
+          }}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-foreground mb-1">
-              Adjust Stock
-            </h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold text-foreground">
+                Adjust Stock
+              </h2>
+              <button
+                onClick={() => {
+                  setAdjust(null);
+                  setAdjustError(null);
+                }}
+                className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg"
+              >
+                &times;
+              </button>
+            </div>
             <p className="text-sm text-muted mb-4">{adjust.item.name}</p>
 
             {/* Current quantity */}

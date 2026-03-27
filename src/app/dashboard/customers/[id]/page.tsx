@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Customer, LedgerEntry, formatCents, parseDollars } from '@/lib/types';
 import { useStore } from '@/lib/store-context';
+import { PageHeader } from '@/components/page-header';
 
 interface LoyaltyEntry {
   id: string;
@@ -173,13 +174,21 @@ export default function CustomerDetailPage() {
   }
 
   if (loading) return <p className="text-muted">Loading customer...</p>;
-  if (!customer) return <p className="text-muted">Customer not found.</p>;
+  if (!customer) return (
+    <div className="space-y-4">
+      <PageHeader title="Customer" backHref="/dashboard/customers" />
+      <div className="rounded-xl border border-card-border bg-card p-8 text-center">
+        <p className="text-muted">Customer not found.</p>
+      </div>
+    </div>
+  );
 
   const isLinked = Boolean(customer.afterroar_user_id);
   const hasLocalPoints = (customer.loyalty_points ?? 0) > 0;
 
   return (
     <div className="space-y-6">
+      <PageHeader title={customer.name} backHref="/dashboard/customers" />
       {/* Header */}
       <div className="bg-card border border-card-border rounded-xl p-6">
         {editing ? (

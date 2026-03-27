@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from '@/lib/store-context';
 import { formatCents } from '@/lib/types';
+import { PageHeader } from '@/components/page-header';
 
 /* ---------- types ---------- */
 
@@ -432,7 +433,7 @@ export default function CashFlowPage() {
       {/* ---- HEADER ---- */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="hidden md:block text-2xl font-bold tracking-tight text-foreground">Cash Flow Intelligence</h1>
+          <PageHeader title="Cash Flow Intelligence" />
           <p className="mt-1 text-sm text-muted">Where your money is, where it&apos;s going, and where it&apos;s stuck.</p>
         </div>
         <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 shadow-inner">

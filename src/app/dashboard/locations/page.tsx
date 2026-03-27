@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store-context';
+import { PageHeader } from '@/components/page-header';
 
 interface Location {
   id: string;
@@ -61,16 +62,16 @@ export default function LocationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="hidden md:block text-2xl font-semibold text-foreground">Locations</h1>
-          <p className="mt-1 text-sm text-muted">Manage your store locations, warehouses, and display areas.</p>
-        </div>
-        <button onClick={() => setShowCreate(!showCreate)}
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors">
-          {showCreate ? 'Cancel' : 'Add Location'}
-        </button>
-      </div>
+      <PageHeader
+        title="Locations"
+        action={
+          <button onClick={() => setShowCreate(!showCreate)}
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors">
+            {showCreate ? 'Cancel' : 'Add Location'}
+          </button>
+        }
+      />
+      <p className="-mt-4 text-sm text-muted">Manage your store locations, warehouses, and display areas.</p>
 
       {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>}
 
