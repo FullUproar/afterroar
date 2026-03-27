@@ -1,13 +1,13 @@
 {
-  "name": "Afterroar Store Ops",
-  "short_name": "Store Ops",
-  "description": "The operating system for friendly local game stores",
-  "start_url": "/dashboard",
+  "name": "Afterroar Register",
+  "short_name": "Register",
+  "description": "Point of sale register for game stores",
+  "start_url": "/dashboard/register",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "any",
   "background_color": "#0a0a0a",
-  "theme_color": "#FF8200",
+  "theme_color": "#16a34a",
   "icons": [
     {
       "src": "/logo-ring-favicon.png",
