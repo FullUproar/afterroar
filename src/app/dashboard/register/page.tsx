@@ -13,6 +13,8 @@ import {
 } from "@/lib/offline-db";
 import { useStoreName, useStoreSettings } from "@/lib/store-settings";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { useScanner } from "@/hooks/use-scanner";
+import type { ScannerError } from "@/lib/scanner-manager";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -45,8 +47,16 @@ export default function RegisterPage() {
   // Quick add favorites
   const [favorites, setFavorites] = useState<InventoryItem[]>([]);
 
-  // Barcode scanner
+  // Barcode scanner (camera)
   const [showScanner, setShowScanner] = useState(false);
+
+  // USB scanner status
+  const [scannerFlash, setScannerFlash] = useState<"none" | "success" | "error">("none");
+  const [scannerErrorText, setScannerErrorText] = useState<string | null>(null);
+  const [lastScannedItemId, setLastScannedItemId] = useState<string | null>(null);
+  const scannerErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scannerFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scanItemFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Customer search
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
@@ -76,6 +86,163 @@ export default function RegisterPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const customerDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tenderedRef = useRef<HTMLInputElement>(null);
+
+  // ---- Beep sound helper ----
+  const playBeep = useCallback((freq = 1200, duration = 0.08, vol = 0.08) => {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.value = vol;
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch {}
+  }, []);
+
+  // ---- USB barcode scanner integration ----
+  const scannerEnabled = !showPaySheet && !showCustomerSearch && !showScanner;
+
+  const {
+    hiddenInputRef: scannerInputRef,
+    isListening: scannerListening,
+    lastScan,
+    lastError: scannerLastError,
+    pause: pauseScanner,
+    resume: resumeScanner,
+    status: scannerStatus,
+  } = useScanner({
+    onScan: useCallback(async (barcode: string) => {
+      // Play success beep
+      playBeep(1200, 0.08, 0.08);
+
+      // Clear any previous error
+      setScannerErrorText(null);
+      if (scannerErrorTimerRef.current) clearTimeout(scannerErrorTimerRef.current);
+
+      // Flash the scanner indicator green
+      setScannerFlash("success");
+      if (scannerFlashTimerRef.current) clearTimeout(scannerFlashTimerRef.current);
+      scannerFlashTimerRef.current = setTimeout(() => setScannerFlash("none"), 600);
+
+      // Search for the barcode in inventory
+      let found: InventoryItem | null = null;
+
+      // Try local/IndexedDB first
+      try {
+        const localResults = await searchInventoryLocal(barcode);
+        const match = localResults.find(
+          (r) => r.barcode === barcode && r.quantity > 0
+        );
+        if (match) {
+          found = {
+            ...match,
+            low_stock_threshold: 5,
+            image_url: null,
+            external_id: null,
+            catalog_product_id: null,
+            shared_to_catalog: false,
+            created_at: "",
+            updated_at: "",
+          } as InventoryItem;
+        }
+      } catch {}
+
+      // Try network if not found locally
+      if (!found) {
+        try {
+          const res = await fetch(
+            `/api/inventory/search?q=${encodeURIComponent(barcode)}`
+          );
+          const data: InventoryItem[] = await res.json();
+          if (Array.isArray(data)) {
+            found =
+              data.find((d) => d.barcode === barcode && d.quantity > 0) ?? null;
+          }
+        } catch {}
+      }
+
+      if (found) {
+        // Add to cart and flash the item
+        addToCart(found);
+        setLastScannedItemId(found.id);
+        if (scanItemFlashTimerRef.current) clearTimeout(scanItemFlashTimerRef.current);
+        scanItemFlashTimerRef.current = setTimeout(
+          () => setLastScannedItemId(null),
+          300
+        );
+      } else {
+        // No match — show error, populate search bar
+        playBeep(400, 0.15, 0.06); // low tone for error
+        setScannerFlash("error");
+        if (scannerFlashTimerRef.current) clearTimeout(scannerFlashTimerRef.current);
+        scannerFlashTimerRef.current = setTimeout(() => setScannerFlash("none"), 1000);
+
+        const errorMsg = `No match for barcode: ${barcode}`;
+        setScannerErrorText(errorMsg);
+        if (scannerErrorTimerRef.current) clearTimeout(scannerErrorTimerRef.current);
+        scannerErrorTimerRef.current = setTimeout(
+          () => setScannerErrorText(null),
+          5000
+        );
+
+        // Transfer barcode to visible search bar for manual handling
+        setSearchQuery(barcode);
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [playBeep]),
+    onHumanTyping: useCallback((text: string) => {
+      // Transfer to visible search bar
+      setSearchQuery((prev) => prev + text);
+      searchRef.current?.focus();
+    }, []),
+    onError: useCallback((error: ScannerError) => {
+      // Flash red
+      setScannerFlash("error");
+      if (scannerFlashTimerRef.current) clearTimeout(scannerFlashTimerRef.current);
+      scannerFlashTimerRef.current = setTimeout(() => setScannerFlash("none"), 1000);
+
+      const errorMsg =
+        error.type === "partial_scan"
+          ? `Partial scan: ${error.rawInput}`
+          : error.type === "garbled"
+            ? `Garbled input: ${error.rawInput}`
+            : `Scanner error: ${error.message}`;
+
+      setScannerErrorText(errorMsg);
+      if (scannerErrorTimerRef.current) clearTimeout(scannerErrorTimerRef.current);
+      scannerErrorTimerRef.current = setTimeout(
+        () => setScannerErrorText(null),
+        5000
+      );
+
+      // Transfer raw input to search bar for manual recovery
+      if (error.rawInput && error.type !== "garbled") {
+        setSearchQuery(error.rawInput);
+      }
+    }, []),
+    enabled: scannerEnabled,
+  });
+
+  // Pause/resume scanner when overlays open/close
+  useEffect(() => {
+    if (showPaySheet || showCustomerSearch || showScanner) {
+      pauseScanner();
+    } else {
+      resumeScanner();
+    }
+  }, [showPaySheet, showCustomerSearch, showScanner, pauseScanner, resumeScanner]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (scannerErrorTimerRef.current) clearTimeout(scannerErrorTimerRef.current);
+      if (scannerFlashTimerRef.current) clearTimeout(scannerFlashTimerRef.current);
+      if (scanItemFlashTimerRef.current) clearTimeout(scanItemFlashTimerRef.current);
+    };
+  }, []);
 
   // ---- Derived values (synchronous, never fetched) ----
   const subtotal = cart.reduce((s, i) => s + i.price_cents * i.quantity, 0);
@@ -330,22 +497,11 @@ export default function RegisterPage() {
     setEditQtyValue("");
   }
 
-  // ---- Barcode scan handler ----
+  // ---- Barcode scan handler (camera scanner) ----
   function handleBarcodeScan(code: string) {
     setShowScanner(false);
     setSearchQuery(code);
-    // Play a subtle beep
-    try {
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 1200;
-      gain.gain.value = 0.08;
-      osc.start();
-      osc.stop(ctx.currentTime + 0.08);
-    } catch {}
+    playBeep();
   }
 
   // ---- Complete sale ----
@@ -443,6 +599,20 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-72px)] overflow-hidden relative">
+      {/* ====== HIDDEN SCANNER INPUT ====== */}
+      <input
+        ref={scannerInputRef}
+        className="fixed opacity-0 pointer-events-none"
+        style={{ position: "fixed", top: -9999, left: -9999, width: 0, height: 0 }}
+        tabIndex={-1}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        aria-hidden="true"
+        data-scanner-input="true"
+      />
+
       {/* ====== SUCCESS FLASH ====== */}
       {showSuccess && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-green-600/90 pointer-events-none">
@@ -456,13 +626,39 @@ export default function RegisterPage() {
       {/* ====== TOP BAR: Search + Camera + Customer ====== */}
       <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-card-border bg-card">
         <div className="flex-1 relative">
+          {/* Scanner status dot */}
+          <div
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center"
+            title={
+              scannerStatus === "listening"
+                ? `Scanner ready${lastScan ? ` — Last: ${lastScan.code}` : ""}`
+                : scannerStatus === "paused"
+                  ? "Scanner paused"
+                  : "Processing scan..."
+            }
+          >
+            <span
+              className={`inline-block w-2 h-2 rounded-full transition-colors duration-150 ${
+                scannerFlash === "success"
+                  ? "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]"
+                  : scannerFlash === "error"
+                    ? "bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.6)]"
+                    : scannerStatus === "listening"
+                      ? "bg-green-500 animate-pulse"
+                      : scannerStatus === "paused"
+                        ? "bg-gray-500"
+                        : "bg-amber-400 animate-pulse"
+              }`}
+            />
+          </div>
+
           <input
             ref={searchRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search products or scan barcode..."
-            className="w-full rounded-xl border border-input-border bg-input-bg px-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+            className="w-full rounded-xl border border-input-border bg-input-bg pl-8 pr-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
             style={{ height: 52, fontSize: 18 }}
             autoComplete="off"
           />
@@ -472,6 +668,7 @@ export default function RegisterPage() {
                 setSearchQuery("");
                 setSearchResults([]);
                 setShowResults(false);
+                setScannerErrorText(null);
                 searchRef.current?.focus();
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground text-xl leading-none"
@@ -479,6 +676,13 @@ export default function RegisterPage() {
             >
               &times;
             </button>
+          )}
+
+          {/* Scanner error text below search bar */}
+          {scannerErrorText && (
+            <div className="absolute left-0 right-0 top-full mt-1 z-20 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+              {scannerErrorText}
+            </div>
           )}
         </div>
 
@@ -630,7 +834,11 @@ export default function RegisterPage() {
                 {cart.map((item) => (
                   <div
                     key={item.inventory_item_id}
-                    className="flex items-center gap-2 px-3 py-2"
+                    className={`flex items-center gap-2 px-3 py-2 transition-colors duration-200 ${
+                      lastScannedItemId === item.inventory_item_id
+                        ? "bg-green-500/15"
+                        : ""
+                    }`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-foreground truncate">
