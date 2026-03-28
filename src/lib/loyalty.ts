@@ -6,7 +6,7 @@
 /* ------------------------------------------------------------------ */
 
 import { prisma } from "./prisma";
-import { getStoreSettings } from "./store-settings";
+import { getStoreSettings } from "./store-settings-shared";
 
 interface EarnResult {
   points_earned: number;
@@ -39,7 +39,7 @@ export function calculateTradeInPoints(
 ): number {
   const settings = getStoreSettings(storeSettings);
   if (!settings.loyalty_enabled) return 0;
-  return settings.loyalty_trade_in_bonus_points;
+  return (settings.loyalty_trade_in_bonus_points as number) ?? 0;
 }
 
 /**
@@ -50,7 +50,7 @@ export function calculateEventPoints(
 ): number {
   const settings = getStoreSettings(storeSettings);
   if (!settings.loyalty_enabled) return 0;
-  return settings.loyalty_event_checkin_points;
+  return (settings.loyalty_event_checkin_points as number) ?? 0;
 }
 
 /**
@@ -62,7 +62,7 @@ export function calculateRedemptionDiscount(
 ): number {
   const settings = getStoreSettings(storeSettings);
   if (!settings.loyalty_enabled) return 0;
-  return Math.floor(points / settings.loyalty_redeem_points_per_dollar) * 100;
+  return Math.floor(points / ((settings.loyalty_redeem_points_per_dollar as number) || 100)) * 100;
 }
 
 /**
@@ -74,7 +74,7 @@ export function canRedeem(
 ): boolean {
   const settings = getStoreSettings(storeSettings);
   if (!settings.loyalty_enabled) return false;
-  return currentBalance >= settings.loyalty_min_redeem_points;
+  return currentBalance >= ((settings.loyalty_min_redeem_points as number) || 100);
 }
 
 /**

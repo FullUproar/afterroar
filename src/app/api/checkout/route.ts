@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { processPayment, PaymentMethod } from "@/lib/payment";
 import { formatCents } from "@/lib/types";
-import { getStoreSettings } from "@/lib/store-settings";
+import { getStoreSettings } from "@/lib/store-settings-shared";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
 import { calculatePurchasePoints, earnPoints, redeemPoints, calculateRedemptionDiscount } from "@/lib/loyalty";
 import { earnPointsFromPurchase } from "@/lib/hq-bridge";

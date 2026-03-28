@@ -1529,7 +1529,7 @@ export default function RegisterPage() {
                         setTenderedInput((amountDue / 100).toFixed(2));
                         (document.activeElement as HTMLElement)?.blur();
                       }}
-                      className="flex-1 min-w-[60px] rounded-lg border border-accent bg-accent/20 px-2 py-2 text-sm font-medium text-accent hover:bg-accent/30 transition-colors"
+                      className="flex-1 min-w-[60px] rounded-lg border border-card-border bg-card-hover px-2 py-2 text-sm font-medium text-foreground hover:bg-accent-light transition-colors"
                       style={{ minHeight: 40 }}
                     >
                       Exact

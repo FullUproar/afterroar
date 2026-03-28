@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
-import { SETTINGS_DEFAULTS, type StoreSettings } from "@/lib/store-settings";
+import { SETTINGS_DEFAULTS, type StoreSettings } from "@/lib/store-settings-shared";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/settings — current store settings merged with defaults     */
@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest) {
 
     await prisma.posStore.update({
       where: { id: storeId },
-      data: { settings: merged, updated_at: new Date() },
+      data: { settings: JSON.parse(JSON.stringify(merged)), updated_at: new Date() },
     });
 
     // Return full settings with defaults

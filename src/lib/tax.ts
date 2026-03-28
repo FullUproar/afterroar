@@ -4,7 +4,7 @@
 /*  settings. Supports tax-exempt customers.                           */
 /* ------------------------------------------------------------------ */
 
-import { getStoreSettings } from "./store-settings";
+import { getStoreSettings } from "./store-settings-shared";
 
 export interface TaxResult {
   taxCents: number;
