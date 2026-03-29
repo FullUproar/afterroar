@@ -178,8 +178,8 @@ button:active, a:active, [role="button"]:active {
 
 /* ---- Thermal receipt print styles (80mm / 3.15in) ---- */
 @media print {
-  /* Hide everything except the receipt */
-  body > *:not(.print-receipt) {
+  /* Hide everything except printable content */
+  body > *:not(.print-receipt):not(.print-barcodes) {
     display: none !important;
   }
   body {

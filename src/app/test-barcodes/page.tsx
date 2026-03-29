@@ -94,7 +94,7 @@ export default function TestBarcodesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-white text-black print-barcodes">
       {/* Header */}
       <div className="text-center py-8 border-b-2 border-black">
         <h1 className="text-2xl font-bold tracking-tight">
