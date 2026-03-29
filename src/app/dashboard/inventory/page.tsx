@@ -11,6 +11,8 @@ import {
 } from "@/lib/types";
 import { StatusBadge } from "@/components/mobile-card";
 import { PageHeader } from "@/components/page-header";
+import { BarcodeScanner } from "@/components/barcode-scanner";
+import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 
 const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: "tcg_single", label: "TCG Single" },
@@ -95,6 +97,11 @@ export default function InventoryPage() {
   >([]);
   const [adjustSubmitting, setAdjustSubmitting] = useState(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
+
+  // Scan to add
+  const [showScanner, setShowScanner] = useState(false);
+  const [learnBarcode, setLearnBarcode] = useState<string | null>(null);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
 
   // Initial load
   useEffect(() => {
@@ -325,6 +332,29 @@ export default function InventoryPage() {
     return sortDir === "asc" ? " \u25B2" : " \u25BC";
   }
 
+  async function handleInventoryScan(code: string) {
+    setShowScanner(false);
+
+    // Check if item already exists
+    try {
+      const res = await fetch(`/api/inventory/search?q=${encodeURIComponent(code)}`);
+      if (res.ok) {
+        const data: InventoryItem[] = await res.json();
+        const match = data.find((d) => d.barcode === code);
+        if (match) {
+          // Highlight existing item
+          setSearchQuery(code);
+          setScanMessage(`Found: ${match.name} (qty: ${match.quantity})`);
+          setTimeout(() => setScanMessage(null), 4000);
+          return;
+        }
+      }
+    } catch {}
+
+    // Not found — open learn modal
+    setLearnBarcode(code);
+  }
+
   const sortedItems = [...items].sort((a, b) => {
     const dir = sortDir === "asc" ? 1 : -1;
     switch (sortField) {
@@ -354,6 +384,12 @@ export default function InventoryPage() {
               Print Labels
             </a>
             <button
+              onClick={() => setShowScanner(true)}
+              className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+            >
+              Scan to Add
+            </button>
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
             >
@@ -368,6 +404,12 @@ export default function InventoryPage() {
         onChange={setSearchQuery}
         placeholder="Search by name, barcode, or SKU..."
       />
+
+      {scanMessage && (
+        <div className="rounded-xl bg-emerald-500/20 border border-emerald-500/40 px-4 py-2 text-sm text-emerald-300">
+          {scanMessage}
+        </div>
+      )}
 
       {showAddForm && (
         <div className="rounded-xl border border-card-border bg-card p-6 space-y-4 shadow-sm dark:shadow-none">
@@ -976,6 +1018,35 @@ export default function InventoryPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Barcode Scanner overlay */}
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(code) => handleInventoryScan(code)}
+          onClose={() => setShowScanner(false)}
+          title="Scan to Add"
+        />
+      )}
+
+      {/* Learn Barcode Modal */}
+      {learnBarcode && (
+        <BarcodeLearnModal
+          barcode={learnBarcode}
+          onClose={() => setLearnBarcode(null)}
+          onItemCreated={(item) => {
+            setItems((prev) => [item, ...prev]);
+            setScanMessage(`Added: ${item.name}`);
+            setTimeout(() => setScanMessage(null), 4000);
+          }}
+          onBarcodeAssigned={(item) => {
+            setItems((prev) =>
+              prev.map((i) => (i.id === item.id ? item : i))
+            );
+            setScanMessage(`Barcode assigned to ${item.name}`);
+            setTimeout(() => setScanMessage(null), 4000);
+          }}
+        />
       )}
     </div>
   );

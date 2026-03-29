@@ -15,6 +15,7 @@ import {
 import { useStoreName, useStoreSettings } from "@/lib/store-settings";
 import { useStore } from "@/lib/store-context";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { useScanner } from "@/hooks/use-scanner";
 import type { ScannerError } from "@/lib/scanner-manager";
@@ -111,6 +112,7 @@ export default function RegisterPage() {
   // USB scanner status
   const [scannerFlash, setScannerFlash] = useState<"none" | "success" | "error">("none");
   const [scannerErrorText, setScannerErrorText] = useState<string | null>(null);
+  const [learnBarcode, setLearnBarcode] = useState<string | null>(null);
   const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
   const scannerErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scannerFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -263,17 +265,8 @@ export default function RegisterPage() {
         if (scannerFlashTimerRef.current) clearTimeout(scannerFlashTimerRef.current);
         scannerFlashTimerRef.current = setTimeout(() => setScannerFlash("none"), 1000);
 
-        const errorMsg = `No match for barcode: ${barcode}`;
-        setScannerErrorText(errorMsg);
-        if (scannerErrorTimerRef.current) clearTimeout(scannerErrorTimerRef.current);
-        scannerErrorTimerRef.current = setTimeout(
-          () => setScannerErrorText(null),
-          5000
-        );
-
-        // Open search panel with barcode
-        setSearchQuery(barcode);
-        setActivePanel("search");
+        // Open learn barcode modal instead of just showing error
+        setLearnBarcode(barcode);
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [playBeep]),
@@ -2098,6 +2091,23 @@ export default function RegisterPage() {
           onScan={(code) => handleBarcodeScan(code)}
           onClose={() => setActivePanel(null)}
           title="Scan Barcode"
+        />
+      )}
+
+      {/* ====== BARCODE LEARN MODAL ====== */}
+      {learnBarcode && (
+        <BarcodeLearnModal
+          barcode={learnBarcode}
+          onClose={() => setLearnBarcode(null)}
+          onItemCreated={(item, addToCartFlag) => {
+            if (addToCartFlag) {
+              addToCart(item);
+            }
+            showItemAdded(`${item.name} added to inventory`);
+          }}
+          onBarcodeAssigned={(item) => {
+            showItemAdded(`Barcode assigned to ${item.name}`);
+          }}
         />
       )}
     </div>
