@@ -164,12 +164,15 @@ export function Sidebar() {
   const ungroupedItems = visibleNav.filter((item) => !groupedHrefs.has(item.href));
 
   return (
-    <aside className="hidden md:flex h-screen w-56 flex-col border-r border-card-border bg-card">
-      <div className="border-b border-card-border px-4 py-4">
-        <h1 className="text-lg font-bold text-foreground">Afterroar</h1>
-        {store && (
-          <p className="truncate text-xs text-muted">{store.name}</p>
-        )}
+    <aside className="hidden md:flex h-screen w-14 lg:w-56 flex-col border-r border-card-border bg-card transition-all duration-200">
+      <div className="border-b border-card-border px-2 lg:px-4 py-4 flex items-center justify-center lg:justify-start">
+        <img src="/logo-ring-favicon.png" alt="Afterroar" className="h-7 w-7 lg:hidden" />
+        <div className="hidden lg:block">
+          <h1 className="text-lg font-bold text-foreground">Afterroar</h1>
+          {store && (
+            <p className="truncate text-xs text-muted">{store.name}</p>
+          )}
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
@@ -180,10 +183,11 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={() => toggleGroup(group.label)}
-                className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted hover:text-foreground transition-colors"
+                className="flex w-full items-center justify-between px-2 lg:px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted hover:text-foreground transition-colors"
               >
-                <span>{group.label}</span>
-                <span className="text-[10px]">{expanded ? "\u25BE" : "\u25B8"}</span>
+                <span className="hidden lg:inline">{group.label}</span>
+                <span className="lg:hidden text-center w-full text-[10px]">···</span>
+                <span className="text-[10px] hidden lg:inline">{expanded ? "\u25BE" : "\u25B8"}</span>
               </button>
               <div
                 className={cn(
@@ -197,15 +201,16 @@ export function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      title={item.label}
                       className={cn(
-                        "flex items-center gap-2 rounded-md pl-6 pr-3 py-2 text-sm transition-colors",
+                        "flex items-center gap-2 rounded-md px-2 lg:pl-6 lg:pr-3 py-2 text-sm transition-colors justify-center lg:justify-start",
                         active
-                          ? "bg-card-hover text-foreground font-medium border-l-2 border-accent"
-                          : "text-muted hover:bg-card-hover hover:text-foreground border-l-2 border-transparent"
+                          ? "bg-card-hover text-foreground font-medium lg:border-l-2 lg:border-accent"
+                          : "text-muted hover:bg-card-hover hover:text-foreground lg:border-l-2 lg:border-transparent"
                       )}
                     >
                       <span className="w-5 text-center">{item.icon}</span>
-                      {item.label}
+                      <span className="hidden lg:inline">{item.label}</span>
                     </Link>
                   );
                 })}
@@ -234,9 +239,9 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-card-border px-4 py-3">
+      <div className="border-t border-card-border px-2 lg:px-4 py-3">
         {staff && (
-          <p className="truncate text-xs text-muted">
+          <p className="truncate text-xs text-muted hidden lg:block">
             {staff.name} &middot;{" "}
             <span className={isTestMode ? "text-purple-400" : ""}>
               {effectiveRole}
@@ -248,7 +253,8 @@ export function Sidebar() {
         )}
         <button
           onClick={handleSignOut}
-          className="mt-2 text-xs text-muted hover:text-foreground transition-colors"
+          className="mt-2 text-xs text-muted hover:text-foreground transition-colors flex items-center justify-center lg:justify-start"
+          title="Sign out"
         >
           Sign out
         </button>
