@@ -14,7 +14,6 @@ import { useTheme } from "@/components/theme-provider";
 /* ------------------------------------------------------------------ */
 const ALL_NAV_ITEMS = [
   { href: "/dashboard/register", label: "Register", icon: "\u25C8" },
-  { href: "/dashboard/checkout", label: "Checkout (Full)", icon: "\u25C8" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "\u25A6" },
   { href: "/dashboard/customers", label: "Customers", icon: "\u265F" },
   { href: "/dashboard/events", label: "Events", icon: "\u2605" },
@@ -80,7 +79,6 @@ const MORE_GROUPS: NavGroup[] = [
     label: "Sales",
     items: [
       { href: "/dashboard/register", label: "Register", icon: "\u25C8", permission: "checkout" },
-      { href: "/dashboard/checkout", label: "Checkout (Full)", icon: "\u25C8", permission: "checkout" },
       { href: "/dashboard/drawer", label: "Drawer", icon: "\u25A3", permission: "checkout" },
       { href: "/dashboard/gift-cards", label: "Gift Cards", icon: "\u25C6", permission: "customers.edit" },
     ],
@@ -127,6 +125,8 @@ const MORE_GROUPS: NavGroup[] = [
       { href: "/dashboard/transfers", label: "Transfers", icon: "\u21C6", permission: "inventory.adjust" },
       { href: "/dashboard/promotions", label: "Promotions", icon: "\u2726", permission: "inventory.adjust" },
       { href: "/dashboard/import", label: "Import", icon: "\u2913", permission: "import" },
+      { href: "/dashboard/issues", label: "Issues", icon: "\u2691", permission: "reports" },
+      { href: "/dashboard/help", label: "Help", icon: "?", permission: "checkout" },
     ],
   },
 ];

@@ -330,9 +330,48 @@ export default function SinglesDashboard() {
           </svg>
           Loading singles...
         </div>
+      ) : items.length === 0 && !debouncedSearch && gameFilter === "All" ? (
+        <div className="space-y-6 py-8">
+          <div className="text-center space-y-2">
+            <div className="text-4xl">🃏</div>
+            <h2 className="text-lg font-semibold text-foreground">No TCG singles in inventory yet</h2>
+            <p className="text-sm text-muted max-w-md mx-auto">
+              TCG singles are cards from games like Magic: The Gathering, Pokemon, and Yu-Gi-Oh. Add them from the Scryfall catalog or scan barcodes.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto">
+            <Link
+              href="/dashboard/catalog"
+              className="flex flex-col items-center gap-2 rounded-xl border border-card-border bg-card p-5 hover:border-accent/50 hover:bg-card-hover transition-colors"
+            >
+              <span className="text-2xl">🔍</span>
+              <span className="text-sm font-medium text-foreground">Search Scryfall</span>
+              <span className="text-[11px] text-muted text-center">Browse the full MTG catalog</span>
+            </Link>
+            <Link
+              href="/dashboard/import"
+              className="flex flex-col items-center gap-2 rounded-xl border border-card-border bg-card p-5 hover:border-accent/50 hover:bg-card-hover transition-colors"
+            >
+              <span className="text-2xl">📦</span>
+              <span className="text-sm font-medium text-foreground">Bulk Import</span>
+              <span className="text-[11px] text-muted text-center">Upload a CSV or spreadsheet</span>
+            </Link>
+            <button
+              onClick={() => {
+                // Trigger barcode scanner — navigate to catalog with scan mode
+                window.location.href = "/dashboard/catalog?scan=1";
+              }}
+              className="flex flex-col items-center gap-2 rounded-xl border border-card-border bg-card p-5 hover:border-accent/50 hover:bg-card-hover transition-colors"
+            >
+              <span className="text-2xl">📷</span>
+              <span className="text-sm font-medium text-foreground">Scan a Card</span>
+              <span className="text-[11px] text-muted text-center">Use your camera or scanner</span>
+            </button>
+          </div>
+        </div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 space-y-3">
-          <p className="text-muted text-sm">No singles found</p>
+          <p className="text-muted text-sm">No singles found matching your search</p>
           <Link
             href="/dashboard/catalog"
             className="inline-block rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"

@@ -102,6 +102,9 @@ export function canAccess(role: Role, path: string): boolean {
     "/dashboard/import": "import",
     "/dashboard/certification": "certification",
     "/dashboard/orders": "checkout",
+    "/dashboard/help": "checkout",
+    "/dashboard/issues": "reports",
+    "/dashboard/onboarding": "store.settings",
   };
 
   // Find the matching route (longest prefix match)
@@ -123,7 +126,6 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/register", label: "Register", icon: "◈", permission: "checkout" },
-  { href: "/dashboard/checkout", label: "Checkout (Full)", icon: "◈", permission: "checkout" },
   { href: "/dashboard", label: "Dashboard", icon: "⌂", permission: "checkout" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "▦", permission: "inventory.view" },
   { href: "/dashboard/singles", label: "TCG Singles", icon: "\u{1F0CF}", permission: "inventory.view" },
@@ -148,6 +150,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/gift-cards", label: "Gift Cards", icon: "◆", permission: "customers.edit" },
   { href: "/dashboard/transfers", label: "Transfers", icon: "⇆", permission: "inventory.adjust" },
   { href: "/dashboard/locations", label: "Locations", icon: "⊡", permission: "store.settings" },
+  { href: "/dashboard/issues", label: "Issues", icon: "⚑", permission: "reports" },
   { href: "/dashboard/staff", label: "Staff", icon: "⊞", permission: "staff.manage" },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙", permission: "store.settings" },
+  { href: "/dashboard/help", label: "Help", icon: "?", permission: "checkout" },
 ];

@@ -1,5 +1,7 @@
 "use client";
 
+import { TrainingBadge } from "@/lib/training-mode";
+
 interface RegisterHeaderProps {
   storeName: string;
   staffName: string;
@@ -62,6 +64,7 @@ export function RegisterHeader({
             Test Mode
           </span>
         )}
+        <TrainingBadge />
       </div>
 
       <div className="flex items-center gap-3">

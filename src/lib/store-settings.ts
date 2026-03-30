@@ -121,7 +121,7 @@ export const SETTINGS_SECTIONS = [
     label: "Trade-Ins",
     description: "Default settings for the trade-in workflow",
     fields: [
-      { key: "trade_in_credit_bonus_percent", label: "Default Credit Bonus %", type: "number" as const, min: 0, max: 100 },
+      { key: "trade_in_credit_bonus_percent", label: "Default Credit Bonus %", type: "number" as const, min: 0, max: 100, tooltip: "The extra percentage added when customers choose store credit over cash. A 30% bonus means a $10 cash offer becomes $13 in credit." },
       { key: "trade_in_require_customer", label: "Require customer for trade-ins", type: "toggle" as const },
     ],
   },
@@ -160,8 +160,8 @@ export const SETTINGS_SECTIONS = [
     label: "Tax",
     description: "Sales tax configuration",
     fields: [
-      { key: "tax_rate_percent", label: "Tax Rate %", type: "number" as const, min: 0, max: 30, step: 0.01 },
-      { key: "tax_included_in_price", label: "Tax is included in listed prices", type: "toggle" as const },
+      { key: "tax_rate_percent", label: "Tax Rate %", type: "number" as const, min: 0, max: 30, step: 0.01, tooltip: "Your local sales tax rate. For example, enter 8.25 for 8.25% tax. This is applied automatically at checkout." },
+      { key: "tax_included_in_price", label: "Tax is included in listed prices", type: "toggle" as const, tooltip: "Enable this if the prices you enter already include tax (common in some countries). When off, tax is calculated on top of the listed price." },
     ],
   },
   {

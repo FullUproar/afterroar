@@ -6,6 +6,7 @@ import { Customer, formatCents, parseDollars } from '@/lib/types';
 import { useStoreSettings } from '@/lib/store-settings';
 import { BarcodeScanner } from '@/components/barcode-scanner';
 import { PageHeader } from '@/components/page-header';
+import { HelpTooltip } from '@/components/help-tooltip';
 
 /* ---------- types ---------- */
 
@@ -587,6 +588,7 @@ export default function NewTradeInPage() {
             <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2">
               <label className="flex items-center gap-2 text-sm text-foreground/70">
                 Credit Bonus %
+                <HelpTooltip text="The credit bonus is an extra percentage added on top of the cash offer when customers choose store credit. A 30% bonus means a $10 cash offer becomes $13 in store credit." />
                 <input
                   type="number"
                   min="0"

@@ -14,6 +14,7 @@ import {
 } from "@/lib/offline-db";
 import { useStoreName, useStoreSettings } from "@/lib/store-settings";
 import { useStore } from "@/lib/store-context";
+import { useTrainingMode } from "@/lib/training-mode";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 import { NumericKeypad } from "@/components/numeric-keypad";
@@ -73,6 +74,23 @@ interface LastReceipt {
   paymentMethod: PaymentMethod;
   customerName: string | null;
   timestamp: string;
+  receiptNumber: string;
+}
+
+/** Generate a receipt number: R-YYYYMMDD-NNN (sequential per day) */
+function generateReceiptNumber(): string {
+  const now = new Date();
+  const dateStr = now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    String(now.getDate()).padStart(2, "0");
+  const storageKey = `receipt-counter-${dateStr}`;
+  let counter = 1;
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) counter = parseInt(stored, 10) + 1;
+    localStorage.setItem(storageKey, String(counter));
+  } catch {}
+  return `R-${dateStr}-${String(counter).padStart(3, "0")}`;
 }
 
 type ActivePanel = "search" | "scan" | "customer" | "quick" | "manual" | "discount" | "more" | "price_check" | "store_credit" | "returns" | "loyalty" | "gift_card" | "no_sale" | "flag_issue" | "void_last" | "order_lookup" | null;
@@ -110,6 +128,7 @@ export default function RegisterPage() {
   const storeName = useStoreName();
   const storeSettings = useStoreSettings();
   const { staff, effectiveRole } = useStore();
+  const { isTraining } = useTrainingMode();
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -613,7 +632,7 @@ export default function RegisterPage() {
     if (method === "cash" && tendered < amountDue && amountDue > 0) return;
     setProcessing(true);
     const clientTxId = `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const payload = { items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents })), customer_id: customer?.id ?? null, payment_method: method, amount_tendered_cents: method === "cash" ? tendered : amountDue, credit_applied_cents: creditToApply, event_id: null, client_tx_id: clientTxId, tax_cents: taxCents, discount_cents: discountCents };
+    const payload = { items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents })), customer_id: customer?.id ?? null, payment_method: method, amount_tendered_cents: method === "cash" ? tendered : amountDue, credit_applied_cents: creditToApply, event_id: null, client_tx_id: clientTxId, tax_cents: taxCents, discount_cents: discountCents, ...(isTraining ? { training: true } : {}) };
     try {
       const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) { const data = await res.json(); showError(data.error || "Checkout failed"); setProcessing(false); return; }
@@ -631,7 +650,8 @@ export default function RegisterPage() {
   function saleComplete(method: PaymentMethod) {
     const cashChange = method === "cash" ? Math.max(0, tendered - total) : 0;
     const receiptCustomer = customer;
-    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString() });
+    const receiptNumber = generateReceiptNumber();
+    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber });
     (document.activeElement as HTMLElement)?.blur();
     setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null);
     clearPersistedCart(); cartIdRef.current = createEmptyCart().id;
@@ -728,6 +748,7 @@ export default function RegisterPage() {
             <div className="text-7xl text-green-400">{"\u2713"}</div>
             <div className="text-2xl font-bold text-foreground">Sale Complete</div>
             {lastReceipt && <div className="text-4xl font-mono font-bold text-foreground tabular-nums">{formatCents(lastReceipt.totalCents)}</div>}
+            {lastReceipt && <div className="text-muted text-sm font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
             {customer && (
               <div className="flex items-center justify-center gap-3 pt-4">
                 {customer.email && (
@@ -886,6 +907,7 @@ export default function RegisterPage() {
           <div className="text-center space-y-4">
             <div className="text-muted text-lg">Change Due</div>
             <div className="text-7xl font-mono font-bold text-green-400 tabular-nums">${(showChangeDue / 100).toFixed(2)}</div>
+            {lastReceipt && <div className="text-muted text-sm font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
             <div className="text-muted text-sm">Give change and tap to continue</div>
             {customer && (
               <div className="flex items-center justify-center gap-3 pt-4">
@@ -908,7 +930,7 @@ export default function RegisterPage() {
                 <span className="text-base font-bold text-foreground">Last Receipt</span>
                 <button onClick={() => setShowLastReceipt(false)} className="text-muted hover:text-foreground" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
               </div>
-              <div className="text-xs text-muted">{new Date(lastReceipt.timestamp).toLocaleString()}{lastReceipt.customerName && ` \u2014 ${lastReceipt.customerName}`}</div>
+              <div className="text-xs text-muted">{lastReceipt.receiptNumber} &middot; {new Date(lastReceipt.timestamp).toLocaleString()}{lastReceipt.customerName && ` \u2014 ${lastReceipt.customerName}`}</div>
               <div className="border-t border-card-border pt-2 space-y-1">
                 {lastReceipt.items.map((item, i) => (
                   <div key={i} className="flex justify-between text-sm">
@@ -936,6 +958,7 @@ export default function RegisterPage() {
           <div className="receipt-store-name">{storeName}</div>
           {storeSettings.receipt_header && <div className="receipt-header">{storeSettings.receipt_header}</div>}
           <div className="receipt-date">{new Date(lastReceipt.timestamp).toLocaleDateString()} {new Date(lastReceipt.timestamp).toLocaleTimeString()}</div>
+          <div className="receipt-date">Receipt #{lastReceipt.receiptNumber}</div>
           {lastReceipt.customerName && <div className="receipt-customer">Customer: {lastReceipt.customerName}</div>}
           <div className="receipt-divider">{"--------------------------------"}</div>
           {lastReceipt.items.map((item, i) => (<div key={i} className="receipt-line"><span className="receipt-item-name">{item.name}</span><span className="receipt-item-detail">{item.quantity > 1 ? `  x${item.quantity}` : ""}{"  "}{formatCents(item.price_cents * item.quantity)}</span></div>))}

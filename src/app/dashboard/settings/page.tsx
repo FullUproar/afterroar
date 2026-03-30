@@ -10,7 +10,9 @@ import {
   type StoreSettings,
 } from '@/lib/store-settings';
 import { useTheme } from '@/components/theme-provider';
+import { useTrainingMode } from '@/lib/training-mode';
 import { PageHeader } from '@/components/page-header';
+import { HelpTooltip } from '@/components/help-tooltip';
 
 interface VenueResult {
   id: string;
@@ -33,6 +35,7 @@ interface StripeConnectStatus {
 export default function SettingsPage() {
   const { can, store, isGodAdmin, isTestMode, effectiveRole, setTestRole } = useStore();
   const { theme, setTheme } = useTheme();
+  const { isTraining, setTraining } = useTrainingMode();
   const currentSettings = useStoreSettings();
   const [settings, setSettings] = useState<StoreSettings>(currentSettings);
   const [saving, setSaving] = useState<string | null>(null);
@@ -444,6 +447,33 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Training Mode (owner only) */}
+      {(effectiveRole === 'owner' || isGodAdmin) && (
+        <div className="max-w-2xl">
+          <div className={`rounded-xl border p-6 shadow-sm dark:shadow-none ${isTraining ? 'border-yellow-500/30 bg-yellow-950/10' : 'border-card-border bg-card'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Training Mode</h2>
+                <p className="mt-0.5 text-xs text-muted">
+                  New employees can practice without affecting real data. Transactions are tagged and excluded from reports.
+                </p>
+              </div>
+              <button
+                onClick={() => setTraining(!isTraining)}
+                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${isTraining ? 'bg-yellow-500' : 'bg-card-hover border border-card-border'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${isTraining ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+              </button>
+            </div>
+            {isTraining && (
+              <p className="mt-3 text-xs text-yellow-400">
+                Training mode is ON. All transactions will be marked as training data and excluded from reports.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* GOD MODE — Role Simulation (admin only) */}
       {isGodAdmin && (
         <div className="max-w-2xl">
@@ -507,10 +537,12 @@ export default function SettingsPage() {
                 const isSaving = saving === field.key;
                 const isSaved = saved === field.key;
 
+                const fieldTooltip = 'tooltip' in field ? (field as { tooltip?: string }).tooltip : undefined;
+
                 if (field.type === 'text') {
                   return (
                     <div key={field.key}>
-                      <label className="mb-1 block text-xs text-muted">{field.label}</label>
+                      <label className="mb-1 flex items-center gap-1.5 text-xs text-muted">{field.label}{fieldTooltip && <HelpTooltip text={fieldTooltip} />}</label>
                       <div className="relative">
                         <input
                           type="text"
@@ -530,7 +562,7 @@ export default function SettingsPage() {
                 if (field.type === 'number') {
                   return (
                     <div key={field.key}>
-                      <label className="mb-1 block text-xs text-muted">{field.label}</label>
+                      <label className="mb-1 flex items-center gap-1.5 text-xs text-muted">{field.label}{fieldTooltip && <HelpTooltip text={fieldTooltip} />}</label>
                       <div className="relative">
                         <input
                           type="number"

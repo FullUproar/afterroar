@@ -29,6 +29,7 @@ interface CheckoutBody {
   gift_card_amount_cents?: number;
   loyalty_points_redeem?: number;
   loyalty_discount_cents?: number;
+  training?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -240,6 +241,7 @@ export async function POST(request: NextRequest) {
             ...(giftCardApplied > 0 ? { gift_card_code, gift_card_amount_cents: giftCardApplied } : {}),
             ...(loyaltyApplied > 0 ? { loyalty_points_redeemed: loyalty_points_redeem, loyalty_discount_cents: loyaltyApplied } : {}),
             ...(client_tx_id ? { client_tx_id } : {}),
+            ...(body.training ? { training: true } : {}),
           })),
         },
       });

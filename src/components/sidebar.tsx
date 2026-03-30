@@ -20,7 +20,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: "POS",
     hrefs: [
       "/dashboard/register",
-      "/dashboard/checkout",
       "/dashboard/drawer",
       "/dashboard/orders",
     ],
@@ -64,6 +63,8 @@ const NAV_GROUPS: NavGroup[] = [
       "/dashboard/timeclock",
       "/dashboard/promotions",
       "/dashboard/preorders",
+      "/dashboard/issues",
+      "/dashboard/help",
     ],
   },
 ];

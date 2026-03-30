@@ -3,6 +3,7 @@
 import { SessionProvider } from "next-auth/react";
 import { StoreProvider } from "@/lib/store-context";
 import { ModeProvider } from "@/lib/mode-context";
+import { TrainingModeProvider, TrainingBanner } from "@/lib/training-mode";
 import { OfflineProvider } from "@/components/offline-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ShortcutsHelp } from "@/components/shortcuts-help";
@@ -18,9 +19,11 @@ export default function DashboardLayout({
     <SessionProvider>
       <StoreProvider>
         <ModeProvider>
+          <TrainingModeProvider>
           <ThemeProvider>
           <OfflineProvider>
           <ToastProvider>
+            <TrainingBanner />
             <DashboardLayoutInner>
               {children}
             </DashboardLayoutInner>
@@ -28,6 +31,7 @@ export default function DashboardLayout({
           </ToastProvider>
           </OfflineProvider>
           </ThemeProvider>
+          </TrainingModeProvider>
         </ModeProvider>
       </StoreProvider>
     </SessionProvider>

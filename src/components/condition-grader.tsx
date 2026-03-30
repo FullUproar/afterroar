@@ -1,6 +1,7 @@
 "use client";
 
 import { CONDITIONS, CONDITION_PERCENT, type Condition } from "@/lib/tcg-pricing";
+import { HelpTooltip } from "@/components/help-tooltip";
 
 interface ConditionGraderProps {
   value: Condition;
@@ -42,6 +43,7 @@ export function ConditionGrader({
   const isLarge = size === "large";
 
   return (
+    <div className="space-y-1.5">
     <div className="flex gap-1.5">
       {CONDITIONS.map((c) => {
         const isActive = value === c;
@@ -68,6 +70,12 @@ export function ConditionGrader({
           </button>
         );
       })}
+    </div>
+    {isLarge && (
+      <div className="flex justify-end">
+        <HelpTooltip text="NM (Near Mint): Looks unplayed. LP (Lightly Played): Minor edge wear. MP (Moderately Played): Noticeable wear. HP (Heavily Played): Significant wear or creases. DMG (Damaged): Major damage like bends or tears." />
+      </div>
+    )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 import Link from "next/link";
 import { DashboardModeGuard } from "@/components/dashboard-mode-guard";
+import { GettingStarted } from "@/components/getting-started";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -34,6 +35,19 @@ export default async function DashboardPage() {
   }
 
   const storeId = staff.store_id;
+
+  // Check if onboarding is needed for owners
+  if (staff.role === "owner") {
+    const store = await prisma.posStore.findUnique({
+      where: { id: storeId },
+      select: { settings: true },
+    });
+    const settings = (store?.settings ?? {}) as Record<string, unknown>;
+    if (!settings.onboarding_complete) {
+      redirect("/dashboard/onboarding");
+    }
+  }
+
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
   const [inventoryCount, customerCount, todayTradeIns, upcomingEvents, recentLedger] =
@@ -67,6 +81,9 @@ export default async function DashboardPage() {
     <DashboardModeGuard>
     <div className="space-y-6 md:space-y-8">
       <h1 className="hidden md:block text-xl md:text-2xl font-semibold text-foreground">Welcome back</h1>
+
+      {/* Getting Started Checklist */}
+      <GettingStarted />
 
       {/* Quick Actions — mobile-first, most common staff tasks */}
       <div className="grid grid-cols-3 gap-3 md:hidden">
