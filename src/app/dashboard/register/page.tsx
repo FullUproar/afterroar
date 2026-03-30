@@ -888,6 +888,10 @@ export default function RegisterPage() {
                 onClick={async () => {
                   // Simulate a successful terminal payment in test mode
                   if (terminalPollRef.current) { clearInterval(terminalPollRef.current); terminalPollRef.current = null; }
+                  // Cancel the reader's pending action so it stops waiting
+                  if (terminalPiId) {
+                    fetch(`/api/stripe/terminal/collect?payment_intent_id=${terminalPiId}`, { method: "DELETE" }).catch(() => {});
+                  }
                   setWaitingForTerminal(false);
                   const piId = terminalPiId;
                   setTerminalPiId(null);
