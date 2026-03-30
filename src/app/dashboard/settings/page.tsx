@@ -753,8 +753,8 @@ function TerminalReaderSection() {
                 {readerStatus.reader?.serial_number && (
                   <p>Serial: <span className="text-foreground">{readerStatus.reader.serial_number}</span></p>
                 )}
-                <p>ID: <span className="text-foreground font-mono text-[10px]">{readerStatus.reader?.id}</span></p>
               </div>
+              <ResetReaderButton readerId={readerStatus.reader?.id} />
             </div>
           ) : (
             <div className="space-y-3">
@@ -830,5 +830,38 @@ function TerminalReaderSection() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reset Reader Button                                                */
+/* ------------------------------------------------------------------ */
+function ResetReaderButton({ readerId }: { readerId?: string }) {
+  const [resetting, setResetting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function handleReset() {
+    if (!readerId || resetting) return;
+    setResetting(true);
+    try {
+      await fetch("/api/stripe/terminal/reset", { method: "POST" });
+      setDone(true);
+      setTimeout(() => setDone(false), 2000);
+    } catch { /* ignore */ }
+    setResetting(false);
+  }
+
+  return (
+    <button
+      onClick={handleReset}
+      disabled={resetting || !readerId}
+      className={`mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+        done
+          ? "bg-green-500/20 text-green-400"
+          : "bg-card-hover text-muted hover:text-foreground"
+      }`}
+    >
+      {resetting ? "Resetting..." : done ? "Reader cleared ✓" : "Reset Reader"}
+    </button>
   );
 }
