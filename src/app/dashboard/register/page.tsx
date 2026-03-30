@@ -873,13 +873,31 @@ export default function RegisterPage() {
             <div className="text-lg font-mono font-bold text-accent tabular-nums">{formatCents(amountDue)}</div>
             <div className="text-sm text-muted">Customer should tap, insert, or swipe on the reader</div>
           </div>
-          <button
-            onClick={cancelTerminalPayment}
-            className="mt-12 rounded-xl font-medium text-muted border border-card-border bg-card-hover px-8 active:scale-[0.98] transition-transform"
-            style={{ height: 48, touchAction: "manipulation" }}
-          >
-            Cancel
-          </button>
+          <div className="mt-12 flex gap-3">
+            {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test") && (
+              <button
+                onClick={async () => {
+                  // Simulate a successful terminal payment in test mode
+                  if (terminalPollRef.current) { clearInterval(terminalPollRef.current); terminalPollRef.current = null; }
+                  setWaitingForTerminal(false);
+                  const piId = terminalPiId;
+                  setTerminalPiId(null);
+                  await finalizeSale("card", piId || undefined);
+                }}
+                className="rounded-xl font-medium text-white bg-green-600 px-8 active:scale-[0.98] transition-transform"
+                style={{ height: 48, touchAction: "manipulation" }}
+              >
+                Simulate Success
+              </button>
+            )}
+            <button
+              onClick={cancelTerminalPayment}
+              className="rounded-xl font-medium text-muted border border-card-border bg-card-hover px-8 active:scale-[0.98] transition-transform"
+              style={{ height: 48, touchAction: "manipulation" }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
