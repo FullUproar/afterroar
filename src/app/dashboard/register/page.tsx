@@ -1923,8 +1923,9 @@ export default function RegisterPage() {
                 value={parkLabel}
                 onChange={(e) => setParkLabel(e.target.value)}
                 placeholder={`Cart #${getParkedCartCount() + 1}`}
-                autoFocus={!isTouchDevice}
+                autoFocus
                 onKeyDown={(e) => {
+                  e.stopPropagation();
                   if (e.key === "Enter") handleParkCart(parkLabel || undefined);
                 }}
                 className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
@@ -2143,6 +2144,7 @@ export default function RegisterPage() {
                 inputMode="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Search products or scan barcode..."
                 className="w-full rounded-xl border border-input-border bg-input-bg pl-4 pr-10 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 style={{ height: 48, fontSize: 16 }}
@@ -2230,7 +2232,7 @@ export default function RegisterPage() {
                   onChange={(e) => setCustomerQuery(e.target.value)}
                   onKeyDown={(e) => e.stopPropagation()}
                   placeholder="Search by name, email, or phone..."
-                  autoFocus={!isTouchDevice}
+                  autoFocus
                   className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   style={{ fontSize: 16, minHeight: 48 }}
                 />
@@ -2300,6 +2302,7 @@ export default function RegisterPage() {
               type="text"
               value={manualName}
               onChange={(e) => setManualName(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
               placeholder="Item name"
               autoFocus
               className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
@@ -2311,6 +2314,7 @@ export default function RegisterPage() {
                 inputMode="decimal"
                 value={manualPrice}
                 onChange={(e) => setManualPrice(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Price (e.g. 5.99)"
                 className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono"
                 style={{ fontSize: 16 }}
@@ -2320,6 +2324,7 @@ export default function RegisterPage() {
                 inputMode="numeric"
                 value={manualQty}
                 onChange={(e) => setManualQty(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Qty"
                 className="w-20 rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-center text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 style={{ fontSize: 16 }}
@@ -2398,6 +2403,7 @@ export default function RegisterPage() {
               inputMode="decimal"
               value={discountValue}
               onChange={(e) => setDiscountValue(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
               placeholder={discountType === "percent" ? "e.g. 10" : "e.g. 5.00"}
               autoFocus
               className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono text-center"
@@ -2408,6 +2414,7 @@ export default function RegisterPage() {
               type="text"
               value={discountReason}
               onChange={(e) => setDiscountReason(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
               placeholder="Reason (optional)"
               className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
               style={{ fontSize: 14 }}

@@ -238,6 +238,7 @@ export default function CatalogPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
+            e.stopPropagation();
             if (e.key === "Enter") handleSearch();
           }}
           placeholder="Search MTG cards on Scryfall..."
@@ -271,7 +272,11 @@ export default function CatalogPage() {
 
       {/* Loading */}
       {loading && (
-        <div className="text-center text-muted py-12">
+        <div className="flex items-center justify-center gap-2 text-muted py-12">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
           Searching Scryfall...
         </div>
       )}
@@ -467,6 +472,7 @@ export default function CatalogPage() {
                       quantity: Math.max(1, parseInt(e.target.value) || 1),
                     })
                   }
+                  onKeyDown={(e) => e.stopPropagation()}
                   className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                 />
               </div>
@@ -482,6 +488,7 @@ export default function CatalogPage() {
                   onChange={(e) =>
                     setAddModal({ ...addModal, cost: e.target.value })
                   }
+                  onKeyDown={(e) => e.stopPropagation()}
                   className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   placeholder="What you paid"
                 />
@@ -498,6 +505,7 @@ export default function CatalogPage() {
                   onChange={(e) =>
                     setAddModal({ ...addModal, price: e.target.value })
                   }
+                  onKeyDown={(e) => e.stopPropagation()}
                   className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                   placeholder="0.00"
                 />
@@ -531,6 +539,7 @@ export default function CatalogPage() {
                   type="checkbox"
                   checked={addModal.foil}
                   onChange={(e) => handleFoilToggle(e.target.checked)}
+                  onKeyDown={(e) => e.stopPropagation()}
                   disabled={
                     addModal.foil
                       ? !addModal.card.nonfoil
@@ -561,9 +570,15 @@ export default function CatalogPage() {
                 disabled={submitting}
                 className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
               >
-                {submitting
-                  ? "Adding..."
-                  : isInInventory(addModal.card)
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Adding...
+                  </span>
+                ) : isInInventory(addModal.card)
                     ? "Update Stock"
                     : "Add to Inventory"}
               </button>

@@ -295,6 +295,7 @@ export default function BulkPricingPage() {
                   Math.max(50, Math.min(300, parseInt(e.target.value, 10) || 100))
                 )
               }
+              onKeyDown={(e) => e.stopPropagation()}
               className="w-20 rounded-lg border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground text-center tabular-nums focus:border-accent focus:outline-none"
             />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted">
@@ -309,9 +310,15 @@ export default function BulkPricingPage() {
             disabled={fetchingMarket || items.length === 0}
             className="ml-auto rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50"
           >
-            {fetchingMarket
-              ? "Fetching..."
-              : "Refresh Market Prices"}
+            {fetchingMarket ? (
+              <span className="flex items-center gap-1.5">
+                <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Refreshing prices...
+              </span>
+            ) : "Refresh Market Prices"}
           </button>
         </div>
 
@@ -346,7 +353,11 @@ export default function BulkPricingPage() {
 
       {/* Preview */}
       {loading ? (
-        <div className="text-center py-12 text-muted text-sm">
+        <div className="flex items-center justify-center gap-2 py-12 text-muted text-sm">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
           Loading singles...
         </div>
       ) : items.length === 0 ? (
@@ -486,9 +497,15 @@ export default function BulkPricingPage() {
               disabled={applying || changedItems.length === 0}
               className="flex-1 md:flex-none rounded-xl bg-accent px-6 py-3 text-sm font-bold text-foreground hover:opacity-90 transition-colors disabled:opacity-50 min-h-12"
             >
-              {applying
-                ? "Applying..."
-                : `Apply ${changedItems.length} Price${changedItems.length !== 1 ? "s" : ""}`}
+              {applying ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Applying prices...
+                </span>
+              ) : `Apply ${changedItems.length} Price${changedItems.length !== 1 ? "s" : ""}`}
             </button>
             <button
               onClick={exportPreview}
@@ -573,7 +590,15 @@ export default function BulkPricingPage() {
                 disabled={applying}
                 className="flex-1 rounded-xl bg-accent py-3 text-sm font-bold text-foreground hover:opacity-90 transition-colors disabled:opacity-50"
               >
-                {applying ? "Applying..." : "Apply"}
+                {applying ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Applying...
+                  </span>
+                ) : "Apply"}
               </button>
             </div>
           </div>

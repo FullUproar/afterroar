@@ -296,6 +296,7 @@ export default function SinglesDashboard() {
         placeholder="Search singles..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
+        onKeyDown={(e) => e.stopPropagation()}
         className="w-full rounded-xl border border-input-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
       />
 
@@ -322,7 +323,11 @@ export default function SinglesDashboard() {
 
       {/* Items List */}
       {loading ? (
-        <div className="text-center py-12 text-muted text-sm">
+        <div className="flex items-center justify-center gap-2 py-12 text-muted text-sm">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
           Loading singles...
         </div>
       ) : items.length === 0 ? (
@@ -394,6 +399,7 @@ export default function SinglesDashboard() {
                           value={editPriceValue}
                           onChange={(e) => setEditPriceValue(e.target.value)}
                           onKeyDown={(e) => {
+                            e.stopPropagation();
                             if (e.key === "Enter") savePrice(item.id);
                             if (e.key === "Escape") setEditingPrice(null);
                           }}
@@ -406,7 +412,12 @@ export default function SinglesDashboard() {
                           disabled={saving}
                           className="text-green-400 hover:text-green-300"
                         >
-                          OK
+                          {saving ? (
+                            <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                          ) : "OK"}
                         </button>
                         <button
                           onClick={() => setEditingPrice(null)}
@@ -436,6 +447,7 @@ export default function SinglesDashboard() {
                           value={editQtyValue}
                           onChange={(e) => setEditQtyValue(e.target.value)}
                           onKeyDown={(e) => {
+                            e.stopPropagation();
                             if (e.key === "Enter") saveQty(item.id);
                             if (e.key === "Escape") setEditingQty(null);
                           }}
@@ -448,7 +460,12 @@ export default function SinglesDashboard() {
                           disabled={saving}
                           className="text-green-400 hover:text-green-300"
                         >
-                          OK
+                          {saving ? (
+                            <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                          ) : "OK"}
                         </button>
                         <button
                           onClick={() => setEditingQty(null)}

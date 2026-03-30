@@ -400,6 +400,7 @@ export function BarcodeLearnModal({
                 type="text"
                 value={assignQuery}
                 onChange={(e) => setAssignQuery(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Search inventory by name..."
                 className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 autoFocus
@@ -466,9 +467,10 @@ export function BarcodeLearnModal({
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
                       className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                       placeholder="Product name"
-                      autoFocus={state !== "found"}
+                      autoFocus
                     />
                   </div>
 
@@ -501,6 +503,7 @@ export function BarcodeLearnModal({
                         inputMode="decimal"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                         placeholder="0.00"
                       />
@@ -514,6 +517,7 @@ export function BarcodeLearnModal({
                         inputMode="decimal"
                         value={cost}
                         onChange={(e) => setCost(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                         placeholder="0.00"
                       />
@@ -531,6 +535,7 @@ export function BarcodeLearnModal({
                       min="1"
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
                       className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                       placeholder="1"
                     />
@@ -545,7 +550,15 @@ export function BarcodeLearnModal({
                   disabled={submitting || !name.trim()}
                   className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-foreground hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {submitting ? "Adding..." : "Add to Inventory & Cart"}
+                  {submitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Adding to inventory...
+                    </span>
+                  ) : "Add to Inventory & Cart"}
                 </button>
 
                 <button
