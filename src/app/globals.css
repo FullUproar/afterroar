@@ -170,6 +170,28 @@ button:active, a:active, [role="button"]:active {
   html {
     overscroll-behavior: none;
   }
+
+  /* ---- Kiosk-friendly text scaling ----
+     Nothing smaller than 14px on touch screens.
+     text-xs (12px) → 14px, text-sm (14px) → 16px.
+     :where() keeps specificity at 0 so page-level overrides still win. */
+  :where(.text-xs),
+  :where(.text-\[10px\]),
+  :where(.text-\[11px\]),
+  :where(.text-\[12px\]) {
+    font-size: 0.875rem;  /* 14px */
+    line-height: 1.4;
+  }
+
+  :where(.text-sm) {
+    font-size: 1rem;      /* 16px */
+    line-height: 1.5;
+  }
+
+  /* Badges / pills — floor at 14px */
+  :where(.rounded-full) {
+    font-size: max(0.875rem, inherit);
+  }
 }
 
 /* Tablet: taller bottom nav */
