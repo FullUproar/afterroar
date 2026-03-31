@@ -74,6 +74,25 @@ export function BarcodeLearnModal({
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Scroll focused input into view when keyboard opens (Android fix)
+  useEffect(() => {
+    function handleFocus(e: FocusEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT") {
+        // Delay to let the keyboard animation complete
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 300);
+      }
+    }
+    const modal = modalRef.current;
+    if (modal) {
+      modal.addEventListener("focusin", handleFocus);
+      return () => modal.removeEventListener("focusin", handleFocus);
+    }
+  }, []);
 
   // Form fields
   const [name, setName] = useState("");
@@ -297,7 +316,9 @@ export function BarcodeLearnModal({
 
       {/* Modal */}
       <div
+        ref={modalRef}
         className="relative w-full sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border border-card-border rounded-t-2xl sm:rounded-2xl shadow-xl"
+        style={{ scrollPaddingBottom: "50vh" }}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
       >
@@ -578,6 +599,8 @@ export function BarcodeLearnModal({
               </div>
             </div>
           )}
+          {/* Extra padding so keyboard doesn't cover bottom fields */}
+          <div className="h-[50vh] sm:h-0" />
         </div>
       </div>
 
