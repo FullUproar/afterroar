@@ -300,8 +300,6 @@ export function BarcodeLearnModal({
         className="relative w-full sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border border-card-border rounded-t-2xl sm:rounded-2xl shadow-xl"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-card border-b border-card-border rounded-t-2xl">
