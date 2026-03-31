@@ -103,7 +103,7 @@ export function PanelContent(props: PanelContentProps) {
       return (
         <div className="p-3 space-y-2">
           <div className="relative">
-            <input ref={searchRef} type="search" inputMode="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Search products or scan barcode..." className="w-full rounded-xl border border-input-border bg-input-bg pl-4 pr-10 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ height: 48, fontSize: 16 }} autoComplete="off" autoFocus={!isTouchDevice} />
+            <input ref={searchRef} type="search" inputMode="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Search products or scan barcode..." className="w-full rounded-xl border border-input-border bg-input-bg pl-4 pr-10 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ height: 48, fontSize: 18 }} autoComplete="off" autoFocus={!isTouchDevice} />
             {searchQuery && (
               <button onClick={() => { setSearchQuery(""); setSearchResults([]); setScannerErrorText(null); focusSearch(); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground text-xl leading-none" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
             )}
@@ -113,15 +113,15 @@ export function PanelContent(props: PanelContentProps) {
               {searchResults.slice(0, 20).map((item) => (
                 <button key={item.id} onClick={() => addToCart(item)} className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left bg-card hover:bg-card-hover active:bg-accent-light transition-colors border border-card-border" style={{ minHeight: 52 }}>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-foreground truncate">{item.name}</div>
-                    <div className="text-xs text-muted">{item.category} {"\u00B7"} qty {item.quantity}</div>
+                    <div className="text-lg font-medium text-foreground truncate">{item.name}</div>
+                    <div className="text-base text-muted">{item.category} {"\u00B7"} qty {item.quantity}</div>
                   </div>
-                  <div className="text-sm font-bold text-foreground ml-3 tabular-nums font-mono">{formatCents(item.price_cents)}</div>
+                  <div className="text-lg font-bold text-foreground ml-3 tabular-nums font-mono">{formatCents(item.price_cents)}</div>
                 </button>
               ))}
             </div>
           ) : searchQuery.trim() ? (
-            <div className="flex items-center justify-center h-24 text-muted text-sm">No products found</div>
+            <div className="flex items-center justify-center h-24 text-muted text-lg">No products found</div>
           ) : null}
         </div>
       );
@@ -133,26 +133,26 @@ export function PanelContent(props: PanelContentProps) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-foreground">{customer.name}</div>
-                  {customer.email && <div className="text-xs text-muted">{customer.email}</div>}
+                  <div className="text-lg font-medium text-foreground">{customer.name}</div>
+                  {customer.email && <div className="text-base text-muted">{customer.email}</div>}
                 </div>
                 {customer.credit_balance_cents > 0 && (
-                  <div className="text-sm font-medium text-accent tabular-nums font-mono">{formatCents(customer.credit_balance_cents)} credit</div>
+                  <div className="text-lg font-medium text-accent tabular-nums font-mono">{formatCents(customer.credit_balance_cents)} credit</div>
                 )}
               </div>
-              <button onClick={() => { setCustomer(null); setActivePanel(null); }} className="w-full rounded-xl border border-red-500/30 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: 44 }}>Detach Customer</button>
+              <button onClick={() => { setCustomer(null); setActivePanel(null); }} className="w-full rounded-xl border border-red-500/30 px-4 py-2.5 text-lg font-medium text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: 44 }}>Detach Customer</button>
             </div>
           ) : (
             <>
-              <input type="search" inputMode="search" value={customerQuery} onChange={(e) => setCustomerQuery(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Search by name, email, or phone..." autoFocus className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 16, minHeight: 48 }} />
+              <input type="search" inputMode="search" value={customerQuery} onChange={(e) => setCustomerQuery(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Search by name, email, or phone..." autoFocus className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 18, minHeight: 48 }} />
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {customerResults.map((c) => (
                   <button key={c.id} onClick={() => { setCustomer(c); setActivePanel(null); (document.activeElement as HTMLElement)?.blur(); }} className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left bg-card-hover hover:bg-accent-light active:bg-accent-light transition-colors" style={{ minHeight: 52 }}>
                     <div>
-                      <div className="text-sm font-medium text-foreground">{c.name}</div>
-                      {c.email && <div className="text-xs text-muted">{c.email}</div>}
+                      <div className="text-lg font-medium text-foreground">{c.name}</div>
+                      {c.email && <div className="text-base text-muted">{c.email}</div>}
                     </div>
-                    {c.credit_balance_cents > 0 && <div className="text-xs font-medium text-accent tabular-nums">{formatCents(c.credit_balance_cents)}</div>}
+                    {c.credit_balance_cents > 0 && <div className="text-base font-medium text-accent tabular-nums">{formatCents(c.credit_balance_cents)}</div>}
                   </button>
                 ))}
               </div>
@@ -168,13 +168,13 @@ export function PanelContent(props: PanelContentProps) {
             <div className="grid grid-cols-2 gap-2">
               {favorites.slice(0, 8).map((item) => (
                 <button key={item.id} onClick={() => addToCart(item)} className="flex flex-col items-center justify-center rounded-xl border border-card-border bg-card hover:bg-card-hover active:bg-accent-light px-3 py-4 transition-colors text-center" style={{ minHeight: 80 }}>
-                  <div className="text-sm font-medium text-foreground leading-tight truncate w-full">{item.name}</div>
-                  <div className="text-xs font-bold text-accent mt-1 tabular-nums font-mono">{formatCents(item.price_cents)}</div>
+                  <div className="text-base font-medium text-foreground leading-tight truncate w-full">{item.name}</div>
+                  <div className="text-lg font-bold text-accent mt-1 tabular-nums font-mono">{formatCents(item.price_cents)}</div>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-24 text-muted text-sm">No favorites configured</div>
+            <div className="flex items-center justify-center h-24 text-muted text-lg">No favorites configured</div>
           )}
         </div>
       );
@@ -182,32 +182,32 @@ export function PanelContent(props: PanelContentProps) {
     case "manual":
       return (
         <div className="p-3 space-y-3">
-          <div className="text-xs font-semibold text-muted uppercase tracking-wider">Manual Item</div>
-          <input type="text" value={manualName} onChange={(e) => setManualName(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Item name" autoFocus className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 16 }} />
+          <div className="text-sm font-semibold text-muted uppercase tracking-wider">Manual Item</div>
+          <input type="text" value={manualName} onChange={(e) => setManualName(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Item name" autoFocus className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 18 }} />
           <div className="flex gap-2">
-            <input type="text" inputMode="decimal" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Price (e.g. 5.99)" className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono" style={{ fontSize: 16 }} />
-            <input type="number" inputMode="numeric" value={manualQty} onChange={(e) => setManualQty(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Qty" className="w-20 rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-center text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 16 }} />
+            <input type="text" inputMode="decimal" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Price (e.g. 5.99)" className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono" style={{ fontSize: 18 }} />
+            <input type="number" inputMode="numeric" value={manualQty} onChange={(e) => setManualQty(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Qty" className="w-20 rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-center text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 18 }} />
           </div>
-          <button onClick={addManualItem} disabled={!manualName.trim() || !manualPrice} className="w-full rounded-xl font-medium text-white disabled:opacity-30 transition-colors" style={{ height: 48, backgroundColor: "#16a34a" }}>Add to Cart</button>
+          <button onClick={addManualItem} disabled={!manualName.trim() || !manualPrice} className="w-full rounded-xl text-lg font-medium text-white disabled:opacity-30 transition-colors" style={{ height: 48, backgroundColor: "#16a34a" }}>Add to Cart</button>
         </div>
       );
 
     case "discount":
       return (
         <div className="p-3 space-y-3">
-          <div className="text-xs font-semibold text-muted uppercase tracking-wider">Apply Discount</div>
+          <div className="text-sm font-semibold text-muted uppercase tracking-wider">Apply Discount</div>
           <div className="flex gap-1 bg-card-hover rounded-xl p-1">
-            <button onClick={() => setDiscountScope("item")} className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${discountScope === "item" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Last Item</button>
-            <button onClick={() => setDiscountScope("cart")} className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${discountScope === "cart" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Whole Cart</button>
+            <button onClick={() => setDiscountScope("item")} className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${discountScope === "item" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Last Item</button>
+            <button onClick={() => setDiscountScope("cart")} className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${discountScope === "cart" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Whole Cart</button>
           </div>
           <div className="flex gap-1 bg-card-hover rounded-xl p-1">
-            <button onClick={() => setDiscountType("percent")} className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${discountType === "percent" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>% Off</button>
-            <button onClick={() => setDiscountType("dollar")} className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${discountType === "dollar" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>$ Off</button>
+            <button onClick={() => setDiscountType("percent")} className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${discountType === "percent" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>% Off</button>
+            <button onClick={() => setDiscountType("dollar")} className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${discountType === "dollar" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>$ Off</button>
           </div>
           <input type="text" inputMode="decimal" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder={discountType === "percent" ? "e.g. 10" : "e.g. 5.00"} autoFocus className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono text-center" style={{ fontSize: 20 }} />
-          <input type="text" value={discountReason} onChange={(e) => setDiscountReason(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Reason (optional)" className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 14 }} />
-          {discountCents > 0 && <div className="text-xs text-amber-400">Current total discount: -{formatCents(discountCents)}</div>}
-          <button onClick={applyDiscount} disabled={!discountValue || !cartLength} className="w-full rounded-xl font-medium text-white disabled:opacity-30 transition-colors" style={{ height: 48, backgroundColor: "#d97706" }}>Apply Discount</button>
+          <input type="text" value={discountReason} onChange={(e) => setDiscountReason(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Reason (optional)" className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 18 }} />
+          {discountCents > 0 && <div className="text-base text-amber-400">Current total discount: -{formatCents(discountCents)}</div>}
+          <button onClick={applyDiscount} disabled={!discountValue || !cartLength} className="w-full rounded-xl text-lg font-medium text-white disabled:opacity-30 transition-colors" style={{ height: 48, backgroundColor: "#d97706" }}>Apply Discount</button>
         </div>
       );
 

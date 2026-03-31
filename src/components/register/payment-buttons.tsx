@@ -65,7 +65,7 @@ export function PaymentButtons({
               placeholder="Enter gift card code"
               autoFocus
               className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono uppercase"
-              style={{ height: 56, fontSize: 16 }}
+              style={{ height: 60, fontSize: 16 }}
             />
             <button
               onClick={onGiftCardPayment}
@@ -78,35 +78,35 @@ export function PaymentButtons({
             <button
               onClick={() => { onSetShowGiftCardPayment(false); onSetGiftCardPayCode(""); onSetGiftCardPayError(null); }}
               className="shrink-0 rounded-xl text-muted hover:text-foreground border border-card-border bg-card-hover active:scale-[0.97] transition-transform"
-              style={{ height: 56, width: 56 }}
+              style={{ height: 60, width: 60 }}
             >
               {"\u2715"}
             </button>
           </div>
-          {giftCardPayError && <div className="text-xs text-red-400 px-1">{giftCardPayError}</div>}
+          {giftCardPayError && <div className="text-sm text-red-400 px-1">{giftCardPayError}</div>}
         </div>
       ) : showPaySheet && !showCashInput ? (
         /* Inline payment method buttons */
         <div className="flex gap-2">
           <button
             onClick={() => onSetShowCashInput(true)}
-            className="flex-1 rounded-xl font-semibold text-foreground border border-card-border bg-card-hover active:scale-[0.97] transition-transform"
-            style={{ height: 56 }}
+            className="flex-1 rounded-xl text-lg font-semibold text-foreground border border-card-border bg-card-hover active:scale-[0.97] transition-transform"
+            style={{ height: 60 }}
           >
             Cash
           </button>
           <button
             onClick={() => onCompleteSale("card")}
             disabled={processing}
-            className="flex-1 rounded-xl font-semibold text-white active:scale-[0.97] transition-transform disabled:opacity-50"
-            style={{ height: 56, backgroundColor: "#2563eb" }}
+            className="flex-1 rounded-xl text-lg font-semibold text-white active:scale-[0.97] transition-transform disabled:opacity-50"
+            style={{ height: 60, backgroundColor: "#2563eb" }}
           >
             {processing ? "..." : "Card"}
           </button>
           <button
             onClick={() => onSetShowGiftCardPayment(true)}
-            className="flex-1 rounded-xl font-semibold text-foreground border border-amber-500/30 bg-amber-500/5 active:scale-[0.97] transition-transform"
-            style={{ height: 56 }}
+            className="flex-1 rounded-xl text-lg font-semibold text-foreground border border-amber-500/30 bg-amber-500/5 active:scale-[0.97] transition-transform"
+            style={{ height: 60 }}
           >
             Gift Card
           </button>
@@ -114,8 +114,8 @@ export function PaymentButtons({
             <button
               onClick={() => onCompleteSale("store_credit")}
               disabled={processing}
-              className="flex-1 rounded-xl font-semibold text-foreground border border-accent bg-accent/10 active:scale-[0.97] transition-transform disabled:opacity-50"
-              style={{ height: 56 }}
+              className="flex-1 rounded-xl text-lg font-semibold text-foreground border border-accent bg-accent/10 active:scale-[0.97] transition-transform disabled:opacity-50"
+              style={{ height: 60 }}
             >
               Credit
             </button>
@@ -123,8 +123,8 @@ export function PaymentButtons({
             <button
               onClick={() => onCompleteSale("external")}
               disabled={processing}
-              className="flex-1 rounded-xl font-semibold text-foreground border border-card-border bg-card-hover active:scale-[0.97] transition-transform disabled:opacity-50"
-              style={{ height: 56 }}
+              className="flex-1 rounded-xl text-lg font-semibold text-foreground border border-card-border bg-card-hover active:scale-[0.97] transition-transform disabled:opacity-50"
+              style={{ height: 60 }}
             >
               Other
             </button>
@@ -132,7 +132,7 @@ export function PaymentButtons({
           <button
             onClick={() => { onSetShowPaySheet(false); onSetShowCashInput(false); onSetShowCreditConfirm(false); onSetShowGiftCardPayment(false); }}
             className="shrink-0 rounded-xl text-muted hover:text-foreground border border-card-border bg-card-hover active:scale-[0.97] transition-transform"
-            style={{ height: 56, width: 56 }}
+            style={{ height: 60, width: 60 }}
           >
             {"\u2715"}
           </button>
@@ -146,10 +146,10 @@ export function PaymentButtons({
           disabled={!hasCart}
           className="w-full rounded-xl font-bold text-white transition-colors disabled:opacity-30 active:scale-[0.98]"
           style={{
-            height: 56,
-            fontSize: 18,
+            height: 60,
+            fontSize: 20,
             backgroundColor: hasCart ? "#16a34a" : undefined,
-            minHeight: 56,
+            minHeight: 60,
           }}
         >
           {hasCart ? `PAY ${formatCents(total)}` : "PAY"}

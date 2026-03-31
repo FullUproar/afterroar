@@ -366,7 +366,7 @@ export function BarcodeLearnModal({
                 {product.brand && (
                   <p className="text-sm text-muted">by {product.brand}</p>
                 )}
-                <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted">
+                <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted">
                   {bgg && (
                     <>
                       <span>
@@ -406,11 +406,11 @@ export function BarcodeLearnModal({
                 onChange={(e) => setAssignQuery(e.target.value)}
                 onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Search inventory by name..."
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 autoFocus
               />
               {assignSearching && (
-                <p className="text-xs text-muted">Searching...</p>
+                <p className="text-sm text-muted">Searching...</p>
               )}
               {assignResults.length > 0 && (
                 <div className="max-h-48 overflow-y-auto border border-card-border rounded-xl divide-y divide-card-border">
@@ -421,10 +421,10 @@ export function BarcodeLearnModal({
                       disabled={submitting}
                       className="w-full text-left px-4 py-3 hover:bg-card-hover transition-colors disabled:opacity-50"
                     >
-                      <div className="text-sm font-medium text-foreground truncate">
+                      <div className="text-lg font-medium text-foreground truncate">
                         {item.name}
                       </div>
-                      <div className="flex gap-2 text-xs text-muted mt-0.5">
+                      <div className="flex gap-2 text-sm text-muted mt-0.5">
                         <span>{formatCents(item.price_cents)}</span>
                         <span>Qty: {item.quantity}</span>
                         {item.barcode && (
@@ -438,7 +438,7 @@ export function BarcodeLearnModal({
                 </div>
               )}
               {assignQuery.trim() && !assignSearching && assignResults.length === 0 && (
-                <p className="text-xs text-muted text-center py-2">No items found</p>
+                <p className="text-sm text-muted text-center py-2">No items found</p>
               )}
               <button
                 onClick={() => setState(lookup?.found ? "found" : "not_found")}
@@ -464,7 +464,7 @@ export function BarcodeLearnModal({
                 <div className="space-y-3">
                   {/* Name */}
                   <div>
-                    <label className="block text-xs font-medium text-muted mb-1">
+                    <label className="block text-base font-medium text-muted mb-1">
                       Name *
                     </label>
                     <input
@@ -472,7 +472,7 @@ export function BarcodeLearnModal({
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       onKeyDown={(e) => e.stopPropagation()}
-                      className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                       placeholder="Product name"
                       autoFocus
                     />
@@ -480,7 +480,7 @@ export function BarcodeLearnModal({
 
                   {/* Category */}
                   <div>
-                    <label className="block text-xs font-medium text-muted mb-1">
+                    <label className="block text-base font-medium text-muted mb-1">
                       Category
                     </label>
                     <select
@@ -499,7 +499,7 @@ export function BarcodeLearnModal({
                   {/* Price + Cost row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-muted mb-1">
+                      <label className="block text-base font-medium text-muted mb-1">
                         Price ($)
                       </label>
                       <input
@@ -508,12 +508,12 @@ export function BarcodeLearnModal({
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                         onKeyDown={(e) => e.stopPropagation()}
-                        className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                        className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                         placeholder="0.00"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-muted mb-1">
+                      <label className="block text-base font-medium text-muted mb-1">
                         Cost ($)
                       </label>
                       <input
@@ -522,7 +522,7 @@ export function BarcodeLearnModal({
                         value={cost}
                         onChange={(e) => setCost(e.target.value)}
                         onKeyDown={(e) => e.stopPropagation()}
-                        className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                        className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                         placeholder="0.00"
                       />
                     </div>
@@ -530,7 +530,7 @@ export function BarcodeLearnModal({
 
                   {/* Quantity */}
                   <div>
-                    <label className="block text-xs font-medium text-muted mb-1">
+                    <label className="block text-base font-medium text-muted mb-1">
                       Quantity
                     </label>
                     <input
@@ -540,7 +540,7 @@ export function BarcodeLearnModal({
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
                       onKeyDown={(e) => e.stopPropagation()}
-                      className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2.5 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                       placeholder="1"
                     />
                   </div>
@@ -552,7 +552,7 @@ export function BarcodeLearnModal({
                 <button
                   onClick={() => handleCreate(true)}
                   disabled={submitting || !name.trim()}
-                  className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-foreground hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl bg-accent px-4 py-3 text-lg font-semibold text-foreground hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
                     <span className="flex items-center justify-center gap-2">
@@ -568,7 +568,7 @@ export function BarcodeLearnModal({
                 <button
                   onClick={() => handleCreate(false)}
                   disabled={submitting || !name.trim()}
-                  className="w-full rounded-xl border border-card-border px-4 py-3 text-sm font-medium text-foreground hover:bg-card-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl border border-card-border px-4 py-3 text-lg font-medium text-foreground hover:bg-card-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Add to Inventory Only
                 </button>

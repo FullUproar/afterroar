@@ -83,7 +83,7 @@ export function NumericKeypad({
       {/* Amount Due */}
       {totalCents != null && totalCents > 0 && (
         <div className="flex items-center justify-center px-4 py-1.5 border-b border-card-border bg-card-hover">
-          <span className="text-sm font-medium text-muted uppercase tracking-wider mr-2">Amount Due</span>
+          <span className="text-base font-medium text-muted uppercase tracking-wider mr-2">Amount Due</span>
           <span className="text-lg font-bold text-foreground tabular-nums font-mono">
             ${(totalCents / 100).toFixed(2)}
           </span>
@@ -92,7 +92,7 @@ export function NumericKeypad({
 
       {/* Display + Change */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-card-border">
-        <div className="text-3xl font-mono font-bold text-foreground tabular-nums">
+        <div className="text-4xl font-mono font-bold text-foreground tabular-nums">
           ${displayValue}
         </div>
         {showChange && (
@@ -139,7 +139,7 @@ export function NumericKeypad({
           <button
             type="button"
             onClick={() => { haptic(); onChange((totalCents / 100).toFixed(2)); }}
-            className="rounded-xl bg-card-hover text-accent font-semibold text-sm active:scale-95 transition-transform select-none"
+            className="rounded-xl bg-card-hover text-accent font-semibold text-base active:scale-95 transition-transform select-none"
             style={{ height: 56, ...btnStyle }}
           >
             Exact
@@ -148,7 +148,7 @@ export function NumericKeypad({
         <button
           type="button"
           onClick={() => { haptic(); onChange(""); }}
-          className="rounded-xl bg-card-hover text-muted font-semibold text-sm active:scale-95 transition-transform select-none"
+          className="rounded-xl bg-card-hover text-muted font-semibold text-base active:scale-95 transition-transform select-none"
           style={{ height: 56, ...btnStyle }}
         >
           Clear
@@ -181,7 +181,7 @@ export function NumericKeypad({
           onClick={() => { haptic(); onSubmit(); }}
           disabled={submitDisabled || processing}
           className="w-full rounded-xl font-bold text-white disabled:opacity-30 transition-colors active:scale-[0.98] select-none"
-          style={{ height: 56, fontSize: 16, backgroundColor: "#16a34a", ...btnStyle }}
+          style={{ height: 56, fontSize: 18, backgroundColor: "#16a34a", ...btnStyle }}
         >
           {processing ? "Processing..." : submitLabel}
         </button>

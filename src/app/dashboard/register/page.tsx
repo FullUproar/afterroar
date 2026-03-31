@@ -842,7 +842,7 @@ export default function RegisterPage() {
             <div className="text-7xl text-green-400">{"\u2713"}</div>
             <div className="text-2xl font-bold text-foreground">Sale Complete</div>
             {lastReceipt && <div className="text-4xl font-mono font-bold text-foreground tabular-nums">{formatCents(lastReceipt.totalCents)}</div>}
-            {lastReceipt && <div className="text-muted text-sm font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
+            {lastReceipt && <div className="text-muted text-base font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
             {/* QR Code for receipt */}
             {receiptQrUrl && (
               <div className="pt-4 space-y-2">
@@ -850,7 +850,7 @@ export default function RegisterPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={receiptQrUrl} alt="Receipt QR" width={200} height={200} style={{ imageRendering: "pixelated" }} />
                 </div>
-                <div className="text-muted text-sm">Scan for your receipt</div>
+                <div className="text-muted text-base">Scan for your receipt</div>
               </div>
             )}
           </div>
@@ -880,7 +880,7 @@ export default function RegisterPage() {
             <div className="text-6xl animate-pulse">💳</div>
             <div className="text-2xl font-bold text-foreground">Waiting for card...</div>
             <div className="text-lg font-mono font-bold text-accent tabular-nums">{formatCents(amountDue)}</div>
-            <div className="text-sm text-muted">Customer should tap, insert, or swipe on the reader</div>
+            <div className="text-base text-muted">Customer should tap, insert, or swipe on the reader</div>
           </div>
           <div className="mt-12 flex gap-3">
             {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test") && (
@@ -913,12 +913,12 @@ export default function RegisterPage() {
       )}
 
       {/* ====== TOAST ====== */}
-      {toastMessage && <div className="absolute top-16 left-1/2 -translate-x-1/2 z-60 bg-card border border-card-border rounded-xl px-4 py-2 shadow-lg text-sm text-foreground pointer-events-none animate-slide-down">{toastMessage}</div>}
+      {toastMessage && <div className="absolute top-16 left-1/2 -translate-x-1/2 z-60 bg-card border border-card-border rounded-xl px-4 py-2 shadow-lg text-base text-foreground pointer-events-none animate-slide-down">{toastMessage}</div>}
 
       {/* ====== ERROR BANNER ====== */}
       {errorBanner && (
         <div className="absolute top-0 left-0 right-0 z-[65] flex items-center gap-3 px-4 py-3 bg-red-500/15 border-b border-red-500/30 animate-slide-down">
-          <span className="flex-1 text-sm font-medium text-red-400">{errorBanner}</span>
+          <span className="flex-1 text-base font-medium text-red-400">{errorBanner}</span>
           <button onClick={() => { setErrorBanner(null); if (errorBannerTimerRef.current) clearTimeout(errorBannerTimerRef.current); }} className="shrink-0 text-red-400 hover:text-red-300 text-lg leading-none" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
         </div>
       )}
@@ -926,7 +926,7 @@ export default function RegisterPage() {
       {/* ====== ITEM ADDED CONFIRMATION ====== */}
       {itemAddedMessage && (
         <div className="absolute top-12 left-0 right-0 z-[55] flex items-center justify-center pointer-events-none">
-          <div className="px-4 py-1.5 text-sm font-medium text-green-400 animate-fade-out">{"\u2713"} {itemAddedMessage} added</div>
+          <div className="px-4 py-1.5 text-base font-medium text-green-400 animate-fade-out">{"\u2713"} {itemAddedMessage} added</div>
         </div>
       )}
 
@@ -957,7 +957,7 @@ export default function RegisterPage() {
       />
 
       {/* ====== SCANNER ERROR BAR ====== */}
-      {scannerErrorText && <div className="shrink-0 px-4 py-1.5 bg-red-500/10 border-b border-red-500/20 text-red-400 text-xs">{scannerErrorText}</div>}
+      {scannerErrorText && <div className="shrink-0 px-4 py-1.5 bg-red-500/10 border-b border-red-500/20 text-red-400 text-base">{scannerErrorText}</div>}
 
       {/* ====== MAIN CONTENT AREA ====== */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
@@ -987,9 +987,9 @@ export default function RegisterPage() {
       <div className="shrink-0 border-t border-card-border bg-card">
         {hasCart && (
           <div className="px-4 py-2 space-y-0.5">
-            <div className="flex justify-between text-xs text-muted"><span>Subtotal</span><span className="tabular-nums font-mono">{formatCents(subtotal)}</span></div>
-            {taxCents > 0 && <div className="flex justify-between text-xs text-muted"><span>Tax ({taxRate}%)</span><span className="tabular-nums font-mono">{formatCents(taxCents)}</span></div>}
-            {discountCents > 0 && <div className="flex justify-between text-xs text-amber-400"><span>Discount</span><span className="tabular-nums font-mono">-{formatCents(discountCents)}</span></div>}
+            <div className="flex justify-between text-base text-muted"><span>Subtotal</span><span className="tabular-nums font-mono text-lg">{formatCents(subtotal)}</span></div>
+            {taxCents > 0 && <div className="flex justify-between text-base text-muted"><span>Tax ({taxRate}%)</span><span className="tabular-nums font-mono text-lg">{formatCents(taxCents)}</span></div>}
+            {discountCents > 0 && <div className="flex justify-between text-base text-amber-400"><span>Discount</span><span className="tabular-nums font-mono text-lg">-{formatCents(discountCents)}</span></div>}
             <div className="flex justify-between text-lg font-bold text-foreground pt-1 border-t border-card-border/50"><span>TOTAL</span><span className="tabular-nums font-mono">{formatCents(total)}</span></div>
           </div>
         )}
@@ -1051,7 +1051,7 @@ export default function RegisterPage() {
           <div className="text-center space-y-4">
             <div className="text-muted text-lg">Change Due</div>
             <div className="text-7xl font-mono font-bold text-green-400 tabular-nums">${(showChangeDue / 100).toFixed(2)}</div>
-            {lastReceipt && <div className="text-muted text-sm font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
+            {lastReceipt && <div className="text-muted text-base font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
             {/* QR Code for receipt */}
             {receiptQrUrl && (
               <div className="pt-2 space-y-2">
@@ -1059,7 +1059,7 @@ export default function RegisterPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={receiptQrUrl} alt="Receipt QR" width={180} height={180} style={{ imageRendering: "pixelated" }} />
                 </div>
-                <div className="text-muted text-sm">Scan for your receipt</div>
+                <div className="text-muted text-base">Scan for your receipt</div>
               </div>
             )}
           </div>
@@ -1082,7 +1082,7 @@ export default function RegisterPage() {
                 <span className="text-base font-bold text-foreground">Last Receipt</span>
                 <button onClick={() => setShowLastReceipt(false)} className="text-muted hover:text-foreground" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
               </div>
-              <div className="text-xs text-muted">{lastReceipt.receiptNumber} &middot; {new Date(lastReceipt.timestamp).toLocaleString()}{lastReceipt.customerName && ` \u2014 ${lastReceipt.customerName}`}</div>
+              <div className="text-sm text-muted">{lastReceipt.receiptNumber} &middot; {new Date(lastReceipt.timestamp).toLocaleString()}{lastReceipt.customerName && ` \u2014 ${lastReceipt.customerName}`}</div>
               <div className="border-t border-card-border pt-2 space-y-1">
                 {lastReceipt.items.map((item, i) => (
                   <div key={i} className="flex justify-between text-sm">
@@ -1091,7 +1091,7 @@ export default function RegisterPage() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-card-border pt-2 space-y-0.5 text-xs">
+              <div className="border-t border-card-border pt-2 space-y-0.5 text-sm">
                 <div className="flex justify-between text-muted"><span>Subtotal</span><span className="tabular-nums font-mono">{formatCents(lastReceipt.subtotalCents)}</span></div>
                 {lastReceipt.discountCents > 0 && <div className="flex justify-between text-amber-400"><span>Discount</span><span className="tabular-nums font-mono">-{formatCents(lastReceipt.discountCents)}</span></div>}
                 {lastReceipt.taxCents > 0 && <div className="flex justify-between text-muted"><span>Tax</span><span className="tabular-nums font-mono">{formatCents(lastReceipt.taxCents)}</span></div>}
@@ -1221,7 +1221,7 @@ export default function RegisterPage() {
                         <button onClick={() => handleRecallCart(pc)} className="flex-1 flex items-center justify-between rounded-xl px-4 py-3 text-left bg-card-hover hover:bg-accent-light active:bg-accent-light transition-colors border border-card-border" style={{ minHeight: 52 }}>
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium text-foreground truncate">{pc.label}</div>
-                            <div className="text-xs text-muted">{pc.itemCount} item{pc.itemCount !== 1 ? "s" : ""}{" \u00B7 "}{formatCents(pc.totalCents)}{" \u00B7 "}{ago}{pc.customer && ` \u00B7 ${pc.customer.name}`}</div>
+                            <div className="text-sm text-muted">{pc.itemCount} item{pc.itemCount !== 1 ? "s" : ""}{" \u00B7 "}{formatCents(pc.totalCents)}{" \u00B7 "}{ago}{pc.customer && ` \u00B7 ${pc.customer.name}`}</div>
                           </div>
                           <svg className="w-4 h-4 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                         </button>

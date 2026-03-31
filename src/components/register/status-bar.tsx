@@ -33,7 +33,7 @@ export function StatusBar({
   setCustomerResults,
 }: StatusBarProps) {
   return (
-    <div className="shrink-0 flex items-center justify-between px-4 h-8 border-t border-card-border bg-card/80 text-xs text-muted">
+    <div className="shrink-0 flex items-center justify-between px-4 h-10 border-t border-card-border bg-card/80 text-base text-muted">
       <div className="flex items-center gap-2 min-w-0">
         {/* Park button -- only when cart has items */}
         {hasCart && (
@@ -55,7 +55,7 @@ export function StatusBar({
             title="Recall a parked cart"
           >
             <span>{"\u25B6"}</span> Recall
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-accent text-white text-[10px] font-bold">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-white text-sm font-bold">
               {parkedCount}
             </span>
           </button>

@@ -40,10 +40,9 @@ export function ActionBar({
           }`}
           title="Search (F2)"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">Search</span>
         </button>
 
         {/* Camera scan */}
@@ -56,10 +55,9 @@ export function ActionBar({
           }`}
           title="Camera scan"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
           </svg>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">Scan</span>
         </button>
 
         {/* Customer */}
@@ -83,10 +81,9 @@ export function ActionBar({
           style={{ minWidth: 48, height: 48 }}
           title={customer ? customer.name : "Attach customer"}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">Cust</span>
         </button>
 
         {/* Quick Add */}
@@ -99,10 +96,9 @@ export function ActionBar({
           }`}
           title="Quick add"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
           </svg>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">Quick</span>
         </button>
 
         {/* Manual Item */}
@@ -115,10 +111,9 @@ export function ActionBar({
           }`}
           title="Manual item"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
           </svg>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">Add</span>
         </button>
 
         {/* Discount */}
@@ -133,8 +128,7 @@ export function ActionBar({
           }`}
           title="Discount"
         >
-          <span className="text-lg font-bold">%</span>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">Disc</span>
+          <span className="text-2xl font-bold">%</span>
         </button>
 
         {/* More */}
@@ -147,10 +141,9 @@ export function ActionBar({
           }`}
           title="More actions"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
           </svg>
-          <span className="hidden lg:block text-[9px] leading-none mt-0.5 font-medium">More</span>
         </button>
       </div>
 

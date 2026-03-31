@@ -477,7 +477,7 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-1">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">More Actions</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">More Actions</span>
             <button onClick={() => setActivePanel(null)} className="text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -512,7 +512,7 @@ export function MoreMenu({
               style={{ minHeight: 48 }}
             >
               <span className="shrink-0 text-muted">{item.icon}</span>
-              <span className="text-sm font-medium">{item.label}</span>
+              <span className="text-lg font-medium">{item.label}</span>
             </button>
           ))}
         </div>
@@ -523,11 +523,11 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-2">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => setActivePanel("more")} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => setActivePanel("more")} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Price Check</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Price Check</span>
           </div>
           <input
             type="search"
@@ -538,7 +538,7 @@ export function MoreMenu({
             placeholder="Search product name or barcode..."
             autoFocus
             className="w-full rounded-xl border border-input-border bg-input-bg px-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-            style={{ height: 48, fontSize: 16 }}
+            style={{ height: 48, fontSize: 18 }}
           />
           {priceCheckResults.length > 0 ? (
             <div className="space-y-1">
@@ -549,20 +549,20 @@ export function MoreMenu({
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-foreground">{item.name}</div>
-                      <div className="text-xs text-muted mt-0.5">
+                      <div className="text-lg font-medium text-foreground">{item.name}</div>
+                      <div className="text-base text-muted mt-0.5">
                         {item.category}
                         {item.barcode && <span className="ml-2 font-mono">{item.barcode}</span>}
                       </div>
                     </div>
                     <div className="text-right ml-3">
-                      <div className="text-sm font-bold text-foreground tabular-nums font-mono">{formatCents(item.price_cents)}</div>
+                      <div className="text-lg font-bold text-foreground tabular-nums font-mono">{formatCents(item.price_cents)}</div>
                       {effectiveRole !== "cashier" && (
-                        <div className="text-xs text-muted tabular-nums font-mono">Cost: {formatCents(item.cost_cents)}</div>
+                        <div className="text-base text-muted tabular-nums font-mono">Cost: {formatCents(item.cost_cents)}</div>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 mt-2 text-xs">
+                  <div className="flex items-center gap-3 mt-2 text-base">
                     <span className={`font-medium ${item.quantity > 0 ? "text-green-400" : "text-red-400"}`}>
                       {item.quantity > 0 ? `${item.quantity} in stock` : "Out of stock"}
                     </span>
@@ -572,9 +572,9 @@ export function MoreMenu({
               ))}
             </div>
           ) : priceCheckQuery.trim() ? (
-            <div className="flex items-center justify-center h-20 text-muted text-sm">No products found</div>
+            <div className="flex items-center justify-center h-20 text-muted text-lg">No products found</div>
           ) : (
-            <div className="flex items-center justify-center h-20 text-muted text-sm">Search for a product to check price</div>
+            <div className="flex items-center justify-center h-20 text-muted text-lg">Search for a product to check price</div>
           )}
         </div>
       );
@@ -585,11 +585,11 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => { setActivePanel("more"); setCreditCustomer(null); setCreditCustomerDetail(null); }} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => { setActivePanel("more"); setCreditCustomer(null); setCreditCustomerDetail(null); }} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Store Credit</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Store Credit</span>
           </div>
 
           {!creditTarget ? (
@@ -617,10 +617,10 @@ export function MoreMenu({
                     style={{ minHeight: 48 }}
                   >
                     <div>
-                      <div className="text-sm font-medium text-foreground">{c.name}</div>
-                      {c.email && <div className="text-xs text-muted">{c.email}</div>}
+                      <div className="text-lg font-medium text-foreground">{c.name}</div>
+                      {c.email && <div className="text-base text-muted">{c.email}</div>}
                     </div>
-                    <div className="text-sm font-medium text-accent tabular-nums font-mono">
+                    <div className="text-lg font-medium text-accent tabular-nums font-mono">
                       {formatCents(c.credit_balance_cents)}
                     </div>
                   </button>
@@ -630,19 +630,19 @@ export function MoreMenu({
           ) : (
             <>
               <div className="rounded-xl border border-card-border bg-card-hover p-4">
-                <div className="text-sm font-medium text-foreground">{creditTarget.name}</div>
+                <div className="text-lg font-medium text-foreground">{creditTarget.name}</div>
                 <div className="text-3xl font-bold text-accent tabular-nums font-mono mt-2">
                   {formatCents(creditCustomerDetail?.credit_balance_cents ?? creditTarget.credit_balance_cents)}
                 </div>
-                <div className="text-xs text-muted mt-1">Available Store Credit</div>
+                <div className="text-sm text-muted mt-1">Available Store Credit</div>
                 {cart.length > 0 && (creditCustomerDetail?.credit_balance_cents ?? creditTarget.credit_balance_cents) > 0 && (
-                  <div className="text-xs text-accent mt-2">Credit available as payment at checkout</div>
+                  <div className="text-sm text-accent mt-2">Credit available as payment at checkout</div>
                 )}
               </div>
 
               {/* Issue Credit */}
               <div className="rounded-xl border border-card-border bg-card p-4 space-y-2">
-                <div className="text-xs font-semibold text-muted uppercase tracking-wider">Issue Credit</div>
+                <div className="text-sm font-semibold text-muted uppercase tracking-wider">Issue Credit</div>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -652,7 +652,7 @@ export function MoreMenu({
                     onKeyDown={(e) => e.stopPropagation()}
                     placeholder="Amount (e.g. 10.00)"
                     className="flex-1 rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono"
-                    style={{ fontSize: 14 }}
+                    style={{ fontSize: 18 }}
                   />
                 </div>
                 <input
@@ -662,7 +662,7 @@ export function MoreMenu({
                   onKeyDown={(e) => e.stopPropagation()}
                   placeholder="Reason (optional)"
                   className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  style={{ fontSize: 14 }}
+                  style={{ fontSize: 18 }}
                 />
                 <button
                   onClick={handleIssueCredit}
@@ -677,9 +677,9 @@ export function MoreMenu({
               {/* Recent credit transactions */}
               {creditCustomerDetail && creditCustomerDetail.ledger_entries.length > 0 && (
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted uppercase tracking-wider">Recent Activity</div>
+                  <div className="text-sm font-semibold text-muted uppercase tracking-wider">Recent Activity</div>
                   {creditCustomerDetail.ledger_entries.map((e) => (
-                    <div key={e.id} className="flex items-center justify-between rounded-lg px-3 py-2 text-xs bg-card-hover">
+                    <div key={e.id} className="flex items-center justify-between rounded-lg px-3 py-2 text-sm bg-card-hover">
                       <div>
                         <span className="text-foreground">{e.description || e.type}</span>
                         <span className="ml-2 text-muted">{new Date(e.created_at).toLocaleDateString()}</span>
@@ -702,11 +702,11 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-2">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => { setActivePanel("more"); setReturnSelectedSale(null); setReturnSelectedItems([]); setReturnSearchQuery(""); setReturnSales([]); }} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => { setActivePanel("more"); setReturnSelectedSale(null); setReturnSelectedItems([]); setReturnSearchQuery(""); setReturnSales([]); }} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Process Return</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Process Return</span>
           </div>
 
           {!returnSelectedSale ? (
@@ -722,7 +722,7 @@ export function MoreMenu({
                 className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 style={{ fontSize: 16 }}
               />
-              {returnSalesLoading && <div className="text-xs text-muted">Searching...</div>}
+              {returnSalesLoading && <div className="text-sm text-muted">Searching...</div>}
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {returnSales.map((sale) => {
                   const hasReturnable = sale.items.some(i => i.max_returnable > 0);
@@ -735,14 +735,14 @@ export function MoreMenu({
                       style={{ minHeight: 48 }}
                     >
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-foreground">{sale.customer_name}</span>
-                        <span className="text-sm tabular-nums font-mono text-foreground">{formatCents(sale.amount_cents)}</span>
+                        <span className="text-lg font-medium text-foreground">{sale.customer_name}</span>
+                        <span className="text-lg tabular-nums font-mono text-foreground">{formatCents(sale.amount_cents)}</span>
                       </div>
-                      <div className="text-xs text-muted mt-0.5">
+                      <div className="text-sm text-muted mt-0.5">
                         {new Date(sale.created_at).toLocaleDateString()} {new Date(sale.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         <span className="ml-2">{sale.items.map(i => i.name).join(", ")}</span>
                       </div>
-                      {!hasReturnable && <div className="text-xs text-red-400 mt-0.5">All items already returned</div>}
+                      {!hasReturnable && <div className="text-sm text-red-400 mt-0.5">All items already returned</div>}
                     </button>
                   );
                 })}
@@ -750,7 +750,7 @@ export function MoreMenu({
             </>
           ) : (
             <>
-              <div className="text-xs text-muted">
+              <div className="text-base text-muted">
                 Sale to {returnSelectedSale.customer_name} on {new Date(returnSelectedSale.created_at).toLocaleDateString()} — {formatCents(returnSelectedSale.amount_cents)}
               </div>
               <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -766,9 +766,9 @@ export function MoreMenu({
                       className="h-4 w-4 rounded border-zinc-600 bg-card text-indigo-600"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-foreground truncate">{item.name}</div>
+                      <div className="text-lg text-foreground truncate">{item.name}</div>
                     </div>
-                    <span className="text-sm font-mono tabular-nums text-foreground">{formatCents(item.price_cents)}</span>
+                    <span className="text-lg font-mono tabular-nums text-foreground">{formatCents(item.price_cents)}</span>
                   </div>
                 ))}
               </div>
@@ -779,7 +779,7 @@ export function MoreMenu({
                   <button
                     key={m}
                     onClick={() => setReturnRefundMethod(m)}
-                    className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${returnRefundMethod === m ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`}
+                    className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${returnRefundMethod === m ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`}
                     style={{ minHeight: "auto" }}
                   >
                     {m === "store_credit" ? "Store Credit" : "Cash"}
@@ -793,13 +793,13 @@ export function MoreMenu({
                 const refundTotal = sel.reduce((s, i) => s + i.price_cents * i.quantity, 0);
                 return (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted">
+                    <span className="text-lg text-muted">
                       {sel.length} item{sel.length !== 1 ? "s" : ""}: {formatCents(refundTotal)}
                     </span>
                     <button
                       onClick={processInlineReturn}
                       disabled={returnProcessing || sel.length === 0}
-                      className="rounded-xl px-6 py-2 text-sm font-medium text-white disabled:opacity-30 transition-colors"
+                      className="rounded-xl px-6 py-2 text-lg font-medium text-white disabled:opacity-30 transition-colors"
                       style={{ backgroundColor: "#16a34a" }}
                     >
                       {returnProcessing ? "Processing..." : "Process Return"}
@@ -810,7 +810,7 @@ export function MoreMenu({
 
               <button
                 onClick={() => { setReturnSelectedSale(null); setReturnSelectedItems([]); }}
-                className="text-xs text-muted hover:text-foreground"
+                className="text-sm text-muted hover:text-foreground"
                 style={{ minHeight: "auto" }}
               >
                 Choose different sale
@@ -825,15 +825,15 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => setActivePanel("more")} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => setActivePanel("more")} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Loyalty Points</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Loyalty Points</span>
           </div>
 
           {!customer ? (
-            <div className="text-center py-8 text-sm text-muted">
+            <div className="text-center py-8 text-lg text-muted">
               Attach a customer first to view loyalty points
             </div>
           ) : loyaltyLoading ? (
@@ -841,11 +841,11 @@ export function MoreMenu({
           ) : loyaltyCustomer ? (
             <>
               <div className="rounded-xl border border-card-border bg-card-hover p-4 text-center">
-                <div className="text-sm text-muted">{loyaltyCustomer.name}</div>
+                <div className="text-base text-muted">{loyaltyCustomer.name}</div>
                 <div className="text-4xl font-bold text-accent mt-1">{loyaltyCustomer.loyalty_points.toLocaleString()}</div>
-                <div className="text-xs text-muted mt-1">Loyalty Points</div>
+                <div className="text-sm text-muted mt-1">Loyalty Points</div>
                 {storeSettings.loyalty_enabled && storeSettings.loyalty_redeem_points_per_dollar > 0 && (
-                  <div className="text-xs text-foreground/60 mt-2">
+                  <div className="text-sm text-foreground/60 mt-2">
                     {storeSettings.loyalty_redeem_points_per_dollar} pts = $1.00 off
                     {loyaltyCustomer.loyalty_points >= storeSettings.loyalty_min_redeem_points && (
                       <span className="ml-1 text-green-400">(Eligible to redeem)</span>
@@ -856,9 +856,9 @@ export function MoreMenu({
 
               {loyaltyCustomer.loyalty_entries.length > 0 && (
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted uppercase tracking-wider">Recent Activity</div>
+                  <div className="text-sm font-semibold text-muted uppercase tracking-wider">Recent Activity</div>
                   {loyaltyCustomer.loyalty_entries.map((e) => (
-                    <div key={e.id} className="flex items-center justify-between rounded-lg px-3 py-2 text-xs bg-card-hover">
+                    <div key={e.id} className="flex items-center justify-between rounded-lg px-3 py-2 text-sm bg-card-hover">
                       <div>
                         <span className="text-foreground">{e.description || e.type}</span>
                         <span className="ml-2 text-muted">{new Date(e.created_at).toLocaleDateString()}</span>
@@ -882,15 +882,15 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => { setActivePanel("more"); setGiftCardResult(null); setGiftCardError(null); setGiftCardCode(""); }} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => { setActivePanel("more"); setGiftCardResult(null); setGiftCardError(null); setGiftCardCode(""); }} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Gift Card</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Gift Card</span>
           </div>
 
           <div className="rounded-xl border border-card-border bg-card p-4 space-y-3">
-            <div className="text-xs font-semibold text-muted uppercase tracking-wider">Check Balance</div>
+            <div className="text-sm font-semibold text-muted uppercase tracking-wider">Check Balance</div>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -921,11 +921,11 @@ export function MoreMenu({
 
             {giftCardResult && (
               <div className="rounded-xl border border-card-border bg-card-hover p-4">
-                <div className="text-xs text-muted font-mono">{giftCardResult.code}</div>
+                <div className="text-sm text-muted font-mono">{giftCardResult.code}</div>
                 <div className="text-3xl font-bold text-accent tabular-nums font-mono mt-1">
                   {formatCents(giftCardResult.balance_cents)}
                 </div>
-                <div className="text-xs mt-1">
+                <div className="text-sm mt-1">
                   <span className={giftCardResult.active ? "text-green-400" : "text-red-400"}>
                     {giftCardResult.active ? "Active" : "Inactive"}
                   </span>
@@ -946,7 +946,7 @@ export function MoreMenu({
               style={{ minHeight: 44 }}
             >
               <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-              <span className="text-sm text-foreground">Sell Gift Card (add to cart)</span>
+              <span className="text-lg text-foreground">Sell Gift Card (add to cart)</span>
             </button>
             {cart.length > 0 && (
               <button
@@ -959,7 +959,7 @@ export function MoreMenu({
                 style={{ minHeight: 44 }}
               >
                 <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
-                <span className="text-sm text-accent font-medium">Redeem as Payment</span>
+                <span className="text-lg text-accent font-medium">Redeem as Payment</span>
               </button>
             )}
           </div>
@@ -971,11 +971,11 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => setActivePanel("more")} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => setActivePanel("more")} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Flag Issue</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Flag Issue</span>
           </div>
 
           <select
@@ -983,7 +983,7 @@ export function MoreMenu({
             onChange={(e) => setFlagType(e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}
             className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground focus:border-accent focus:outline-none"
-            style={{ fontSize: 14 }}
+            style={{ fontSize: 18 }}
           >
             <option value="wrong_price">Wrong Price</option>
             <option value="wrong_stock_count">Wrong Stock Count</option>
@@ -1001,7 +1001,7 @@ export function MoreMenu({
             rows={3}
             autoFocus
             className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none resize-none"
-            style={{ fontSize: 14 }}
+            style={{ fontSize: 18 }}
           />
 
           <button
@@ -1020,11 +1020,11 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => setActivePanel("more")} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => setActivePanel("more")} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Void Last Transaction</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Void Last Transaction</span>
           </div>
 
           {voidLoading ? (
@@ -1036,13 +1036,13 @@ export function MoreMenu({
           ) : (
             <>
               <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 space-y-2">
-                <div className="text-sm font-medium text-foreground">
+                <div className="text-lg font-medium text-foreground">
                   {voidTransaction.description || "Sale"}
                 </div>
                 <div className="text-2xl font-bold text-red-400 tabular-nums font-mono">
                   {formatCents(voidTransaction.amount_cents)}
                 </div>
-                <div className="text-xs text-muted">
+                <div className="text-sm text-muted">
                   {new Date(voidTransaction.created_at).toLocaleString()}
                 </div>
                 {(() => {
@@ -1050,7 +1050,7 @@ export function MoreMenu({
                   const items = (meta.items as Array<{ name?: string; quantity?: number }>) ?? [];
                   if (items.length === 0) return null;
                   return (
-                    <div className="text-xs text-muted border-t border-card-border pt-2 mt-2">
+                    <div className="text-sm text-muted border-t border-card-border pt-2 mt-2">
                       {items.map((it, i) => (
                         <div key={i}>{it.name ?? "Item"} x{it.quantity ?? 1}</div>
                       ))}
@@ -1068,7 +1068,7 @@ export function MoreMenu({
                 {voidProcessing ? "Voiding..." : `Void this ${formatCents(voidTransaction.amount_cents)} sale`}
               </button>
 
-              <div className="text-xs text-muted text-center">
+              <div className="text-sm text-muted text-center">
                 This will reverse the sale and restore inventory
               </div>
             </>
@@ -1081,11 +1081,11 @@ export function MoreMenu({
       return (
         <div className="p-3 space-y-2">
           <div className="flex items-center justify-between mb-1">
-            <button onClick={() => { setActivePanel("more"); setOrderLookupReceipt(null); setOrderLookupQuery(""); }} className="text-xs text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
+            <button onClick={() => { setActivePanel("more"); setOrderLookupReceipt(null); setOrderLookupQuery(""); }} className="text-sm text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">Order Lookup</span>
+            <span className="text-sm font-semibold text-muted uppercase tracking-wider">Order Lookup</span>
             <button onClick={() => setActivePanel(null)} className="text-muted hover:text-foreground" style={{ minHeight: "auto" }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -1096,7 +1096,7 @@ export function MoreMenu({
             <div className="space-y-3">
               <button
                 onClick={() => setOrderLookupReceipt(null)}
-                className="text-xs text-accent hover:underline flex items-center gap-1"
+                className="text-sm text-accent hover:underline flex items-center gap-1"
                 style={{ minHeight: "auto" }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
@@ -1105,21 +1105,21 @@ export function MoreMenu({
 
               <div className="rounded-xl border border-card-border bg-card p-4 space-y-3">
                 <div className="text-center space-y-1">
-                  <div className="text-sm font-bold text-foreground">{orderLookupReceipt.store_name}</div>
-                  <div className="text-xs text-muted">{orderLookupReceipt.date_formatted}</div>
-                  <div className="text-xs text-muted font-mono">{orderLookupReceipt.receipt_number}</div>
+                  <div className="text-lg font-bold text-foreground">{orderLookupReceipt.store_name}</div>
+                  <div className="text-sm text-muted">{orderLookupReceipt.date_formatted}</div>
+                  <div className="text-sm text-muted font-mono">{orderLookupReceipt.receipt_number}</div>
                 </div>
 
                 {orderLookupReceipt.staff_name && (
-                  <div className="text-xs text-muted">Cashier: {orderLookupReceipt.staff_name}</div>
+                  <div className="text-sm text-muted">Cashier: {orderLookupReceipt.staff_name}</div>
                 )}
                 {orderLookupReceipt.customer_name && (
-                  <div className="text-xs text-muted">Customer: {orderLookupReceipt.customer_name}</div>
+                  <div className="text-sm text-muted">Customer: {orderLookupReceipt.customer_name}</div>
                 )}
 
                 <div className="border-t border-card-border pt-2 space-y-1">
                   {orderLookupReceipt.items.map((item, i) => (
-                    <div key={i} className="flex justify-between text-xs">
+                    <div key={i} className="flex justify-between text-sm">
                       <span className="text-foreground min-w-0 flex-1">
                         {item.name}
                         {item.quantity > 1 && <span className="text-muted ml-1">x{item.quantity}</span>}
@@ -1130,36 +1130,36 @@ export function MoreMenu({
                 </div>
 
                 <div className="border-t border-card-border pt-2 space-y-1">
-                  <div className="flex justify-between text-xs text-muted">
+                  <div className="flex justify-between text-sm text-muted">
                     <span>Subtotal</span>
                     <span className="tabular-nums font-mono">{formatCents(orderLookupReceipt.subtotal_cents)}</span>
                   </div>
                   {orderLookupReceipt.discount_cents > 0 && (
-                    <div className="flex justify-between text-xs text-amber-400">
+                    <div className="flex justify-between text-sm text-amber-400">
                       <span>Discount</span>
                       <span className="tabular-nums font-mono">-{formatCents(orderLookupReceipt.discount_cents)}</span>
                     </div>
                   )}
                   {orderLookupReceipt.tax_cents > 0 && (
-                    <div className="flex justify-between text-xs text-muted">
+                    <div className="flex justify-between text-sm text-muted">
                       <span>Tax</span>
                       <span className="tabular-nums font-mono">{formatCents(orderLookupReceipt.tax_cents)}</span>
                     </div>
                   )}
                   {orderLookupReceipt.credit_applied_cents > 0 && (
-                    <div className="flex justify-between text-xs text-blue-400">
+                    <div className="flex justify-between text-sm text-blue-400">
                       <span>Store Credit</span>
                       <span className="tabular-nums font-mono">-{formatCents(orderLookupReceipt.credit_applied_cents)}</span>
                     </div>
                   )}
                   {orderLookupReceipt.gift_card_applied_cents > 0 && (
-                    <div className="flex justify-between text-xs text-purple-400">
+                    <div className="flex justify-between text-sm text-purple-400">
                       <span>Gift Card</span>
                       <span className="tabular-nums font-mono">-{formatCents(orderLookupReceipt.gift_card_applied_cents)}</span>
                     </div>
                   )}
                   {orderLookupReceipt.loyalty_discount_cents > 0 && (
-                    <div className="flex justify-between text-xs text-yellow-400">
+                    <div className="flex justify-between text-sm text-yellow-400">
                       <span>Loyalty Discount</span>
                       <span className="tabular-nums font-mono">-{formatCents(orderLookupReceipt.loyalty_discount_cents)}</span>
                     </div>
@@ -1168,12 +1168,12 @@ export function MoreMenu({
                     <span>TOTAL</span>
                     <span className="tabular-nums font-mono">{formatCents(orderLookupReceipt.total_cents)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-muted">
+                  <div className="flex justify-between text-sm text-muted">
                     <span>Paid</span>
                     <span className="uppercase">{orderLookupReceipt.payment_method}</span>
                   </div>
                   {orderLookupReceipt.change_cents > 0 && (
-                    <div className="flex justify-between text-xs text-muted">
+                    <div className="flex justify-between text-sm text-muted">
                       <span>Change</span>
                       <span className="tabular-nums font-mono">{formatCents(orderLookupReceipt.change_cents)}</span>
                     </div>
@@ -1234,7 +1234,7 @@ export function MoreMenu({
                 placeholder="Search by name, amount, date..."
                 autoFocus
                 className="w-full rounded-xl border border-input-border bg-input-bg px-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                style={{ height: 48, fontSize: 16 }}
+                style={{ height: 48, fontSize: 18 }}
               />
 
               {orderLookupLoading && orderLookupResults.length === 0 ? (
@@ -1249,7 +1249,7 @@ export function MoreMenu({
               ) : (
                 <div className="space-y-1">
                   {!orderLookupQuery.trim() && (
-                    <div className="text-xs text-muted font-semibold uppercase tracking-wider px-1 pt-1">
+                    <div className="text-sm text-muted font-semibold uppercase tracking-wider px-1 pt-1">
                       Today&apos;s Transactions
                     </div>
                   )}
@@ -1272,10 +1272,10 @@ export function MoreMenu({
                         <div className="flex items-start justify-between">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted">{time}</span>
-                              <span className="text-sm font-medium text-foreground truncate">{shortName}</span>
+                              <span className="text-sm text-muted">{time}</span>
+                              <span className="text-lg font-medium text-foreground truncate">{shortName}</span>
                             </div>
-                            <div className="text-xs text-muted mt-0.5">
+                            <div className="text-sm text-muted mt-0.5">
                               <span className="capitalize">{tx.type.replace(/_/g, " ")}</span>
                               {tx.payment_method && <span> · {tx.payment_method}</span>}
                               {itemCount > 0 && <span> · {itemCount} item{itemCount !== 1 ? "s" : ""}</span>}
@@ -1288,7 +1288,7 @@ export function MoreMenu({
                         <div className="flex gap-2 mt-2">
                           <button
                             onClick={() => loadOrderReceipt(tx.id)}
-                            className="text-xs text-accent hover:underline font-medium"
+                            className="text-sm text-accent hover:underline font-medium"
                             style={{ minHeight: "auto" }}
                           >
                             View Receipt
@@ -1298,7 +1298,7 @@ export function MoreMenu({
                               await loadOrderReceipt(tx.id);
                               setTimeout(() => window.print(), 500);
                             }}
-                            className="text-xs text-muted hover:text-foreground font-medium"
+                            className="text-sm text-muted hover:text-foreground font-medium"
                             style={{ minHeight: "auto" }}
                           >
                             Reprint
