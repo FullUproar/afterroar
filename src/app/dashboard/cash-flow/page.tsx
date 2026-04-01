@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useStore } from '@/lib/store-context';
 import { formatCents } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
+import { IntelligenceFeed } from '@/components/intelligence-feed';
 
 /* ---------- types ---------- */
 
@@ -368,6 +369,132 @@ function CategoryBars({ categories, totalCost }: { categories: CategoryRow[]; to
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------- Cash Flow AI Recommendations ---------- */
+
+function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; totalDeadStockValue: number }) {
+  // Generate cash-flow-specific sentence-based insights
+  const recommendations: Array<{ icon: string; text: string; borderColor: string }> = [];
+
+  // Dead stock insight
+  if (data.dead_stock.length > 0 && totalDeadStockValue > 0) {
+    recommendations.push({
+      icon: '\u{1F4E6}',
+      text: `You have ${formatCents(totalDeadStockValue)} trapped in ${data.dead_stock.length} slow-moving items. A 15-20% markdown or a "clearance bin" promotion could free up to ${formatCents(Math.round(totalDeadStockValue * 0.85))} in cash to reinvest in what actually sells.`,
+      borderColor: 'border-l-amber-500',
+    });
+  }
+
+  // Fast mover stockout risk
+  const urgentMovers = data.fast_movers.filter(m => m.days_of_stock !== null && m.days_of_stock <= 14);
+  if (urgentMovers.length > 0) {
+    const top = urgentMovers[0];
+    recommendations.push({
+      icon: '\u{1F6A8}',
+      text: `Your top seller "${top.name}" has only ${top.days_of_stock} days of stock left at current velocity (${top.sales_per_week}/week). Reorder now to avoid losing sales.${urgentMovers.length > 1 ? ` ${urgentMovers.length - 1} more fast-movers are also running low.` : ''}`,
+      borderColor: 'border-l-red-500',
+    });
+  }
+
+  // Outstanding credit liability
+  if (data.outstanding_credit.total_cents > 0) {
+    recommendations.push({
+      icon: '\u{1F4B0}',
+      text: `${formatCents(data.outstanding_credit.total_cents)} in store credit across ${data.outstanding_credit.customer_count} customers is a liability on your books. Run a "use your credit" event or bonus weekend to convert these into sales.`,
+      borderColor: 'border-l-amber-500',
+    });
+  }
+
+  // Margin by category
+  if (data.margin_analysis.length >= 2) {
+    const sorted = [...data.margin_analysis].sort((a, b) => a.margin_percent - b.margin_percent);
+    const lowest = sorted[0];
+    const highest = sorted[sorted.length - 1];
+    if (lowest.margin_percent < 30 && lowest.revenue_cents > 0) {
+      recommendations.push({
+        icon: '\u{1F4CA}',
+        text: `Your ${catLabel(lowest.category)} margin is only ${lowest.margin_percent}%, while ${catLabel(highest.category)} earns ${highest.margin_percent}%. Consider adjusting pricing or shifting inventory dollars toward higher-margin categories.`,
+        borderColor: 'border-l-indigo-500',
+      });
+    }
+  }
+
+  // Capital allocation
+  if (data.category_breakdown.length > 0) {
+    const topCat = data.category_breakdown[0];
+    const topCatPct = data.inventory.cost_basis_cents > 0
+      ? Math.round((topCat.cost_basis_cents / data.inventory.cost_basis_cents) * 100)
+      : 0;
+    const topCatSales = data.margin_analysis.find(m => m.category === topCat.category);
+    const totalSalesRev = data.margin_analysis.reduce((s, m) => s + m.revenue_cents, 0);
+    const topCatSalesPct = topCatSales && totalSalesRev > 0
+      ? Math.round((topCatSales.revenue_cents / totalSalesRev) * 100)
+      : 0;
+
+    if (topCatPct > 0 && topCatSalesPct > 0 && topCatPct > topCatSalesPct + 15) {
+      recommendations.push({
+        icon: '\u{1F4B5}',
+        text: `${catLabel(topCat.category)} holds ${topCatPct}% of your inventory capital but only generates ${topCatSalesPct}% of revenue. Your money might work harder in a different category.`,
+        borderColor: 'border-l-indigo-500',
+      });
+    }
+  }
+
+  // Trade-in ROI
+  if (data.trade_in_roi.total_cost_cents > 0) {
+    if (data.trade_in_roi.roi_percent > 50) {
+      recommendations.push({
+        icon: '\u{1F3C6}',
+        text: `Your trade-in program is generating ${data.trade_in_roi.roi_percent}% ROI. Trade-ins are one of the best ways to acquire inventory cheaply. Keep pushing credit-based payouts for even better margins.`,
+        borderColor: 'border-l-green-500',
+      });
+    } else if (data.trade_in_roi.roi_percent < 0) {
+      recommendations.push({
+        icon: '\u26A0\uFE0F',
+        text: `Your trade-in program is currently at ${data.trade_in_roi.roi_percent}% ROI. Review your offer prices -- you may be paying too much for items that aren't selling through.`,
+        borderColor: 'border-l-red-500',
+      });
+    }
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push({
+      icon: '\u2728',
+      text: 'Your cash flow looks healthy. Keep monitoring velocity and margins to stay ahead.',
+      borderColor: 'border-l-green-500',
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Sentence-based recommendations */}
+      <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
+        <SectionHeader sub="Actionable advice based on your data">AI Recommendations</SectionHeader>
+        <div className="mt-4 space-y-3">
+          {recommendations.map((rec, i) => (
+            <div
+              key={i}
+              className={`rounded-xl border border-card-border border-l-4 ${rec.borderColor} bg-background/50 p-4`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 text-lg shrink-0">{rec.icon}</span>
+                <p className="text-sm text-foreground/90 leading-relaxed">{rec.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Full Intelligence Feed */}
+      <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
+        <SectionHeader sub="All actionable insights across your store">Store Intelligence</SectionHeader>
+        <div className="mt-4">
+          <IntelligenceFeed />
+        </div>
+      </div>
     </div>
   );
 }
@@ -775,33 +902,8 @@ export default function CashFlowPage() {
         />
       </div>
 
-      {/* ---- AI INSIGHTS ---- */}
-      <div className="rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-6 shadow-lg">
-        <h3 className="font-semibold text-indigo-300">AI Insights</h3>
-        <div className="mt-3 space-y-2 text-sm text-muted">
-          {data.dead_stock.length > 0 && totalDeadStockValue > 0 && (
-            <p>
-              You have {formatCents(totalDeadStockValue)} trapped in dead stock.
-              A 15% markdown could free up to {formatCents(Math.round(totalDeadStockValue * 0.85))} in cash.
-            </p>
-          )}
-          {data.fast_movers.length > 0 && data.fast_movers[0].days_of_stock !== null && data.fast_movers[0].days_of_stock <= 7 && (
-            <p>
-              Your top seller &quot;{data.fast_movers[0].name}&quot; has only {data.fast_movers[0].days_of_stock} days
-              of stock left at current velocity. Reorder now to avoid stockout.
-            </p>
-          )}
-          {data.outstanding_credit.total_cents > 0 && (
-            <p>
-              {formatCents(data.outstanding_credit.total_cents)} in outstanding store credit is a liability.
-              Consider loyalty promotions to convert credit balances into sales.
-            </p>
-          )}
-          <p className="text-muted italic">
-            More AI-powered recommendations coming soon based on your cash flow patterns.
-          </p>
-        </div>
-      </div>
+      {/* ---- AI RECOMMENDATIONS ---- */}
+      <CashFlowInsights data={data} totalDeadStockValue={totalDeadStockValue} />
     </div>
   );
 }

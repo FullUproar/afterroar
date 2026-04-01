@@ -5,6 +5,7 @@ import { formatCents } from "@/lib/types";
 import Link from "next/link";
 import { DashboardModeGuard } from "@/components/dashboard-mode-guard";
 import { GettingStarted } from "@/components/getting-started";
+import { IntelligenceFeed } from "@/components/intelligence-feed";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -80,10 +81,11 @@ export default async function DashboardPage() {
   return (
     <DashboardModeGuard>
     <div className="space-y-6 md:space-y-8">
-      <h1 className="hidden lg:block text-2xl font-semibold text-foreground">Welcome back</h1>
-
       {/* Getting Started Checklist */}
       <GettingStarted />
+
+      {/* Intelligence Feed — AI-powered actionable insights */}
+      <IntelligenceFeed compact />
 
       {/* Quick Actions — mobile/tablet, most common staff tasks */}
       <div className="grid grid-cols-3 gap-3 lg:hidden">

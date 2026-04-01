@@ -2,32 +2,127 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Customer, formatCents } from '@/lib/types';
+import { formatCents } from '@/lib/types';
 import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
 
+/* ------------------------------------------------------------------ */
+/*  Customer Segments                                                   */
+/* ------------------------------------------------------------------ */
+
+type CustomerSegment = 'vip' | 'regular' | 'new' | 'at_risk' | 'dormant' | 'active';
+
+interface SegmentedCustomer {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  credit_balance_cents: number;
+  created_at: string;
+  segment: CustomerSegment;
+  lifetime_spend_cents: number;
+  purchases_30d: number;
+  last_purchase_date: string | null;
+}
+
+interface SegmentCounts {
+  vip: number;
+  regular: number;
+  new: number;
+  at_risk: number;
+  dormant: number;
+  active: number;
+  total: number;
+}
+
+const SEGMENT_CONFIG: Record<CustomerSegment, {
+  label: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+}> = {
+  vip: {
+    label: 'VIP',
+    icon: '\u{1F31F}',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+  },
+  regular: {
+    label: 'Regular',
+    icon: '\u{1F504}',
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+  },
+  new: {
+    label: 'New',
+    icon: '\u{1F195}',
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-500/30',
+  },
+  at_risk: {
+    label: 'At Risk',
+    icon: '\u26A0\uFE0F',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/30',
+  },
+  dormant: {
+    label: 'Dormant',
+    icon: '\u{1F4A4}',
+    color: 'text-zinc-400',
+    bgColor: 'bg-zinc-500/10',
+    borderColor: 'border-zinc-500/30',
+  },
+  active: {
+    label: 'Active',
+    icon: '\u2713',
+    color: 'text-foreground/70',
+    bgColor: 'bg-card-hover',
+    borderColor: 'border-card-border',
+  },
+};
+
+function SegmentBadge({ segment }: { segment: CustomerSegment }) {
+  const config = SEGMENT_CONFIG[segment];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${config.color} ${config.bgColor} ${config.borderColor}`}
+    >
+      <span aria-hidden="true">{config.icon}</span>
+      {config.label}
+    </span>
+  );
+}
+
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<SegmentedCustomer[]>([]);
+  const [counts, setCounts] = useState<SegmentCounts | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [segmentFilter, setSegmentFilter] = useState<CustomerSegment | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [saving, setSaving] = useState(false);
 
   const loadCustomers = useCallback(async () => {
     try {
-      const q = search ? `?q=${encodeURIComponent(search)}` : '';
-      const res = await fetch(`/api/customers${q}`);
-      if (res.ok) setCustomers(await res.json());
+      const res = await fetch('/api/customers/segments');
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.customers ?? []);
+        setCounts(data.counts ?? null);
+      }
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    const timeout = setTimeout(loadCustomers, 300);
-    return () => clearTimeout(timeout);
+    loadCustomers();
   }, [loadCustomers]);
 
   async function handleCreate(e: React.FormEvent) {
@@ -48,6 +143,29 @@ export default function CustomersPage() {
       setSaving(false);
     }
   }
+
+  // Filter by search and segment
+  const filtered = customers.filter((c) => {
+    if (segmentFilter !== 'all' && c.segment !== segmentFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        c.name.toLowerCase().includes(q) ||
+        (c.email?.toLowerCase().includes(q) ?? false) ||
+        (c.phone?.includes(q) ?? false)
+      );
+    }
+    return true;
+  });
+
+  const segmentButtons: Array<{ key: CustomerSegment | 'all'; label: string; count: number | null }> = [
+    { key: 'all', label: 'All', count: counts?.total ?? null },
+    { key: 'vip', label: '\u{1F31F} VIP', count: counts?.vip ?? null },
+    { key: 'regular', label: '\u{1F504} Regular', count: counts?.regular ?? null },
+    { key: 'new', label: '\u{1F195} New', count: counts?.new ?? null },
+    { key: 'at_risk', label: '\u26A0\uFE0F At Risk', count: counts?.at_risk ?? null },
+    { key: 'dormant', label: '\u{1F4A4} Dormant', count: counts?.dormant ?? null },
+  ];
 
   return (
     <div className="space-y-6">
@@ -104,6 +222,29 @@ export default function CustomersPage() {
         </form>
       )}
 
+      {/* Segment Filter Bar */}
+      {counts && (
+        <div className="flex flex-wrap gap-2">
+          {segmentButtons.map((seg) => (
+            <button
+              key={seg.key}
+              onClick={() => setSegmentFilter(seg.key)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                segmentFilter === seg.key
+                  ? 'border-accent bg-accent/10 text-accent'
+                  : 'border-card-border bg-card text-muted hover:text-foreground hover:border-input-border'
+              }`}
+            >
+              {seg.label}
+              {seg.count !== null && (
+                <span className="text-xs opacity-70 tabular-nums">{seg.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Search */}
       <div>
         <input
           type="text"
@@ -116,10 +257,10 @@ export default function CustomersPage() {
 
       {loading ? (
         <p className="text-muted">Loading customers...</p>
-      ) : customers.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-          <p className="text-muted">{search ? 'No customers match your search.' : 'No customers yet.'}</p>
-          {!search && (
+          <p className="text-muted">{search || segmentFilter !== 'all' ? 'No customers match your filters.' : 'No customers yet.'}</p>
+          {!search && segmentFilter === 'all' && (
             <button
               onClick={() => setShowForm(true)}
               className="mt-3 px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
@@ -132,20 +273,26 @@ export default function CustomersPage() {
         <>
           {/* Mobile card view */}
           <div className="md:hidden space-y-3">
-            {customers.map((c) => (
+            {filtered.map((c) => (
               <Link
                 key={c.id}
                 href={`/dashboard/customers/${c.id}`}
                 className="block rounded-xl border border-card-border bg-card p-4 min-h-11 active:bg-card-hover shadow-sm dark:shadow-none transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground leading-snug">{c.name}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-semibold text-foreground leading-snug truncate">{c.name}</span>
+                    <SegmentBadge segment={c.segment} />
+                  </div>
                   <StatusBadge variant="success">
                     {formatCents(c.credit_balance_cents ?? 0)}
                   </StatusBadge>
                 </div>
-                <div className="mt-1 text-xs text-muted">
-                  {c.email || c.phone || 'No contact info'}
+                <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
+                  <span>{c.email || c.phone || 'No contact info'}</span>
+                  {c.lifetime_spend_cents > 0 && (
+                    <span className="tabular-nums">{formatCents(c.lifetime_spend_cents)} lifetime</span>
+                  )}
                 </div>
               </Link>
             ))}
@@ -157,14 +304,15 @@ export default function CustomersPage() {
               <thead>
                 <tr className="border-b border-card-border text-muted text-left">
                   <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Segment</th>
                   <th className="px-4 py-3 font-medium">Email</th>
-                  <th className="px-4 py-3 font-medium">Phone</th>
-                  <th className="px-4 py-3 font-medium">Store Credit</th>
-                  <th className="px-4 py-3 font-medium">Member Since</th>
+                  <th className="px-4 py-3 font-medium text-right">Lifetime Spend</th>
+                  <th className="px-4 py-3 font-medium text-right">Store Credit</th>
+                  <th className="px-4 py-3 font-medium text-right">Last Purchase</th>
                 </tr>
               </thead>
               <tbody>
-                {customers.map((c) => (
+                {filtered.map((c) => (
                   <Link
                     key={c.id}
                     href={`/dashboard/customers/${c.id}`}
@@ -172,15 +320,22 @@ export default function CustomersPage() {
                   >
                     <tr className="border-b border-card-border hover:bg-card-hover cursor-pointer text-foreground">
                       <td className="px-4 py-3 font-medium">{c.name}</td>
-                      <td className="px-4 py-3 text-muted">{c.email || '-'}</td>
-                      <td className="px-4 py-3 text-muted">{c.phone || '-'}</td>
                       <td className="px-4 py-3">
+                        <SegmentBadge segment={c.segment} />
+                      </td>
+                      <td className="px-4 py-3 text-muted">{c.email || '-'}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {c.lifetime_spend_cents > 0 ? formatCents(c.lifetime_spend_cents) : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
                         <StatusBadge variant="success">
                           {formatCents(c.credit_balance_cents ?? 0)}
                         </StatusBadge>
                       </td>
-                      <td className="px-4 py-3 text-muted">
-                        {new Date(c.created_at).toLocaleDateString()}
+                      <td className="px-4 py-3 text-right text-muted">
+                        {c.last_purchase_date
+                          ? new Date(c.last_purchase_date).toLocaleDateString()
+                          : 'Never'}
                       </td>
                     </tr>
                   </Link>
