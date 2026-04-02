@@ -67,6 +67,10 @@ All Store Ops models are prefixed with `Pos`:
 - Intelligence Engine: `src/lib/store-intelligence.ts` — FLGS-vocabulary insights (liquidity runway, bench warmers, regulars MIA, credit liability, seasonal warnings, WPN metrics, cash-aware buylist)
 - Store Advisor: `src/components/store-advisor.tsx` + `/api/intelligence/advisor` — Claude-powered business co-pilot, feeds real store metrics to Claude Sonnet, returns personalized advice in gamer language
 - Intelligence Preferences: store-level settings for thresholds (dead stock days, at-risk days, cash comfort zone), monthly fixed costs (rent, payroll, utilities), WPN level, advisor tone, seasonal warnings
+- Configurable Permissions: `src/lib/permissions.ts` — 30+ granular permissions, per-role overrides stored in store settings, owner always has all. API at `/api/permissions`
+- Feature Gating: `src/components/feature-gate.tsx` — store plans (free/base/pro/enterprise) + add-on modules (intelligence, events, tcg_engine, ecommerce, multi_location, cafe, advanced_reports, api_access)
+- Permission Categories: pos, inventory, customers, trade_returns, events, reports, admin — each with specific toggles
+- `requireFeature()` and `requirePermissionAndFeature()` in require-staff.ts for server-side gating
 
 ## Dual Mode Layout
 - **Dashboard Mode**: full sidebar, all features, data-heavy (owner/manager default)

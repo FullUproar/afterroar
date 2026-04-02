@@ -13,6 +13,7 @@ import { useTheme } from '@/components/theme-provider';
 import { useTrainingMode } from '@/lib/training-mode';
 import { PageHeader } from '@/components/page-header';
 import { HelpTooltip } from '@/components/help-tooltip';
+import { PermissionsEditor } from '@/components/permissions-editor';
 
 interface VenueResult {
   id: string;
@@ -513,6 +514,17 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Role Permissions */}
+      <div className="max-w-2xl">
+        <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
+          <h2 className="text-sm font-semibold text-foreground">Role Permissions</h2>
+          <p className="mt-0.5 text-xs text-muted mb-4">
+            Customize what each role can access. Changes apply immediately.
+          </p>
+          <PermissionsEditor />
+        </div>
+      </div>
 
       <div className="max-w-2xl space-y-4">
         {SETTINGS_SECTIONS.map((section) => (

@@ -2,7 +2,15 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { type Role, type Permission, hasPermission } from "@/lib/permissions";
+import {
+  type Role,
+  type Permission,
+  type RolePermissionOverrides,
+  type StorePlan,
+  type FeatureModule,
+  hasPermission,
+  hasFeature,
+} from "@/lib/permissions";
 
 const GOD_ADMIN_EMAIL = "info@fulluproar.com";
 
@@ -30,6 +38,7 @@ interface StoreContextValue {
   isTestMode: boolean;
   setTestRole: (role: Role | null) => void;
   can: (permission: Permission) => boolean;
+  hasModule: (feature: FeatureModule) => boolean;
   userEmail: string | null;
 }
 
@@ -43,6 +52,7 @@ const StoreContext = createContext<StoreContextValue>({
   isTestMode: false,
   setTestRole: () => {},
   can: () => false,
+  hasModule: () => true, // default to true so features don't break before plan is loaded
   userEmail: null,
 });
 
@@ -84,12 +94,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const isTestMode = isGodAdmin && testRole !== null;
   const effectiveRole = isTestMode ? testRole : actualRole;
 
+  // Extract permission overrides from store settings
+  const roleOverrides = (store?.settings?.role_permissions ?? null) as RolePermissionOverrides | null;
+
+  // Extract plan + addons from store settings
+  const plan = ((store?.settings?.plan as string) || "enterprise") as StorePlan; // default to enterprise during dev
+  const addons = ((store?.settings?.addons as string[]) || []) as FeatureModule[];
+
   const can = useCallback(
     (permission: Permission) => {
       if (!effectiveRole) return false;
-      return hasPermission(effectiveRole, permission);
+      // God admin bypasses all restrictions
+      if (isGodAdmin && !isTestMode) return true;
+      return hasPermission(effectiveRole, permission, roleOverrides);
     },
-    [effectiveRole]
+    [effectiveRole, roleOverrides, isGodAdmin, isTestMode]
+  );
+
+  const hasModuleFn = useCallback(
+    (feature: FeatureModule) => {
+      // God admin sees everything
+      if (isGodAdmin && !isTestMode) return true;
+      return hasFeature(plan, addons, feature);
+    },
+    [plan, addons, isGodAdmin, isTestMode]
   );
 
   return (
@@ -104,6 +132,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         isTestMode,
         setTestRole,
         can,
+        hasModule: hasModuleFn,
         userEmail,
       }}
     >
