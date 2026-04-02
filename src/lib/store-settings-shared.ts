@@ -34,6 +34,8 @@ export interface StoreSettings {
   timeclock_geofence_lat: number;
   timeclock_geofence_lng: number;
   timeclock_geofence_radius_meters: number;
+  // NUX (new user experience)
+  nux_dismissed: boolean;
   // Mobile register
   mobile_register_enabled: boolean;
   mobile_access_code_hash: string;    // bcrypt hash of the 6-digit code
@@ -77,6 +79,8 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   timeclock_geofence_lat: 0,
   timeclock_geofence_lng: 0,
   timeclock_geofence_radius_meters: 150,
+  // NUX
+  nux_dismissed: false,
   // Mobile register
   mobile_register_enabled: false,
   mobile_access_code_hash: "",

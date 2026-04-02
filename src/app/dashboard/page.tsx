@@ -7,6 +7,8 @@ import { DashboardModeGuard } from "@/components/dashboard-mode-guard";
 import { GettingStarted } from "@/components/getting-started";
 import { IntelligenceFeed } from "@/components/intelligence-feed";
 import { StoreAdvisor } from "@/components/store-advisor";
+import { HealthScore } from "@/components/health-score";
+import { DailyClose } from "@/components/daily-close";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -77,6 +79,9 @@ export default async function DashboardPage() {
   return (
     <DashboardModeGuard>
     <div className="space-y-6 md:space-y-8">
+      {/* Store Health — single-glance status */}
+      <HealthScore />
+
       {/* Getting Started Checklist */}
       <GettingStarted />
 
@@ -230,6 +235,8 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+      {/* End of Day */}
+      <DailyClose />
     </div>
     </DashboardModeGuard>
   );

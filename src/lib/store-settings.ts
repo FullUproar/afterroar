@@ -75,6 +75,8 @@ export interface StoreSettings {
   timeclock_geofence_lat: number;
   timeclock_geofence_lng: number;
   timeclock_geofence_radius_meters: number;
+  // NUX
+  nux_dismissed: boolean;
   // Mobile register
   mobile_register_enabled: boolean;
   mobile_access_code_hash: string;
@@ -150,6 +152,8 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   intel_advisor_enabled: true,
   intel_advisor_tone: "gamer",
 
+  // NUX
+  nux_dismissed: false,
   // Mobile register
   mobile_register_enabled: false,
   mobile_access_code_hash: "",

@@ -12,7 +12,7 @@ interface ChecklistItem {
 
 const CHECKLIST_ITEMS: ChecklistItem[] = [
   { key: "store_created", label: "Create your store", href: "/dashboard/settings" },
-  { key: "first_product", label: "Add your first product", href: "/dashboard/catalog" },
+  { key: "first_product", label: "Add your first product", href: "/dashboard/inventory" },
   { key: "tax_rate", label: "Set up tax rate", href: "/dashboard/settings" },
   { key: "payment_connected", label: "Connect payment processing", href: "/dashboard/settings" },
   { key: "staff_added", label: "Add a staff member", href: "/dashboard/staff" },
@@ -66,11 +66,11 @@ export function GettingStarted() {
   function handleDismiss() {
     setDismissed(true);
     try { localStorage.setItem(DISMISS_KEY, "true"); } catch {}
-    // Also persist to server
+    // Persist to server — dismiss both getting started and NUX hints
     fetch("/api/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ getting_started_dismissed: true }),
+      body: JSON.stringify({ getting_started_dismissed: true, nux_dismissed: true }),
     }).catch(() => {});
   }
 
