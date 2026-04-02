@@ -17,7 +17,8 @@ export type EventType =
   | "trade_in.complete"
   | "issue.flagged" | "issue.resolved"
   | "sync.failed" | "sync.retry"
-  | "system.error" | "system.startup";
+  | "system.error" | "system.startup"
+  | "mobile.sale" | "mobile.paired" | "mobile.revoked";
 
 export interface OpLogParams {
   storeId: string;

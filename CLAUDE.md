@@ -75,6 +75,12 @@ All Store Ops models are prefixed with `Pos`:
 - Geofence: GPS tagging on clock-in (on_site/remote/no_gps), never blocks, just tags. Store configurable.
 - Staff PINs: `pos_staff.pin_hash` — 4-8 digit PIN, set by owner/manager via PATCH `/api/clock`
 - Clock API: GET/POST `/api/clock` — public (PIN auth), no session required
+- Mobile Register: `/mobile/[slug]` — access-code paired, PIN-auth, slimmed POS for employee phones
+- Access Code: 6-digit store code (hashed), generates via PATCH `/api/mobile`, revokes all sessions on rotation
+- Mobile Sessions: `pos_mobile_sessions` table tracks pairing, tx count, tx total, expiry, revocation
+- Mobile Guardrails: configurable per store — max tx per session, max $ per tx, no refunds by default, discount toggle, cash toggle
+- Rate Limiting: `pos_access_code_attempts` table, 10 attempts per 15 min per IP
+- Mobile API: GET/POST/PATCH `/api/mobile` — pair, activate, checkout, admin ops (generate code, revoke sessions, list sessions)
 
 ## Dual Mode Layout
 - **Dashboard Mode**: full sidebar, all features, data-heavy (owner/manager default)

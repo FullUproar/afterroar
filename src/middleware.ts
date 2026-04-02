@@ -17,6 +17,8 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/api/stripe/webhook") ||
     path.startsWith("/api/test-barcodes") ||
     path.startsWith("/api/clock") ||
+    path.startsWith("/api/mobile") ||
+    path.startsWith("/mobile") ||
     path === "/brand" ||
     path.startsWith("/test-barcodes") ||
     path.startsWith("/r/") ||

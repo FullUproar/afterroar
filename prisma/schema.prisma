@@ -58,8 +58,49 @@ model PosStore {
   catalog_pricing PosCatalogPricing[]
   orders          PosOrder[]
   operational_logs PosOperationalLog[]
+  mobile_sessions      PosMobileSession[]
+  access_code_attempts PosAccessCodeAttempt[]
 
   @@map("pos_stores")
+}
+
+// ============================================================
+// MOBILE REGISTER SESSIONS
+// ============================================================
+
+model PosMobileSession {
+  id             String    @id @default(cuid())
+  store_id       String
+  staff_id       String?
+  device_name    String?
+  paired_at      DateTime  @default(now()) @db.Timestamptz()
+  expires_at     DateTime  @db.Timestamptz()
+  last_active_at DateTime  @default(now()) @db.Timestamptz()
+  tx_count       Int       @default(0)
+  tx_total_cents Int       @default(0)
+  revoked        Boolean   @default(false)
+  ip_address     String?
+  user_agent     String?
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  staff PosStaff? @relation(fields: [staff_id], references: [id])
+
+  @@index([store_id])
+  @@index([store_id, revoked, expires_at])
+  @@map("pos_mobile_sessions")
+}
+
+model PosAccessCodeAttempt {
+  id           String   @id @default(cuid())
+  store_id     String
+  ip_address   String?
+  attempted_at DateTime @default(now()) @db.Timestamptz()
+  success      Boolean  @default(false)
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id, attempted_at(sort: Desc)])
+  @@map("pos_access_code_attempts")
 }
 
 // ============================================================
@@ -210,7 +251,8 @@ model PosStaff {
   certifications  PosCertification[]
   time_entries    PosTimeEntry[]
   game_checkouts  PosGameCheckout[]
-  stock_counts    PosStockCount[]
+  stock_counts     PosStockCount[]
+  mobile_sessions  PosMobileSession[]
 
   @@unique([user_id, store_id])
   @@map("pos_staff")

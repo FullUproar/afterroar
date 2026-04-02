@@ -75,6 +75,15 @@ export interface StoreSettings {
   timeclock_geofence_lat: number;
   timeclock_geofence_lng: number;
   timeclock_geofence_radius_meters: number;
+  // Mobile register
+  mobile_register_enabled: boolean;
+  mobile_access_code_hash: string;
+  mobile_session_hours: number;
+  mobile_max_tx_per_session: number;
+  mobile_max_tx_cents: number;
+  mobile_allow_discounts: boolean;
+  mobile_allow_refunds: boolean;
+  mobile_allow_cash: boolean;
 }
 
 /** Sensible defaults — a store works immediately with zero config */
@@ -146,6 +155,15 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   timeclock_geofence_lat: 0,
   timeclock_geofence_lng: 0,
   timeclock_geofence_radius_meters: 150,
+  // Mobile register
+  mobile_register_enabled: false,
+  mobile_access_code_hash: "",
+  mobile_session_hours: 12,
+  mobile_max_tx_per_session: 0,
+  mobile_max_tx_cents: 0,
+  mobile_allow_discounts: false,
+  mobile_allow_refunds: false,
+  mobile_allow_cash: true,
 };
 
 /** Settings section metadata for the settings UI */

@@ -34,6 +34,15 @@ export interface StoreSettings {
   timeclock_geofence_lat: number;
   timeclock_geofence_lng: number;
   timeclock_geofence_radius_meters: number;
+  // Mobile register
+  mobile_register_enabled: boolean;
+  mobile_access_code_hash: string;    // bcrypt hash of the 6-digit code
+  mobile_session_hours: number;       // how long a paired device stays active (default 12)
+  mobile_max_tx_per_session: number;  // max transactions per session (0 = unlimited)
+  mobile_max_tx_cents: number;        // max single transaction in cents (0 = unlimited)
+  mobile_allow_discounts: boolean;    // can mobile register apply discounts
+  mobile_allow_refunds: boolean;      // can mobile register process refunds (default false)
+  mobile_allow_cash: boolean;         // can mobile register accept cash (default true)
   [key: string]: unknown;
 }
 
@@ -68,6 +77,15 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   timeclock_geofence_lat: 0,
   timeclock_geofence_lng: 0,
   timeclock_geofence_radius_meters: 150,
+  // Mobile register
+  mobile_register_enabled: false,
+  mobile_access_code_hash: "",
+  mobile_session_hours: 12,
+  mobile_max_tx_per_session: 0,
+  mobile_max_tx_cents: 0,
+  mobile_allow_discounts: false,
+  mobile_allow_refunds: false,
+  mobile_allow_cash: true,
 };
 
 /** Server-safe: get typed settings from a store record */
