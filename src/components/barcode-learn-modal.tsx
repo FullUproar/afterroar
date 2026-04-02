@@ -76,6 +76,15 @@ export function BarcodeLearnModal({
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
   // Scroll focused input into view when keyboard opens (Android fix)
   useEffect(() => {
     function handleFocus(e: FocusEvent) {
@@ -106,48 +115,47 @@ export function BarcodeLearnModal({
   const [assignSearching, setAssignSearching] = useState(false);
 
   const assignDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const fetchedRef = useRef(false);
 
-  // ---- Fetch lookup on mount ----
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+  // ---- Fetch lookup ----
+  const doLookup = useCallback(async () => {
+    setState("loading");
+    try {
+      const res = await fetch(
+        `/api/barcode/lookup?code=${encodeURIComponent(barcode)}`
+      );
+      if (!res.ok) {
+        setState("not_found");
+        return;
+      }
+      const data: LookupResult = await res.json();
+      setLookup(data);
 
-    async function doLookup() {
-      try {
-        const res = await fetch(
-          `/api/barcode/lookup?code=${encodeURIComponent(barcode)}`
-        );
-        if (!res.ok) {
-          setState("not_found");
-          return;
+      if (data.rate_limited) {
+        setState("rate_limited");
+        return;
+      }
+
+      if (data.found && data.product) {
+        const p = data.product;
+        setName(p.name || "");
+        setCategory((p.category as ItemCategory) || "other");
+        if (p.suggested_price_cents) {
+          setPrice((p.suggested_price_cents / 100).toFixed(2));
         }
-        const data: LookupResult = await res.json();
-        setLookup(data);
-
-        if (data.rate_limited) {
-          setState("rate_limited");
-          return;
-        }
-
-        if (data.found && data.product) {
-          const p = data.product;
-          setName(p.name || "");
-          setCategory((p.category as ItemCategory) || "other");
-          if (p.suggested_price_cents) {
-            setPrice((p.suggested_price_cents / 100).toFixed(2));
-          }
-          setState("found");
-        } else {
-          setState("not_found");
-        }
-      } catch {
+        setState("found");
+      } else {
         setState("not_found");
       }
+    } catch {
+      setState("not_found");
     }
-
-    doLookup();
   }, [barcode]);
+
+  // Auto-lookup on mount
+  useEffect(() => {
+    doLookup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---- Assign search ----
   useEffect(() => {
@@ -364,6 +372,12 @@ export function BarcodeLearnModal({
               <p className="text-sm text-muted">
                 Product not found in UPC database. Add manually:
               </p>
+              <button
+                onClick={doLookup}
+                className="text-xs text-accent hover:underline"
+              >
+                Retry lookup
+              </button>
             </div>
           )}
 

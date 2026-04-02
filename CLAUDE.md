@@ -64,6 +64,9 @@ All Store Ops models are prefixed with `Pos`:
 - Market Cache: `src/lib/market-price-cache.ts` — Scryfall price cache (1hr TTL)
 - Op Log: `src/lib/op-log.ts` — operational logging to `pos_operational_logs` table (fire-and-forget)
 - Receipt QR: token-based receipt lookup (`/r/[token]`), customer-facing display
+- Intelligence Engine: `src/lib/store-intelligence.ts` — FLGS-vocabulary insights (liquidity runway, bench warmers, regulars MIA, credit liability, seasonal warnings, WPN metrics, cash-aware buylist)
+- Store Advisor: `src/components/store-advisor.tsx` + `/api/intelligence/advisor` — Claude-powered business co-pilot, feeds real store metrics to Claude Sonnet, returns personalized advice in gamer language
+- Intelligence Preferences: store-level settings for thresholds (dead stock days, at-risk days, cash comfort zone), monthly fixed costs (rent, payroll, utilities), WPN level, advisor tone, seasonal warnings
 
 ## Dual Mode Layout
 - **Dashboard Mode**: full sidebar, all features, data-heavy (owner/manager default)

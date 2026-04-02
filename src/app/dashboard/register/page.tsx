@@ -14,7 +14,9 @@ import {
 } from "@/lib/offline-db";
 import { useStoreName, useStoreSettings } from "@/lib/store-settings";
 import { useStore } from "@/lib/store-context";
+import { signOut } from "next-auth/react";
 import { useTrainingMode } from "@/lib/training-mode";
+import { useMode } from "@/lib/mode-context";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 import { NumericKeypad } from "@/components/numeric-keypad";
@@ -132,6 +134,7 @@ export default function RegisterPage() {
   const storeSettings = useStoreSettings();
   const { staff, effectiveRole } = useStore();
   const { isTraining } = useTrainingMode();
+  const { setMode } = useMode();
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -199,6 +202,10 @@ export default function RegisterPage() {
   // Error banner
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const errorBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [noticeBanner, setNoticeBanner] = useState<string | null>(null);
+  const noticeBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [zeroStockItem, setZeroStockItem] = useState<InventoryItem | null>(null);
+  const [hasZeroStockOverride, setHasZeroStockOverride] = useState(false);
 
   // Receipt QR code
   const [receiptQrUrl, setReceiptQrUrl] = useState<string | null>(null);
@@ -282,26 +289,37 @@ export default function RegisterPage() {
       scannerFlashTimerRef.current = setTimeout(() => setScannerFlash("none"), 600);
 
       let found: InventoryItem | null = null;
+      let zeroStockMatch: InventoryItem | null = null;
       try {
         const localResults = await searchInventoryLocal(barcode);
-        const match = localResults.find((r) => r.barcode === barcode && r.quantity > 0);
+        const match = localResults.find((r) => r.barcode === barcode);
         if (match) {
-          found = { ...match, low_stock_threshold: 5, image_url: null, external_id: null, catalog_product_id: null, shared_to_catalog: false, created_at: "", updated_at: "" } as InventoryItem;
+          const asItem = { ...match, low_stock_threshold: 5, image_url: null, external_id: null, catalog_product_id: null, shared_to_catalog: false, created_at: "", updated_at: "" } as InventoryItem;
+          if (match.quantity > 0) found = asItem;
+          else zeroStockMatch = asItem;
         }
       } catch {}
 
-      if (!found) {
+      if (!found && !zeroStockMatch) {
         try {
           const res = await fetch(`/api/inventory/search?q=${encodeURIComponent(barcode)}`);
           const data: InventoryItem[] = await res.json();
           if (Array.isArray(data)) {
-            found = data.find((d) => d.barcode === barcode && d.quantity > 0) ?? null;
+            const match = data.find((d) => d.barcode === barcode);
+            if (match) {
+              if (match.quantity > 0) found = match;
+              else zeroStockMatch = match;
+            }
           }
         } catch {}
       }
 
       if (found) {
         addToCart(found);
+      } else if (zeroStockMatch) {
+        // Item exists but system says 0 stock — offer override
+        const item = zeroStockMatch;
+        setZeroStockItem(item);
       } else {
         playBeep(400, 0.15, 0.06);
         setScannerFlash("error");
@@ -531,13 +549,20 @@ export default function RegisterPage() {
   }
 
   function showError(message: string) {
+    // Expected business conditions → amber notice (not scary)
+    if (/insufficient.*quantit/i.test(message) || /not enough.*stock/i.test(message) || /insufficient.*credit/i.test(message)) {
+      setNoticeBanner(message);
+      if (noticeBannerTimerRef.current) clearTimeout(noticeBannerTimerRef.current);
+      noticeBannerTimerRef.current = setTimeout(() => setNoticeBanner(null), 6000);
+      return;
+    }
+    // True errors → red banner
     let friendly = message;
     if (/payment.*fail/i.test(message)) friendly = "Card payment failed. Try again or use a different method.";
-    else if (/insufficient.*inventory/i.test(message) || /not enough.*stock/i.test(message)) friendly = "Not enough stock. Check inventory.";
     else if (/network|fetch|connect/i.test(message)) friendly = "Connection lost. Transaction saved offline.";
     setErrorBanner(friendly);
     if (errorBannerTimerRef.current) clearTimeout(errorBannerTimerRef.current);
-    errorBannerTimerRef.current = setTimeout(() => setErrorBanner(null), 5000);
+    errorBannerTimerRef.current = setTimeout(() => setErrorBanner(null), 8000);
   }
 
   function addToCart(item: InventoryItem) {
@@ -718,6 +743,7 @@ export default function RegisterPage() {
       discount_cents: discountCents,
       ...(stripePaymentIntentId ? { stripe_payment_intent_id: stripePaymentIntentId } : {}),
       ...(isTraining ? { training: true } : {}),
+      ...(hasZeroStockOverride ? { allow_negative_stock: true } : {}),
     };
     try {
       const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -740,7 +766,7 @@ export default function RegisterPage() {
     const receiptNumber = generateReceiptNumber();
     setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken });
     (document.activeElement as HTMLElement)?.blur();
-    setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null);
+    setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null); setHasZeroStockOverride(false);
     clearPersistedCart(); cartIdRef.current = createEmptyCart().id;
     // Generate QR code for receipt
     if (receiptToken) {
@@ -918,11 +944,51 @@ export default function RegisterPage() {
       {/* ====== TOAST ====== */}
       {toastMessage && <div className="absolute top-16 left-1/2 -translate-x-1/2 z-60 bg-card border border-card-border rounded-xl px-4 py-2 shadow-lg text-base text-foreground pointer-events-none animate-slide-down">{toastMessage}</div>}
 
-      {/* ====== ERROR BANNER ====== */}
+      {/* ====== ZERO STOCK PROMPT — item exists but qty is 0 ====== */}
+      {zeroStockItem && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-amber-500/40 bg-amber-950 p-5 shadow-2xl space-y-3">
+            <p className="text-base font-semibold text-amber-200">
+              {zeroStockItem.name}
+            </p>
+            <p className="text-sm text-amber-200/80">
+              System shows 0 in stock, but you scanned it. Sell it anyway?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { addToCart(zeroStockItem); setZeroStockItem(null); setHasZeroStockOverride(true); }}
+                className="flex-1 rounded-xl bg-amber-600 py-3 text-sm font-semibold text-white active:bg-amber-700 transition-colors"
+              >
+                Add Anyway
+              </button>
+              <button
+                onClick={() => setZeroStockItem(null)}
+                className="flex-1 rounded-xl border border-amber-500/30 bg-transparent py-3 text-sm font-medium text-amber-300 active:bg-amber-900 transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+            <p className="text-[11px] text-amber-200/50">
+              Inventory count will go negative. Adjust stock later.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ====== NOTICE BANNER (expected conditions: out of stock, insufficient credit) ====== */}
+      {noticeBanner && (
+        <div className="absolute top-14 left-4 right-4 z-[65] flex items-center gap-3 rounded-xl bg-amber-950 border border-amber-500/40 px-4 py-3 shadow-lg animate-slide-down">
+          <span className="text-xl shrink-0">{"\u26A0\uFE0F"}</span>
+          <span className="flex-1 text-sm font-medium text-amber-200">{noticeBanner}</span>
+          <button onClick={() => { setNoticeBanner(null); if (noticeBannerTimerRef.current) clearTimeout(noticeBannerTimerRef.current); }} className="shrink-0 text-amber-400 hover:text-amber-200 text-lg leading-none" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
+        </div>
+      )}
+
+      {/* ====== ERROR BANNER (true errors: network, crashes) ====== */}
       {errorBanner && (
-        <div className="absolute top-0 left-0 right-0 z-[65] flex items-center gap-3 px-4 py-3 bg-red-500/15 border-b border-red-500/30 animate-slide-down">
-          <span className="flex-1 text-base font-medium text-red-400">{errorBanner}</span>
-          <button onClick={() => { setErrorBanner(null); if (errorBannerTimerRef.current) clearTimeout(errorBannerTimerRef.current); }} className="shrink-0 text-red-400 hover:text-red-300 text-lg leading-none" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
+        <div className="absolute top-14 left-4 right-4 z-[65] flex items-center gap-3 rounded-xl bg-red-950 border border-red-500/40 px-4 py-3 shadow-lg animate-slide-down">
+          <span className="flex-1 text-sm font-medium text-red-200">{errorBanner}</span>
+          <button onClick={() => { setErrorBanner(null); if (errorBannerTimerRef.current) clearTimeout(errorBannerTimerRef.current); }} className="shrink-0 text-red-400 hover:text-red-200 text-lg leading-none" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
         </div>
       )}
 
@@ -945,7 +1011,7 @@ export default function RegisterPage() {
         cartLength={cart.length}
         totalCents={total}
         onLogoTap={handleLogoTap}
-        onExitClick={() => { if (cart.length > 0) setShowExitConfirm(true); else router.push("/dashboard"); }}
+        onExitClick={() => setShowExitConfirm(true)}
       />
 
       {/* ====== ACTION BAR ====== */}
@@ -1183,10 +1249,20 @@ export default function RegisterPage() {
           <div className="relative bg-card rounded-2xl border border-card-border w-full max-w-sm mx-4">
             <div className="p-5 space-y-4">
               <div className="text-base font-bold text-foreground">Exit Register?</div>
-              <p className="text-sm text-muted">You have {cartItemCount} item{cartItemCount !== 1 ? "s" : ""} ({formatCents(total)}) in your cart.</p>
+              {cartItemCount > 0 && (
+                <p className="text-sm text-muted">You have {cartItemCount} item{cartItemCount !== 1 ? "s" : ""} ({formatCents(total)}) in your cart.</p>
+              )}
               <div className="flex flex-col gap-2">
-                <button onClick={() => { handleParkCart(); setShowExitConfirm(false); router.push("/dashboard"); }} className="w-full rounded-xl font-medium text-white transition-colors" style={{ height: 44, backgroundColor: "var(--accent)", minHeight: 44 }}>Park Cart</button>
-                <button onClick={() => { setCart([]); setDiscounts([]); setCustomer(null); clearPersistedCart(); cartIdRef.current = createEmptyCart().id; setShowExitConfirm(false); router.push("/dashboard"); }} className="w-full rounded-xl border border-red-500/30 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: 44 }}>Clear Cart</button>
+                {cartItemCount > 0 && (
+                  <>
+                    <button onClick={() => { handleParkCart(); setShowExitConfirm(false); setMode("dashboard"); router.push("/dashboard"); }} className="w-full rounded-xl font-medium text-white transition-colors" style={{ height: 44, backgroundColor: "var(--accent)", minHeight: 44 }}>Park Cart & Exit</button>
+                    <button onClick={() => { setCart([]); setDiscounts([]); setCustomer(null); clearPersistedCart(); cartIdRef.current = createEmptyCart().id; setShowExitConfirm(false); setHasZeroStockOverride(false); setMode("dashboard"); router.push("/dashboard"); }} className="w-full rounded-xl border border-card-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-card-hover transition-colors" style={{ minHeight: 44 }}>Clear Cart & Exit</button>
+                  </>
+                )}
+                {cartItemCount === 0 && (
+                  <button onClick={() => { setMode("dashboard"); setShowExitConfirm(false); router.push("/dashboard"); }} className="w-full rounded-xl font-medium text-white transition-colors" style={{ height: 44, backgroundColor: "var(--accent)", minHeight: 44 }}>Go to Dashboard</button>
+                )}
+                <button onClick={() => { signOut({ callbackUrl: "/login" }); }} className="w-full rounded-xl border border-red-500/30 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: 44 }}>Sign Out</button>
                 <button onClick={() => setShowExitConfirm(false)} className="w-full rounded-xl border border-card-border px-4 py-2.5 text-sm font-medium text-muted hover:text-foreground hover:bg-card-hover transition-colors" style={{ minHeight: 44 }}>Cancel</button>
               </div>
             </div>

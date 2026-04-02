@@ -80,13 +80,21 @@ export default function GiftCardsPage() {
     }
   }
 
+  const [detailError, setDetailError] = useState<string | null>(null);
+
   async function viewDetail(code: string) {
     setDetailLoading(true);
+    setDetail(null);
+    setDetailError(null);
     try {
       const res = await fetch(`/api/gift-cards/${encodeURIComponent(code)}`);
       if (res.ok) {
         setDetail(await res.json());
+      } else {
+        setDetailError("Failed to load gift card details");
       }
+    } catch {
+      setDetailError("Network error loading gift card");
     } finally {
       setDetailLoading(false);
     }
@@ -303,6 +311,11 @@ export default function GiftCardsPage() {
           >
             {detailLoading && !detail ? (
               <p className="text-muted">Loading...</p>
+            ) : detailError ? (
+              <div className="text-center py-4">
+                <p className="text-red-400 text-sm">{detailError}</p>
+                <button onClick={() => setDetail(null)} className="mt-2 text-xs text-muted hover:text-foreground">Close</button>
+              </div>
             ) : detail ? (
               <>
                 <div className="flex items-center justify-between mb-1">

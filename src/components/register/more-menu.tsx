@@ -913,7 +913,7 @@ export function MoreMenu({
               <input
                 type="text"
                 value={giftCardCode}
-                onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
+                onChange={(e) => { setGiftCardCode(e.target.value.toUpperCase()); setGiftCardError(null); }}
                 onKeyDown={(e) => {
                   e.stopPropagation();
                   if (e.key === "Enter") lookupGiftCard(giftCardCode);

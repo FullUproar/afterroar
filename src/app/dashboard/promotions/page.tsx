@@ -103,15 +103,23 @@ export default function PromotionsPage() {
   }
 
   async function toggleActive(id: string, active: boolean) {
+    // Optimistically update UI
+    setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, active } : p)));
     try {
-      await fetch('/api/promotions', {
+      const res = await fetch('/api/promotions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, active }),
       });
-      setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, active } : p)));
+      if (!res.ok) {
+        // Revert on failure
+        setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, active: !active } : p)));
+        setError('Failed to update promotion');
+      }
     } catch {
-      setError('Failed to update');
+      // Revert on network error
+      setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, active: !active } : p)));
+      setError('Failed to update promotion');
     }
   }
 

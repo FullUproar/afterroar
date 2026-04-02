@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DashboardModeGuard } from "@/components/dashboard-mode-guard";
 import { GettingStarted } from "@/components/getting-started";
 import { IntelligenceFeed } from "@/components/intelligence-feed";
+import { StoreAdvisor } from "@/components/store-advisor";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -86,6 +87,9 @@ export default async function DashboardPage() {
 
       {/* Intelligence Feed — AI-powered actionable insights */}
       <IntelligenceFeed compact />
+
+      {/* AI Store Advisor — Claude-powered business co-pilot */}
+      <StoreAdvisor />
 
       {/* Quick Actions — mobile/tablet, most common staff tasks */}
       <div className="grid grid-cols-3 gap-3 lg:hidden">

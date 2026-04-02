@@ -53,6 +53,22 @@ export interface StoreSettings {
 
   // Payment methods enabled
   payment_methods_enabled: string[];
+
+  // Intelligence preferences — store-level customization for insights
+  intel_monthly_rent: number;              // Monthly rent in dollars (0 = not set)
+  intel_monthly_utilities: number;         // Monthly utilities in dollars
+  intel_monthly_insurance: number;         // Monthly insurance in dollars
+  intel_monthly_payroll: number;           // Monthly payroll in dollars
+  intel_monthly_other_fixed: number;       // Other monthly fixed costs in dollars
+  intel_dead_stock_days: number;           // Days with no sales before flagging as dead stock (default 30)
+  intel_at_risk_days: number;              // Days since last visit before flagging customer at risk (default 14)
+  intel_buylist_cash_comfort_days: number; // Days of cash runway you want before buylist shifts to credit (default 14)
+  intel_credit_liability_warn_percent: number; // Warn when outstanding credit exceeds this % of monthly revenue (default 50)
+  intel_prefer_credit_buylists: boolean;   // Default to credit-forward on buylists (default false)
+  intel_wpn_level: string;                 // WPN level: "none" | "core" | "advanced" | "premium" (default "none")
+  intel_seasonal_warnings: boolean;        // Enable seasonal Q4/January cliff warnings (default true)
+  intel_advisor_enabled: boolean;          // Enable AI-powered store advisor (default true)
+  intel_advisor_tone: string;              // "gamer" | "professional" | "casual" (default "gamer")
 }
 
 /** Sensible defaults — a store works immediately with zero config */
@@ -102,6 +118,22 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
 
   // Payment methods
   payment_methods_enabled: ["cash", "card", "store_credit", "split"],
+
+  // Intelligence preferences
+  intel_monthly_rent: 0,
+  intel_monthly_utilities: 0,
+  intel_monthly_insurance: 0,
+  intel_monthly_payroll: 0,
+  intel_monthly_other_fixed: 0,
+  intel_dead_stock_days: 30,
+  intel_at_risk_days: 14,
+  intel_buylist_cash_comfort_days: 14,
+  intel_credit_liability_warn_percent: 50,
+  intel_prefer_credit_buylists: false,
+  intel_wpn_level: "none",
+  intel_seasonal_warnings: true,
+  intel_advisor_enabled: true,
+  intel_advisor_tone: "gamer",
 };
 
 /** Settings section metadata for the settings UI */
@@ -196,6 +228,61 @@ export const SETTINGS_SECTIONS = [
       { key: "loyalty_event_checkin_points", label: "Points per event check-in", type: "number" as const, min: 0, max: 1000 },
       { key: "loyalty_redeem_points_per_dollar", label: "Points needed for $1 discount", type: "number" as const, min: 1, max: 10000 },
       { key: "loyalty_min_redeem_points", label: "Minimum points to redeem", type: "number" as const, min: 0, max: 10000 },
+    ],
+  },
+  {
+    key: "intelligence",
+    label: "Store Intelligence",
+    description: "Customize how your store advisor analyzes your business",
+    fields: [
+      { key: "intel_advisor_enabled", label: "Enable AI store advisor", type: "toggle" as const },
+      {
+        key: "intel_advisor_tone",
+        label: "Advisor Personality",
+        type: "select" as const,
+        options: [
+          { value: "gamer", label: "Gamer (friendly, uses game store lingo)" },
+          { value: "casual", label: "Casual (plain English, no jargon)" },
+          { value: "professional", label: "Professional (formal business language)" },
+        ],
+      },
+      {
+        key: "intel_wpn_level",
+        label: "WPN Level",
+        type: "select" as const,
+        tooltip: "Your Wizards Play Network level. Affects event frequency recommendations and metric targets.",
+        options: [
+          { value: "none", label: "Not WPN / Not Applicable" },
+          { value: "core", label: "WPN Core" },
+          { value: "advanced", label: "WPN Advanced" },
+          { value: "premium", label: "WPN Premium" },
+        ],
+      },
+      { key: "intel_seasonal_warnings", label: "Seasonal cash flow warnings (Q4, January cliff, etc.)", type: "toggle" as const },
+      { key: "intel_prefer_credit_buylists", label: "Default buylists to credit-forward pricing", type: "toggle" as const, tooltip: "When enabled, buylist offers default to store credit instead of cash. Customers still choose, but the default shifts." },
+    ],
+  },
+  {
+    key: "intelligence_costs",
+    label: "Monthly Fixed Costs",
+    description: "Enter your fixed monthly expenses so we can calculate your cash runway and buying power",
+    fields: [
+      { key: "intel_monthly_rent", label: "Rent ($)", type: "number" as const, min: 0, max: 100000 },
+      { key: "intel_monthly_utilities", label: "Utilities ($)", type: "number" as const, min: 0, max: 50000 },
+      { key: "intel_monthly_insurance", label: "Insurance ($)", type: "number" as const, min: 0, max: 50000 },
+      { key: "intel_monthly_payroll", label: "Payroll ($)", type: "number" as const, min: 0, max: 500000 },
+      { key: "intel_monthly_other_fixed", label: "Other Fixed Costs ($)", type: "number" as const, min: 0, max: 100000, tooltip: "Subscriptions, loan payments, POS fees, etc." },
+    ],
+  },
+  {
+    key: "intelligence_thresholds",
+    label: "Intelligence Thresholds",
+    description: "Fine-tune when alerts trigger — every store is different",
+    fields: [
+      { key: "intel_dead_stock_days", label: "Flag dead stock after (days)", type: "number" as const, min: 7, max: 180, tooltip: "Items with zero sales for this many days get flagged. Lower = more aggressive inventory management." },
+      { key: "intel_at_risk_days", label: "Flag at-risk customers after (days)", type: "number" as const, min: 7, max: 90, tooltip: "Regular customers who haven't visited in this many days get flagged. Lower = more proactive outreach." },
+      { key: "intel_buylist_cash_comfort_days", label: "Cash comfort zone (days)", type: "number" as const, min: 7, max: 60, tooltip: "When your cash runway drops below this many days, buylist pricing automatically shifts toward store credit." },
+      { key: "intel_credit_liability_warn_percent", label: "Credit liability warning threshold (%)", type: "number" as const, min: 10, max: 200, tooltip: "Alert when total outstanding store credit exceeds this percentage of your monthly revenue." },
     ],
   },
   {

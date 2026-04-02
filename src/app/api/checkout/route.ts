@@ -32,6 +32,7 @@ interface CheckoutBody {
   loyalty_points_redeem?: number;
   loyalty_discount_cents?: number;
   training?: boolean;
+  allow_negative_stock?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      if (inv.quantity < item.quantity) {
+      if (inv.quantity < item.quantity && !body.allow_negative_stock) {
         return NextResponse.json(
           {
             error: `Insufficient quantity for "${inv.name}". Available: ${inv.quantity}, requested: ${item.quantity}`,

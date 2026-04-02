@@ -14,6 +14,21 @@ export interface StoreSettings {
   loyalty_points_per_dollar: number;
   loyalty_redemption_rate: number;
   currency: string;
+  // Intelligence preferences
+  intel_monthly_rent: number;
+  intel_monthly_utilities: number;
+  intel_monthly_insurance: number;
+  intel_monthly_payroll: number;
+  intel_monthly_other_fixed: number;
+  intel_dead_stock_days: number;
+  intel_at_risk_days: number;
+  intel_buylist_cash_comfort_days: number;
+  intel_credit_liability_warn_percent: number;
+  intel_prefer_credit_buylists: boolean;
+  intel_wpn_level: string;
+  intel_seasonal_warnings: boolean;
+  intel_advisor_enabled: boolean;
+  intel_advisor_tone: string;
   [key: string]: unknown;
 }
 
@@ -28,6 +43,21 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   loyalty_points_per_dollar: 1,
   loyalty_redemption_rate: 100, // 100 points = $1
   currency: "USD",
+  // Intelligence preferences
+  intel_monthly_rent: 0,
+  intel_monthly_utilities: 0,
+  intel_monthly_insurance: 0,
+  intel_monthly_payroll: 0,
+  intel_monthly_other_fixed: 0,
+  intel_dead_stock_days: 30,
+  intel_at_risk_days: 14,
+  intel_buylist_cash_comfort_days: 14,
+  intel_credit_liability_warn_percent: 50,
+  intel_prefer_credit_buylists: false,
+  intel_wpn_level: "none",
+  intel_seasonal_warnings: true,
+  intel_advisor_enabled: true,
+  intel_advisor_tone: "gamer",
 };
 
 /** Server-safe: get typed settings from a store record */

@@ -270,27 +270,35 @@ function RevenueChart({ data, onHover }: { data: DailyRevenueRow[]; onHover?: (d
         </div>
       </div>
 
-      {/* Hovered day tooltip */}
-      {hoveredIdx !== null && data[hoveredIdx] && (
-        <div className="mb-3 rounded-xl bg-card-hover/80 px-3 py-2 text-xs">
-          <span className="font-medium text-foreground">{formatDayLabel(data[hoveredIdx].date)}</span>
-          <span className="mx-2 text-zinc-600">|</span>
-          <span className="text-indigo-400">Revenue: {formatCents(data[hoveredIdx].revenue_cents)}</span>
-          <span className="mx-2 text-zinc-600">|</span>
-          <span className="text-rose-400">Payouts: {formatCents(data[hoveredIdx].payout_cents)}</span>
-          <span className="mx-2 text-zinc-600">|</span>
-          <span className={data[hoveredIdx].net_cents >= 0 ? 'text-green-400' : 'text-red-400'}>
-            Net: {formatCents(data[hoveredIdx].net_cents)}
-          </span>
-        </div>
-      )}
+      {/* Hovered day tooltip — fixed height so bars don't shift */}
+      <div className="h-8 mb-3">
+        {hoveredIdx !== null && data[hoveredIdx] && (
+          <div className="rounded-xl bg-card-hover/80 px-3 py-2 text-xs">
+            <span className="font-medium text-foreground">{formatDayLabel(data[hoveredIdx].date)}</span>
+            <span className="mx-2 text-zinc-600">|</span>
+            <span className="text-indigo-400">Revenue: {formatCents(data[hoveredIdx].revenue_cents)}</span>
+            <span className="mx-2 text-zinc-600">|</span>
+            <span className="text-rose-400">Payouts: {formatCents(data[hoveredIdx].payout_cents)}</span>
+            <span className="mx-2 text-zinc-600">|</span>
+            <span className={data[hoveredIdx].net_cents >= 0 ? 'text-green-400' : 'text-red-400'}>
+              Net: {formatCents(data[hoveredIdx].net_cents)}
+            </span>
+          </div>
+        )}
+      </div>
 
-      <div ref={containerRef} className="relative flex items-end gap-0.5" style={{ height: chartHeight }}>
+      <div ref={containerRef} className="relative flex items-end gap-px" style={{ height: chartHeight }}>
         {data.map((day, i) => {
-          const revenueH = (day.revenue_cents / maxRevenue) * (chartHeight - 20);
-          const payoutH = (day.payout_cents / maxRevenue) * (chartHeight - 20);
+          const barArea = chartHeight - 24;
+          const revenueH = (day.revenue_cents / maxRevenue) * barArea;
+          const payoutH = (day.payout_cents / maxRevenue) * barArea;
           const isWeekend = day.day_of_week === 0 || day.day_of_week === 6;
           const isHovered = hoveredIdx === i;
+
+          // Show date label on Mondays, or first/last day
+          const dayDate = new Date(day.date + 'T12:00:00Z');
+          const isMonday = dayDate.getUTCDay() === 1;
+          const showLabel = isMonday || i === 0 || i === data.length - 1;
 
           return (
             <div
@@ -306,35 +314,35 @@ function RevenueChart({ data, onHover }: { data: DailyRevenueRow[]; onHover?: (d
                 onHover?.(null);
               }}
             >
-              {/* Revenue bar */}
-              <div className="relative flex w-full flex-col items-center justify-end" style={{ height: chartHeight - 20 }}>
-                {/* Payout bar (overlaid, semi-transparent) */}
-                {payoutH > 0 && (
-                  <div
-                    className={`absolute bottom-0 w-full rounded-t transition-all ${
-                      isHovered ? 'bg-rose-500/80' : 'bg-rose-500/40'
-                    }`}
-                    style={{ height: Math.max(payoutH, 1) }}
-                  />
-                )}
+              {/* Bar pair: revenue (left half) + payout (right half) */}
+              <div className="flex w-full items-end justify-center gap-px" style={{ height: barArea }}>
                 {/* Revenue bar */}
                 <div
-                  className={`relative w-full rounded-t transition-all ${
+                  className={`flex-1 rounded-t transition-all ${
                     isHovered
                       ? 'bg-indigo-400'
                       : isWeekend
-                        ? 'bg-accent/60'
+                        ? 'bg-indigo-500/50'
                         : 'bg-indigo-500/80'
                   }`}
                   style={{ height: Math.max(revenueH, 1) }}
                 />
+                {/* Payout bar */}
+                <div
+                  className={`flex-1 rounded-t transition-all ${
+                    isHovered ? 'bg-rose-400' : 'bg-rose-500/50'
+                  }`}
+                  style={{ height: Math.max(payoutH, 1) }}
+                />
               </div>
-              {/* Date label — show every 5th day */}
-              {i % 5 === 0 && (
-                <span className="mt-1 text-[9px] text-zinc-600 tabular-nums">
-                  {formatShortDate(day.date)}
-                </span>
-              )}
+              {/* Date label — Mondays + first/last */}
+              <div className="h-4 flex items-center justify-center">
+                {showLabel && (
+                  <span className="text-[9px] text-zinc-500 tabular-nums whitespace-nowrap">
+                    {formatShortDate(day.date)}
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
@@ -352,12 +360,14 @@ function CategoryBars({ categories, totalCost }: { categories: CategoryRow[]; to
         const pct = totalCost > 0 ? (cat.cost_basis_cents / totalCost) * 100 : 0;
         return (
           <div key={cat.category}>
-            <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="font-medium text-zinc-200">{catLabel(cat.category)}</span>
-              <div className="flex items-center gap-3">
-                <span className="text-muted tabular-nums">{cat.item_count} SKUs</span>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-medium text-zinc-200 truncate">{catLabel(cat.category)}</span>
+                <span className="shrink-0 text-[10px] text-muted/50 cursor-default" title={`${cat.item_count.toLocaleString()} SKUs — ${formatCents(cat.cost_basis_cents)} at cost`}>{"\u24D8"}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="font-medium text-foreground tabular-nums">{formatCents(cat.cost_basis_cents)}</span>
-                <span className="w-12 text-right text-xs text-muted tabular-nums">{pct.toFixed(0)}%</span>
+                <span className="w-10 text-right text-xs text-muted tabular-nums">{pct.toFixed(0)}%</span>
               </div>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-card-hover">
@@ -638,7 +648,7 @@ export default function CashFlowPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left: Inventory by Category */}
         <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
-          <SectionHeader sub="Where your capital is tied up">Inventory by Category</SectionHeader>
+          <SectionHeader sub="Cost basis — how much cash is locked in each category">Inventory by Category</SectionHeader>
           <div className="mt-5">
             <CategoryBars categories={data.category_breakdown} totalCost={data.inventory.cost_basis_cents} />
           </div>

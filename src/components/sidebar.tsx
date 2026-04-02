@@ -128,22 +128,23 @@ export function Sidebar() {
 
   function toggleGroup(label: string) {
     setExpanded((prev) => {
-      const isCurrentlyExpanded =
-        (activeGroup?.label === label) || !!prev[label];
-      const next = { ...prev, [label]: !isCurrentlyExpanded };
+      // Simple: if it has an explicit value, flip it. Otherwise it's implicitly open (active) or closed (inactive).
+      const currentlyOpen = label in prev
+        ? !!prev[label]
+        : activeGroup?.label === label; // active group defaults open, others default closed
+      const next = { ...prev, [label]: !currentlyOpen };
       storeExpanded(next);
       return next;
     });
   }
 
   function isGroupExpanded(group: NavGroup): boolean {
-    // Active group is always expanded (unless explicitly collapsed)
-    if (activeGroup && group.label === activeGroup.label) {
-      // Only collapse active group if user explicitly collapsed it
-      return expanded[group.label] !== false;
+    // Explicit state takes priority
+    if (group.label in expanded) {
+      return !!expanded[group.label];
     }
-    // Otherwise check stored state — default to collapsed
-    return !!expanded[group.label];
+    // Default: active group is open, others are closed
+    return activeGroup?.label === group.label;
   }
 
   function handleSignOut() {

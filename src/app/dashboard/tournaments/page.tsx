@@ -392,7 +392,7 @@ export default function TournamentsPage() {
 
         {/* Report Match Modal */}
         {reportMatch && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg" onClick={() => setReportMatch(null)} onKeyDown={(e) => e.key === "Escape" && setReportMatch(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg outline-none" onClick={() => setReportMatch(null)} onKeyDown={(e) => { if (e.key === "Escape") setReportMatch(null); }} tabIndex={-1} ref={(el) => el?.focus()}>
             <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-foreground">Report Match Result</h2>

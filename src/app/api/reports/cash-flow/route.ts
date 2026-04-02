@@ -585,9 +585,13 @@ export async function GET() {
       const catInv = inventoryByCategory.get(cat);
       if (catInv && sales.units_sold > 0) {
         // Rough estimate: (current stock / daily sales rate)
+        // Cap perpetual-stock categories (food_drink uses qty 999 for always-available items)
+        const effectiveUnits = cat === "food_drink"
+          ? Math.min(catInv.total_units, sales.units_sold * 2)
+          : catInv.total_units;
         const dailySalesRate = sales.units_sold / 30;
         avgDaysToSellByCategory[cat] = dailySalesRate > 0
-          ? Math.round(catInv.total_units / dailySalesRate)
+          ? Math.round(effectiveUnits / dailySalesRate)
           : null;
       } else {
         avgDaysToSellByCategory[cat] = null;
