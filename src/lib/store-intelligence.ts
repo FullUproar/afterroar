@@ -517,7 +517,7 @@ export async function generateInsights(
         ? `${top.name}: only ${top.quantity} left, selling ${top.velocity}/week. ${urgency}`
         : `${top.name} is most urgent — ${top.quantity} left, selling ${top.velocity}/week. ${urgency} ${lowStockItems.length - 1} more also need attention.`,
       metric: `${lowStockItems.length}`,
-      action: { label: "View Inventory", href: "/dashboard/inventory" },
+      action: { label: "Create Purchase Order", href: "/dashboard/purchase-orders" },
       category: "inventory",
     });
   }
@@ -549,7 +549,7 @@ export async function generateInsights(
       title: `${formatCents(totalTrapped)} sitting on the bench`,
       message: `${benchItems.length} item${benchItems.length > 1 ? "s" : ""} with zero sales in ${deadStockDays}+ days. That's cash trapped on your shelves doing nothing. Mark these down, bundle them, or run a clearance event to free up buying power.`,
       metric: formatCents(totalTrapped),
-      action: { label: "View Cash Flow", href: "/dashboard/cash-flow" },
+      action: { label: "Run a Promotion", href: "/dashboard/promotions" },
       category: "inventory",
     });
   }
@@ -582,7 +582,7 @@ export async function generateInsights(
       icon: "\u{1F4CA}",
       title: `Too deep on ${overstockItems.length} item${overstockItems.length > 1 ? "s" : ""}`,
       message: `${top.quantity} of "${top.name}" but you only move ${top.monthlyVelocity}/month — that's ${top.monthsOfStock} months of stock. Your cash is better off in things that actually sell.`,
-      action: { label: "View Inventory", href: "/dashboard/inventory" },
+      action: { label: "Adjust Pricing", href: "/dashboard/singles/pricing" },
       category: "inventory",
     });
   }
@@ -766,7 +766,7 @@ export async function generateInsights(
       icon: "\u{1F4C5}",
       title: "Nothing on the calendar this week",
       message: "Events are what separate you from Amazon. FNM, Commander nights, board game meetups — they bring regulars through the door who buy singles, snacks, and sleeves. An empty calendar is a quiet register.",
-      action: { label: "Create Event", href: "/dashboard/events" },
+      action: { label: "Schedule an Event", href: "/dashboard/events" },
       category: "events",
     });
   }

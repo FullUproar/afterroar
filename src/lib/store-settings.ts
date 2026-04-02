@@ -150,11 +150,6 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   intel_advisor_enabled: true,
   intel_advisor_tone: "gamer",
 
-  // Timeclock
-  timeclock_geofence_enabled: false,
-  timeclock_geofence_lat: 0,
-  timeclock_geofence_lng: 0,
-  timeclock_geofence_radius_meters: 150,
   // Mobile register
   mobile_register_enabled: false,
   mobile_access_code_hash: "",
@@ -164,6 +159,11 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   mobile_allow_discounts: false,
   mobile_allow_refunds: false,
   mobile_allow_cash: true,
+  // Timeclock
+  timeclock_geofence_enabled: false,
+  timeclock_geofence_lat: 0,
+  timeclock_geofence_lng: 0,
+  timeclock_geofence_radius_meters: 150,
 };
 
 /** Settings section metadata for the settings UI */
@@ -316,9 +316,23 @@ export const SETTINGS_SECTIONS = [
     ],
   },
   {
+    key: "mobile_register",
+    label: "Mobile Register",
+    description: "Let employees sell from their phones during events and busy periods",
+    fields: [
+      { key: "mobile_register_enabled", label: "Enable mobile register", type: "toggle" as const, tooltip: "When enabled, employees can pair their phone to your store with an access code and sell using their PIN." },
+      { key: "mobile_session_hours", label: "Session duration (hours)", type: "number" as const, min: 1, max: 72, tooltip: "How long a paired device stays active before requiring re-pairing." },
+      { key: "mobile_max_tx_per_session", label: "Max sales per session (0 = unlimited)", type: "number" as const, min: 0, max: 10000 },
+      { key: "mobile_max_tx_cents", label: "Max sale amount (cents, 0 = unlimited)", type: "number" as const, min: 0, max: 10000000, tooltip: "Maximum single transaction amount on mobile. E.g. 50000 = $500." },
+      { key: "mobile_allow_discounts", label: "Allow discounts on mobile", type: "toggle" as const },
+      { key: "mobile_allow_refunds", label: "Allow refunds on mobile", type: "toggle" as const, tooltip: "Not recommended. Refunds are safer on the main register where managers can supervise." },
+      { key: "mobile_allow_cash", label: "Allow cash payments on mobile", type: "toggle" as const },
+    ],
+  },
+  {
     key: "timeclock",
     label: "Time Clock",
-    description: "Employee clock-in settings and geofencing",
+    description: "Employee clock-in from phone: share your store's clock-in link or print the QR code",
     fields: [
       { key: "timeclock_geofence_enabled", label: "Enable GPS geofencing", type: "toggle" as const, tooltip: "When enabled, clock-ins are tagged as 'at store' or 'remote' based on GPS. Never blocks clock-in — just tags it." },
       { key: "timeclock_geofence_lat", label: "Store Latitude", type: "number" as const, min: -90, max: 90, step: 0.000001 },

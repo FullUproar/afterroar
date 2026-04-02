@@ -302,7 +302,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/promotions", label: "Promotions", icon: "✦", permission: "inventory.pricing" },
   { href: "/dashboard/reports", label: "Reports", icon: "◩", permission: "reports" },
   { href: "/dashboard/cash-flow", label: "Cash Flow", icon: "◎", permission: "cash_flow", feature: "intelligence" },
-  { href: "/dashboard/catalog", label: "Catalog", icon: "⊕", permission: "inventory.create", feature: "tcg_engine" },
+  // Catalog is accessed via "+ Add" button on TCG Singles page, not sidebar
+  // { href: "/dashboard/catalog", label: "Catalog", icon: "⊕", permission: "inventory.create", feature: "tcg_engine" },
   { href: "/dashboard/import", label: "Import", icon: "⤓", permission: "import" },
   { href: "/dashboard/certification", label: "Certification", icon: "◉", permission: "certification" },
   { href: "/dashboard/orders", label: "Orders", icon: "⊟", permission: "checkout" },

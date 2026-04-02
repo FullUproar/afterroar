@@ -228,9 +228,9 @@ export default function SinglesDashboard() {
         action={
           <Link
             href="/dashboard/catalog"
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
           >
-            + Add
+            + Add Cards
           </Link>
         }
       />

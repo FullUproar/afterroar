@@ -515,6 +515,44 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* Mobile Links */}
+      {store?.slug && (
+        <div className="max-w-2xl">
+          <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
+            <h2 className="text-sm font-semibold text-foreground">Employee Phone Access</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Share these links with your team. They work on any phone — no app needed.
+            </p>
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between rounded-lg bg-card-hover px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Clock In/Out</p>
+                  <p className="text-xs text-muted mt-0.5">PIN-based, GPS tagging, PWA installable</p>
+                </div>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/clock/${store.slug}`); setSaved('clock_url'); setTimeout(() => setSaved(null), 2000); }}
+                  className="text-xs text-accent hover:underline shrink-0 ml-3"
+                >
+                  {saved === 'clock_url' ? 'Copied!' : 'Copy Link'}
+                </button>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-card-hover px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Mobile Register</p>
+                  <p className="text-xs text-muted mt-0.5">Access-code paired, sell from any phone</p>
+                </div>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/mobile/${store.slug}`); setSaved('mobile_url'); setTimeout(() => setSaved(null), 2000); }}
+                  className="text-xs text-accent hover:underline shrink-0 ml-3"
+                >
+                  {saved === 'mobile_url' ? 'Copied!' : 'Copy Link'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Role Permissions */}
       <div className="max-w-2xl">
         <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
