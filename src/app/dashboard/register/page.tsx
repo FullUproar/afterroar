@@ -343,6 +343,28 @@ export default function RegisterPage() {
   const [lastCardBrand, setLastCardBrand] = useState<string | null>(null);
   const [lastCardLast4, setLastCardLast4] = useState<string | null>(null);
 
+  // Active event detection for halo revenue tagging
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
+  const [activeEventName, setActiveEventName] = useState<string | null>(null);
+  useEffect(() => {
+    async function checkActiveEvent() {
+      try {
+        const res = await fetch("/api/events/active");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.event) {
+            setActiveEventId(data.event.id);
+            setActiveEventName(data.event.name);
+          }
+        }
+      } catch {}
+    }
+    checkActiveEvent();
+    // Re-check every 30 minutes
+    const interval = setInterval(checkActiveEvent, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Receipt QR code
   const [receiptQrUrl, setReceiptQrUrl] = useState<string | null>(null);
   const [showCustomerDisplay, setShowCustomerDisplay] = useState(false);
@@ -876,7 +898,7 @@ export default function RegisterPage() {
       payment_method: method,
       amount_tendered_cents: method === "cash" ? tendered : amountDue,
       credit_applied_cents: creditToApply,
-      event_id: null,
+      event_id: activeEventId,
       client_tx_id: clientTxId,
       tax_cents: taxCents,
       discount_cents: discountCents,
@@ -1251,6 +1273,14 @@ export default function RegisterPage() {
           onGiftCardPayment={handleGiftCardPayment}
         />
       </div>
+
+      {/* ====== ACTIVE EVENT INDICATOR ====== */}
+      {activeEventName && (
+        <div className="shrink-0 flex items-center justify-center gap-2 h-7 bg-purple-900/30 border-t border-purple-500/20 text-xs text-purple-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
+          Sales tagged to: <strong>{activeEventName}</strong>
+        </div>
+      )}
 
       {/* ====== STATUS BAR ====== */}
       <StatusBar

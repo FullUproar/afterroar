@@ -78,6 +78,8 @@ export default function EventsPage() {
     max_players: '',
     description: '',
   });
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
+  const [repeatWeeks, setRepeatWeeks] = useState(4);
   const [saving, setSaving] = useState(false);
 
   const settings = (store?.settings ?? {}) as Record<string, unknown>;
@@ -104,26 +106,32 @@ export default function EventsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          event_type: form.event_type,
-          starts_at: form.starts_at,
-          ends_at: form.ends_at || null,
-          entry_fee_cents: form.entry_fee ? parseDollars(form.entry_fee) : 0,
-          max_players: form.max_players ? parseInt(form.max_players) : null,
-          description: form.description || null,
-          create_hq_event: createAsHQ,
-        }),
-      });
-      if (res.ok) {
-        setForm({ name: '', event_type: 'fnm', starts_at: '', ends_at: '', entry_fee: '', max_players: '', description: '' });
-        setShowForm(false);
-        setCreateAsHQ(false);
-        loadEvents();
+      const weeks = repeatWeekly ? repeatWeeks : 1;
+      for (let w = 0; w < weeks; w++) {
+        const startOffset = w * 7 * 86400000;
+        const startsAt = form.starts_at ? new Date(new Date(form.starts_at).getTime() + startOffset).toISOString() : "";
+        const endsAt = form.ends_at ? new Date(new Date(form.ends_at).getTime() + startOffset).toISOString() : null;
+
+        await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            event_type: form.event_type,
+            starts_at: startsAt,
+            ends_at: endsAt,
+            entry_fee_cents: form.entry_fee ? parseDollars(form.entry_fee) : 0,
+            max_players: form.max_players ? parseInt(form.max_players) : null,
+            description: form.description || null,
+            create_hq_event: createAsHQ && w === 0, // Only create HQ event for the first one
+          }),
+        });
       }
+      setForm({ name: '', event_type: 'fnm', starts_at: '', ends_at: '', entry_fee: '', max_players: '', description: '' });
+      setShowForm(false);
+      setCreateAsHQ(false);
+      setRepeatWeekly(false);
+      loadEvents();
     } finally {
       setSaving(false);
     }
@@ -245,13 +253,40 @@ export default function EventsPage() {
               className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
             />
           </div>
+          {/* Repeat weekly toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setRepeatWeekly(!repeatWeekly)}
+              className={`relative h-5 w-9 rounded-full transition-colors ${repeatWeekly ? 'bg-accent' : 'bg-card-hover'}`}
+              style={{ minHeight: "auto" }}
+            >
+              <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${repeatWeekly ? 'translate-x-4' : ''}`} />
+            </button>
+            <span className="text-sm text-foreground">Repeat weekly</span>
+            {repeatWeekly && (
+              <span className="flex items-center gap-1 text-sm text-muted">
+                for
+                <input
+                  type="number"
+                  min={2}
+                  max={12}
+                  value={repeatWeeks}
+                  onChange={(e) => setRepeatWeeks(Math.min(12, Math.max(2, parseInt(e.target.value) || 4)))}
+                  className="w-12 bg-input-bg border border-input-border rounded px-2 py-0.5 text-foreground text-sm text-center focus:border-accent focus:outline-none"
+                />
+                weeks
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={saving}
               className={`px-4 py-2 ${createAsHQ ? 'bg-purple-600 hover:bg-purple-700' : 'bg-accent hover:opacity-90'} disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors`}
             >
-              {saving ? 'Creating...' : createAsHQ ? 'Create Afterroar Event' : 'Create Event'}
+              {saving ? 'Creating...' : repeatWeekly ? `Create ${repeatWeeks} Events` : createAsHQ ? 'Create Afterroar Event' : 'Create Event'}
             </button>
             <button
               type="button"
