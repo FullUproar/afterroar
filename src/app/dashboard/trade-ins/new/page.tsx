@@ -16,6 +16,7 @@ interface InventoryResult {
   name: string;
   category: string;
   price_cents: number;
+  image_url: string | null;
 }
 
 interface TradeItem {
@@ -27,6 +28,7 @@ interface TradeItem {
   condition: string;
   quantity: number;
   inventory_item_id?: string;
+  image_url?: string | null;
 }
 
 const CONDITIONS = ['NM', 'LP', 'MP', 'HP', 'DMG'] as const;
@@ -36,6 +38,21 @@ const CONDITIONS = ['NM', 'LP', 'MP', 'HP', 'DMG'] as const;
 export default function NewTradeInPage() {
   const storeSettings = useStoreSettings();
   const [step, setStep] = useState(1);
+
+  // Cash position indicator for buylist decisions
+  const [cashIndicator, setCashIndicator] = useState<{ level: "healthy" | "tight" | "critical"; message: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/intelligence").then((r) => r.ok ? r.json() : null).then((data) => {
+      if (!data?.insights) return;
+      const runway = data.insights.find((i: { id: string }) => i.id === "liquidity-runway");
+      if (!runway) return;
+      if (runway.type === "warning") {
+        setCashIndicator({ level: runway.priority === "high" ? "critical" : "tight", message: "Cash is tight — consider offering store credit instead of cash" });
+      } else {
+        setCashIndicator({ level: "healthy", message: "Cash position is healthy" });
+      }
+    }).catch(() => {});
+  }, []);
 
   // Step 1 — customer
   const [customerQuery, setCustomerQuery] = useState('');
@@ -119,6 +136,7 @@ export default function NewTradeInPage() {
         condition: defaultCondition,
         quantity: 1,
         inventory_item_id: inv.id,
+        image_url: inv.image_url,
       },
     ]);
     setSearchQuery('');
@@ -400,6 +418,18 @@ export default function NewTradeInPage() {
         <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground">Add Items</h2>
 
+          {/* Cash position indicator */}
+          {cashIndicator && cashIndicator.level !== "healthy" && (
+            <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${
+              cashIndicator.level === "critical"
+                ? "bg-red-900/20 border border-red-500/30 text-red-300"
+                : "bg-amber-900/20 border border-amber-500/30 text-amber-300"
+            }`}>
+              <span className={`h-2 w-2 rounded-full shrink-0 ${cashIndicator.level === "critical" ? "bg-red-400 animate-pulse" : "bg-amber-400"}`} />
+              {cashIndicator.message}
+            </div>
+          )}
+
           {/* search */}
           <div className="relative">
             <div className="flex gap-2">
@@ -481,17 +511,26 @@ export default function NewTradeInPage() {
                   key={item.key}
                   className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-medium text-foreground">{item.name}</div>
-                      {item.category && (
-                        <div className="text-xs text-muted">{item.category}</div>
-                      )}
-                      {item.market_price_cents > 0 && (
-                        <div className="text-xs text-muted">
-                          Market: {formatCents(item.market_price_cents)}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex gap-3">
+                      {/* Card image preview */}
+                      {item.image_url && item.category === "tcg_single" && (
+                        <div className="shrink-0 w-16 h-22 rounded-lg overflow-hidden bg-background border border-card-border">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                         </div>
                       )}
+                      <div>
+                        <div className="font-medium text-foreground">{item.name}</div>
+                        {item.category && (
+                          <div className="text-xs text-muted">{item.category}</div>
+                        )}
+                        {item.market_price_cents > 0 && (
+                          <div className="text-xs text-muted">
+                            Market: {formatCents(item.market_price_cents)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={() => removeItem(item.key)}

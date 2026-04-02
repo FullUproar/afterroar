@@ -54,7 +54,7 @@ const RARITY_BG: Record<string, string> = {
 export default function CatalogPage() {
   const { can } = useStore();
 
-  type GameTab = "mtg" | "pokemon";
+  type GameTab = "mtg" | "pokemon" | "yugioh";
   const [gameTab, setGameTab] = useState<GameTab>("mtg");
   const [query, setQuery] = useState("");
   const [cards, setCards] = useState<CatalogCard[]>([]);
@@ -100,8 +100,9 @@ export default function CatalogPage() {
     setError(null);
 
     try {
-      if (gameTab === "pokemon") {
-        const res = await fetch(`/api/catalog/pokemon?q=${encodeURIComponent(query.trim())}`);
+      if (gameTab === "pokemon" || gameTab === "yugioh") {
+        const endpoint = gameTab === "pokemon" ? "/api/catalog/pokemon" : "/api/catalog/yugioh";
+        const res = await fetch(`${endpoint}?q=${encodeURIComponent(query.trim())}`);
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
         setPokemonCards(data.cards || []);
@@ -214,8 +215,21 @@ export default function CatalogPage() {
       const costCents = addModal.cost ? parseDollars(addModal.cost) : 0;
 
       const isPokemon = gameTab === "pokemon";
-      const endpoint = isPokemon ? "/api/catalog/pokemon" : "/api/catalog/scryfall";
-      const payload = isPokemon
+      const isYuGiOh = gameTab === "yugioh";
+      const endpoint = isPokemon ? "/api/catalog/pokemon" : isYuGiOh ? "/api/catalog/yugioh" : "/api/catalog/scryfall";
+      const payload = isYuGiOh
+        ? {
+            yugioh_id: addModal.card.scryfall_id,
+            name: addModal.card.name,
+            set_name: addModal.card.set_name,
+            rarity: addModal.card.rarity,
+            image_url: addModal.card.image_url,
+            price_cents: priceCents,
+            cost_cents: costCents,
+            quantity: addModal.quantity,
+            condition: addModal.condition,
+          }
+        : isPokemon
         ? {
             pokemon_id: addModal.card.scryfall_id,
             name: addModal.card.name,
@@ -302,6 +316,15 @@ export default function CatalogPage() {
         >
           Pokemon
         </button>
+        <button
+          onClick={() => { setGameTab("yugioh"); setCards([]); setPokemonCards([]); setSearched(false); }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            gameTab === "yugioh" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+          }`}
+          style={{ minHeight: "auto" }}
+        >
+          Yu-Gi-Oh
+        </button>
       </div>
 
       {/* Search */}
@@ -314,7 +337,7 @@ export default function CatalogPage() {
             e.stopPropagation();
             if (e.key === "Enter") handleSearch();
           }}
-          placeholder={gameTab === "mtg" ? "Search MTG cards on Scryfall..." : "Search Pokemon cards..."}
+          placeholder={gameTab === "mtg" ? "Search MTG cards on Scryfall..." : gameTab === "pokemon" ? "Search Pokemon cards..." : "Search Yu-Gi-Oh cards..."}
           autoFocus
           className="w-full rounded-xl border border-input-border bg-card px-5 py-3 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
@@ -435,57 +458,68 @@ export default function CatalogPage() {
         </div>
       )}
 
-      {/* Pokemon Results */}
+      {/* Pokemon / Yu-Gi-Oh Results */}
       {pokemonCards.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {pokemonCards.map((card: { pokemon_id: string; name: string; set_name: string; number: string; rarity: string | null; image_url: string | null; small_image_url: string | null; price_market: number | null; price_low: number | null; hp: string | null; types: string[] }) => (
+          {pokemonCards.map((card: Record<string, unknown>) => {
+            // Normalize fields across Pokemon and Yu-Gi-Oh
+            const cardId = String(card.pokemon_id || card.yugioh_id || "");
+            const cardName = String(card.name || "");
+            const setName = String(card.set_name || "");
+            const cardNumber = String(card.number || card.set_code || "");
+            const rarity = (card.rarity as string) || null;
+            const imageUrl = (card.image_url as string) || null;
+            const smallImageUrl = (card.small_image_url as string) || imageUrl;
+            const priceCents = (card.price_market as number) || (card.price_tcgplayer as number) || null;
+
+            return (
             <div
-              key={card.pokemon_id}
+              key={cardId}
               className="group rounded-xl border border-card-border bg-card overflow-hidden hover:border-accent/50 transition-colors cursor-pointer"
               onClick={() => {
                 setAddModal({
                   card: {
-                    scryfall_id: card.pokemon_id,
-                    name: card.name,
-                    set_name: card.set_name,
+                    scryfall_id: cardId,
+                    name: cardName,
+                    set_name: setName,
                     set_code: "",
-                    collector_number: card.number,
-                    rarity: card.rarity || "common",
-                    price_usd: card.price_market ? (card.price_market / 100).toFixed(2) : null,
+                    collector_number: cardNumber,
+                    rarity: rarity || "common",
+                    price_usd: priceCents ? (priceCents / 100).toFixed(2) : null,
                     price_usd_foil: null,
-                    image_url: card.image_url,
-                    small_image_url: card.small_image_url,
+                    image_url: imageUrl,
+                    small_image_url: smallImageUrl,
                     foil: false,
                     nonfoil: true,
-                    type_line: card.hp ? `Pokemon - HP ${card.hp}` : "Pokemon",
+                    type_line: gameTab === "pokemon" ? "Pokemon" : "Yu-Gi-Oh",
                     mana_cost: "",
                   },
                   quantity: 1,
                   cost: "",
-                  price: card.price_market ? (card.price_market / 100).toFixed(2) : "",
+                  price: priceCents ? (priceCents / 100).toFixed(2) : "",
                   condition: "NM",
                   foil: false,
                 });
               }}
             >
-              {card.small_image_url && (
+              {smallImageUrl && (
                 <div className="aspect-[2.5/3.5] bg-background">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={card.small_image_url} alt={card.name} className="w-full h-full object-contain" loading="lazy" />
+                  <img src={smallImageUrl} alt={cardName} className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               <div className="p-2.5">
-                <p className="text-sm font-medium text-foreground truncate">{card.name}</p>
-                <p className="text-xs text-muted truncate">{card.set_name} #{card.number}</p>
+                <p className="text-sm font-medium text-foreground truncate">{cardName}</p>
+                <p className="text-xs text-muted truncate">{setName}{cardNumber ? ` #${cardNumber}` : ""}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-muted">{card.rarity}</span>
-                  {card.price_market && (
-                    <span className="text-sm font-semibold text-accent tabular-nums">${(card.price_market / 100).toFixed(2)}</span>
+                  <span className="text-xs text-muted">{rarity}</span>
+                  {priceCents && (
+                    <span className="text-sm font-semibold text-accent tabular-nums">${(priceCents / 100).toFixed(2)}</span>
                   )}
                 </div>
               </div>
             </div>
-          ))}
+          );})}
         </div>
       )}
 
