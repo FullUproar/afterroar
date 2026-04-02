@@ -61,6 +61,7 @@ model PosStore {
   mobile_sessions      PosMobileSession[]
   access_code_attempts PosAccessCodeAttempt[]
   customer_notes       PosCustomerNote[]
+  allocation_pools     PosAllocationPool[]
 
   @@map("pos_stores")
 }
@@ -219,14 +220,40 @@ model PosPreorder {
   created_at        DateTime  @default(now()) @db.Timestamptz()
   updated_at        DateTime  @default(now()) @db.Timestamptz()
 
-  store    PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
-  customer PosCustomer? @relation(fields: [customer_id], references: [id])
-  location PosLocation? @relation(fields: [location_id], references: [id])
+  pool_id                 String?
+  waitlisted              Boolean  @default(false)
+  deposit_ledger_entry_id String?
+
+  store    PosStore           @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer PosCustomer?       @relation(fields: [customer_id], references: [id])
+  location PosLocation?       @relation(fields: [location_id], references: [id])
+  pool     PosAllocationPool? @relation(fields: [pool_id], references: [id])
 
   @@index([store_id])
   @@index([store_id, status])
   @@index([customer_id])
   @@map("pos_preorders")
+}
+
+model PosAllocationPool {
+  id              String    @id @default(cuid())
+  store_id        String
+  product_name    String
+  sku             String?
+  total_allocated Int       @default(0)
+  total_reserved  Int       @default(0)
+  release_date    DateTime? @db.Date
+  event_id        String?
+  notes           String?
+  status          String    @default("open") // open | closed | fulfilled
+  created_at      DateTime  @default(now()) @db.Timestamptz()
+
+  store     PosStore      @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  event     PosEvent?     @relation(fields: [event_id], references: [id])
+  preorders PosPreorder[]
+
+  @@index([store_id])
+  @@map("pos_allocation_pools")
 }
 
 // ============================================================
@@ -471,7 +498,8 @@ model PosEvent {
   store          PosStore          @relation(fields: [store_id], references: [id], onDelete: Cascade)
   checkins       PosEventCheckin[]
   ledger_entries PosLedgerEntry[]
-  tournaments    PosTournament[]
+  tournaments      PosTournament[]
+  allocation_pools PosAllocationPool[]
 
   @@index([store_id])
   @@index([store_id, starts_at(sort: Desc)])

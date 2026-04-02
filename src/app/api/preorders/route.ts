@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     let body: {
       customer_id?: string;
       location_id?: string;
+      pool_id?: string;
       product_name: string;
       product_details?: Record<string, unknown>;
       quantity?: number;
@@ -62,22 +63,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Product name is required" }, { status: 400 });
     }
 
+    const qty = body.quantity ?? 1;
+
+    // Check allocation pool capacity if linked
+    let waitlisted = false;
+    if (body.pool_id) {
+      const pool = await db.posAllocationPool.findFirst({
+        where: { id: body.pool_id },
+      });
+      if (!pool) {
+        return NextResponse.json({ error: "Allocation pool not found" }, { status: 404 });
+      }
+      if (pool.status !== "open") {
+        return NextResponse.json({ error: "This allocation is closed for new preorders" }, { status: 400 });
+      }
+      if (pool.total_reserved + qty > pool.total_allocated) {
+        // Over capacity — add to waitlist instead of blocking
+        waitlisted = true;
+      }
+    }
+
     const preorder = await db.posPreorder.create({
       data: {
         store_id: storeId,
         customer_id: body.customer_id ?? null,
         location_id: body.location_id ?? null,
+        pool_id: body.pool_id ?? null,
         staff_id: staff.id,
-        status: "pending",
+        status: waitlisted ? "pending" : "confirmed",
+        waitlisted,
         product_name: body.product_name.trim(),
         product_details: body.product_details ? JSON.parse(JSON.stringify(body.product_details)) : {},
-        quantity: body.quantity ?? 1,
+        quantity: qty,
         deposit_cents: body.deposit_cents ?? 0,
         total_price_cents: body.total_price_cents ?? 0,
         release_date: body.release_date ? new Date(body.release_date) : null,
         notes: body.notes ?? null,
       },
     });
+
+    // Update pool reservation count
+    if (body.pool_id && !waitlisted) {
+      await db.posAllocationPool.update({
+        where: { id: body.pool_id },
+        data: { total_reserved: { increment: qty } },
+      });
+    }
 
     // If there's a deposit, create a ledger entry
     if (body.deposit_cents && body.deposit_cents > 0 && body.customer_id) {
