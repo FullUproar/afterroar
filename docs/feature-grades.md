@@ -1,6 +1,6 @@
 # Feature Grades — Game Store Differentiators
 
-**Last updated:** April 2, 2026
+**Last updated:** April 2, 2026 (post Wave 3)
 **Strategy:** Breadth-first. Wave 1 (top 5 to B+), Wave 2 (bottom 5 to B), Wave 3 (A push with user feedback). TCG Singles gets A+++ treatment — woven in at the right moments.
 
 ---
@@ -22,9 +22,33 @@
 
 ---
 
-## Current Grades
+## Grade Summary (Post Wave 3)
 
-### 1. TCG Singles Engine — B+ (target: A+++)
+| # | Feature | Start | Wave 1 | Wave 2 | Wave 3 | Current |
+|---|---------|-------|--------|--------|--------|---------|
+| 1 | TCG Singles Engine | B+ | B+ | B+ | **A-** | **A-** |
+| 2 | Trade-In Circular Economy | B | **B+** | B+ | B+ | **B+** |
+| 3 | Event Ecosystem | B- | **B+** | B+ | **A-** | **A-** |
+| 4 | Community Customer Profiles | C+ | **B+** | B+ | **A-** | **A-** |
+| 5 | Prerelease / Allocation | D | **B+** | B+ | B+ | **B+** |
+| 6 | Tournament Brackets | C- | C- | **B** | B | **B** |
+| 7 | Cafe / Concessions | F | F | **B** | B | **B** |
+| 8 | Game Library | D+ | D+ | **B** | B | **B** |
+| 9 | Consignment / Showcase | F | F | **B** | B | **B** |
+| 10 | Cross-Store Intelligence | D | D | **B** | B | **B** |
+
+**Overall GPA: B+ → A-** (from C+ at session start)
+
+---
+
+## Detailed Grades
+
+### 1. TCG Singles Engine — A- (target: A+++)
+**Wave 3 TCG Sprint completed.** Advanced search filters (set, color, rarity, price, format). Yu-Gi-Oh API integration (3 games live). Pokemon price drift parity. Buylist auto-generation from market data. One-click repricing from drift results. Sealed product EV calculator. Collection CSV import with Scryfall enrichment. Card image preview in trade-in grading. Cash position indicator in buylist workflow.
+
+**Remaining for A+:** TCGPlayer marketplace sync. Lorcana API. Predictive price movement. Community price verification. Collection import from Moxfield/Archidekt.
+
+**Previous grade: B+. Moved to A- via:**
 **What works:** Scryfall search, Pokemon TCG API, add-to-inventory with prices, condition grading, bulk pricing tool, market price cache, eBay listing integration, card evaluator for trade-ins.
 **What's missing for A:**
 - Yu-Gi-Oh and Lorcana API integrations
