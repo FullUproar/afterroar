@@ -80,6 +80,10 @@ interface LastReceipt {
   timestamp: string;
   receiptNumber: string;
   receiptToken: string | null;
+  cardBrand: string | null;
+  cardLast4: string | null;
+  tenderedCents: number;
+  changeCents: number;
 }
 
 /** Generate a receipt number: R-YYYYMMDD-NNN (sequential per day) */
@@ -126,41 +130,41 @@ interface ReceiptData {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Print Receipt HTML builder                                         */
+/*  Print Receipt — uses the template system                           */
 /* ------------------------------------------------------------------ */
 
-function buildPrintReceiptHtml(receipt: LastReceipt, storeName: string): string {
-  const fc = (cents: number) => "$" + (cents / 100).toFixed(2);
-  const items = receipt.items.map((i) =>
-    `<tr><td style="padding:2px 0">${i.name}</td><td style="padding:2px 8px;text-align:center">${i.quantity}</td><td style="text-align:right;padding:2px 0">${fc(i.price_cents * i.quantity)}</td></tr>`
-  ).join("");
+import { buildThermalReceiptHtml, buildReceiptConfig, type ReceiptData as TemplateReceiptData } from "@/lib/receipt-template";
 
-  return `<!DOCTYPE html><html><head><title>Receipt</title><style>
-    body{font-family:monospace;font-size:12px;width:280px;margin:0 auto;padding:10px;color:#000}
-    h1{font-size:16px;text-align:center;margin:0 0 4px}
-    .center{text-align:center}
-    .line{border-top:1px dashed #000;margin:6px 0}
-    table{width:100%;border-collapse:collapse}
-    .total{font-size:16px;font-weight:bold}
-    @media print{body{width:auto}}
-  </style></head><body>
-    <h1>${storeName}</h1>
-    <p class="center" style="margin:2px 0">${new Date(receipt.timestamp).toLocaleString()}</p>
-    <p class="center" style="margin:2px 0">Receipt #${receipt.receiptNumber}</p>
-    <div class="line"></div>
-    <table><thead><tr><th style="text-align:left">Item</th><th>Qty</th><th style="text-align:right">Total</th></tr></thead><tbody>${items}</tbody></table>
-    <div class="line"></div>
-    <table>
-      <tr><td>Subtotal</td><td style="text-align:right">${fc(receipt.subtotalCents)}</td></tr>
-      ${receipt.discountCents > 0 ? `<tr><td>Discount</td><td style="text-align:right">-${fc(receipt.discountCents)}</td></tr>` : ""}
-      ${receipt.taxCents > 0 ? `<tr><td>Tax</td><td style="text-align:right">${fc(receipt.taxCents)}</td></tr>` : ""}
-      <tr class="total"><td>Total</td><td style="text-align:right">${fc(receipt.totalCents)}</td></tr>
-    </table>
-    <div class="line"></div>
-    <p class="center">Payment: ${receipt.paymentMethod.toUpperCase()}</p>
-    ${receipt.customerName ? `<p class="center">Customer: ${receipt.customerName}</p>` : ""}
-    <p class="center" style="margin-top:12px;font-size:10px">Thank you for shopping with us!</p>
-  </body></html>`;
+function buildPrintReceiptHtml(receipt: LastReceipt, storeName: string, storeSettings?: Record<string, unknown>): string {
+  const config = buildReceiptConfig(storeName, storeSettings ?? {});
+  const data: TemplateReceiptData = {
+    receipt_number: receipt.receiptNumber,
+    receipt_token: receipt.receiptToken,
+    date: receipt.timestamp,
+    items: receipt.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      price_cents: i.price_cents,
+      total_cents: i.price_cents * i.quantity,
+    })),
+    subtotal_cents: receipt.subtotalCents,
+    tax_cents: receipt.taxCents,
+    discount_cents: receipt.discountCents,
+    credit_applied_cents: 0,
+    gift_card_applied_cents: 0,
+    loyalty_discount_cents: 0,
+    total_cents: receipt.totalCents,
+    payment_method: receipt.paymentMethod,
+    amount_tendered_cents: receipt.tenderedCents,
+    change_cents: receipt.changeCents,
+    card_brand: receipt.cardBrand,
+    card_last4: receipt.cardLast4,
+    customer_name: receipt.customerName,
+    loyalty_points_earned: 0,
+    loyalty_balance: 0,
+    staff_name: null,
+  };
+  return buildThermalReceiptHtml(config, data);
 }
 
 /* ------------------------------------------------------------------ */
@@ -326,6 +330,8 @@ export default function RegisterPage() {
   const noticeBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [zeroStockItem, setZeroStockItem] = useState<InventoryItem | null>(null);
   const [hasZeroStockOverride, setHasZeroStockOverride] = useState(false);
+  const [lastCardBrand, setLastCardBrand] = useState<string | null>(null);
+  const [lastCardLast4, setLastCardLast4] = useState<string | null>(null);
 
   // Receipt QR code
   const [receiptQrUrl, setReceiptQrUrl] = useState<string | null>(null);
@@ -808,6 +814,9 @@ export default function RegisterPage() {
               terminalPollRef.current = null;
               setWaitingForTerminal(false);
               setTerminalPiId(null);
+              // Capture card details for receipt
+              setLastCardBrand(statusData.card_brand || null);
+              setLastCardLast4(statusData.card_last4 || null);
               await finalizeSale(method, collectData.payment_intent_id);
             } else if (statusData.status === "failed" || statusData.status === "cancelled") {
               clearInterval(terminalPollRef.current!);
@@ -884,9 +893,9 @@ export default function RegisterPage() {
     const cashChange = method === "cash" ? Math.max(0, tendered - total) : 0;
     const receiptCustomer = customer;
     const receiptNumber = generateReceiptNumber();
-    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken });
+    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken, cardBrand: lastCardBrand, cardLast4: lastCardLast4, tenderedCents: method === "cash" ? tendered : total, changeCents: cashChange });
     (document.activeElement as HTMLElement)?.blur();
-    setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null); setHasZeroStockOverride(false);
+    setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null); setHasZeroStockOverride(false); setLastCardBrand(null); setLastCardLast4(null);
     clearPersistedCart(); cartIdRef.current = createEmptyCart().id;
     // Generate QR code for receipt
     if (receiptToken) {
@@ -1011,7 +1020,7 @@ export default function RegisterPage() {
                 if (!lastReceipt) return;
                 const w = window.open("", "_blank", "width=380,height=600");
                 if (!w) return;
-                w.document.write(buildPrintReceiptHtml(lastReceipt, storeName));
+                w.document.write(buildPrintReceiptHtml(lastReceipt, storeName, storeSettings as unknown as Record<string, unknown>));
                 w.document.close();
                 w.focus();
                 w.print();
@@ -1286,7 +1295,7 @@ export default function RegisterPage() {
                 if (!lastReceipt) return;
                 const w = window.open("", "_blank", "width=380,height=600");
                 if (!w) return;
-                w.document.write(buildPrintReceiptHtml(lastReceipt, storeName));
+                w.document.write(buildPrintReceiptHtml(lastReceipt, storeName, storeSettings as unknown as Record<string, unknown>));
                 w.document.close();
                 w.focus();
                 w.print();

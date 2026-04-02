@@ -143,11 +143,26 @@ export async function GET(request: Request) {
       });
     }
 
+    // Extract card details from the charge
+    let cardBrand: string | null = null;
+    let cardLast4: string | null = null;
+    if (status === "succeeded" && pi.latest_charge) {
+      try {
+        const charge = await stripe.charges.retrieve(pi.latest_charge as string);
+        cardBrand = charge.payment_method_details?.card_present?.brand ?? charge.payment_method_details?.card?.brand ?? null;
+        cardLast4 = charge.payment_method_details?.card_present?.last4 ?? charge.payment_method_details?.card?.last4 ?? null;
+      } catch {
+        // Non-critical — continue without card details
+      }
+    }
+
     return NextResponse.json({
       status,
       payment_intent_id: pi.id,
       amount_cents: pi.amount,
       error: pi.last_payment_error?.message || null,
+      card_brand: cardBrand,
+      card_last4: cardLast4,
     });
   } catch (error) {
     if (error instanceof Stripe.errors.StripeError) {

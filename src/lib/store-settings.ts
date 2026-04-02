@@ -10,8 +10,14 @@ import { useStore } from "./store-context";
 export interface StoreSettings {
   // Store identity
   store_display_name: string;
+  store_phone: string;
+  store_website: string;
   receipt_header: string;
   receipt_footer: string;
+  receipt_show_barcode: boolean;
+  receipt_show_savings: boolean;
+  receipt_show_return_policy: boolean;
+  return_policy_text: string;
 
   // Trade-ins
   trade_in_credit_bonus_percent: number;
@@ -92,8 +98,14 @@ export interface StoreSettings {
 export const SETTINGS_DEFAULTS: StoreSettings = {
   // Store identity
   store_display_name: "",
+  store_phone: "",
+  store_website: "",
   receipt_header: "",
   receipt_footer: "Thank you for shopping with us!",
+  receipt_show_barcode: true,
+  receipt_show_savings: true,
+  receipt_show_return_policy: false,
+  return_policy_text: "",
 
   // Trade-ins
   trade_in_credit_bonus_percent: 30,
@@ -178,8 +190,14 @@ export const SETTINGS_SECTIONS = [
     description: "How your store appears on receipts and to customers",
     fields: [
       { key: "store_display_name", label: "Display Name", type: "text" as const, placeholder: "Defaults to store name" },
-      { key: "receipt_header", label: "Receipt Header", type: "text" as const, placeholder: "e.g. 123 Main St, City, ST 12345" },
+      { key: "store_phone", label: "Store Phone", type: "text" as const, placeholder: "e.g. (503) 555-0100" },
+      { key: "store_website", label: "Website", type: "text" as const, placeholder: "e.g. www.yourstore.com" },
+      { key: "receipt_header", label: "Receipt Address", type: "text" as const, placeholder: "e.g. 123 Main St, City, ST 12345", tooltip: "Printed on receipts below your store name. Required for legal compliance in most states." },
       { key: "receipt_footer", label: "Receipt Footer", type: "text" as const, placeholder: "e.g. Thank you for shopping with us!" },
+      { key: "receipt_show_barcode", label: "Show barcode on printed receipts", type: "toggle" as const },
+      { key: "receipt_show_savings", label: "Show 'You saved $X' on receipts", type: "toggle" as const },
+      { key: "receipt_show_return_policy", label: "Show return policy on receipts", type: "toggle" as const },
+      { key: "return_policy_text", label: "Return Policy Text", type: "text" as const, placeholder: "Returns accepted within 30 days with receipt." },
     ],
   },
   {
