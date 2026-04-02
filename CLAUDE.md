@@ -120,6 +120,37 @@ All Store Ops models are prefixed with `Pos`:
 - Account deletion compliance webhook (`/api/ebay/account-deletion`)
 - Marketplace sync (planned)
 
+## TCG Multi-Game Support
+- Scryfall (MTG) — full integration: search, pricing, card images, price drift, collection import
+- Pokemon TCG API — search, pricing, add to inventory
+- Yu-Gi-Oh (YGOPRODeck) — search, pricing, add to inventory
+- Catalog page: game tabs (MTG | Pokemon | Yu-Gi-Oh) with advanced filters
+- Buylist auto-generation: GET /api/buylist (auto-calculated offers from market × condition × buylist%)
+- Sealed EV calculator: GET /api/catalog/sealed-ev?set=MH3
+- One-click repricing: POST /api/inventory/reprice
+- Collection CSV import: POST /api/catalog/import-collection (TCGPlayer, Moxfield, simple format)
+
+## Tournament System
+- Swiss pairing algorithm (`src/lib/swiss-pairing.ts`) — standard for FNM/league events
+- Single elimination bracket (pre-existing)
+- OMW% tiebreaker calculations
+- Round management (start_swiss, next_round, report_match, drop_player)
+- Prize payouts as store credit via ledger
+
+## Cafe Module
+- Tab system: `pos_tabs` + `pos_tab_items`
+- Lifecycle: open → add items → KDS status updates → close (settles to ledger)
+- Event attribution: tabs can link to event_id
+- KDS endpoint: returns pending items for kitchen display
+- API: GET/POST /api/cafe
+
+## Consignment Module
+- `pos_consignment_items` table: consignor, asking price, commission %, status
+- Intake creates inventory item + consignment record
+- Sale calculates commission, credits consignor via ledger
+- Return deactivates inventory item
+- API: GET/POST /api/consignment
+
 ## Test Accounts
 - Owner: Google sign-in (shawnoah.pollock@gmail.com or info@fulluproar.com)
 - Manager: manager@teststore.com / password123

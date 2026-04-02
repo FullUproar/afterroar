@@ -1,6 +1,8 @@
-# Afterroar HQ ↔ Store Ops Integration Contract
+> **SUPERSEDED** — This doc is outdated. The current bridge spec is at `full-uproar-site/docs/hq-store-ops-bridge-spec.md`
 
-**Status:** Agreed March 26, 2026
+# Afterroar HQ ↔ Store Ops Integration Contract (ARCHIVED)
+
+**Status:** Superseded April 2, 2026. Originally agreed March 26, 2026.
 **Database:** Shared Prisma Postgres at db.prisma.io
 
 ---

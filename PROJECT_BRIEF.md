@@ -1,7 +1,7 @@
 # Afterroar Store Ops — Project Brief
 
-**Last updated:** March 30, 2026
-**Status:** Working prototype, live at afterroar.store, on shared FU database
+**Last updated:** March 30, 2026 (see `full-uproar-site/docs/store-ops-architecture.md` for current state)
+**Status:** Pre-beta, live at afterroar.store, 40+ tables, 10 differentiators at B+ or above
 **Company:** Full Uproar Games, Inc. (Shawn Pollock, founder)
 
 ---
