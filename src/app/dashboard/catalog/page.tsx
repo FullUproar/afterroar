@@ -64,6 +64,15 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  // Advanced filters (MTG only)
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterSet, setFilterSet] = useState("");
+  const [filterColor, setFilterColor] = useState("");
+  const [filterRarity, setFilterRarity] = useState("");
+  const [filterMinPrice, setFilterMinPrice] = useState("");
+  const [filterMaxPrice, setFilterMaxPrice] = useState("");
+  const [filterFormat, setFilterFormat] = useState("");
+
   // Existing external_ids in inventory for "Already in inventory" badges
   const [existingIds, setExistingIds] = useState<Set<string>>(new Set());
 
@@ -102,9 +111,17 @@ export default function CatalogPage() {
         return;
       }
 
-      // MTG (Scryfall)
+      // MTG (Scryfall) — build query with filters
+      let scryfallQuery = query.trim();
+      if (filterSet) scryfallQuery += ` set:${filterSet}`;
+      if (filterColor) scryfallQuery += ` c:${filterColor}`;
+      if (filterRarity) scryfallQuery += ` r:${filterRarity}`;
+      if (filterMinPrice) scryfallQuery += ` usd>=${filterMinPrice}`;
+      if (filterMaxPrice) scryfallQuery += ` usd<=${filterMaxPrice}`;
+      if (filterFormat) scryfallQuery += ` f:${filterFormat}`;
+
       const res = await fetch(
-        `/api/catalog/scryfall?q=${encodeURIComponent(query.trim())}`
+        `/api/catalog/scryfall?q=${encodeURIComponent(scryfallQuery)}`
       );
       if (!res.ok) {
         throw new Error("Search failed");
@@ -309,6 +326,105 @@ export default function CatalogPage() {
           {loading ? "Searching..." : "Search"}
         </button>
       </div>
+
+      {/* Advanced Filters (MTG only) */}
+      {gameTab === "mtg" && (
+        <div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="text-xs text-muted hover:text-foreground transition-colors"
+            style={{ minHeight: "auto" }}
+          >
+            {showFilters ? "Hide filters" : "Advanced filters"}
+          </button>
+          {showFilters && (
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+              <div>
+                <label className="block text-[10px] text-muted mb-0.5">Set Code</label>
+                <input
+                  type="text"
+                  value={filterSet}
+                  onChange={(e) => setFilterSet(e.target.value.toLowerCase())}
+                  placeholder="e.g. mh3"
+                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted mb-0.5">Color</label>
+                <select
+                  value={filterColor}
+                  onChange={(e) => setFilterColor(e.target.value)}
+                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
+                >
+                  <option value="">Any</option>
+                  <option value="w">White</option>
+                  <option value="u">Blue</option>
+                  <option value="b">Black</option>
+                  <option value="r">Red</option>
+                  <option value="g">Green</option>
+                  <option value="c">Colorless</option>
+                  <option value="m">Multicolor</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted mb-0.5">Rarity</label>
+                <select
+                  value={filterRarity}
+                  onChange={(e) => setFilterRarity(e.target.value)}
+                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
+                >
+                  <option value="">Any</option>
+                  <option value="common">Common</option>
+                  <option value="uncommon">Uncommon</option>
+                  <option value="rare">Rare</option>
+                  <option value="mythic">Mythic</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted mb-0.5">Min Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={filterMinPrice}
+                  onChange={(e) => setFilterMinPrice(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted mb-0.5">Max Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={filterMaxPrice}
+                  onChange={(e) => setFilterMaxPrice(e.target.value)}
+                  placeholder="100.00"
+                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted mb-0.5">Format</label>
+                <select
+                  value={filterFormat}
+                  onChange={(e) => setFilterFormat(e.target.value)}
+                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
+                >
+                  <option value="">Any</option>
+                  <option value="standard">Standard</option>
+                  <option value="pioneer">Pioneer</option>
+                  <option value="modern">Modern</option>
+                  <option value="legacy">Legacy</option>
+                  <option value="vintage">Vintage</option>
+                  <option value="commander">Commander</option>
+                  <option value="pauper">Pauper</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Results info */}
       {searched && !loading && (
