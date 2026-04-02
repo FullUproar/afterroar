@@ -243,6 +243,7 @@ export function canAccess(
     "/dashboard/gift-cards": "customers.edit",
     "/dashboard/transfers": "inventory.adjust",
     "/dashboard/staff": "staff.manage",
+    "/dashboard/billing": "store.settings",
     "/dashboard/settings": "store.settings",
     "/dashboard/game-library": "inventory.view",
     "/dashboard/singles": "inventory.view",
@@ -315,6 +316,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/issues", label: "Issues", icon: "⚑", permission: "reports" },
   { href: "/dashboard/ops-log", label: "Ops Log", icon: "◉", permission: "ops_log" },
   { href: "/dashboard/staff", label: "Staff", icon: "⊞", permission: "staff.manage" },
+  { href: "/dashboard/billing", label: "Billing", icon: "\u{1F4B3}", permission: "store.settings" },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙", permission: "store.settings" },
   { href: "/dashboard/help", label: "Help", icon: "?", permission: "checkout" },
 ];

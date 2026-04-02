@@ -45,6 +45,12 @@ export async function POST(request: Request) {
         name: storeName,
         slug,
         owner_id: user.id,
+        settings: {
+          plan: "trial",
+          subscription_status: "trial",
+          trial_started_at: new Date().toISOString(),
+          trial_days: 14,
+        },
       },
     });
 

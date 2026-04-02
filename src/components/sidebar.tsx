@@ -56,6 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Admin",
     hrefs: [
       "/dashboard/staff",
+      "/dashboard/billing",
       "/dashboard/settings",
       "/dashboard/import",
       "/dashboard/certification",

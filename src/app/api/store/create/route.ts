@@ -42,18 +42,24 @@ export async function POST(request: NextRequest) {
       slug = `${slug}-${Date.now().toString(36).slice(-4)}`;
     }
 
+    const userId = session.user.id!;
+
     // Create store + staff in a transaction
     const result = await prisma.$transaction(async (tx) => {
       const store = await tx.posStore.create({
         data: {
           name: store_name.trim(),
           slug,
-          owner_id: session.user!.id,
-          settings: {},
+          owner_id: userId,
+          settings: {
+            plan: "trial",
+            subscription_status: "trial",
+            trial_started_at: new Date().toISOString(),
+            trial_days: 14,
+          },
         },
       });
 
-      const userId = session.user!.id!;
       await tx.posStaff.create({
         data: {
           user_id: userId,
