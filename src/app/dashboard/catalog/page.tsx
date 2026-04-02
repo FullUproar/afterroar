@@ -54,8 +54,12 @@ const RARITY_BG: Record<string, string> = {
 export default function CatalogPage() {
   const { can } = useStore();
 
+  type GameTab = "mtg" | "pokemon";
+  const [gameTab, setGameTab] = useState<GameTab>("mtg");
   const [query, setQuery] = useState("");
   const [cards, setCards] = useState<CatalogCard[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [pokemonCards, setPokemonCards] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -78,7 +82,7 @@ export default function CatalogPage() {
     toastTimer.current = setTimeout(() => setToast(null), 4000);
   }, []);
 
-  // Search Scryfall
+  // Search — routes to the right API based on game tab
   const handleSearch = useCallback(async () => {
     if (!query.trim() || query.trim().length < 2) return;
 
@@ -87,6 +91,18 @@ export default function CatalogPage() {
     setError(null);
 
     try {
+      if (gameTab === "pokemon") {
+        const res = await fetch(`/api/catalog/pokemon?q=${encodeURIComponent(query.trim())}`);
+        if (!res.ok) throw new Error("Search failed");
+        const data = await res.json();
+        setPokemonCards(data.cards || []);
+        setCards([]);
+        setTotal(data.total || 0);
+        setLoading(false);
+        return;
+      }
+
+      // MTG (Scryfall)
       const res = await fetch(
         `/api/catalog/scryfall?q=${encodeURIComponent(query.trim())}`
       );
@@ -95,6 +111,7 @@ export default function CatalogPage() {
       }
       const data = await res.json();
       setCards(data.cards || []);
+      setPokemonCards([]);
       setTotal(data.total || 0);
 
       // Check which cards already exist in our inventory
@@ -120,7 +137,7 @@ export default function CatalogPage() {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, gameTab]);
 
   // Debounced search on Enter or after typing pause
   useEffect(() => {
@@ -179,17 +196,34 @@ export default function CatalogPage() {
         : 0;
       const costCents = addModal.cost ? parseDollars(addModal.cost) : 0;
 
-      const res = await fetch("/api/catalog/scryfall", {
+      const isPokemon = gameTab === "pokemon";
+      const endpoint = isPokemon ? "/api/catalog/pokemon" : "/api/catalog/scryfall";
+      const payload = isPokemon
+        ? {
+            pokemon_id: addModal.card.scryfall_id,
+            name: addModal.card.name,
+            set_name: addModal.card.set_name,
+            number: addModal.card.collector_number,
+            rarity: addModal.card.rarity,
+            image_url: addModal.card.image_url,
+            price_cents: priceCents,
+            cost_cents: costCents,
+            quantity: addModal.quantity,
+            condition: addModal.condition,
+          }
+        : {
+            scryfall_id: addModal.card.scryfall_id,
+            foil: addModal.foil,
+            quantity: addModal.quantity,
+            cost_cents: costCents,
+            condition: addModal.condition,
+            price_cents: priceCents,
+          };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scryfall_id: addModal.card.scryfall_id,
-          foil: addModal.foil,
-          quantity: addModal.quantity,
-          cost_cents: costCents,
-          condition: addModal.condition,
-          price_cents: priceCents,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -212,7 +246,7 @@ export default function CatalogPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [addModal, showToast]);
+  }, [addModal, showToast, gameTab]);
 
   const isInInventory = (card: CatalogCard) => {
     return (
@@ -231,6 +265,28 @@ export default function CatalogPage() {
         </p>
       </div>
 
+      {/* Game Tabs */}
+      <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 w-fit">
+        <button
+          onClick={() => { setGameTab("mtg"); setCards([]); setPokemonCards([]); setSearched(false); }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            gameTab === "mtg" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+          }`}
+          style={{ minHeight: "auto" }}
+        >
+          Magic: The Gathering
+        </button>
+        <button
+          onClick={() => { setGameTab("pokemon"); setCards([]); setPokemonCards([]); setSearched(false); }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            gameTab === "pokemon" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+          }`}
+          style={{ minHeight: "auto" }}
+        >
+          Pokemon
+        </button>
+      </div>
+
       {/* Search */}
       <div className="relative">
         <input
@@ -241,7 +297,7 @@ export default function CatalogPage() {
             e.stopPropagation();
             if (e.key === "Enter") handleSearch();
           }}
-          placeholder="Search MTG cards on Scryfall..."
+          placeholder={gameTab === "mtg" ? "Search MTG cards on Scryfall..." : "Search Pokemon cards..."}
           autoFocus
           className="w-full rounded-xl border border-input-border bg-card px-5 py-3 text-lg text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
@@ -257,9 +313,63 @@ export default function CatalogPage() {
       {/* Results info */}
       {searched && !loading && (
         <div className="text-sm text-muted">
-          {cards.length === 0
+          {(cards.length === 0 && pokemonCards.length === 0)
             ? "No cards found. Try a different search."
-            : `Showing ${cards.length} of ${total.toLocaleString()} results`}
+            : `Showing ${cards.length || pokemonCards.length} of ${total.toLocaleString()} results`}
+        </div>
+      )}
+
+      {/* Pokemon Results */}
+      {pokemonCards.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {pokemonCards.map((card: { pokemon_id: string; name: string; set_name: string; number: string; rarity: string | null; image_url: string | null; small_image_url: string | null; price_market: number | null; price_low: number | null; hp: string | null; types: string[] }) => (
+            <div
+              key={card.pokemon_id}
+              className="group rounded-xl border border-card-border bg-card overflow-hidden hover:border-accent/50 transition-colors cursor-pointer"
+              onClick={() => {
+                setAddModal({
+                  card: {
+                    scryfall_id: card.pokemon_id,
+                    name: card.name,
+                    set_name: card.set_name,
+                    set_code: "",
+                    collector_number: card.number,
+                    rarity: card.rarity || "common",
+                    price_usd: card.price_market ? (card.price_market / 100).toFixed(2) : null,
+                    price_usd_foil: null,
+                    image_url: card.image_url,
+                    small_image_url: card.small_image_url,
+                    foil: false,
+                    nonfoil: true,
+                    type_line: card.hp ? `Pokemon - HP ${card.hp}` : "Pokemon",
+                    mana_cost: "",
+                  },
+                  quantity: 1,
+                  cost: "",
+                  price: card.price_market ? (card.price_market / 100).toFixed(2) : "",
+                  condition: "NM",
+                  foil: false,
+                });
+              }}
+            >
+              {card.small_image_url && (
+                <div className="aspect-[2.5/3.5] bg-background">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={card.small_image_url} alt={card.name} className="w-full h-full object-contain" loading="lazy" />
+                </div>
+              )}
+              <div className="p-2.5">
+                <p className="text-sm font-medium text-foreground truncate">{card.name}</p>
+                <p className="text-xs text-muted truncate">{card.set_name} #{card.number}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-muted">{card.rarity}</span>
+                  {card.price_market && (
+                    <span className="text-sm font-semibold text-accent tabular-nums">${(card.price_market / 100).toFixed(2)}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
