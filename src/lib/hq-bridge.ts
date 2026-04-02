@@ -248,11 +248,12 @@ export async function earnPointsFromPurchase(params: {
 
   return prisma.$queryRawUnsafe(
     `INSERT INTO "PointsLedger" (
-      id, "userId", action, category, points, description, metadata, "createdAt"
+      id, "userId", action, category, amount, balance, description, metadata, "createdAt"
     ) VALUES (
-      $1, $2, 'STORE_PURCHASE', 'engagement', $3, $4,
-      $5::jsonb, NOW()
-    ) RETURNING id, points, action`,
+      $1, $2, 'STORE_PURCHASE', 'engagement', $3,
+      COALESCE((SELECT SUM(amount) FROM "PointsLedger" WHERE "userId" = $2), 0) + $3,
+      $4, $5::jsonb, NOW()
+    ) RETURNING id, amount, action`,
     cuid(),
     params.userId,
     params.points,
@@ -278,11 +279,12 @@ export async function migratePointsToHQ(params: {
 
   return prisma.$queryRawUnsafe(
     `INSERT INTO "PointsLedger" (
-      id, "userId", action, category, points, description, metadata, "createdAt"
+      id, "userId", action, category, amount, balance, description, metadata, "createdAt"
     ) VALUES (
-      $1, $2, 'LOYALTY_MIGRATION', 'engagement', $3, $4,
-      $5::jsonb, NOW()
-    ) RETURNING id, points, action`,
+      $1, $2, 'LOYALTY_MIGRATION', 'engagement', $3,
+      COALESCE((SELECT SUM(amount) FROM "PointsLedger" WHERE "userId" = $2), 0) + $3,
+      $4, $5::jsonb, NOW()
+    ) RETURNING id, amount, action`,
     cuid(),
     params.userId,
     params.points,

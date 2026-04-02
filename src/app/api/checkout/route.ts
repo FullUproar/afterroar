@@ -391,14 +391,19 @@ export async function POST(request: NextRequest) {
           });
 
           if (custRecord?.afterroar_user_id) {
-            // Write to HQ PointsLedger for linked customers
-            await earnPointsFromPurchase({
-              userId: custRecord.afterroar_user_id,
-              points: earnablePoints,
-              storeId,
-              transactionId: ledgerEntry.id,
-              amountSpentCents: subtotal_cents,
-            });
+            // Write to HQ PointsLedger for linked customers (non-blocking — don't let HQ issues kill checkout)
+            try {
+              await earnPointsFromPurchase({
+                userId: custRecord.afterroar_user_id,
+                points: earnablePoints,
+                storeId,
+                transactionId: ledgerEntry.id,
+                amountSpentCents: subtotal_cents,
+              });
+            } catch (hqErr) {
+              console.error("[Checkout] HQ points sync failed (non-fatal):", hqErr);
+              // Fall through to POS-local points instead
+            }
             pointsEarned = earnablePoints;
           } else {
             // POS-local loyalty points for unlinked customers
