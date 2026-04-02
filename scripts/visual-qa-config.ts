@@ -1,30 +1,25 @@
 import { defineConfig, devices } from "@playwright/test";
+import * as path from "path";
 
 const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || "https://www.afterroar.store";
 
 export default defineConfig({
-  testDir: "./scripts",
-  testMatch: "visual-qa.ts",
-  outputDir: "./scripts/visual-qa-output",
-  timeout: 60_000,
+  testDir: __dirname,
+  testMatch: "site-audit.ts",
+  outputDir: path.join(__dirname, "site-audit-output"),
+  timeout: 300_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
   retries: 0,
+  workers: 1,
   reporter: "list",
   use: {
     baseURL,
     screenshot: "off",
     trace: "off",
+    ignoreHTTPSErrors: true,
   },
   projects: [
-    {
-      name: "mobile",
-      use: { ...devices["Pixel 5"] },
-    },
-    {
-      name: "tablet",
-      use: { ...devices["iPad (gen 7)"] },
-    },
     {
       name: "desktop",
       use: {
@@ -33,13 +28,12 @@ export default defineConfig({
       },
     },
     {
-      name: "pos-terminal",
-      use: {
-        viewport: { width: 1024, height: 768 },
-        userAgent: "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36",
-        isMobile: false,
-        hasTouch: true,
-      },
+      name: "tablet",
+      use: { ...devices["iPad (gen 7)"] },
+    },
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 5"] },
     },
   ],
 });

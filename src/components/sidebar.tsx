@@ -95,8 +95,12 @@ export function Sidebar() {
   const { store, staff, effectiveRole, isTestMode, can } = useStore();
   const { mode, setMode } = useMode();
 
-  // Build visible items per group
-  const visibleNav = NAV_ITEMS.filter((item) => can(item.permission));
+  const { hasModule } = useStore();
+
+  // Build visible items per group — filter by permission AND feature module
+  const visibleNav = NAV_ITEMS.filter(
+    (item) => can(item.permission) && (!item.feature || hasModule(item.feature))
+  );
 
   // Map href -> NavItem for quick lookup
   const itemByHref = new Map<string, NavItem>();

@@ -62,15 +62,7 @@ export function ActionBar({
 
         {/* Customer */}
         <button
-          onClick={() => {
-            if (customer && activePanel !== "customer") {
-              togglePanel("customer");
-            } else if (customer && activePanel === "customer") {
-              togglePanel("customer");
-            } else {
-              togglePanel("customer");
-            }
-          }}
+          onClick={() => togglePanel("customer")}
           className={`flex flex-col items-center justify-center rounded-xl transition-colors ${
             activePanel === "customer"
               ? "bg-accent text-white"

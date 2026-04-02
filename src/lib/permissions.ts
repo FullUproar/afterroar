@@ -281,34 +281,36 @@ export interface NavItem {
   label: string;
   icon: string;
   permission: Permission;
+  /** If set, this nav item is only visible when the store has this feature module */
+  feature?: FeatureModule;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/register", label: "Register", icon: "◈", permission: "checkout" },
   { href: "/dashboard", label: "Dashboard", icon: "⌂", permission: "checkout" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "▦", permission: "inventory.view" },
-  { href: "/dashboard/singles", label: "TCG Singles", icon: "\u{1F0CF}", permission: "inventory.view" },
+  { href: "/dashboard/singles", label: "TCG Singles", icon: "\u{1F0CF}", permission: "inventory.view", feature: "tcg_engine" },
   { href: "/dashboard/game-library", label: "Game Library", icon: "♜", permission: "inventory.view" },
   { href: "/dashboard/preorders", label: "Preorders", icon: "⏳", permission: "inventory.adjust" },
   { href: "/dashboard/trade-ins", label: "Trade-Ins", icon: "⇄", permission: "trade_ins" },
   { href: "/dashboard/returns", label: "Returns", icon: "↩", permission: "returns" },
   { href: "/dashboard/customers", label: "Customers", icon: "♟", permission: "customers.view" },
   { href: "/dashboard/events", label: "Events", icon: "★", permission: "events.checkin" },
-  { href: "/dashboard/tournaments", label: "Tournaments", icon: "\u2694", permission: "events.manage" },
+  { href: "/dashboard/tournaments", label: "Tournaments", icon: "\u2694", permission: "events.manage", feature: "events" },
   { href: "/dashboard/purchase-orders", label: "Purchase Orders", icon: "\u229e", permission: "inventory.adjust" },
   { href: "/dashboard/stock-counts", label: "Stock Count", icon: "\u25a4", permission: "inventory.adjust" },
   { href: "/dashboard/promotions", label: "Promotions", icon: "✦", permission: "inventory.pricing" },
   { href: "/dashboard/reports", label: "Reports", icon: "◩", permission: "reports" },
-  { href: "/dashboard/cash-flow", label: "Cash Flow", icon: "◎", permission: "cash_flow" },
-  { href: "/dashboard/catalog", label: "Catalog", icon: "⊕", permission: "inventory.create" },
+  { href: "/dashboard/cash-flow", label: "Cash Flow", icon: "◎", permission: "cash_flow", feature: "intelligence" },
+  { href: "/dashboard/catalog", label: "Catalog", icon: "⊕", permission: "inventory.create", feature: "tcg_engine" },
   { href: "/dashboard/import", label: "Import", icon: "⤓", permission: "import" },
   { href: "/dashboard/certification", label: "Certification", icon: "◉", permission: "certification" },
   { href: "/dashboard/orders", label: "Orders", icon: "⊟", permission: "checkout" },
   { href: "/dashboard/drawer", label: "Drawer", icon: "▣", permission: "checkout" },
   { href: "/dashboard/timeclock", label: "Time Clock", icon: "◷", permission: "checkout" },
   { href: "/dashboard/gift-cards", label: "Gift Cards", icon: "◆", permission: "customers.edit" },
-  { href: "/dashboard/transfers", label: "Transfers", icon: "⇆", permission: "inventory.adjust" },
-  { href: "/dashboard/locations", label: "Locations", icon: "⊡", permission: "store.settings" },
+  { href: "/dashboard/transfers", label: "Transfers", icon: "⇆", permission: "inventory.adjust", feature: "multi_location" },
+  { href: "/dashboard/locations", label: "Locations", icon: "⊡", permission: "store.settings", feature: "multi_location" },
   { href: "/dashboard/issues", label: "Issues", icon: "⚑", permission: "reports" },
   { href: "/dashboard/ops-log", label: "Ops Log", icon: "◉", permission: "ops_log" },
   { href: "/dashboard/staff", label: "Staff", icon: "⊞", permission: "staff.manage" },
