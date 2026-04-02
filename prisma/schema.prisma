@@ -62,8 +62,86 @@ model PosStore {
   access_code_attempts PosAccessCodeAttempt[]
   customer_notes       PosCustomerNote[]
   allocation_pools     PosAllocationPool[]
+  tabs                 PosTab[]
+  consignment_items    PosConsignmentItem[]
 
   @@map("pos_stores")
+}
+
+// ============================================================
+// CONSIGNMENT
+// ============================================================
+
+model PosConsignmentItem {
+  id                     String    @id @default(cuid())
+  store_id               String
+  consignor_id           String
+  inventory_item_id      String?
+  asking_price_cents     Int
+  commission_percent     Decimal   @db.Decimal(5, 2) @default(15.00)
+  status                 String    @default("active") // active | sold | returned | expired
+  listed_at              DateTime  @default(now()) @db.Timestamptz()
+  sold_at                DateTime? @db.Timestamptz()
+  payout_cents           Int?
+  payout_ledger_entry_id String?
+  notes                  String?
+
+  store              PosStore          @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  consignor          PosCustomer       @relation(fields: [consignor_id], references: [id])
+  inventory_item     PosInventoryItem? @relation(fields: [inventory_item_id], references: [id])
+
+  @@index([store_id])
+  @@index([consignor_id])
+  @@index([store_id, status])
+  @@map("pos_consignment_items")
+}
+
+// ============================================================
+// CAFE / CONCESSIONS
+// ============================================================
+
+model PosTab {
+  id              String    @id @default(cuid())
+  store_id        String
+  customer_id     String?
+  staff_id        String?
+  event_id        String?
+  table_label     String?
+  status          String    @default("open") // open | closed | voided
+  subtotal_cents  Int       @default(0)
+  tax_cents       Int       @default(0)
+  total_cents     Int       @default(0)
+  ledger_entry_id String?
+  notes           String?
+  opened_at       DateTime  @default(now()) @db.Timestamptz()
+  closed_at       DateTime? @db.Timestamptz()
+
+  store    PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer PosCustomer? @relation(fields: [customer_id], references: [id])
+  event    PosEvent?    @relation(fields: [event_id], references: [id])
+  items    PosTabItem[]
+
+  @@index([store_id])
+  @@index([store_id, status])
+  @@map("pos_tabs")
+}
+
+model PosTabItem {
+  id          String    @id @default(cuid())
+  tab_id      String
+  name        String
+  price_cents Int
+  quantity    Int       @default(1)
+  modifiers   String?
+  notes       String?
+  status      String    @default("pending") // pending | in_progress | served
+  created_at  DateTime  @default(now()) @db.Timestamptz()
+  served_at   DateTime? @db.Timestamptz()
+
+  tab PosTab @relation(fields: [tab_id], references: [id], onDelete: Cascade)
+
+  @@index([tab_id])
+  @@map("pos_tab_items")
 }
 
 // ============================================================
@@ -338,6 +416,8 @@ model PosCustomer {
   orders             PosOrder[]
   tags               String[]             @default([])
   customer_notes     PosCustomerNote[]
+  tabs               PosTab[]
+  consignment_items  PosConsignmentItem[]
 
   @@index([store_id])
   @@map("pos_customers")
@@ -451,6 +531,7 @@ model PosInventoryItem {
   purchase_order_items PosPurchaseOrderItem[]
   stock_count_items    PosStockCountItem[]
   order_items          PosOrderItem[]
+  consignment_items    PosConsignmentItem[]
 
   @@index([store_id])
   @@index([store_id, active])
@@ -500,6 +581,7 @@ model PosEvent {
   ledger_entries PosLedgerEntry[]
   tournaments      PosTournament[]
   allocation_pools PosAllocationPool[]
+  tabs             PosTab[]
 
   @@index([store_id])
   @@index([store_id, starts_at(sort: Desc)])
@@ -753,6 +835,8 @@ model PosGameCheckout {
   return_condition  String?
   return_notes      String?
   status            String    @default("out") // out, returned, overdue
+  due_back_at       DateTime? @db.Timestamptz()
+  fee_cents         Int       @default(0)
   created_at        DateTime  @default(now()) @db.Timestamptz()
 
   store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)

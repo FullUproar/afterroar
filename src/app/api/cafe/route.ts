@@ -1,0 +1,197 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
+import { prisma } from "@/lib/prisma";
+import { formatCents } from "@/lib/types";
+import { getDefaultTaxRate } from "@/lib/tax";
+import { getStoreSettings } from "@/lib/store-settings-shared";
+
+/* ------------------------------------------------------------------ */
+/*  Cafe / Tab API                                                     */
+/*  GET: list open tabs                                                */
+/*  POST: actions (open_tab, add_item, update_item_status, close_tab) */
+/* ------------------------------------------------------------------ */
+
+export async function GET(request: NextRequest) {
+  try {
+    const { db } = await requireStaff();
+    const status = request.nextUrl.searchParams.get("status") || "open";
+
+    const tabs = await db.posTab.findMany({
+      where: { status },
+      orderBy: { opened_at: "desc" },
+      include: {
+        items: { orderBy: { created_at: "asc" } },
+        customer: { select: { name: true } },
+      },
+      take: 100,
+    });
+
+    return NextResponse.json(tabs);
+  } catch (error) {
+    return handleAuthError(error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { db, storeId, staff } = await requireStaff();
+    const body = await request.json();
+    const action = body.action as string;
+
+    // ---- OPEN TAB ----
+    if (action === "open_tab") {
+      const tab = await db.posTab.create({
+        data: {
+          store_id: storeId,
+          customer_id: body.customer_id || null,
+          staff_id: staff.id,
+          event_id: body.event_id || null,
+          table_label: body.table_label || null,
+          notes: body.notes || null,
+        },
+      });
+      return NextResponse.json(tab, { status: 201 });
+    }
+
+    // ---- ADD ITEM TO TAB ----
+    if (action === "add_item") {
+      const { tab_id, name, price_cents, quantity, modifiers, notes } = body;
+      if (!tab_id || !name) {
+        return NextResponse.json({ error: "tab_id and name required" }, { status: 400 });
+      }
+
+      const tab = await db.posTab.findFirst({ where: { id: tab_id, status: "open" } });
+      if (!tab) {
+        return NextResponse.json({ error: "Tab not found or closed" }, { status: 404 });
+      }
+
+      const item = await db.posTabItem.create({
+        data: {
+          tab_id,
+          name: name.trim(),
+          price_cents: price_cents || 0,
+          quantity: quantity || 1,
+          modifiers: modifiers || null,
+          notes: notes || null,
+        },
+      });
+
+      // Update tab subtotal
+      const itemTotal = (price_cents || 0) * (quantity || 1);
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: { subtotal_cents: { increment: itemTotal } },
+      });
+
+      return NextResponse.json(item, { status: 201 });
+    }
+
+    // ---- UPDATE ITEM STATUS (KDS) ----
+    if (action === "update_item_status") {
+      const { item_id, status: newStatus } = body;
+      if (!item_id || !newStatus) {
+        return NextResponse.json({ error: "item_id and status required" }, { status: 400 });
+      }
+
+      const updated = await db.posTabItem.update({
+        where: { id: item_id },
+        data: {
+          status: newStatus,
+          ...(newStatus === "served" ? { served_at: new Date() } : {}),
+        },
+      });
+
+      return NextResponse.json(updated);
+    }
+
+    // ---- CLOSE TAB ----
+    if (action === "close_tab") {
+      const { tab_id, payment_method } = body;
+      if (!tab_id) {
+        return NextResponse.json({ error: "tab_id required" }, { status: 400 });
+      }
+
+      const tab = await db.posTab.findFirst({
+        where: { id: tab_id, status: "open" },
+        include: { items: true },
+      });
+      if (!tab) {
+        return NextResponse.json({ error: "Tab not found or already closed" }, { status: 404 });
+      }
+
+      // Calculate total with tax
+      const subtotal = tab.items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
+      const store = await db.posStore.findFirst({ select: { settings: true } });
+      const settings = getStoreSettings((store?.settings ?? {}) as Record<string, unknown>);
+      const taxRate = settings.tax_rate_percent || getDefaultTaxRate();
+      const taxCents = Math.round(subtotal * (taxRate / 100));
+      const totalCents = subtotal + taxCents;
+
+      // Create ledger entry
+      const itemNames = tab.items.map((i) => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ""}`).join(", ");
+      const ledgerEntry = await prisma.posLedgerEntry.create({
+        data: {
+          store_id: storeId,
+          type: "sale",
+          customer_id: tab.customer_id,
+          staff_id: staff.id,
+          event_id: tab.event_id,
+          amount_cents: totalCents,
+          description: `Tab: ${itemNames}`,
+          metadata: JSON.parse(JSON.stringify({
+            tab_id: tab.id,
+            table_label: tab.table_label,
+            payment_method: payment_method || "cash",
+            items: tab.items.map((i) => ({
+              name: i.name,
+              price_cents: i.price_cents,
+              quantity: i.quantity,
+              modifiers: i.modifiers,
+            })),
+            tax_cents: taxCents,
+            source: "cafe",
+          })),
+        },
+      });
+
+      // Close tab
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: {
+          status: "closed",
+          subtotal_cents: subtotal,
+          tax_cents: taxCents,
+          total_cents: totalCents,
+          ledger_entry_id: ledgerEntry.id,
+          closed_at: new Date(),
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        total_cents: totalCents,
+        ledger_entry_id: ledgerEntry.id,
+      });
+    }
+
+    // ---- KDS VIEW (pending items across all open tabs) ----
+    if (action === "kds") {
+      const items = await db.posTabItem.findMany({
+        where: {
+          status: { in: ["pending", "in_progress"] },
+          tab: { status: "open" },
+        },
+        include: {
+          tab: { select: { table_label: true, customer: { select: { name: true } } } },
+        },
+        orderBy: { created_at: "asc" },
+      });
+
+      return NextResponse.json(items);
+    }
+
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  } catch (error) {
+    return handleAuthError(error);
+  }
+}

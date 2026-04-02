@@ -37,6 +37,8 @@ export interface StoreSettings {
   // Staff lock screen
   staff_lock_enabled: boolean;
   staff_lock_timeout_minutes: number;
+  // Cross-store intelligence
+  opt_in_benchmarking: boolean;
   // NUX (new user experience)
   nux_dismissed: boolean;
   // Mobile register
@@ -85,6 +87,8 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   // Staff lock screen
   staff_lock_enabled: false,
   staff_lock_timeout_minutes: 0,
+  // Cross-store intelligence
+  opt_in_benchmarking: false,
   // NUX
   nux_dismissed: false,
   // Mobile register
