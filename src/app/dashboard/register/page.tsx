@@ -731,9 +731,16 @@ export default function RegisterPage() {
       const existingIdx = prev.findIndex((c) => c.inventory_item_id === item.id);
       if (existingIdx >= 0) {
         const existing = prev[existingIdx];
-        if (existing.quantity >= item.quantity) return prev;
+        const newQty = existing.quantity + 1;
+        if (newQty > item.quantity && item.quantity > 0) {
+          // Warn but allow — set override flag
+          setNoticeBanner(`${item.name}: adding more than in stock (${item.quantity} available)`);
+          if (noticeBannerTimerRef.current) clearTimeout(noticeBannerTimerRef.current);
+          noticeBannerTimerRef.current = setTimeout(() => setNoticeBanner(null), 5000);
+          setHasZeroStockOverride(true);
+        }
         const updated = [...prev];
-        updated[existingIdx] = { ...existing, quantity: existing.quantity + 1 };
+        updated[existingIdx] = { ...existing, quantity: newQty };
         setLastAddedIndex(existingIdx);
         return updated;
       }
@@ -814,6 +821,37 @@ export default function RegisterPage() {
   async function handleCompleteSale(method: PaymentMethod) {
     if (cart.length === 0 || processing) return;
     if (method === "cash" && tendered < amountDue && amountDue > 0) return;
+
+    // PRE-FLIGHT: Check stock BEFORE any payment is taken
+    if (!hasZeroStockOverride) {
+      try {
+        const stockCheckItems = cart.filter(c => c.inventory_item_id);
+        if (stockCheckItems.length > 0) {
+          const res = await fetch("/api/inventory/check-stock", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: stockCheckItems.map(c => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity })) }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.issues && data.issues.length > 0) {
+              // Show warning — don't block, but warn before payment
+              const issueMsg = data.issues.map((i: { name: string; available: number; requested: number }) =>
+                `${i.name}: ${i.available} in stock, ${i.requested} in cart`
+              ).join("\n");
+              setNoticeBanner(`Stock warning:\n${issueMsg}`);
+              if (noticeBannerTimerRef.current) clearTimeout(noticeBannerTimerRef.current);
+              noticeBannerTimerRef.current = setTimeout(() => setNoticeBanner(null), 8000);
+              // Set override so we don't check again + checkout API won't reject
+              setHasZeroStockOverride(true);
+              return; // Let them review, they can tap Pay again
+            }
+          }
+        }
+      } catch {
+        // Stock check failed — proceed anyway (don't block sale)
+      }
+    }
 
     // For card payments: route through Stripe Terminal reader
     if (method === "card" && !isTraining) {
