@@ -22,6 +22,10 @@ interface Tab {
   customer: { name: string } | null;
   opened_at: string;
   items: TabItem[];
+  table_fee_type: string | null;
+  table_fee_cents: number;
+  table_fee_waived: boolean;
+  age_verified: boolean;
 }
 
 const MENU_ITEMS = [
@@ -45,6 +49,13 @@ export default function CafePage() {
   // New tab form
   const [showNewTab, setShowNewTab] = useState(false);
   const [newTabTable, setNewTabTable] = useState("");
+
+  // Live timer
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   const loadTabs = useCallback(async () => {
     try {
@@ -213,7 +224,22 @@ export default function CafePage() {
                     </div>
                     <span className="text-sm font-semibold text-accent tabular-nums">{formatCents(tab.subtotal_cents)}</span>
                   </div>
-                  <p className="text-[10px] text-muted mt-1">{tab.items.length} item{tab.items.length !== 1 ? "s" : ""} — opened {new Date(tab.opened_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</p>
+                  {(() => {
+                    const elapsed = Math.floor((now - new Date(tab.opened_at).getTime()) / 60000);
+                    const hrs = Math.floor(elapsed / 60);
+                    const mins = elapsed % 60;
+                    const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                    return (
+                      <p className="text-[10px] text-muted mt-1">
+                        {tab.items.length} item{tab.items.length !== 1 ? "s" : ""} {"\u00B7"} {timeStr}
+                        {tab.table_fee_type === "hourly" && tab.table_fee_cents > 0 && (
+                          <span className="text-amber-400 ml-1">
+                            {"\u00B7"} {formatCents(Math.round((tab.table_fee_cents / 60) * elapsed))} accrued
+                          </span>
+                        )}
+                      </p>
+                    );
+                  })()}
                 </button>
               ))
             )}
