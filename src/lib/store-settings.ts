@@ -345,6 +345,27 @@ export const SETTINGS_SECTIONS = [
     ],
   },
   {
+    key: "cafe",
+    label: "Cafe & Concessions",
+    description: "Table fees, age verification, and F&B settings",
+    fields: [
+      {
+        key: "cafe_table_fee_type",
+        label: "Default Table Fee Model",
+        type: "select" as const,
+        options: [
+          { value: "none", label: "No table fee" },
+          { value: "flat", label: "Flat fee per person" },
+          { value: "hourly", label: "Hourly rate" },
+          { value: "free_with_purchase", label: "Free with minimum purchase" },
+        ],
+      },
+      { key: "cafe_table_fee_cents", label: "Table Fee Amount (cents)", type: "number" as const, min: 0, max: 10000, tooltip: "For flat fee: total per person. For hourly: rate per hour. E.g. 500 = $5.00" },
+      { key: "cafe_free_threshold_cents", label: "Free-with-purchase threshold (cents)", type: "number" as const, min: 0, max: 100000, tooltip: "Minimum F&B spend to waive the table fee. E.g. 1000 = $10.00" },
+      { key: "cafe_age_verification_enabled", label: "Require age verification for alcohol", type: "toggle" as const, tooltip: "When enabled, a prompt appears before adding age-restricted items to a tab." },
+    ],
+  },
+  {
     key: "staff_lock",
     label: "Staff Lock Screen",
     description: "Require staff PIN before using the system. Locks between shifts.",

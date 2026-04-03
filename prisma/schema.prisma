@@ -101,20 +101,24 @@ model PosConsignmentItem {
 // ============================================================
 
 model PosTab {
-  id              String    @id @default(cuid())
-  store_id        String
-  customer_id     String?
-  staff_id        String?
-  event_id        String?
-  table_label     String?
-  status          String    @default("open") // open | closed | voided
-  subtotal_cents  Int       @default(0)
-  tax_cents       Int       @default(0)
-  total_cents     Int       @default(0)
-  ledger_entry_id String?
-  notes           String?
-  opened_at       DateTime  @default(now()) @db.Timestamptz()
-  closed_at       DateTime? @db.Timestamptz()
+  id                String    @id @default(cuid())
+  store_id          String
+  customer_id       String?
+  staff_id          String?
+  event_id          String?
+  table_label       String?
+  status            String    @default("open") // open | closed | voided
+  subtotal_cents    Int       @default(0)
+  tax_cents         Int       @default(0)
+  total_cents       Int       @default(0)
+  ledger_entry_id   String?
+  notes             String?
+  table_fee_type    String?   // flat | hourly | free_with_purchase
+  table_fee_cents   Int       @default(0)
+  table_fee_waived  Boolean   @default(false)
+  age_verified      Boolean   @default(false)
+  opened_at         DateTime  @default(now()) @db.Timestamptz()
+  closed_at         DateTime? @db.Timestamptz()
 
   store    PosStore     @relation(fields: [store_id], references: [id], onDelete: Cascade)
   customer PosCustomer? @relation(fields: [customer_id], references: [id])
@@ -127,16 +131,18 @@ model PosTab {
 }
 
 model PosTabItem {
-  id          String    @id @default(cuid())
-  tab_id      String
-  name        String
-  price_cents Int
-  quantity    Int       @default(1)
-  modifiers   String?
-  notes       String?
-  status      String    @default("pending") // pending | in_progress | served
-  created_at  DateTime  @default(now()) @db.Timestamptz()
-  served_at   DateTime? @db.Timestamptz()
+  id                String    @id @default(cuid())
+  tab_id            String
+  name              String
+  price_cents       Int
+  quantity          Int       @default(1)
+  modifiers         String?
+  notes             String?
+  status            String    @default("pending") // pending | in_progress | served
+  item_type         String    @default("cafe") // cafe | retail | table_fee
+  inventory_item_id String?
+  created_at        DateTime  @default(now()) @db.Timestamptz()
+  served_at         DateTime? @db.Timestamptz()
 
   tab PosTab @relation(fields: [tab_id], references: [id], onDelete: Cascade)
 

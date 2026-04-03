@@ -86,6 +86,108 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(item, { status: 201 });
     }
 
+    // ---- ADD INVENTORY ITEM TO TAB (retail purchase on same tab) ----
+    if (action === "add_inventory_item") {
+      const { tab_id, inventory_item_id, quantity: qty } = body;
+      if (!tab_id || !inventory_item_id) {
+        return NextResponse.json({ error: "tab_id and inventory_item_id required" }, { status: 400 });
+      }
+
+      const tab = await db.posTab.findFirst({ where: { id: tab_id, status: "open" } });
+      if (!tab) return NextResponse.json({ error: "Tab not found or closed" }, { status: 404 });
+
+      const invItem = await db.posInventoryItem.findFirst({
+        where: { id: inventory_item_id },
+        select: { id: true, name: true, price_cents: true },
+      });
+      if (!invItem) return NextResponse.json({ error: "Inventory item not found" }, { status: 404 });
+
+      const itemQty = qty || 1;
+      const item = await db.posTabItem.create({
+        data: {
+          tab_id,
+          name: invItem.name,
+          price_cents: invItem.price_cents,
+          quantity: itemQty,
+          item_type: "retail",
+          inventory_item_id: invItem.id,
+          status: "served",
+        },
+      });
+
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: { subtotal_cents: { increment: invItem.price_cents * itemQty } },
+      });
+
+      return NextResponse.json(item, { status: 201 });
+    }
+
+    // ---- SET TABLE FEE ----
+    if (action === "set_table_fee") {
+      const { tab_id, fee_type, fee_cents } = body;
+      if (!tab_id || !fee_type) {
+        return NextResponse.json({ error: "tab_id and fee_type required" }, { status: 400 });
+      }
+
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: { table_fee_type: fee_type, table_fee_cents: fee_cents || 0 },
+      });
+
+      if (fee_cents && fee_cents > 0) {
+        await db.posTabItem.create({
+          data: {
+            tab_id,
+            name: `Table Fee (${fee_type})`,
+            price_cents: fee_cents,
+            quantity: 1,
+            item_type: "table_fee",
+            status: "served",
+          },
+        });
+        await db.posTab.update({
+          where: { id: tab_id },
+          data: { subtotal_cents: { increment: fee_cents } },
+        });
+      }
+
+      return NextResponse.json({ success: true });
+    }
+
+    // ---- WAIVE TABLE FEE ----
+    if (action === "waive_table_fee") {
+      const { tab_id } = body;
+      if (!tab_id) return NextResponse.json({ error: "tab_id required" }, { status: 400 });
+
+      const tab = await db.posTab.findFirst({
+        where: { id: tab_id, status: "open" },
+        include: { items: true },
+      });
+      if (!tab) return NextResponse.json({ error: "Tab not found" }, { status: 404 });
+
+      const feeItem = tab.items.find((i) => i.item_type === "table_fee");
+      if (feeItem) {
+        await db.posTabItem.delete({ where: { id: feeItem.id } });
+        await db.posTab.update({
+          where: { id: tab_id },
+          data: { subtotal_cents: { decrement: feeItem.price_cents }, table_fee_waived: true },
+        });
+      } else {
+        await db.posTab.update({ where: { id: tab_id }, data: { table_fee_waived: true } });
+      }
+
+      return NextResponse.json({ success: true });
+    }
+
+    // ---- AGE VERIFY ----
+    if (action === "age_verify") {
+      const { tab_id } = body;
+      if (!tab_id) return NextResponse.json({ error: "tab_id required" }, { status: 400 });
+      await db.posTab.update({ where: { id: tab_id }, data: { age_verified: true } });
+      return NextResponse.json({ success: true });
+    }
+
     // ---- UPDATE ITEM STATUS (KDS) ----
     if (action === "update_item_status") {
       const { item_id, status: newStatus } = body;
@@ -153,6 +255,15 @@ export async function POST(request: NextRequest) {
           })),
         },
       });
+
+      // Deduct inventory for retail items on the tab
+      const retailItems = tab.items.filter((i) => i.item_type === "retail" && i.inventory_item_id);
+      for (const ri of retailItems) {
+        await db.posInventoryItem.updateMany({
+          where: { id: ri.inventory_item_id!, store_id: storeId },
+          data: { quantity: { decrement: ri.quantity } },
+        });
+      }
 
       // Close tab
       await db.posTab.update({
