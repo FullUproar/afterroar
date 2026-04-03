@@ -107,7 +107,7 @@ export function MoreMenu({
   const [gcSellResult, setGcSellResult] = useState<{ code: string; balance_cents: number } | null>(null);
 
   async function handleSellGiftCard() {
-    const cents = Math.round(parseDollars(gcSellAmount) * 100);
+    const cents = parseDollars(gcSellAmount);
     if (cents < 100) { showError("Minimum gift card amount is $1.00"); return; }
     setGcSellLoading(true);
     try {
@@ -1063,7 +1063,7 @@ export function MoreMenu({
                   </div>
                   <button
                     onClick={handleSellGiftCard}
-                    disabled={gcSellLoading || !gcSellAmount || parseDollars(gcSellAmount) < 1}
+                    disabled={gcSellLoading || !gcSellAmount || parseDollars(gcSellAmount) < 100}
                     className="shrink-0 rounded-xl px-5 font-semibold text-white disabled:opacity-30 transition-colors"
                     style={{ height: 44, backgroundColor: "#16a34a" }}
                   >
