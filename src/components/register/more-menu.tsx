@@ -100,6 +100,40 @@ export function MoreMenu({
     }
   }, []);
 
+  // ---- Gift Card Sale ----
+  const [gcSellMode, setGcSellMode] = useState(false);
+  const [gcSellAmount, setGcSellAmount] = useState("");
+  const [gcSellLoading, setGcSellLoading] = useState(false);
+  const [gcSellResult, setGcSellResult] = useState<{ code: string; balance_cents: number } | null>(null);
+
+  async function handleSellGiftCard() {
+    const cents = Math.round(parseDollars(gcSellAmount) * 100);
+    if (cents < 100) { showError("Minimum gift card amount is $1.00"); return; }
+    setGcSellLoading(true);
+    try {
+      const res = await fetch("/api/gift-cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount_cents: cents,
+          customer_id: customer?.id || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        showError(data.error || "Failed to create gift card");
+        return;
+      }
+      const card = await res.json();
+      setGcSellResult({ code: card.code, balance_cents: card.balance_cents });
+      setToastMessage(`Gift card created: ${formatCents(cents)}`);
+    } catch {
+      showError("Failed to create gift card");
+    } finally {
+      setGcSellLoading(false);
+    }
+  }
+
   // ---- Price Check ----
   const [priceCheckQuery, setPriceCheckQuery] = useState("");
   const [priceCheckResults, setPriceCheckResults] = useState<InventoryItem[]>([]);
@@ -952,35 +986,125 @@ export function MoreMenu({
             )}
           </div>
 
-          {/* Quick actions */}
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                setActivePanel("manual");
-                setManualName("Gift Card");
-                setManualPrice("");
-              }}
-              className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left border border-card-border hover:bg-card-hover transition-colors"
-              style={{ minHeight: 44 }}
-            >
-              <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-              <span className="text-lg text-foreground">Sell Gift Card (add to cart)</span>
-            </button>
-            {cart.length > 0 && (
+          {/* Sell Gift Card */}
+          <div className="rounded-xl border border-card-border bg-card p-4 space-y-3">
+            <div className="text-sm font-semibold text-muted uppercase tracking-wider">Sell Gift Card</div>
+
+            {gcSellResult ? (
+              /* Success — show the code */
+              <div className="space-y-3">
+                <div className="rounded-xl border-2 border-green-500/30 bg-green-500/5 p-4 text-center space-y-2">
+                  <div className="text-sm text-muted">Gift Card Code</div>
+                  <div className="text-2xl font-mono font-bold tracking-wider text-foreground select-all">{gcSellResult.code}</div>
+                  <div className="text-lg font-semibold text-green-400">{formatCents(gcSellResult.balance_cents)}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(gcSellResult.code).then(() => setToastMessage("Code copied!")).catch(() => {});
+                    }}
+                    className="flex-1 rounded-xl px-4 py-2.5 border border-card-border hover:bg-card-hover transition-colors text-sm font-medium"
+                  >
+                    Copy Code
+                  </button>
+                  <button
+                    onClick={() => {
+                      const w = window.open("", "_blank", "width=380,height=300");
+                      if (!w) return;
+                      w.document.write(`<html><body style="font-family:monospace;text-align:center;padding:40px"><h2>Gift Card</h2><div style="font-size:28px;letter-spacing:4px;margin:20px 0;font-weight:bold">${gcSellResult.code}</div><div style="font-size:24px;color:#16a34a">${formatCents(gcSellResult.balance_cents)}</div><br><button onclick="window.print()" style="padding:8px 24px;font-size:16px;cursor:pointer">Print</button></body></html>`);
+                      w.document.close();
+                    }}
+                    className="flex-1 rounded-xl px-4 py-2.5 border border-card-border hover:bg-card-hover transition-colors text-sm font-medium"
+                  >
+                    Print
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setGcSellResult(null); setGcSellAmount(""); setGcSellMode(false); }}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            ) : gcSellMode ? (
+              /* Amount entry */
+              <div className="space-y-3">
+                <div className="grid grid-cols-4 gap-2">
+                  {[10, 25, 50, 100].map((amt) => (
+                    <button
+                      key={amt}
+                      onClick={() => setGcSellAmount(String(amt))}
+                      className={`rounded-xl py-3 text-center font-semibold transition-colors border ${
+                        gcSellAmount === String(amt)
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-card-border hover:bg-card-hover text-foreground"
+                      }`}
+                    >
+                      ${amt}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-lg">$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={gcSellAmount}
+                      onChange={(e) => setGcSellAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Enter") handleSellGiftCard();
+                      }}
+                      placeholder="Custom"
+                      autoFocus
+                      className="w-full rounded-xl border border-input-border bg-input-bg pl-8 pr-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none text-lg font-mono"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSellGiftCard}
+                    disabled={gcSellLoading || !gcSellAmount || parseDollars(gcSellAmount) < 1}
+                    className="shrink-0 rounded-xl px-5 font-semibold text-white disabled:opacity-30 transition-colors"
+                    style={{ height: 44, backgroundColor: "#16a34a" }}
+                  >
+                    {gcSellLoading ? "..." : "Create"}
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setGcSellMode(false); setGcSellAmount(""); }}
+                  className="w-full text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              /* Entry point */
               <button
-                onClick={() => {
-                  setShowGiftCardPayment(true);
-                  setShowPaySheet(true);
-                  setActivePanel(null);
-                }}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left border border-accent/30 bg-accent/5 hover:bg-accent/10 transition-colors"
+                onClick={() => setGcSellMode(true)}
+                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left border border-card-border hover:bg-card-hover transition-colors"
                 style={{ minHeight: 44 }}
               >
-                <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
-                <span className="text-lg text-accent font-medium">Redeem as Payment</span>
+                <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                <span className="text-lg text-foreground">Sell New Gift Card</span>
               </button>
             )}
           </div>
+
+          {/* Redeem as payment */}
+          {cart.length > 0 && (
+            <button
+              onClick={() => {
+                setShowGiftCardPayment(true);
+                setShowPaySheet(true);
+                setActivePanel(null);
+              }}
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left border border-accent/30 bg-accent/5 hover:bg-accent/10 transition-colors"
+              style={{ minHeight: 44 }}
+            >
+              <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+              <span className="text-lg text-accent font-medium">Redeem as Payment</span>
+            </button>
+          )}
         </div>
       );
 
