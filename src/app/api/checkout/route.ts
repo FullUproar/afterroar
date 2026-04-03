@@ -477,18 +477,25 @@ export async function POST(request: NextRequest) {
             userId: visitCust.afterroar_user_id,
             storeId,
           });
-          // Purchase summary for Passport receipt holder (no dollar amounts — categories only)
+          // Purchase summary for Passport receipt holder
+          // No dollar amounts per bridge spec — categories + board game names only
           const categoryCounts = new Map<string, number>();
+          const boardGameNames: string[] = [];
           for (const item of items) {
             const inv = invMap.get(item.inventory_item_id);
             const cat = inv?.category || "other";
             categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + item.quantity);
+            // Include board game names for game library integration
+            if (cat === "board_game" && inv?.name) {
+              boardGameNames.push(inv.name);
+            }
           }
           await enqueueHQ(storeId, "purchase_summary", {
             userId: visitCust.afterroar_user_id,
             storeId,
             itemCount: items.reduce((s, i) => s + i.quantity, 0),
             categories: Object.fromEntries(categoryCounts),
+            boardGames: boardGameNames.length > 0 ? boardGameNames : undefined,
             receiptToken,
             receiptUrl: `https://www.afterroar.store/r/${receiptToken}`,
           });
