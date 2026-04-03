@@ -433,11 +433,40 @@ export const SETTINGS_SECTIONS = [
 /*  Hooks                                                               */
 /* ------------------------------------------------------------------ */
 
-/** Client-side: get typed settings merged with defaults */
+const SETTINGS_CACHE_KEY = "store-settings-cache";
+
+function getCachedSettings(): Partial<StoreSettings> {
+  try {
+    const cached = localStorage.getItem(SETTINGS_CACHE_KEY);
+    return cached ? JSON.parse(cached) : {};
+  } catch {
+    return {};
+  }
+}
+
+function setCachedSettings(settings: Partial<StoreSettings>) {
+  try {
+    localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(settings));
+  } catch {
+    // ignore
+  }
+}
+
+/** Client-side: get typed settings merged with defaults.
+ *  Uses localStorage cache for instant load, updates when store context arrives. */
 export function useStoreSettings(): StoreSettings {
   const { store } = useStore();
-  const raw = (store?.settings ?? {}) as Partial<StoreSettings>;
-  return { ...SETTINGS_DEFAULTS, ...raw };
+  const raw = (store?.settings ?? null) as Partial<StoreSettings> | null;
+
+  // When store settings arrive, cache them
+  if (raw && Object.keys(raw).length > 0) {
+    setCachedSettings(raw);
+    return { ...SETTINGS_DEFAULTS, ...raw };
+  }
+
+  // Before store loads, use cached settings from last session
+  const cached = getCachedSettings();
+  return { ...SETTINGS_DEFAULTS, ...cached };
 }
 
 /** Get the effective store display name */

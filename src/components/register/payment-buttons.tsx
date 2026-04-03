@@ -24,6 +24,7 @@ interface PaymentButtonsProps {
   onSetGiftCardPayError: (v: string | null) => void;
   onCompleteSale: (method: PaymentMethod) => void;
   onGiftCardPayment: () => void;
+  taxReady?: boolean;
 }
 
 export function PaymentButtons({
@@ -46,6 +47,7 @@ export function PaymentButtons({
   onSetGiftCardPayError,
   onCompleteSale,
   onGiftCardPayment,
+  taxReady,
 }: PaymentButtonsProps) {
   return (
     <div className="px-4 pb-3 pt-1">
@@ -141,18 +143,18 @@ export function PaymentButtons({
         /* PAY button -- normal state */
         <button
           onClick={() => {
-            if (hasCart) onSetShowPaySheet(true);
+            if (hasCart && taxReady !== false) onSetShowPaySheet(true);
           }}
-          disabled={!hasCart}
+          disabled={!hasCart || taxReady === false}
           className="w-full rounded-xl font-bold text-white transition-colors disabled:opacity-30 active:scale-[0.98]"
           style={{
             height: 60,
             fontSize: 20,
-            backgroundColor: hasCart ? "#16a34a" : undefined,
+            backgroundColor: hasCart && taxReady !== false ? "#16a34a" : undefined,
             minHeight: 60,
           }}
         >
-          {hasCart ? `PAY ${formatCents(total)}` : "PAY"}
+          {!hasCart ? "PAY" : taxReady === false ? "Calculating tax..." : `PAY ${formatCents(total)}`}
         </button>
       ) : null}
     </div>

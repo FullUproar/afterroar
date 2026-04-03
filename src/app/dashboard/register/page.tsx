@@ -721,6 +721,7 @@ export default function RegisterPage() {
   const subtotal = cart.reduce((s, i) => s + i.price_cents * i.quantity, 0);
   const cartItemCount = cart.reduce((s, i) => s + i.quantity, 0);
   const taxRate = storeSettings.tax_rate_percent;
+  const taxReady = taxRate > 0; // Settings loaded with a real tax rate
 
   const discountCents = discounts.reduce((sum, d) => {
     if (d.scope === "cart") {
@@ -846,7 +847,7 @@ export default function RegisterPage() {
         else if (activePanel) { setActivePanel(null); }
       }
       if (e.key === "F2") { e.preventDefault(); setActivePanel("search"); setTimeout(() => focusSearch(), 50); }
-      if (e.key === "Enter" && !searchQuery.trim() && cart.length > 0 && !showPaySheet && !activePanel) { e.preventDefault(); setShowPaySheet(true); }
+      if (e.key === "Enter" && !searchQuery.trim() && cart.length > 0 && !showPaySheet && !activePanel && taxReady) { e.preventDefault(); setShowPaySheet(true); }
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -1496,6 +1497,7 @@ export default function RegisterPage() {
           <div className="px-4 py-2 space-y-0.5">
             <div className="flex justify-between text-base text-muted"><span>Subtotal</span><span className="tabular-nums font-mono text-lg">{formatCents(subtotal)}</span></div>
             {taxCents > 0 && <div className="flex justify-between text-base text-muted"><span>Tax ({taxRate}%)</span><span className="tabular-nums font-mono text-lg">{formatCents(taxCents)}</span></div>}
+            {cart.length > 0 && !taxReady && <div className="flex justify-between text-base text-amber-400"><span>Tax</span><span className="text-sm animate-pulse">calculating...</span></div>}
             {discountCents > 0 && <div className="flex justify-between text-base text-amber-400"><span>Discount</span><span className="tabular-nums font-mono text-lg">-{formatCents(discountCents)}</span></div>}
             <div className="flex justify-between text-lg font-bold text-foreground pt-1 border-t border-card-border/50"><span>TOTAL</span><span className="tabular-nums font-mono">{formatCents(total)}</span></div>
           </div>
@@ -1521,6 +1523,7 @@ export default function RegisterPage() {
           onSetGiftCardPayError={setGiftCardPayError}
           onCompleteSale={handleCompleteSale}
           onGiftCardPayment={handleGiftCardPayment}
+          taxReady={taxReady}
         />
       </div>
 
