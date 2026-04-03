@@ -84,6 +84,7 @@ interface LastReceipt {
   cardLast4: string | null;
   tenderedCents: number;
   changeCents: number;
+  loyaltyPointsEarned: number;
 }
 
 /** Generate a receipt number from server (atomic counter) with localStorage fallback */
@@ -170,7 +171,7 @@ function buildPrintReceiptHtml(receipt: LastReceipt, storeName: string, storeSet
     card_brand: receipt.cardBrand,
     card_last4: receipt.cardLast4,
     customer_name: receipt.customerName,
-    loyalty_points_earned: 0,
+    loyalty_points_earned: receipt.loyaltyPointsEarned || 0,
     loyalty_balance: 0,
     staff_name: null,
   };
@@ -299,6 +300,7 @@ export default function RegisterPage() {
   const [discountType, setDiscountType] = useState<"percent" | "dollar">("percent");
   const [discountValue, setDiscountValue] = useState("");
   const [discountReason, setDiscountReason] = useState("");
+  const [discountError, setDiscountError] = useState<string | null>(null);
 
   // USB scanner status
   const [scannerFlash, setScannerFlash] = useState<"none" | "success" | "error">("none");
@@ -784,11 +786,15 @@ export default function RegisterPage() {
   // ---- Discount helpers ----
   function applyDiscount() {
     const val = parseFloat(discountValue);
-    if (!val || val <= 0) return;
+    if (!val || isNaN(val)) { setDiscountError("Enter a valid number"); return; }
+    if (val <= 0) { setDiscountError("Must be greater than zero"); return; }
+    if (discountType === "percent" && val > 100) { setDiscountError("Can't exceed 100%"); return; }
+    if (discountType === "dollar" && parseDollars(discountValue) > subtotal) { setDiscountError("Can't exceed the subtotal"); return; }
+    setDiscountError(null);
     const newDiscount: CartDiscount = { id: `d_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, scope: discountScope, type: discountType, value: discountType === "dollar" ? parseDollars(discountValue) : val, reason: discountReason.trim() };
     if (discountScope === "item" && cart.length > 0) newDiscount.itemIndex = cart.length - 1;
     setDiscounts((prev) => [...prev, newDiscount]);
-    setDiscountValue(""); setDiscountReason(""); setActivePanel(null);
+    setDiscountValue(""); setDiscountReason(""); setDiscountError(null); setActivePanel(null);
     (document.activeElement as HTMLElement)?.blur();
   }
 
@@ -910,7 +916,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) { const data = await res.json(); showError(data.error || "Checkout failed"); setProcessing(false); return; }
       const checkoutData = await res.json();
-      saleComplete(method, checkoutData.receipt_token ?? null);
+      saleComplete(method, checkoutData.receipt_token ?? null, checkoutData.loyalty_points_earned ?? 0);
     } catch {
       try {
         await enqueueTx({ clientTxId, type: "checkout", createdAt: new Date().toISOString(), status: "pending", retryCount: 0, lastError: null, payload, receipt: {} as Record<string, unknown> });
@@ -921,11 +927,11 @@ export default function RegisterPage() {
     } finally { setProcessing(false); }
   }
 
-  async function saleComplete(method: PaymentMethod, receiptToken: string | null = null) {
+  async function saleComplete(method: PaymentMethod, receiptToken: string | null = null, loyaltyPointsEarned: number = 0) {
     const cashChange = method === "cash" ? Math.max(0, tendered - total) : 0;
     const receiptCustomer = customer;
     const receiptNumber = await generateReceiptNumber();
-    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken, cardBrand: lastCardBrand, cardLast4: lastCardLast4, tenderedCents: method === "cash" ? tendered : total, changeCents: cashChange });
+    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken, cardBrand: lastCardBrand, cardLast4: lastCardLast4, tenderedCents: method === "cash" ? tendered : total, changeCents: cashChange, loyaltyPointsEarned });
     (document.activeElement as HTMLElement)?.blur();
     setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null); setHasZeroStockOverride(false); setLastCardBrand(null); setLastCardLast4(null);
     clearPersistedCart(); cartIdRef.current = createEmptyCart().id;
@@ -1018,7 +1024,7 @@ export default function RegisterPage() {
     manualPrice, setManualPrice, manualQty, setManualQty, addManualItem,
     discountScope, setDiscountScope, discountType, setDiscountType,
     discountValue, setDiscountValue, discountReason, setDiscountReason,
-    discountCents, cartLength: cart.length, applyDiscount,
+    discountCents, cartLength: cart.length, applyDiscount, discountError,
     effectiveRole, cart, storeSettings, setToastMessage, showError,
     setShowGiftCardPayment, setShowPaySheet, orderLookupReceipt, setOrderLookupReceipt,
   };
@@ -1033,6 +1039,9 @@ export default function RegisterPage() {
             <div className="text-2xl font-bold text-foreground">Sale Complete</div>
             {lastReceipt && <div className="text-4xl font-mono font-bold text-foreground tabular-nums">{formatCents(lastReceipt.totalCents)}</div>}
             {lastReceipt && <div className="text-muted text-base font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
+            {lastReceipt && lastReceipt.loyaltyPointsEarned > 0 && (
+              <div className="text-purple-400 text-sm font-medium">+{lastReceipt.loyaltyPointsEarned} loyalty points earned</div>
+            )}
             {/* QR Code for receipt */}
             {receiptQrUrl && (
               <div className="pt-4 space-y-2">
@@ -1211,6 +1220,11 @@ export default function RegisterPage() {
         discountsLength={discounts.length}
         hasCart={hasCart}
         total={total}
+        parkedCount={parkedCount}
+        hasLastReceipt={!!lastReceipt}
+        onPark={() => setShowParkInput(true)}
+        onRecall={openRecallSheet}
+        onShowLastReceipt={() => setShowLastReceipt(true)}
       />
 
       {/* ====== SCANNER ERROR BAR ====== */}
@@ -1284,17 +1298,9 @@ export default function RegisterPage() {
 
       {/* ====== STATUS BAR ====== */}
       <StatusBar
-        hasCart={hasCart}
         customer={customer}
         parkedCount={parkedCount}
-        hasLastReceipt={!!lastReceipt}
-        togglePanel={togglePanel}
-        setActivePanel={setActivePanel}
-        onPark={() => setShowParkInput(true)}
-        onRecall={openRecallSheet}
-        onShowLastReceipt={() => setShowLastReceipt(true)}
-        setCustomerQuery={setCustomerQuery}
-        setCustomerResults={setCustomerResults}
+        activeEventName={activeEventName}
       />
 
       {/* ====== CASH KEYPAD ====== */}

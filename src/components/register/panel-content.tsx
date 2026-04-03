@@ -73,6 +73,7 @@ interface PanelContentProps {
   discountCents: number;
   cartLength: number;
   applyDiscount: () => void;
+  discountError: string | null;
   // More menu passthrough
   effectiveRole: string | null;
   cart: Array<{ inventory_item_id: string | null; name: string; category: string; price_cents: number; quantity: number; max_quantity: number }>;
@@ -94,7 +95,7 @@ export function PanelContent(props: PanelContentProps) {
     manualPrice, setManualPrice, manualQty, setManualQty, addManualItem,
     discountScope, setDiscountScope, discountType, setDiscountType,
     discountValue, setDiscountValue, discountReason, setDiscountReason,
-    discountCents, cartLength, applyDiscount,
+    discountCents, cartLength, applyDiscount, discountError,
     effectiveRole, cart, storeSettings, setToastMessage, showError,
     setShowGiftCardPayment, setShowPaySheet, orderLookupReceipt, setOrderLookupReceipt,
   } = props;
@@ -225,6 +226,7 @@ export function PanelContent(props: PanelContentProps) {
           </div>
           <input type="text" inputMode="decimal" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter" && discountValue && cartLength) applyDiscount(); }} placeholder={discountType === "percent" ? "e.g. 10" : "e.g. 5.00"} autoFocus className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono text-center" style={{ fontSize: 20 }} />
           <input type="text" value={discountReason} onChange={(e) => setDiscountReason(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter" && discountValue && cartLength) applyDiscount(); }} placeholder="Reason (optional)" className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none" style={{ fontSize: 18 }} />
+          {discountError && <div className="text-sm text-red-400 bg-red-950/30 border border-red-500/20 rounded-lg px-3 py-2">{discountError}</div>}
           {discountCents > 0 && <div className="text-base text-amber-400">Current total discount: -{formatCents(discountCents)}</div>}
           <button onClick={applyDiscount} disabled={!discountValue || !cartLength} className="w-full rounded-xl text-lg font-medium text-white disabled:opacity-30 transition-colors" style={{ height: 48, backgroundColor: "#d97706" }}>Apply Discount</button>
         </div>

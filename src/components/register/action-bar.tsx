@@ -13,6 +13,11 @@ interface ActionBarProps {
   discountsLength: number;
   hasCart: boolean;
   total: number;
+  parkedCount: number;
+  hasLastReceipt: boolean;
+  onPark: () => void;
+  onRecall: () => void;
+  onShowLastReceipt: () => void;
 }
 
 export function ActionBar({
@@ -23,6 +28,11 @@ export function ActionBar({
   discountsLength,
   hasCart,
   total,
+  parkedCount,
+  hasLastReceipt,
+  onPark,
+  onRecall,
+  onShowLastReceipt,
 }: ActionBarProps) {
   return (
     <div className="shrink-0 flex items-center gap-1 px-2 h-14 border-b border-card-border bg-card overflow-x-auto">
@@ -139,11 +149,31 @@ export function ActionBar({
         </button>
       </div>
 
-      {/* Running total (right side) */}
+      {/* Spacer */}
       <div className="flex-1" />
-      <div className="shrink-0 text-right pr-1">
-        <div className="text-lg font-bold text-foreground tabular-nums">
-          {hasCart ? formatCents(total) : "$0.00"}
+
+      {/* Right side: park/recall, last receipt, total */}
+      <div className="flex items-center gap-1 shrink-0">
+        {hasCart && (
+          <button onClick={onPark} className="flex items-center gap-1 px-2 h-10 rounded-lg text-muted hover:text-foreground hover:bg-card-hover text-xs transition-colors" style={{ minHeight: "auto" }} title="Park cart">
+            {"\u23F8"} Park
+          </button>
+        )}
+        {parkedCount > 0 && (
+          <button onClick={onRecall} className="flex items-center gap-1 px-2 h-10 rounded-lg text-muted hover:text-foreground hover:bg-card-hover text-xs transition-colors" style={{ minHeight: "auto" }} title="Recall parked cart">
+            {"\u25B6"}
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-accent text-white text-[10px] font-bold">{parkedCount}</span>
+          </button>
+        )}
+        {hasLastReceipt && (
+          <button onClick={onShowLastReceipt} className="px-2 h-10 rounded-lg text-muted hover:text-foreground hover:bg-card-hover text-xs transition-colors" style={{ minHeight: "auto" }} title="Last receipt">
+            {"\u{1F4C4}"}
+          </button>
+        )}
+        <div className="text-right pl-2 pr-1">
+          <div className="text-lg font-bold text-foreground tabular-nums">
+            {hasCart ? formatCents(total) : "$0.00"}
+          </div>
         </div>
       </div>
     </div>
