@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const discount_cents = rawDiscountCents ?? 0;
+    const tip_cents = body.tip_cents ?? 0;
 
     // Idempotency: if this transaction was already processed, return the existing result
     if (client_tx_id) {
@@ -517,7 +518,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Build receipt
-    const tip_cents = body.tip_cents ?? 0;
     const total_cents = subtotal_cents + tax_cents + tip_cents - effectiveCreditApplied - giftCardApplied - loyaltyApplied;
     const change_cents =
       payment_method === "cash" || payment_method === "split"
