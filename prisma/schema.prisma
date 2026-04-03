@@ -64,6 +64,8 @@ model PosStore {
   allocation_pools     PosAllocationPool[]
   tabs                 PosTab[]
   consignment_items    PosConsignmentItem[]
+  menu_items           PosMenuItem[]
+  menu_modifiers       PosMenuModifier[]
 
   @@map("pos_stores")
 }
@@ -117,6 +119,8 @@ model PosTab {
   table_fee_cents   Int       @default(0)
   table_fee_waived  Boolean   @default(false)
   age_verified      Boolean   @default(false)
+  parent_tab_id     String?
+  transferred_from  String?
   opened_at         DateTime  @default(now()) @db.Timestamptz()
   closed_at         DateTime? @db.Timestamptz()
 
@@ -148,6 +152,40 @@ model PosTabItem {
 
   @@index([tab_id])
   @@map("pos_tab_items")
+}
+
+model PosMenuItem {
+  id             String   @id @default(cuid())
+  store_id       String
+  name           String
+  category       String   @default("other") // drink | food | snack | alcohol | other
+  price_cents    Int      @default(0)
+  description    String?
+  available      Boolean  @default(true)
+  sort_order     Int      @default(0)
+  age_restricted Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz()
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@map("pos_menu_items")
+}
+
+model PosMenuModifier {
+  id           String   @id @default(cuid())
+  store_id     String
+  name         String
+  options      Json     @default("[]") // [{name, price_cents}]
+  required     Boolean  @default(false)
+  multi_select Boolean  @default(false)
+  applies_to   String[] @default([])
+  sort_order   Int      @default(0)
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@map("pos_menu_modifiers")
 }
 
 // ============================================================

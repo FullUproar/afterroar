@@ -285,11 +285,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ---- KDS VIEW (pending items across all open tabs) ----
+    // ---- KDS VIEW (pending cafe items only — exclude retail/fee) ----
     if (action === "kds") {
       const items = await db.posTabItem.findMany({
         where: {
           status: { in: ["pending", "in_progress"] },
+          item_type: "cafe", // Only cafe items need kitchen prep
           tab: { status: "open" },
         },
         include: {
@@ -299,6 +300,189 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(items);
+    }
+
+    // ---- TRANSFER TAB (move to different table) ----
+    if (action === "transfer_tab") {
+      const { tab_id, new_table_label } = body;
+      if (!tab_id) return NextResponse.json({ error: "tab_id required" }, { status: 400 });
+
+      const tab = await db.posTab.findFirst({ where: { id: tab_id, status: "open" } });
+      if (!tab) return NextResponse.json({ error: "Tab not found" }, { status: 404 });
+
+      const oldTable = tab.table_label;
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: { table_label: new_table_label || null, transferred_from: oldTable },
+      });
+
+      return NextResponse.json({ success: true, from: oldTable, to: new_table_label });
+    }
+
+    // ---- SPLIT TAB (move selected items to a new tab) ----
+    if (action === "split_tab") {
+      const { tab_id, item_ids } = body as { tab_id: string; item_ids: string[] };
+      if (!tab_id || !item_ids?.length) {
+        return NextResponse.json({ error: "tab_id and item_ids required" }, { status: 400 });
+      }
+
+      const tab = await db.posTab.findFirst({
+        where: { id: tab_id, status: "open" },
+        include: { items: true },
+      });
+      if (!tab) return NextResponse.json({ error: "Tab not found" }, { status: 404 });
+
+      const itemsToMove = tab.items.filter((i) => item_ids.includes(i.id));
+      if (itemsToMove.length === 0) return NextResponse.json({ error: "No matching items" }, { status: 400 });
+
+      const movedSubtotal = itemsToMove.reduce((s, i) => s + i.price_cents * i.quantity, 0);
+
+      // Create new tab
+      const newTab = await db.posTab.create({
+        data: {
+          store_id: storeId,
+          staff_id: staff.id,
+          table_label: tab.table_label ? `${tab.table_label} (split)` : "Split",
+          parent_tab_id: tab.id,
+          customer_id: tab.customer_id,
+          event_id: tab.event_id,
+          subtotal_cents: movedSubtotal,
+        },
+      });
+
+      // Move items
+      for (const item of itemsToMove) {
+        await db.posTabItem.update({
+          where: { id: item.id },
+          data: { tab_id: newTab.id },
+        });
+      }
+
+      // Update original tab subtotal
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: { subtotal_cents: { decrement: movedSubtotal } },
+      });
+
+      return NextResponse.json({ success: true, new_tab_id: newTab.id });
+    }
+
+    // ---- MENU ITEMS CRUD ----
+    if (action === "get_menu") {
+      const menuItems = await db.posMenuItem.findMany({
+        orderBy: [{ category: "asc" }, { sort_order: "asc" }, { name: "asc" }],
+      });
+      const modifiers = await db.posMenuModifier.findMany({
+        orderBy: { sort_order: "asc" },
+      });
+      return NextResponse.json({ menu_items: menuItems, modifiers });
+    }
+
+    if (action === "add_menu_item") {
+      const { name, category, price_cents, description, age_restricted } = body;
+      if (!name) return NextResponse.json({ error: "name required" }, { status: 400 });
+
+      const item = await db.posMenuItem.create({
+        data: {
+          store_id: storeId,
+          name: name.trim(),
+          category: category || "other",
+          price_cents: price_cents || 0,
+          description: description || null,
+          age_restricted: !!age_restricted,
+        },
+      });
+      return NextResponse.json(item, { status: 201 });
+    }
+
+    if (action === "add_modifier") {
+      const { name, options, required, multi_select, applies_to } = body;
+      if (!name) return NextResponse.json({ error: "name required" }, { status: 400 });
+
+      const modifier = await db.posMenuModifier.create({
+        data: {
+          store_id: storeId,
+          name: name.trim(),
+          options: options || [],
+          required: !!required,
+          multi_select: !!multi_select,
+          applies_to: applies_to || [],
+        },
+      });
+      return NextResponse.json(modifier, { status: 201 });
+    }
+
+    // ---- ADD FROM MENU (with modifiers) ----
+    if (action === "add_menu_to_tab") {
+      const { tab_id, menu_item_id, modifiers: selectedMods, quantity: qty } = body;
+      if (!tab_id || !menu_item_id) {
+        return NextResponse.json({ error: "tab_id and menu_item_id required" }, { status: 400 });
+      }
+
+      const tab = await db.posTab.findFirst({ where: { id: tab_id, status: "open" } });
+      if (!tab) return NextResponse.json({ error: "Tab not found" }, { status: 404 });
+
+      const menuItem = await db.posMenuItem.findFirst({ where: { id: menu_item_id } });
+      if (!menuItem) return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
+
+      // Age check
+      if (menuItem.age_restricted && !tab.age_verified) {
+        return NextResponse.json({ error: "Age verification required for this item", age_verification_required: true }, { status: 403 });
+      }
+
+      // Calculate modifier price additions
+      let modifierTotal = 0;
+      const modifierNames: string[] = [];
+      if (selectedMods && Array.isArray(selectedMods)) {
+        for (const mod of selectedMods as Array<{ name: string; price_cents: number }>) {
+          modifierTotal += mod.price_cents || 0;
+          modifierNames.push(mod.name);
+        }
+      }
+
+      const totalPrice = menuItem.price_cents + modifierTotal;
+      const itemQty = qty || 1;
+
+      const item = await db.posTabItem.create({
+        data: {
+          tab_id,
+          name: menuItem.name,
+          price_cents: totalPrice,
+          quantity: itemQty,
+          modifiers: modifierNames.length > 0 ? modifierNames.join(", ") : null,
+          item_type: "cafe",
+        },
+      });
+
+      await db.posTab.update({
+        where: { id: tab_id },
+        data: { subtotal_cents: { increment: totalPrice * itemQty } },
+      });
+
+      // Auto-waive table fee check
+      const settings = getStoreSettings((await db.posStore.findFirst({ select: { settings: true } }))?.settings as Record<string, unknown> ?? {});
+      const freeThreshold = (settings.cafe_free_threshold_cents as number) || 0;
+      if (freeThreshold > 0 && !tab.table_fee_waived) {
+        const updatedTab = await db.posTab.findFirst({
+          where: { id: tab_id },
+          select: { subtotal_cents: true },
+        });
+        if (updatedTab && updatedTab.subtotal_cents >= freeThreshold) {
+          // Auto-waive
+          const feeItems = await db.posTabItem.findMany({
+            where: { tab_id, item_type: "table_fee" },
+          });
+          for (const fi of feeItems) {
+            await db.posTabItem.delete({ where: { id: fi.id } });
+            await db.posTab.update({
+              where: { id: tab_id },
+              data: { subtotal_cents: { decrement: fi.price_cents }, table_fee_waived: true },
+            });
+          }
+        }
+      }
+
+      return NextResponse.json(item, { status: 201 });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
