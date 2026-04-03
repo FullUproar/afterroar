@@ -3,6 +3,10 @@
     {
       "path": "/api/hq-bridge/drain",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/marketplace/sync",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

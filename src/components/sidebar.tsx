@@ -22,6 +22,7 @@ const NAV_GROUPS: NavGroup[] = [
       "/dashboard/register",
       "/dashboard/drawer",
       "/dashboard/orders",
+      "/dashboard/fulfillment",
     ],
   },
   {

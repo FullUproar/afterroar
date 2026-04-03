@@ -13,6 +13,7 @@ import {
   updateLocalCustomerCredit,
 } from "@/lib/offline-db";
 import { useStoreName, useStoreSettings } from "@/lib/store-settings";
+import { shouldPromptTip } from "@/lib/store-settings-shared";
 import { useStore } from "@/lib/store-context";
 import { signOut } from "next-auth/react";
 import { useTrainingMode } from "@/lib/training-mode";
@@ -1002,6 +1003,15 @@ export default function RegisterPage() {
     // For card payments: route through Stripe Terminal reader
     if (method === "card" && !isTraining) {
       setProcessing(true);
+
+      // Check if we should prompt for tips on this transaction
+      const cartCategories = cart.map((c) => c.category).filter(Boolean);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const enableTipping = shouldPromptTip(storeSettings as any, {
+        categories: cartCategories,
+        source: "register",
+      });
+
       try {
         // Send to terminal reader
         const collectRes = await fetch("/api/stripe/terminal/collect", {
@@ -1010,6 +1020,7 @@ export default function RegisterPage() {
           body: JSON.stringify({
             amount_cents: amountDue,
             description: `Sale: ${cart.map(c => c.name).join(", ")}`.substring(0, 200),
+            enable_tipping: enableTipping,
           }),
         });
         const collectData = await collectRes.json();
@@ -1039,7 +1050,9 @@ export default function RegisterPage() {
               // Capture card details for receipt
               setLastCardBrand(statusData.card_brand || null);
               setLastCardLast4(statusData.card_last4 || null);
-              await finalizeSale(method, collectData.payment_intent_id);
+              // Capture tip from terminal (Stripe reader collected it on-screen)
+              const terminalTipCents = statusData.tip_cents || 0;
+              await finalizeSale(method, collectData.payment_intent_id, terminalTipCents);
             } else if (statusData.status === "failed" || statusData.status === "cancelled") {
               clearInterval(terminalPollRef.current!);
               terminalPollRef.current = null;
@@ -1080,7 +1093,7 @@ export default function RegisterPage() {
     setProcessing(false);
   }
 
-  async function finalizeSale(method: PaymentMethod, stripePaymentIntentId?: string) {
+  async function finalizeSale(method: PaymentMethod, stripePaymentIntentId?: string, tipCents: number = 0) {
     const clientTxId = `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const payload = {
       items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents })),
@@ -1092,6 +1105,7 @@ export default function RegisterPage() {
       client_tx_id: clientTxId,
       tax_cents: taxCents,
       discount_cents: discountCents,
+      ...(tipCents > 0 ? { tip_cents: tipCents } : {}),
       ...(stripePaymentIntentId ? { stripe_payment_intent_id: stripePaymentIntentId } : {}),
       ...(isTraining ? { training: true } : {}),
       ...(hasZeroStockOverride ? { allow_negative_stock: true } : {}),

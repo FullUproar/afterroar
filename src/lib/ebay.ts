@@ -240,6 +240,59 @@ export class EbayClient {
     return data.orders || [];
   }
 
+  /**
+   * Get orders created after a given date.
+   * eBay filter format: creationdate:[2026-04-01T00:00:00.000Z..]
+   */
+  async getOrdersSince(since: Date): Promise<EbayOrder[]> {
+    const filter = `creationdate:[${since.toISOString()}..]`;
+    return this.getOrders(filter);
+  }
+
+  /**
+   * Mark an order as shipped in eBay.
+   */
+  async createShippingFulfillment(
+    orderId: string,
+    params: {
+      trackingNumber: string;
+      shippingCarrier: string;
+      lineItemIds: string[];
+    },
+  ): Promise<void> {
+    const res = await this.request(
+      "POST",
+      `/sell/fulfillment/v1/order/${encodeURIComponent(orderId)}/shipping_fulfillment`,
+      {
+        lineItems: params.lineItemIds.map((id) => ({
+          lineItemId: id,
+          quantity: 1,
+        })),
+        shippingCarrierCode: params.shippingCarrier,
+        trackingNumber: params.trackingNumber,
+      },
+    );
+    if (!res.ok && res.status !== 204) {
+      const body = await res.text();
+      throw new Error(`eBay createShippingFulfillment failed (${res.status}): ${body}`);
+    }
+  }
+
+  /**
+   * Quick quantity update — updates existing inventory item quantity only.
+   * Much faster than a full createOrReplaceInventoryItem call.
+   */
+  async updateQuantity(sku: string, quantity: number): Promise<void> {
+    await this.createOrReplaceInventoryItem(sku, {
+      availability: {
+        shipToLocationAvailability: { quantity: Math.max(0, quantity) },
+      },
+      // Minimal required fields — eBay merges with existing data
+      condition: "LIKE_NEW",
+      product: { title: "", description: "", imageUrls: [] },
+    });
+  }
+
   // ---- Helper: list a TCG single ----
 
   async listSingle(params: {
@@ -307,7 +360,7 @@ export class EbayClient {
 }
 
 /**
- * Get a singleton eBay client (returns null if not configured).
+ * Get an eBay client using the platform-level token (env var).
  */
 export function getEbayClient(): EbayClient | null {
   if (!process.env.EBAY_USER_TOKEN) return null;
@@ -316,4 +369,124 @@ export function getEbayClient(): EbayClient | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Get an eBay client for a specific store using their OAuth tokens.
+ * Falls back to platform-level token if store doesn't have one.
+ */
+export function getEbayClientForStore(
+  storeSettings: Record<string, unknown>,
+): EbayClient | null {
+  const storeToken = storeSettings.ebay_access_token as string | undefined;
+  if (storeToken) {
+    try {
+      return new EbayClient(storeToken);
+    } catch {
+      // Fall through to platform token
+    }
+  }
+  return getEbayClient();
+}
+
+/* ------------------------------------------------------------------ */
+/*  OAuth helpers — exchange code, refresh tokens                      */
+/* ------------------------------------------------------------------ */
+
+const EBAY_AUTH_URL = "https://auth.ebay.com/oauth2/authorize";
+const EBAY_TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
+
+const EBAY_SCOPES = [
+  "https://api.ebay.com/oauth/api_scope/sell.inventory",
+  "https://api.ebay.com/oauth/api_scope/sell.fulfillment",
+  "https://api.ebay.com/oauth/api_scope/sell.account",
+  "https://api.ebay.com/oauth/api_scope/commerce.taxonomy.readonly",
+].join(" ");
+
+/**
+ * Generate the eBay OAuth authorization URL for a store to connect.
+ */
+export function getEbayAuthUrl(storeId: string): string | null {
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const redirectUri = process.env.EBAY_REDIRECT_URI;
+
+  if (!clientId || !redirectUri) return null;
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: EBAY_SCOPES,
+    state: storeId, // Pass storeId through OAuth state
+  });
+
+  return `${EBAY_AUTH_URL}?${params.toString()}`;
+}
+
+/**
+ * Exchange an authorization code for access + refresh tokens.
+ */
+export async function exchangeEbayCode(code: string): Promise<{
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+} | null> {
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+  const redirectUri = process.env.EBAY_REDIRECT_URI;
+
+  if (!clientId || !clientSecret || !redirectUri) return null;
+
+  const res = await fetch(EBAY_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+    },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("[eBay OAuth] Token exchange failed:", await res.text());
+    return null;
+  }
+
+  return res.json();
+}
+
+/**
+ * Refresh an expired access token using the refresh token.
+ */
+export async function refreshEbayToken(refreshToken: string): Promise<{
+  access_token: string;
+  expires_in: number;
+} | null> {
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) return null;
+
+  const res = await fetch(EBAY_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+    },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      scope: EBAY_SCOPES,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("[eBay OAuth] Token refresh failed:", await res.text());
+    return null;
+  }
+
+  return res.json();
 }

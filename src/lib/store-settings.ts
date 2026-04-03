@@ -95,6 +95,11 @@ export interface StoreSettings {
   mobile_allow_discounts: boolean;
   mobile_allow_refunds: boolean;
   mobile_allow_cash: boolean;
+  // Tips
+  tips_mode: "never" | "always" | "contextual";
+  tips_contexts: string[];
+  tips_presets: number[];
+  tips_allow_custom: boolean;
 }
 
 /** Sensible defaults — a store works immediately with zero config */
@@ -181,6 +186,11 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   mobile_allow_discounts: false,
   mobile_allow_refunds: false,
   mobile_allow_cash: true,
+  // Tips
+  tips_mode: "contextual",
+  tips_contexts: ["cafe", "food_drink", "table_service"],
+  tips_presets: [15, 20, 25],
+  tips_allow_custom: true,
   // Timeclock
   timeclock_geofence_enabled: false,
   timeclock_geofence_lat: 0,

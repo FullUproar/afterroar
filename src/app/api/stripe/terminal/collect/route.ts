@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const { storeId } = await requireStaff();
 
-    const { amount_cents, description } = await request.json();
+    const { amount_cents, description, enable_tipping } = await request.json();
 
     if (!amount_cents || amount_cents < 50) {
       return NextResponse.json({ error: "Amount must be at least $0.50" }, { status: 400 });
@@ -47,14 +47,27 @@ export async function POST(request: Request) {
       payment_method_types: ["card_present"],
       capture_method: "automatic",
       description: description || "Store Ops sale",
-      metadata: { store_id: storeId, source: "terminal" },
+      metadata: {
+        store_id: storeId,
+        source: "terminal",
+        ...(enable_tipping ? { tipping_enabled: "true" } : {}),
+      },
     });
 
-    // 2. Send to the reader — reader will display "Tap, insert, or swipe"
+    // 2. Send to the reader
+    // When tipping is enabled, the S710 shows a tip selection screen
+    // before the "Tap, insert, or swipe" prompt
     try {
       await stripe.terminal.readers.processPaymentIntent(
         readerId,
-        { payment_intent: paymentIntent.id }
+        {
+          payment_intent: paymentIntent.id,
+          ...(enable_tipping ? {
+            process_config: {
+              tipping: { amount_eligible: amount_cents },
+            },
+          } : {}),
+        }
       );
     } catch (readerError) {
       // Cancel the payment intent if reader fails
@@ -156,10 +169,15 @@ export async function GET(request: Request) {
       }
     }
 
+    // Extract tip amount (Stripe stores it in amount_details.tip when tipping is used)
+    const tipAmount = (pi as unknown as { amount_details?: { tip?: { amount?: number } } })
+      .amount_details?.tip?.amount ?? 0;
+
     return NextResponse.json({
       status,
       payment_intent_id: pi.id,
       amount_cents: pi.amount,
+      tip_cents: tipAmount,
       error: pi.last_payment_error?.message || null,
       card_brand: cardBrand,
       card_last4: cardLast4,

@@ -46,7 +46,10 @@ export async function POST(
     const { db, storeId } = await requireStaff();
 
     const body = await request.json();
-    const { customer_id } = body;
+    const { customer_id, ticket_tier_id } = body as {
+      customer_id: string;
+      ticket_tier_id?: string;
+    };
 
     if (!customer_id) {
       return NextResponse.json({ error: "customer_id is required" }, { status: 400 });
@@ -71,7 +74,36 @@ export async function POST(
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    const fee_paid = event.entry_fee_cents > 0;
+    // Resolve ticket tier pricing (tier > flat fee > free)
+    let feeCents = event.entry_fee_cents;
+    let tierName: string | null = null;
+
+    if (ticket_tier_id) {
+      const tier = await db.posEventTicketTier.findFirst({
+        where: { id: ticket_tier_id, event_id, active: true },
+        select: { id: true, name: true, price_cents: true, capacity: true, sold: true },
+      });
+
+      if (!tier) {
+        return NextResponse.json({ error: "Ticket tier not found or inactive" }, { status: 400 });
+      }
+
+      // Check capacity
+      if (tier.capacity && tier.sold >= tier.capacity) {
+        return NextResponse.json({ error: `${tier.name} is sold out` }, { status: 400 });
+      }
+
+      feeCents = tier.price_cents;
+      tierName = tier.name;
+
+      // Increment sold count
+      await db.posEventTicketTier.update({
+        where: { id: ticket_tier_id },
+        data: { sold: { increment: 1 } },
+      });
+    }
+
+    const fee_paid = feeCents > 0;
 
     // Create checkin record
     const checkin = await db.posEventCheckin.create({
@@ -80,19 +112,21 @@ export async function POST(
         customer_id,
         checked_in_at: new Date(),
         fee_paid,
+        ticket_tier_id: ticket_tier_id || null,
+        amount_paid_cents: feeCents,
       },
     });
 
-    // If there's an entry fee, create a ledger entry
-    if (event.entry_fee_cents > 0) {
+    // If there's a fee, create a ledger entry
+    if (feeCents > 0) {
       await db.posLedgerEntry.create({
         data: {
           store_id: storeId,
           customer_id,
           type: "event_fee",
-          amount_cents: event.entry_fee_cents,
+          amount_cents: feeCents,
           event_id,
-          description: "Event entry fee",
+          description: tierName ? `Event ticket: ${tierName}` : "Event entry fee",
         },
       });
     }

@@ -49,6 +49,11 @@ export interface StoreSettings {
   opt_in_benchmarking: boolean;
   // NUX (new user experience)
   nux_dismissed: boolean;
+  // Tips
+  tips_mode: "never" | "always" | "contextual";
+  tips_contexts: string[]; // which contexts trigger tip prompt: "cafe", "food_drink", "table_service", "events"
+  tips_presets: number[];  // preset tip percentages shown on terminal/screen (e.g. [15, 20, 25])
+  tips_allow_custom: boolean; // allow custom tip amount
   // Mobile register
   mobile_register_enabled: boolean;
   mobile_access_code_hash: string;    // bcrypt hash of the 6-digit code
@@ -107,6 +112,11 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   opt_in_benchmarking: false,
   // NUX
   nux_dismissed: false,
+  // Tips
+  tips_mode: "contextual",
+  tips_contexts: ["cafe", "food_drink", "table_service"],
+  tips_presets: [15, 20, 25],
+  tips_allow_custom: true,
   // Mobile register
   mobile_register_enabled: false,
   mobile_access_code_hash: "",
@@ -124,4 +134,46 @@ export function getStoreSettings(
 ): StoreSettings {
   const raw = (storeSettings ?? {}) as Partial<StoreSettings>;
   return { ...SETTINGS_DEFAULTS, ...raw };
+}
+
+/**
+ * Should we prompt for a tip on this transaction?
+ * Uses store settings + cart context to decide.
+ *
+ * @param settings - store settings
+ * @param context - what kind of transaction this is
+ *   - categories: item categories in the cart (e.g. ["food_drink", "board_game"])
+ *   - source: "register" | "cafe" | "table" | "mobile" | "online"
+ */
+export function shouldPromptTip(
+  settings: StoreSettings,
+  context: {
+    categories?: string[];
+    source?: string;
+  },
+): boolean {
+  if (settings.tips_mode === "never") return false;
+  if (settings.tips_mode === "always") return true;
+
+  // Contextual mode — check if any trigger matches
+  const triggers = settings.tips_contexts;
+
+  // Cafe tab close
+  if (context.source === "cafe" && triggers.includes("cafe")) return true;
+
+  // Table service (QR order, tab)
+  if (context.source === "table" && triggers.includes("table_service")) return true;
+
+  // Cart contains food/drink items
+  if (
+    triggers.includes("food_drink") &&
+    context.categories?.some((c) => c === "food_drink")
+  ) {
+    return true;
+  }
+
+  // Event check-in with fee
+  if (context.source === "event" && triggers.includes("events")) return true;
+
+  return false;
 }

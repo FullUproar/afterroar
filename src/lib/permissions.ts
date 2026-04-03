@@ -43,6 +43,8 @@ export type Permission =
   | "store.settings"
   | "import"
   | "certification"
+  // Orders & Fulfillment
+  | "manage_orders"               // view/manage orders and fulfillment queue
   // Operational
   | "timeclock.view_all"          // see all staff time entries (vs just own)
   | "ops_log";                    // view operational logs
@@ -100,6 +102,8 @@ export const ALL_PERMISSIONS: PermissionMeta[] = [
   // Reports
   { key: "reports", label: "View reports", description: "Access sales reports and analytics", category: "reports" },
   { key: "cash_flow", label: "View cash flow", description: "Access cash flow dashboard and intelligence", category: "reports" },
+  // Orders & Fulfillment
+  { key: "manage_orders", label: "Manage orders & fulfillment", description: "View orders, pick/pack/ship, create labels", category: "pos" },
   // Admin
   { key: "staff.manage", label: "Manage staff", description: "Add/remove staff, change roles", category: "admin" },
   { key: "store.settings", label: "Store settings", description: "Change store configuration and preferences", category: "admin" },
@@ -141,6 +145,7 @@ const ROLE_DEFAULTS: Record<Role, Permission[]> = {
     "cash_flow",
     "timeclock.view_all",
     "import",
+    "manage_orders",
   ],
   cashier: [
     "checkout",
@@ -260,6 +265,7 @@ export function canAccess(
     "/dashboard/import": "import",
     "/dashboard/certification": "certification",
     "/dashboard/orders": "checkout",
+    "/dashboard/fulfillment": "manage_orders",
     "/dashboard/help": "checkout",
     "/dashboard/issues": "reports",
     "/dashboard/ops-log": "ops_log",
@@ -312,6 +318,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/import", label: "Import", icon: "⤓", permission: "import" },
   { href: "/dashboard/certification", label: "Certification", icon: "◉", permission: "certification" },
   { href: "/dashboard/orders", label: "Orders", icon: "⊟", permission: "checkout" },
+  { href: "/dashboard/fulfillment", label: "Fulfillment", icon: "▶", permission: "manage_orders", feature: "ecommerce" },
   { href: "/dashboard/drawer", label: "Drawer", icon: "▣", permission: "checkout" },
   { href: "/dashboard/timeclock", label: "Time Clock", icon: "◷", permission: "checkout" },
   { href: "/dashboard/gift-cards", label: "Gift Cards", icon: "◆", permission: "customers.edit" },

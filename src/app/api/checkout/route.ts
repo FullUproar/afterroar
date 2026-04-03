@@ -31,6 +31,7 @@ interface CheckoutBody {
   gift_card_amount_cents?: number;
   loyalty_points_redeem?: number;
   loyalty_discount_cents?: number;
+  tip_cents?: number;
   training?: boolean;
   allow_negative_stock?: boolean;
   stripe_payment_intent_id?: string; // Terminal already collected — skip processPayment
@@ -305,6 +306,7 @@ export async function POST(request: NextRequest) {
           staff_id: staff.id,
           event_id,
           amount_cents: subtotal_cents,
+          tip_cents,
           credit_amount_cents: effectiveCreditApplied,
           description: `Sale: ${itemNames}`,
           metadata: JSON.parse(JSON.stringify({
@@ -317,6 +319,7 @@ export async function POST(request: NextRequest) {
             ...(cogsCents > 0 ? { cogs_cents: cogsCents, margin_cents: marginCents, margin_percent: marginPercent } : {}),
             ...(paymentResult.stripe_payment_intent_id ? { stripe_payment_intent_id: paymentResult.stripe_payment_intent_id } : {}),
             ...(paymentResult.provider ? { payment_provider: paymentResult.provider } : {}),
+            ...(tip_cents > 0 ? { tip_cents } : {}),
             ...(discount_cents > 0 ? { discount_cents, discount_reason } : {}),
             ...(giftCardApplied > 0 ? { gift_card_code, gift_card_amount_cents: giftCardApplied } : {}),
             ...(loyaltyApplied > 0 ? { loyalty_points_redeemed: loyalty_points_redeem, loyalty_discount_cents: loyaltyApplied } : {}),
@@ -514,7 +517,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Build receipt
-    const total_cents = subtotal_cents + tax_cents - effectiveCreditApplied - giftCardApplied - loyaltyApplied;
+    const tip_cents = body.tip_cents ?? 0;
+    const total_cents = subtotal_cents + tax_cents + tip_cents - effectiveCreditApplied - giftCardApplied - loyaltyApplied;
     const change_cents =
       payment_method === "cash" || payment_method === "split"
         ? Math.max(0, amount_tendered_cents - total_cents)
@@ -557,6 +561,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Fire-and-forget op log
+    // Push inventory changes to marketplaces (fire-and-forget, non-blocking)
+    import("@/lib/marketplace-sync").then(({ pushInventoryUpdate }) => {
+      for (const item of items) {
+        if (item.inventory_item_id) {
+          // We don't know the new quantity here, so fetch it
+          prisma.posInventoryItem
+            .findUnique({ where: { id: item.inventory_item_id }, select: { quantity: true } })
+            .then((inv) => {
+              if (inv) pushInventoryUpdate(item.inventory_item_id, inv.quantity);
+            })
+            .catch(() => {});
+        }
+      }
+    }).catch(() => {});
+
     opLog({
       storeId,
       eventType: "checkout.complete",
@@ -580,6 +599,7 @@ export async function POST(request: NextRequest) {
         receipt_token: receiptToken,
         change_cents,
         subtotal_cents,
+        tip_cents,
         receipt,
         loyalty_points_earned: result.pointsEarned,
         tax_source: taxSource,

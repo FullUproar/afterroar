@@ -123,9 +123,20 @@ All Store Ops models are prefixed with `Pos`:
 - Samsung Galaxy Tab (primary tablet target)
 - Inateck USB barcode scanner (HID mode)
 
-## eBay Integration
-- Account deletion compliance webhook (`/api/ebay/account-deletion`)
-- Marketplace sync (planned)
+## Marketplace Sync
+- Order ingestion engine: `src/lib/order-ingest.ts` — `ingestOrder()` shared by HQ bridge, eBay, Shopify, generic API
+- Generic order API: `POST /api/orders/ingest` — API-key authed, for any external e-commerce site
+- API key management: `/api/settings/api-key` — SHA-256 hashed, feature-gated behind `api_access`
+- Marketplace sync engine: `src/lib/marketplace-sync.ts` — bidirectional (push inventory out, pull orders in)
+- Auto inventory push: POS sale/return → pushes updated qty to eBay (fire-and-forget)
+- Cron: `/api/marketplace/sync` every 5 min — polls eBay orders for stores with `marketplace_sync_enabled`
+- eBay client: `src/lib/ebay.ts` — Inventory, Offer, Fulfillment APIs + OAuth
+- eBay listings: `/api/ebay/listings` (single) + `/api/ebay/listings/bulk` (batch)
+- eBay OAuth: `/api/ebay/connect` + `/api/ebay/callback` — per-store token storage, auto-refresh
+- Account deletion compliance: `/api/ebay/account-deletion`
+- Fulfillment: `/dashboard/fulfillment` — pick/pack/ship queue with rate shopping + label creation
+- Fulfillment types: merchant (self-fulfill), pod (stays on HQ), 3pl (future)
+- ShipStation: `src/lib/shipstation.ts` — multi-tenant platform account, webhook at `/api/webhooks/shipstation`
 
 ## TCG Multi-Game Support
 - Scryfall (MTG) — full integration: search, pricing, card images, price drift, collection import
