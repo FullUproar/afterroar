@@ -268,6 +268,90 @@ export async function POST(request: NextRequest) {
       return { posReturn, ledgerEntry };
     });
 
+    // Deduct loyalty points earned on the original sale (min 0)
+    if (originalSale.customer_id) {
+      try {
+        const originalMeta = (originalSale.metadata ?? {}) as Record<string, unknown>;
+        // Check if points were earned on the original transaction
+        const originalPoints = await prisma.posLoyaltyEntry.findFirst({
+          where: {
+            customer_id: originalSale.customer_id,
+            reference_id: original_ledger_entry_id,
+            type: "earn_purchase",
+          },
+          select: { points: true },
+        });
+
+        if (originalPoints && originalPoints.points > 0) {
+          // Get current balance
+          const cust = await prisma.posCustomer.findUnique({
+            where: { id: originalSale.customer_id, store_id: storeId },
+            select: { loyalty_points: true, afterroar_user_id: true },
+          });
+
+          const deduction = Math.min(originalPoints.points, cust?.loyalty_points ?? 0);
+
+          if (deduction > 0) {
+            await prisma.$transaction(async (tx) => {
+              const updated = await tx.posCustomer.update({
+                where: { id: originalSale.customer_id!, store_id: storeId },
+                data: { loyalty_points: { decrement: deduction } },
+                select: { loyalty_points: true },
+              });
+
+              await tx.posLoyaltyEntry.create({
+                data: {
+                  store_id: storeId,
+                  customer_id: originalSale.customer_id!,
+                  type: "adjust",
+                  points: -deduction,
+                  balance_after: updated.loyalty_points,
+                  description: `Points reversed: return of ${items.length} item(s)`,
+                  reference_id: result.ledgerEntry.id,
+                },
+              });
+            });
+
+            // Sync deduction to HQ
+            if (cust?.afterroar_user_id) {
+              const { enqueueHQ } = await import("@/lib/hq-outbox");
+              await enqueueHQ(storeId, "points_earned", {
+                userId: cust.afterroar_user_id,
+                storeId,
+                points: -deduction,
+                category: "return",
+                transactionId: result.ledgerEntry.id,
+              });
+            }
+          }
+        }
+
+        // Check return frequency — flag frequent returners
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
+        const recentReturns = await prisma.posReturn.count({
+          where: {
+            store_id: storeId,
+            customer_id: originalSale.customer_id,
+            created_at: { gte: thirtyDaysAgo },
+          },
+        });
+
+        if (recentReturns >= 3) {
+          // Flag the customer
+          await prisma.posCustomer.update({
+            where: { id: originalSale.customer_id, store_id: storeId },
+            data: {
+              tags: {
+                push: "frequent_returner",
+              },
+            },
+          });
+        }
+      } catch (err) {
+        console.error("[Returns] Points deduction failed (non-fatal):", err);
+      }
+    }
+
     return NextResponse.json(
       {
         id: result.posReturn.id,

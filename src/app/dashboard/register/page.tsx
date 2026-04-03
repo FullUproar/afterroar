@@ -85,6 +85,7 @@ interface LastReceipt {
   tenderedCents: number;
   changeCents: number;
   loyaltyPointsEarned: number;
+  ledgerEntryId: string | null;
 }
 
 /** Generate a receipt number from server (atomic counter) with localStorage fallback */
@@ -176,6 +177,108 @@ function buildPrintReceiptHtml(receipt: LastReceipt, storeName: string, storeSet
     staff_name: null,
   };
   return buildThermalReceiptHtml(config, data);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Unclaimed Points Prompt                                            */
+/* ------------------------------------------------------------------ */
+
+function UnclaimedPointsPrompt({ totalCents, ledgerEntryId, onClaimed }: {
+  totalCents: number;
+  ledgerEntryId: string;
+  onClaimed: (customerName: string, points: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Array<{ id: string; name: string; email: string | null }>>([]);
+  const [claiming, setClaiming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Estimated points
+  const estimatedPoints = Math.floor(totalCents / 100);
+
+  // Search customers
+  useEffect(() => {
+    if (query.length < 2) { setResults([]); return; }
+    const ctrl = new AbortController();
+    fetch(`/api/customers?q=${encodeURIComponent(query)}`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((d) => setResults(d.slice(0, 5)))
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [query]);
+
+  async function claimForCustomer(customerId: string) {
+    setClaiming(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/loyalty/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ledger_entry_id: ledgerEntryId, customer_id: customerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to claim points");
+        setClaiming(false);
+        return;
+      }
+      onClaimed(data.customer_name, data.points_awarded);
+    } catch {
+      setError("Connection error");
+    } finally {
+      setClaiming(false);
+    }
+  }
+
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        className="mt-2 rounded-xl border border-purple-500/30 bg-purple-900/20 px-4 py-2.5 text-sm text-purple-300 hover:bg-purple-900/30 transition-colors"
+      >
+        {"\u2728"} {estimatedPoints} points unclaimed — attach customer to earn
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-xl border border-purple-500/30 bg-purple-900/20 p-4 space-y-3 text-left w-full max-w-sm mx-auto">
+      <p className="text-sm text-purple-300 font-medium">{estimatedPoints} points available</p>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setError(null); }}
+        onKeyDown={(e) => e.stopPropagation()}
+        placeholder="Search by name, email, or phone..."
+        autoFocus
+        className="w-full rounded-lg border border-purple-500/30 bg-purple-950/50 px-3 py-2 text-sm text-foreground placeholder:text-purple-400/50 focus:border-purple-400 focus:outline-none"
+      />
+      {results.length > 0 && (
+        <div className="space-y-1">
+          {results.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => claimForCustomer(c.id)}
+              disabled={claiming}
+              className="w-full text-left rounded-lg px-3 py-2 text-sm text-foreground hover:bg-purple-900/30 transition-colors disabled:opacity-50"
+            >
+              {c.name}
+              {c.email && <span className="text-xs text-muted ml-2">{c.email}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <p className="text-xs text-red-400">{error}</p>}
+      <button
+        onClick={() => setExpanded(false)}
+        className="text-xs text-muted hover:text-foreground transition-colors"
+        style={{ minHeight: "auto" }}
+      >
+        Skip
+      </button>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -954,7 +1057,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) { const data = await res.json(); showError(data.error || "Checkout failed"); setProcessing(false); return; }
       const checkoutData = await res.json();
-      saleComplete(method, checkoutData.receipt_token ?? null, checkoutData.loyalty_points_earned ?? 0);
+      saleComplete(method, checkoutData.receipt_token ?? null, checkoutData.loyalty_points_earned ?? 0, checkoutData.ledger_entry_id ?? null);
     } catch {
       try {
         await enqueueTx({ clientTxId, type: "checkout", createdAt: new Date().toISOString(), status: "pending", retryCount: 0, lastError: null, payload, receipt: {} as Record<string, unknown> });
@@ -965,11 +1068,11 @@ export default function RegisterPage() {
     } finally { setProcessing(false); }
   }
 
-  async function saleComplete(method: PaymentMethod, receiptToken: string | null = null, loyaltyPointsEarned: number = 0) {
+  async function saleComplete(method: PaymentMethod, receiptToken: string | null = null, loyaltyPointsEarned: number = 0, ledgerEntryId: string | null = null) {
     const cashChange = method === "cash" ? Math.max(0, tendered - total) : 0;
     const receiptCustomer = customer;
     const receiptNumber = await generateReceiptNumber();
-    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken, cardBrand: lastCardBrand, cardLast4: lastCardLast4, tenderedCents: method === "cash" ? tendered : total, changeCents: cashChange, loyaltyPointsEarned });
+    setLastReceipt({ items: [...cart], discounts: [...discounts], subtotalCents: subtotal, discountCents, taxCents, totalCents: total, paymentMethod: method, customerName: receiptCustomer?.name ?? null, timestamp: new Date().toISOString(), receiptNumber, receiptToken, cardBrand: lastCardBrand, cardLast4: lastCardLast4, tenderedCents: method === "cash" ? tendered : total, changeCents: cashChange, loyaltyPointsEarned, ledgerEntryId });
     (document.activeElement as HTMLElement)?.blur();
     setCart([]); setDiscounts([]); setShowPaySheet(false); setShowCashInput(false); setShowCreditConfirm(false); setShowGiftCardPayment(false); setGiftCardPayCode(""); setGiftCardPayError(null); setTenderedInput(""); setPaymentMethod("cash"); setActivePanel(null); setHasZeroStockOverride(false); setLastCardBrand(null); setLastCardLast4(null);
     clearPersistedCart(); cartIdRef.current = createEmptyCart().id;
@@ -1079,6 +1182,16 @@ export default function RegisterPage() {
             {lastReceipt && <div className="text-muted text-base font-mono">Receipt #{lastReceipt.receiptNumber}</div>}
             {lastReceipt && lastReceipt.loyaltyPointsEarned > 0 && (
               <div className="text-purple-400 text-sm font-medium">+{lastReceipt.loyaltyPointsEarned} loyalty points earned</div>
+            )}
+            {/* Unclaimed points prompt — no customer attached */}
+            {lastReceipt && !lastReceipt.customerName && lastReceipt.ledgerEntryId && storeSettings.loyalty_enabled && (
+              <UnclaimedPointsPrompt
+                totalCents={lastReceipt.totalCents}
+                ledgerEntryId={lastReceipt.ledgerEntryId}
+                onClaimed={(name, points) => {
+                  setLastReceipt((prev) => prev ? { ...prev, customerName: name, loyaltyPointsEarned: points } : prev);
+                }}
+              />
             )}
             {/* QR Code for receipt */}
             {receiptQrUrl && (
