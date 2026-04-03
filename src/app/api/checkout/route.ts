@@ -196,6 +196,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log(`[Checkout] Tax: ${tax_cents}c via ${taxSource} (rate: ${taxRateUsed}%, subtotal: ${subtotal_cents}c, client sent: ${clientTaxCents ?? 'none'})`);
+
     // 2c. Gift card + loyalty deductions
     const giftCardApplied = gift_card_amount_cents ?? 0;
     const loyaltyApplied = loyalty_discount_cents ?? 0;
@@ -586,10 +588,12 @@ export async function POST(request: NextRequest) {
         receipt_token: receiptToken,
         change_cents,
         subtotal_cents,
+        tax_cents,
+        tax_source: taxSource,
+        tax_rate: taxRateUsed,
         tip_cents,
         receipt,
         loyalty_points_earned: result.pointsEarned,
-        tax_source: taxSource,
       },
       { status: 201 }
     );
