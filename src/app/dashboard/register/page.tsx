@@ -1131,7 +1131,7 @@ export default function RegisterPage() {
       credit_applied_cents: creditToApply,
       event_id: activeEventId,
       client_tx_id: clientTxId,
-      tax_cents: taxCents,
+      ...(taxCents > 0 ? { tax_cents: taxCents } : {}),
       discount_cents: discountCents,
       ...(tipCents > 0 ? { tip_cents: tipCents } : {}),
       ...(stripePaymentIntentId ? { stripe_payment_intent_id: stripePaymentIntentId } : {}),
@@ -1208,7 +1208,7 @@ export default function RegisterPage() {
       if (!card.active) { setGiftCardPayError("Gift card is inactive"); setGiftCardPayLoading(false); return; }
       if (card.balance_cents <= 0) { setGiftCardPayError("Gift card has no balance"); setGiftCardPayLoading(false); return; }
       const amountToCharge = Math.min(card.balance_cents, amountDue);
-      const payload = { items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents })), customer_id: customer?.id ?? null, payment_method: "gift_card" as PaymentMethod, amount_tendered_cents: amountToCharge, credit_applied_cents: creditToApply, event_id: null, tax_cents: taxCents, discount_cents: discountCents, gift_card_code: giftCardPayCode.trim().toUpperCase(), gift_card_amount_cents: amountToCharge };
+      const payload = { items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents })), customer_id: customer?.id ?? null, payment_method: "gift_card" as PaymentMethod, amount_tendered_cents: amountToCharge, credit_applied_cents: creditToApply, event_id: null, ...(taxCents > 0 ? { tax_cents: taxCents } : {}), discount_cents: discountCents, gift_card_code: giftCardPayCode.trim().toUpperCase(), gift_card_amount_cents: amountToCharge };
       const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) { const data = await res.json().catch(() => ({})); setGiftCardPayError(data.error || "Payment failed"); setGiftCardPayLoading(false); return; }
       const gcData = await res.json();
