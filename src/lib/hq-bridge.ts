@@ -244,26 +244,15 @@ export async function earnPointsFromPurchase(params: {
   transactionId: string;
   amountSpentCents: number;
 }) {
-  const { default: cuid } = await import("cuid");
-
-  return prisma.$queryRawUnsafe(
-    `INSERT INTO "PointsLedger" (
-      id, "userId", action, category, amount, balance, description, metadata, "createdAt"
-    ) VALUES (
-      $1, $2, 'STORE_PURCHASE', 'engagement', $3,
-      COALESCE((SELECT SUM(amount) FROM "PointsLedger" WHERE "userId" = $2), 0) + $3,
-      $4, $5::jsonb, NOW()
-    ) RETURNING id, amount, action`,
-    cuid(),
-    params.userId,
-    params.points,
-    `Earned ${params.points} points on store purchase`,
-    JSON.stringify({
-      storeId: params.storeId,
-      transactionId: params.transactionId,
-      amountSpent: params.amountSpentCents,
-    })
-  );
+  // Enqueue to outbox — HQ webhook will process asynchronously
+  const { enqueueHQ } = await import("./hq-outbox");
+  await enqueueHQ(params.storeId, "points_earned", {
+    userId: params.userId,
+    storeId: params.storeId,
+    points: params.points,
+    category: "purchase",
+    transactionId: params.transactionId,
+  });
 }
 
 // ============================================================
@@ -275,22 +264,13 @@ export async function migratePointsToHQ(params: {
   points: number;
   storeId: string;
 }) {
-  const { default: cuid } = await import("cuid");
-
-  return prisma.$queryRawUnsafe(
-    `INSERT INTO "PointsLedger" (
-      id, "userId", action, category, amount, balance, description, metadata, "createdAt"
-    ) VALUES (
-      $1, $2, 'LOYALTY_MIGRATION', 'engagement', $3,
-      COALESCE((SELECT SUM(amount) FROM "PointsLedger" WHERE "userId" = $2), 0) + $3,
-      $4, $5::jsonb, NOW()
-    ) RETURNING id, amount, action`,
-    cuid(),
-    params.userId,
-    params.points,
-    `Migrated ${params.points} loyalty points from POS`,
-    JSON.stringify({ storeId: params.storeId, source: "pos_loyalty_migration" })
-  );
+  const { enqueueHQ } = await import("./hq-outbox");
+  await enqueueHQ(params.storeId, "points_earned", {
+    userId: params.userId,
+    storeId: params.storeId,
+    points: params.points,
+    category: "loyalty_migration",
+  });
 }
 
 // ============================================================

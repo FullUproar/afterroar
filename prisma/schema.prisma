@@ -66,8 +66,34 @@ model PosStore {
   consignment_items    PosConsignmentItem[]
   menu_items           PosMenuItem[]
   menu_modifiers       PosMenuModifier[]
+  hq_outbox            PosHqOutbox[]
 
   @@map("pos_stores")
+}
+
+// ============================================================
+// HQ BRIDGE OUTBOX
+// ============================================================
+
+model PosHqOutbox {
+  id              Int       @id @default(autoincrement())
+  idempotency_key String    @unique @default(uuid()) @db.Uuid
+  store_id        String
+  event_type      String    @db.VarChar(50)
+  payload         Json
+  status          String    @default("pending") @db.VarChar(20)
+  retry_count     Int       @default(0)
+  max_retries     Int       @default(5)
+  next_retry_at   DateTime  @default(now()) @db.Timestamptz()
+  created_at      DateTime  @default(now()) @db.Timestamptz()
+  sent_at         DateTime? @db.Timestamptz()
+  error_message   String?
+
+  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([status, next_retry_at])
+  @@index([store_id, created_at(sort: Desc)])
+  @@map("pos_hq_outbox")
 }
 
 // ============================================================
