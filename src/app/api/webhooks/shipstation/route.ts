@@ -103,7 +103,37 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Log
+      // Send shipping notification email
+      if (order.customer_id && trackingNumber) {
+        try {
+          const customer = await prisma.posCustomer.findUnique({
+            where: { id: order.customer_id },
+            select: { email: true, name: true },
+          });
+          const store = await prisma.posStore.findUnique({
+            where: { id: order.store_id },
+            select: { name: true },
+          });
+          if (customer?.email) {
+            const { sendShippingNotification } = await import("@/lib/email");
+            await sendShippingNotification(customer.email, {
+              storeName: store?.name || "Store",
+              orderNumber,
+              customerName: customer.name,
+              trackingNumber,
+              carrier: carrierCode,
+              estimatedDelivery: estimatedDelivery.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              }),
+            });
+          }
+        } catch {
+          // Non-critical — don't fail the webhook
+        }
+      }
+
       console.log(`[ShipStation] Order ${orderNumber} shipped via ${carrierCode}, tracking: ${trackingNumber}`);
     }
 

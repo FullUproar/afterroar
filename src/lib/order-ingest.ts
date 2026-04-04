@@ -254,6 +254,27 @@ export async function ingestOrder(
 
   const synced = await syncOrderToShipStation(ssOrder, storeId, storeName);
 
+  // Send order confirmation email (fire-and-forget)
+  if (payload.customer?.email) {
+    import("@/lib/email").then(({ sendOrderConfirmation }) => {
+      sendOrderConfirmation(payload.customer!.email!, {
+        storeName,
+        orderNumber: order.order_number,
+        customerName: payload.customer!.name,
+        items: merchantItems.map((i) => ({
+          name: i.name,
+          quantity: i.quantity,
+          price_cents: i.price_cents,
+        })),
+        subtotalCents,
+        taxCents: payload.tax_cents || 0,
+        shippingCents: payload.shipping_cents || 0,
+        totalCents: payload.total_cents,
+        shippingAddress: shippingAddress || undefined,
+      }).catch(() => {});
+    }).catch(() => {});
+  }
+
   console.log(
     `[OrderIngest] ${payload.source} order ${payload.order_number} → ${order.id}, ShipStation: ${synced}`,
   );
