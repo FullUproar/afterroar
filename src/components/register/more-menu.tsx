@@ -6,6 +6,16 @@ import type { InventoryItem, Customer } from "@/lib/types";
 
 type ActivePanel = "search" | "scan" | "customer" | "quick" | "manual" | "discount" | "more" | "price_check" | "store_credit" | "returns" | "loyalty" | "gift_card" | "no_sale" | "flag_issue" | "void_last" | "order_lookup" | null;
 
+/** Auto-format a gift card code with dashes: XXXX-XXXX-XXXX-XXXX */
+function formatGiftCardInput(raw: string): string {
+  const stripped = raw.replace(/[^A-Z0-9]/g, "").slice(0, 16);
+  const parts: string[] = [];
+  for (let i = 0; i < stripped.length; i += 4) {
+    parts.push(stripped.slice(i, i + 4));
+  }
+  return parts.join("-");
+}
+
 interface TransactionEntry {
   id: string;
   type: string;
@@ -917,7 +927,7 @@ export function MoreMenu({
               <input
                 type="text"
                 value={giftCardCode}
-                onChange={(e) => { setGiftCardCode(e.target.value.toUpperCase()); setGiftCardError(null); }}
+                onChange={(e) => { setGiftCardCode(formatGiftCardInput(e.target.value.toUpperCase())); setGiftCardError(null); }}
                 onKeyDown={(e) => {
                   e.stopPropagation();
                   if (e.key === "Enter") lookupGiftCard(giftCardCode);

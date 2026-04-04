@@ -111,6 +111,7 @@ export default function FulfillmentPage() {
   const [tab, setTab] = useState<TabFilter>("unfulfilled");
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [pullSheetLoading, setPullSheetLoading] = useState(false);
 
   // Rate shopping state
   const [rateOrderId, setRateOrderId] = useState<string | null>(null);
@@ -220,6 +221,83 @@ export default function FulfillmentPage() {
     }
   };
 
+  const printPullSheet = async () => {
+    setPullSheetLoading(true);
+    try {
+      const res = await fetch(`/api/fulfillment/pull-sheet?status=${tab}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const sections = (data.sections || []) as {
+        category: string;
+        items: {
+          name: string;
+          sku: string | null;
+          total_quantity: number;
+          orders: string[];
+          location: string | null;
+        }[];
+      }[];
+
+      // Build print-friendly HTML
+      const html = `<!DOCTYPE html>
+<html><head>
+<title>Pull Sheet - ${new Date(data.generated_at).toLocaleDateString()}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Courier New", Courier, monospace; font-size: 12px; padding: 20px; color: #000; }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .meta { font-size: 11px; color: #666; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+  .section { margin-bottom: 16px; }
+  .section-header { font-size: 14px; font-weight: bold; text-transform: uppercase; background: #eee; padding: 4px 8px; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid #999; padding: 2px 4px; }
+  td { padding: 4px; border-bottom: 1px dotted #ccc; vertical-align: top; }
+  .cb { width: 20px; text-align: center; }
+  .qty { width: 40px; text-align: center; font-weight: bold; }
+  .sku { width: 120px; font-size: 11px; color: #555; }
+  .loc { width: 120px; font-size: 11px; color: #555; }
+  .orders { font-size: 10px; color: #777; }
+  @media print { body { padding: 10px; } }
+</style>
+</head><body>
+<h1>Pull Sheet</h1>
+<div class="meta">
+  Generated: ${new Date(data.generated_at).toLocaleString()} &nbsp;|&nbsp;
+  Orders: ${data.order_count} &nbsp;|&nbsp;
+  Total items: ${data.total_items}
+</div>
+${sections.map((s: typeof sections[number]) => `
+<div class="section">
+  <div class="section-header">${s.category.replace(/_/g, " ")}</div>
+  <table>
+    <tr><th class="cb"></th><th class="qty">Qty</th><th>Item</th><th class="sku">SKU</th><th class="loc">Location</th><th>Orders</th></tr>
+    ${s.items.map((item: typeof s.items[number]) => `
+    <tr>
+      <td class="cb">&#9744;</td>
+      <td class="qty">${item.total_quantity}</td>
+      <td>${item.name}</td>
+      <td class="sku">${item.sku || "-"}</td>
+      <td class="loc">${item.location || "-"}</td>
+      <td class="orders">${item.orders.join(", ")}</td>
+    </tr>`).join("")}
+  </table>
+</div>`).join("")}
+</body></html>`;
+
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        // Auto-trigger print dialog after a brief render
+        setTimeout(() => win.print(), 400);
+      }
+    } finally {
+      setPullSheetLoading(false);
+    }
+  };
+
   const formatAddress = (addr: Record<string, string> | null) => {
     if (!addr) return "No address";
     const parts = [addr.street1 || addr.street, addr.street2, addr.city, addr.state, addr.zip || addr.postalCode].filter(Boolean);
@@ -244,7 +322,21 @@ export default function FulfillmentPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Fulfillment Queue" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Fulfillment Queue" />
+        <button
+          onClick={printPullSheet}
+          disabled={pullSheetLoading}
+          className="py-2 px-4 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 shrink-0"
+        >
+          {pullSheetLoading ? (
+            <span className="animate-spin inline-block">&#9696;</span>
+          ) : (
+            <span>&#x1F5A8;</span>
+          )}
+          Print Pull Sheet
+        </button>
+      </div>
 
       {/* Tab bar with counts */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">

@@ -505,6 +505,12 @@ export default function RegisterPage() {
   const [giftCardPayLoading, setGiftCardPayLoading] = useState(false);
   const [giftCardPayError, setGiftCardPayError] = useState<string | null>(null);
 
+  // Refs for scanner access to payment state (avoids re-creating scanner callback)
+  const showPaySheetRef = useRef(showPaySheet);
+  showPaySheetRef.current = showPaySheet;
+  const showGiftCardPaymentRef = useRef(showGiftCardPayment);
+  showGiftCardPaymentRef.current = showGiftCardPayment;
+
   // Park / Recall
   const [showParkInput, setShowParkInput] = useState(false);
   const [parkLabel, setParkLabel] = useState("");
@@ -557,7 +563,8 @@ export default function RegisterPage() {
   }, []);
 
   // ---- USB barcode scanner integration ----
-  const scannerEnabled = !showPaySheet && !learnBarcode && activePanel !== "scan" && activePanel !== "customer" && activePanel !== "more" && activePanel !== "price_check" && activePanel !== "store_credit" && activePanel !== "returns" && activePanel !== "gift_card" && activePanel !== "flag_issue" && activePanel !== "order_lookup";
+  // Scanner stays enabled during showPaySheet so gift card barcodes can be scanned at checkout
+  const scannerEnabled = !learnBarcode && activePanel !== "scan" && activePanel !== "customer" && activePanel !== "more" && activePanel !== "price_check" && activePanel !== "store_credit" && activePanel !== "returns" && activePanel !== "gift_card" && activePanel !== "flag_issue" && activePanel !== "order_lookup";
 
   const {
     lastScan,
@@ -572,6 +579,25 @@ export default function RegisterPage() {
       setScannerFlash("success");
       if (scannerFlashTimerRef.current) clearTimeout(scannerFlashTimerRef.current);
       scannerFlashTimerRef.current = setTimeout(() => setScannerFlash("none"), 600);
+
+      // Check if this is a gift card barcode (16 chars from ABCDEFGHJKLMNPQRSTUVWXYZ23456789, with or without dashes)
+      const gcChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const strippedGc = barcode.replace(/-/g, "").toUpperCase();
+      if (strippedGc.length === 16 && [...strippedGc].every((ch) => gcChars.includes(ch))) {
+        // Format as XXXX-XXXX-XXXX-XXXX
+        const formatted = [strippedGc.slice(0, 4), strippedGc.slice(4, 8), strippedGc.slice(8, 12), strippedGc.slice(12, 16)].join("-");
+        // If pay sheet is showing, open gift card input with code pre-filled
+        // If not, open pay sheet first then gift card input
+        if (!showPaySheetRef.current) setShowPaySheet(true);
+        setShowCashInput(false);
+        setShowGiftCardPayment(true);
+        setGiftCardPayCode(formatted);
+        setGiftCardPayError(null);
+        return;
+      }
+
+      // If pay sheet is showing and this is NOT a gift card, ignore non-gift-card scans
+      if (showPaySheetRef.current) return;
 
       // Check if this is an Afterroar Passport QR/barcode (CUID format)
       if (barcode.startsWith("c") && barcode.length >= 20 && /^[a-z0-9]+$/.test(barcode)) {
@@ -663,12 +689,12 @@ export default function RegisterPage() {
 
   // Pause/resume scanner when overlays open/close
   useEffect(() => {
-    if (showPaySheet || activePanel === "scan" || activePanel === "customer" || activePanel === "more" || activePanel === "price_check" || activePanel === "store_credit" || activePanel === "returns" || activePanel === "gift_card" || activePanel === "flag_issue") {
+    if (activePanel === "scan" || activePanel === "customer" || activePanel === "more" || activePanel === "price_check" || activePanel === "store_credit" || activePanel === "returns" || activePanel === "gift_card" || activePanel === "flag_issue") {
       pauseScanner();
     } else {
       resumeScanner();
     }
-  }, [showPaySheet, activePanel, pauseScanner, resumeScanner]);
+  }, [activePanel, pauseScanner, resumeScanner]);
 
   // Cleanup timers on unmount
   useEffect(() => {

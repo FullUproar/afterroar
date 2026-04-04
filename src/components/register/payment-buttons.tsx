@@ -4,6 +4,16 @@ import { formatCents } from "@/lib/types";
 import type { PaymentMethod } from "@/lib/payment";
 import type { Customer } from "@/lib/types";
 
+/** Auto-format a gift card code with dashes: XXXX-XXXX-XXXX-XXXX */
+function formatGiftCardInput(raw: string): string {
+  const stripped = raw.replace(/[^A-Z0-9]/g, "").slice(0, 16);
+  const parts: string[] = [];
+  for (let i = 0; i < stripped.length; i += 4) {
+    parts.push(stripped.slice(i, i + 4));
+  }
+  return parts.join("-");
+}
+
 interface PaymentButtonsProps {
   hasCart: boolean;
   total: number;
@@ -58,7 +68,7 @@ export function PaymentButtons({
             <input
               type="text"
               value={giftCardPayCode}
-              onChange={(e) => onSetGiftCardPayCode(e.target.value.toUpperCase())}
+              onChange={(e) => onSetGiftCardPayCode(formatGiftCardInput(e.target.value.toUpperCase()))}
               onKeyDown={(e) => {
                 e.stopPropagation();
                 if (e.key === "Enter") onGiftCardPayment();
