@@ -137,6 +137,11 @@ All Store Ops models are prefixed with `Pos`:
 - Fulfillment: `/dashboard/fulfillment` — pick/pack/ship queue with rate shopping + label creation
 - Fulfillment types: merchant (self-fulfill), pod (stays on HQ), 3pl (future)
 - ShipStation: `src/lib/shipstation.ts` — multi-tenant platform account, webhook at `/api/webhooks/shipstation`
+- Transactional emails: `src/lib/email.ts` — Resend provider, order confirmation + shipping notification + gift card delivery
+- Tax codes: `src/lib/tax-codes.ts` — per-category Stripe Tax code mapping (gift cards = no tax, food = different rate)
+- Tips: `shouldPromptTip()` in store-settings-shared.ts — contextual tip prompts (cafe/food/table/always/never)
+- COGS margins: `/api/reports/margins` + `/dashboard/reports/margins` — revenue, COGS, margins by category
+- Pull sheets: `/api/fulfillment/pull-sheet` — consolidated pick lists for fulfillment
 
 ## TCG Multi-Game Support
 - Scryfall (MTG) — full integration: search, pricing, card images, price drift, collection import
