@@ -12,7 +12,8 @@ import { opLog } from "@/lib/op-log";
 import { getTaxCode } from "@/lib/tax-codes";
 
 interface CheckoutItem {
-  inventory_item_id: string;
+  inventory_item_id: string | null;
+  category?: string; // for manual items (gift_card, etc.)
   quantity: number;
   price_cents: number;
 }
@@ -103,11 +104,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Validate all items exist and have sufficient quantity
-    const itemIds = items.map((i) => i.inventory_item_id);
-    const invItems = await prisma.posInventoryItem.findMany({
-      where: { id: { in: itemIds }, store_id: storeId },
-      select: { id: true, name: true, quantity: true, price_cents: true, cost_cents: true, category: true, attributes: true },
-    });
+    // Split: inventory items vs manual items (gift cards, etc.)
+    const inventoryItems = items.filter((i) => i.inventory_item_id);
+    const itemIds = inventoryItems.map((i) => i.inventory_item_id).filter(Boolean) as string[];
+    const invItems = itemIds.length > 0
+      ? await prisma.posInventoryItem.findMany({
+          where: { id: { in: itemIds }, store_id: storeId },
+          select: { id: true, name: true, quantity: true, price_cents: true, cost_cents: true, category: true, attributes: true },
+        })
+      : [];
 
     if (invItems.length !== itemIds.length) {
       return NextResponse.json(
@@ -117,8 +122,8 @@ export async function POST(request: NextRequest) {
     }
 
     const invMap = new Map(invItems.map((i) => [i.id, i]));
-    for (const item of items) {
-      const inv = invMap.get(item.inventory_item_id);
+    for (const item of inventoryItems) {
+      const inv = invMap.get(item.inventory_item_id!);
       if (!inv) {
         return NextResponse.json(
           { error: `Item ${item.inventory_item_id} not found` },
@@ -163,13 +168,14 @@ export async function POST(request: NextRequest) {
           const taxCalc = await stripe.tax.calculations.create({
             currency: "usd",
             line_items: items.map((item) => {
-              const inv = invMap.get(item.inventory_item_id);
+              const inv = item.inventory_item_id ? invMap.get(item.inventory_item_id) : null;
               const attrs = (inv?.attributes ?? {}) as Record<string, unknown>;
               const taxSubCategory = attrs.tax_code as string | undefined;
+              const category = inv?.category || item.category || "other";
               return {
                 amount: item.price_cents * item.quantity,
                 reference: item.inventory_item_id || "manual",
-                tax_code: getTaxCode(inv?.category || "other", taxSubCategory),
+                tax_code: getTaxCode(category, taxSubCategory),
               };
             }),
             customer_details: {
@@ -291,14 +297,14 @@ export async function POST(request: NextRequest) {
     // 6. Execute all DB writes in a transaction
     const itemNames = items
       .map((i) => {
-        const inv = invMap.get(i.inventory_item_id);
-        return `${inv?.name} x${i.quantity}`;
+        const inv = i.inventory_item_id ? invMap.get(i.inventory_item_id) : null;
+        return `${inv?.name || i.category || "Manual"} x${i.quantity}`;
       })
       .join(", ");
 
     // Calculate COGS for items with cost data
     const cogsCents = items.reduce((sum, i) => {
-      const inv = invMap.get(i.inventory_item_id);
+      const inv = i.inventory_item_id ? invMap.get(i.inventory_item_id) : null;
       return sum + (inv?.cost_cents ?? 0) * i.quantity;
     }, 0);
     const marginCents = subtotal_cents - cogsCents;
@@ -421,12 +427,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Deduct inventory quantities
+      // Deduct inventory quantities (skip manual items like gift cards)
       for (const item of items) {
-        await tx.posInventoryItem.update({
-          where: { id: item.inventory_item_id },
-          data: { quantity: { decrement: item.quantity } },
-        });
+        if (item.inventory_item_id) {
+          await tx.posInventoryItem.update({
+            where: { id: item.inventory_item_id },
+            data: { quantity: { decrement: item.quantity } },
+          });
+        }
       }
 
       // Earn loyalty points (if customer is attached and loyalty is enabled)
@@ -495,11 +503,11 @@ export async function POST(request: NextRequest) {
           const categoryCounts = new Map<string, number>();
           const boardGames: Array<{ name: string; catalog_product_id?: string; bgg_id?: string }> = [];
           for (const item of items) {
-            const inv = invMap.get(item.inventory_item_id);
-            const cat = inv?.category || "other";
+            const inv = item.inventory_item_id ? invMap.get(item.inventory_item_id) : null;
+            const cat = inv?.category || item.category || "other";
             categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + item.quantity);
             // Include board game details for game library integration
-            if (cat === "board_game" && inv?.name) {
+            if (cat === "board_game" && inv?.name && item.inventory_item_id) {
               // Get full item for catalog link and BGG ID
               const fullItem = await prisma.posInventoryItem.findFirst({
                 where: { id: item.inventory_item_id, store_id: storeId },
@@ -540,9 +548,9 @@ export async function POST(request: NextRequest) {
       store_name: receiptStoreName,
       date: new Date().toISOString(),
       items: items.map((i) => {
-        const inv = invMap.get(i.inventory_item_id);
+        const inv = i.inventory_item_id ? invMap.get(i.inventory_item_id) : null;
         return {
-          name: inv?.name ?? "Unknown Item",
+          name: inv?.name ?? i.category ?? "Unknown Item",
           quantity: i.quantity,
           price_cents: i.price_cents,
           total_cents: i.price_cents * i.quantity,

@@ -738,7 +738,9 @@ export default function RegisterPage() {
   }, 0);
 
   const discountedSubtotal = Math.max(0, subtotal - discountCents);
-  const taxCents = storeSettings.tax_included_in_price ? 0 : Math.round(discountedSubtotal * taxRate / 100);
+  // Exclude gift cards from tax (stored value — taxed at redemption)
+  const taxableSubtotal = discountedSubtotal - cart.filter((c) => c.category === "gift_card").reduce((s, c) => s + c.price_cents * c.quantity, 0);
+  const taxCents = storeSettings.tax_included_in_price ? 0 : Math.round(Math.max(0, taxableSubtotal) * taxRate / 100);
   const total = discountedSubtotal + taxCents;
   const creditAvailable = customer?.credit_balance_cents ?? 0;
   const creditToApply = showCreditConfirm ? Math.min(creditAvailable, total) : 0;
@@ -1126,7 +1128,7 @@ export default function RegisterPage() {
   async function finalizeSale(method: PaymentMethod, stripePaymentIntentId?: string, tipCents: number = 0) {
     const clientTxId = `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const payload = {
-      items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents })),
+      items: cart.map((c) => ({ inventory_item_id: c.inventory_item_id, quantity: c.quantity, price_cents: c.price_cents, ...(c.category === "gift_card" ? { category: "gift_card" } : {}) })),
       customer_id: customer?.id ?? null,
       payment_method: method,
       amount_tendered_cents: method === "cash" ? tendered : amountDue,
