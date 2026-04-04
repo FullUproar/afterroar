@@ -141,6 +141,7 @@ function DeckBuilderContent() {
   const [metaDecks, setMetaDecks] = useState<LiveMetaResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [matchLoading, setMatchLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState<Array<{ type: string; name: string; reason: string; price_cents: number; inventory_item_id: string; image_url: string | null }>>([]);
   const [metaLoading, setMetaLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"search" | "paste">("search");
 
@@ -277,6 +278,9 @@ function DeckBuilderContent() {
         if (data.inventory) {
           setInventoryResults(data.inventory);
         }
+        if (data.recommendations) {
+          setRecommendations(data.recommendations);
+        }
       }
     } catch {
       // ignore
@@ -372,11 +376,12 @@ function DeckBuilderContent() {
       const res = await fetch("/api/deck-builder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "match", cards }),
+        body: JSON.stringify({ action: "match", cards, format }),
       });
       if (res.ok) {
         const data = await res.json();
         setInventoryResults(data.results ?? []);
+        setRecommendations(data.recommendations ?? []);
       }
     } catch {
       // ignore
@@ -994,6 +999,51 @@ function DeckBuilderContent() {
                   Add All Available to Cart ({inStockCards} cards)
                 </button>
               </div>
+
+              {/* Recommendations / Upsells */}
+              {recommendations.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-card-border">
+                  <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
+                    You Might Also Need
+                  </h3>
+                  <div className="space-y-2">
+                    {recommendations.map((rec, i) => (
+                      <div
+                        key={`${rec.inventory_item_id}-${i}`}
+                        className="flex items-center gap-3 rounded-xl border border-card-border bg-card p-3"
+                      >
+                        {rec.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={rec.image_url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-card-hover flex items-center justify-center text-muted text-xs shrink-0">
+                            {rec.type === "accessory" ? "\uD83D\uDEE1" : rec.type === "upgrade" ? "\u2728" : "\u2660"}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{rec.name}</div>
+                          <div className="text-xs text-muted">{rec.reason}</div>
+                        </div>
+                        <div className="text-sm font-mono font-semibold text-foreground shrink-0 mr-2">
+                          {formatCents(rec.price_cents)}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const cartItems = [{ inventory_item_id: rec.inventory_item_id, name: rec.name, price_cents: rec.price_cents, quantity: 1 }];
+                            const existing = localStorage.getItem("deck-builder-cart");
+                            const merged = existing ? [...JSON.parse(existing), ...cartItems] : cartItems;
+                            localStorage.setItem("deck-builder-cart", JSON.stringify(merged));
+                            setRecommendations((prev) => prev.filter((_, j) => j !== i));
+                          }}
+                          className="shrink-0 rounded-lg bg-accent/10 border border-accent/30 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 

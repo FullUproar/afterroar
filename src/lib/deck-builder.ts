@@ -474,6 +474,179 @@ export async function buildCommanderDeck(
 }
 
 /* ------------------------------------------------------------------ */
+/*  Recommendation Engine — upsells + accessories + upgrades            */
+/* ------------------------------------------------------------------ */
+
+export interface Recommendation {
+  type: "accessory" | "upgrade" | "sideboard" | "also_bought";
+  name: string;
+  reason: string;
+  price_cents: number;
+  inventory_item_id: string;
+  image_url: string | null;
+  category: string;
+}
+
+/**
+ * Generate upsell/cross-sell recommendations based on a deck + inventory match.
+ */
+export async function getRecommendations(
+  deckCards: ParsedCard[],
+  inventoryMatches: InventoryMatchResult[],
+  storeId: string,
+  options?: { format?: string; colors?: string[] },
+): Promise<Recommendation[]> {
+  const recs: Recommendation[] = [];
+
+  // 1. ACCESSORIES — sleeves, deck box, playmat if store has them
+  const accessories = await prisma.posInventoryItem.findMany({
+    where: {
+      store_id: storeId,
+      active: true,
+      quantity: { gt: 0 },
+      category: "accessory",
+    },
+    orderBy: { price_cents: "asc" },
+    take: 20,
+    select: { id: true, name: true, price_cents: true, image_url: true, category: true, attributes: true },
+  });
+
+  // Find sleeves, deck boxes, playmats
+  const sleeves = accessories.filter((a) => /sleeve/i.test(a.name));
+  const deckBoxes = accessories.filter((a) => /deck.?box/i.test(a.name));
+  const playmats = accessories.filter((a) => /playmat/i.test(a.name));
+
+  if (sleeves.length > 0) {
+    const pick = sleeves[0];
+    recs.push({
+      type: "accessory",
+      name: pick.name,
+      reason: "Protect your new deck",
+      price_cents: pick.price_cents,
+      inventory_item_id: pick.id,
+      image_url: pick.image_url,
+      category: pick.category,
+    });
+  }
+
+  if (deckBoxes.length > 0) {
+    const pick = deckBoxes[0];
+    recs.push({
+      type: "accessory",
+      name: pick.name,
+      reason: "Keep your deck together",
+      price_cents: pick.price_cents,
+      inventory_item_id: pick.id,
+      image_url: pick.image_url,
+      category: pick.category,
+    });
+  }
+
+  if (playmats.length > 0) {
+    const pick = playmats[0];
+    recs.push({
+      type: "accessory",
+      name: pick.name,
+      reason: "Complete the setup",
+      price_cents: pick.price_cents,
+      inventory_item_id: pick.id,
+      image_url: pick.image_url,
+      category: pick.category,
+    });
+  }
+
+  // 2. UPGRADES — foil or alt-art versions of cards in the deck
+  const matchedNames = inventoryMatches
+    .filter((m) => m.status === "available" && m.inventory_item_id)
+    .map((m) => m.name);
+
+  if (matchedNames.length > 0) {
+    // Find foil/premium versions of cards the customer is buying
+    const upgrades = await prisma.posInventoryItem.findMany({
+      where: {
+        store_id: storeId,
+        active: true,
+        quantity: { gt: 0 },
+        category: "tcg_single",
+        OR: matchedNames.slice(0, 10).map((name) => ({
+          name: { contains: name, mode: "insensitive" as const },
+        })),
+        attributes: {
+          path: ["foil"],
+          equals: true,
+        },
+      },
+      take: 5,
+      select: { id: true, name: true, price_cents: true, image_url: true, category: true },
+    });
+
+    for (const upgrade of upgrades) {
+      // Only suggest if we're not already adding this exact item
+      const alreadyInDeck = inventoryMatches.some(
+        (m) => m.inventory_item_id === upgrade.id,
+      );
+      if (!alreadyInDeck) {
+        recs.push({
+          type: "upgrade",
+          name: upgrade.name,
+          reason: "Foil upgrade available",
+          price_cents: upgrade.price_cents,
+          inventory_item_id: upgrade.id,
+          image_url: upgrade.image_url,
+          category: upgrade.category,
+        });
+      }
+    }
+  }
+
+  // 3. FORMAT STAPLES — popular cards in the same format that complement the deck
+  if (options?.format && options.format !== "commander") {
+    // Find other popular singles in stock that aren't in the deck
+    const deckCardNames = new Set(deckCards.map((c) => c.name.toLowerCase()));
+
+    const formatStaples = await prisma.posInventoryItem.findMany({
+      where: {
+        store_id: storeId,
+        active: true,
+        quantity: { gt: 0 },
+        category: "tcg_single",
+        price_cents: { gte: 200 }, // $2+ cards are more interesting recommendations
+        NOT: {
+          name: { in: Array.from(deckCardNames).slice(0, 20) },
+        },
+      },
+      orderBy: { price_cents: "desc" },
+      take: 10,
+      select: { id: true, name: true, price_cents: true, image_url: true, category: true, attributes: true },
+    });
+
+    // Filter to cards that share the deck's color identity
+    const deckColors = options.colors || [];
+    for (const staple of formatStaples.slice(0, 3)) {
+      const attrs = (staple.attributes ?? {}) as Record<string, unknown>;
+      const cardColors = ((attrs.color_identity as string) || "").split(",").filter(Boolean);
+
+      // Only suggest if colors overlap or no color info
+      if (cardColors.length === 0 || deckColors.length === 0 || cardColors.some((c) => deckColors.includes(c))) {
+        if (!deckCardNames.has(staple.name.toLowerCase())) {
+          recs.push({
+            type: "also_bought",
+            name: staple.name,
+            reason: "Popular in this format",
+            price_cents: staple.price_cents,
+            inventory_item_id: staple.id,
+            image_url: staple.image_url,
+            category: staple.category,
+          });
+        }
+      }
+    }
+  }
+
+  return recs;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Re-export sub-module functions for API layer convenience            */
 /* ------------------------------------------------------------------ */
 

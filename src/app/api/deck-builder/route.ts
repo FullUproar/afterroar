@@ -9,6 +9,7 @@ import {
   buildCommanderDeck,
   searchCommanders,
   fetchTopPokemonDecks,
+  getRecommendations,
 } from "@/lib/deck-builder";
 
 export async function POST(request: NextRequest) {
@@ -38,12 +39,13 @@ export async function POST(request: NextRequest) {
       }
 
       case "match": {
-        const { cards } = body;
+        const { cards, format, colors } = body;
         if (!Array.isArray(cards)) {
           return NextResponse.json({ error: "cards array is required" }, { status: 400 });
         }
         const results = await matchDeckToInventory(cards, ctx.storeId);
-        return NextResponse.json({ results });
+        const recommendations = await getRecommendations(cards, results, ctx.storeId, { format, colors });
+        return NextResponse.json({ results, recommendations });
       }
 
       case "suggest": {
@@ -80,9 +82,10 @@ export async function POST(request: NextRequest) {
             { cards: [], message: "Could not fetch decklist" },
           );
         }
-        // Also match against inventory
+        // Match against inventory + generate recommendations
         const results = await matchDeckToInventory(cards, ctx.storeId);
-        return NextResponse.json({ cards, inventory: results });
+        const recommendations = await getRecommendations(cards, results, ctx.storeId, { format });
+        return NextResponse.json({ cards, inventory: results, recommendations });
       }
 
       case "commander": {
