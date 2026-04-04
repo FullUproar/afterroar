@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { EbayClient, getEbayClient, getEbayClientForStore, refreshEbayToken } from "@/lib/ebay";
+import { getCardTraderClientForStore } from "@/lib/cardtrader";
+import { getManaPoolClientForStore } from "@/lib/manapool";
 import { ingestOrder } from "@/lib/order-ingest";
 
 /* ------------------------------------------------------------------ */
@@ -71,8 +73,13 @@ export async function pushInventoryUpdate(
       where: { id: itemId },
       select: {
         id: true,
+        store_id: true,
         listed_on_ebay: true,
         ebay_offer_id: true,
+        listed_on_cardtrader: true,
+        cardtrader_product_id: true,
+        listed_on_manapool: true,
+        manapool_listing_id: true,
         quantity: true,
       },
     });
@@ -111,7 +118,67 @@ export async function pushInventoryUpdate(
       }
     }
 
-    // Future: CardTrader, Mana Pool pushes go here
+    // CardTrader
+    if (item.listed_on_cardtrader && item.cardtrader_product_id) {
+      const store = await prisma.posStore.findUnique({
+        where: { id: item.store_id },
+        select: { settings: true },
+      });
+      const settings = (store?.settings ?? {}) as Record<string, unknown>;
+      const ct = getCardTraderClientForStore(settings);
+      if (ct) {
+        try {
+          if (newQuantity <= 0) {
+            await ct.deleteProduct(item.cardtrader_product_id).catch(() => {});
+            await prisma.posInventoryItem.update({
+              where: { id: itemId },
+              data: {
+                listed_on_cardtrader: false,
+                cardtrader_product_id: null,
+                updated_at: new Date(),
+              },
+            });
+            console.log(`[MarketplaceSync] CardTrader: delisted ${itemId} (out of stock)`);
+          } else {
+            await ct.updateQuantity(item.cardtrader_product_id, newQuantity);
+            console.log(`[MarketplaceSync] CardTrader: updated ${itemId} qty=${newQuantity}`);
+          }
+        } catch (err) {
+          console.error(`[MarketplaceSync] CardTrader push failed for ${itemId}:`, err);
+        }
+      }
+    }
+
+    // Mana Pool
+    if (item.listed_on_manapool && item.manapool_listing_id) {
+      const store = await prisma.posStore.findUnique({
+        where: { id: item.store_id },
+        select: { settings: true },
+      });
+      const settings = (store?.settings ?? {}) as Record<string, unknown>;
+      const mp = getManaPoolClientForStore(settings);
+      if (mp) {
+        try {
+          if (newQuantity <= 0) {
+            await mp.deleteListing(item.manapool_listing_id).catch(() => {});
+            await prisma.posInventoryItem.update({
+              where: { id: itemId },
+              data: {
+                listed_on_manapool: false,
+                manapool_listing_id: null,
+                updated_at: new Date(),
+              },
+            });
+            console.log(`[MarketplaceSync] ManaPool: delisted ${itemId} (out of stock)`);
+          } else {
+            await mp.updateQuantity(item.manapool_listing_id, newQuantity);
+            console.log(`[MarketplaceSync] ManaPool: updated ${itemId} qty=${newQuantity}`);
+          }
+        } catch (err) {
+          console.error(`[MarketplaceSync] ManaPool push failed for ${itemId}:`, err);
+        }
+      }
+    }
   } catch (err) {
     // Fire and forget — never break the calling flow
     console.error("[MarketplaceSync] pushInventoryUpdate error:", err);
@@ -297,6 +364,190 @@ export async function pullEbayOrders(storeId: string): Promise<{
         settings: JSON.parse(JSON.stringify({
           ...settings,
           ebay_last_poll: new Date().toISOString(),
+        })),
+      },
+    });
+  } catch (err) {
+    report.errors.push(err instanceof Error ? err.message : String(err));
+  }
+
+  return report;
+}
+
+/* ------------------------------------------------------------------ */
+/*  INBOUND: Pull CardTrader orders                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Poll CardTrader for new orders and ingest them.
+ * Uses store settings to track last poll time.
+ */
+export async function pullCardTraderOrders(storeId: string): Promise<{
+  imported: number;
+  skipped: number;
+  errors: string[];
+}> {
+  const store = await prisma.posStore.findUnique({
+    where: { id: storeId },
+    select: { id: true, name: true, settings: true },
+  });
+
+  if (!store) return { imported: 0, skipped: 0, errors: ["Store not found"] };
+
+  const settings = (store.settings ?? {}) as Record<string, unknown>;
+  const ct = getCardTraderClientForStore(settings);
+  if (!ct) return { imported: 0, skipped: 0, errors: ["CardTrader not configured"] };
+
+  // Last poll time — default to 24 hours ago on first run
+  const lastPoll = settings.cardtrader_last_poll
+    ? new Date(settings.cardtrader_last_poll as string)
+    : new Date(Date.now() - 86400000);
+
+  const report = { imported: 0, skipped: 0, errors: [] as string[] };
+
+  try {
+    const orders = await ct.getOrders({ since: lastPoll.toISOString() });
+
+    for (const ctOrder of orders) {
+      // Skip already-fulfilled orders
+      if (ctOrder.state === "shipped" || ctOrder.state === "completed") {
+        report.skipped++;
+        continue;
+      }
+
+      const items = ctOrder.items.map((li) => ({
+        name: li.name_en,
+        sku: undefined as string | undefined,
+        quantity: li.quantity,
+        price_cents: li.price_cents,
+        fulfillment_type: "merchant" as const,
+      }));
+
+      const result = await ingestOrder(store.id, store.name, {
+        external_id: String(ctOrder.id),
+        order_number: `CT-${ctOrder.code}`,
+        source: "cardtrader",
+        items,
+        total_cents: ctOrder.total_cents,
+        paid_at: ctOrder.created_at,
+        customer: ctOrder.buyer
+          ? {
+              name: ctOrder.buyer.username,
+              email: ctOrder.buyer.email || null,
+            }
+          : undefined,
+      });
+
+      if (result.deduplicated) {
+        report.skipped++;
+      } else if (result.ok) {
+        report.imported++;
+      }
+    }
+
+    // Update last poll time
+    await prisma.posStore.update({
+      where: { id: storeId },
+      data: {
+        settings: JSON.parse(JSON.stringify({
+          ...settings,
+          cardtrader_last_poll: new Date().toISOString(),
+        })),
+      },
+    });
+  } catch (err) {
+    report.errors.push(err instanceof Error ? err.message : String(err));
+  }
+
+  return report;
+}
+
+/* ------------------------------------------------------------------ */
+/*  INBOUND: Pull Mana Pool orders                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Poll Mana Pool for new orders and ingest them.
+ * Uses store settings to track last poll time.
+ */
+export async function pullManaPoolOrders(storeId: string): Promise<{
+  imported: number;
+  skipped: number;
+  errors: string[];
+}> {
+  const store = await prisma.posStore.findUnique({
+    where: { id: storeId },
+    select: { id: true, name: true, settings: true },
+  });
+
+  if (!store) return { imported: 0, skipped: 0, errors: ["Store not found"] };
+
+  const settings = (store.settings ?? {}) as Record<string, unknown>;
+  const mp = getManaPoolClientForStore(settings);
+  if (!mp) return { imported: 0, skipped: 0, errors: ["Mana Pool not configured"] };
+
+  // Last poll time — default to 24 hours ago on first run
+  const lastPoll = settings.manapool_last_poll
+    ? new Date(settings.manapool_last_poll as string)
+    : new Date(Date.now() - 86400000);
+
+  const report = { imported: 0, skipped: 0, errors: [] as string[] };
+
+  try {
+    const orders = await mp.getOrders({ since: lastPoll.toISOString() });
+
+    for (const mpOrder of orders) {
+      // Skip already-fulfilled orders
+      if (mpOrder.status === "shipped" || mpOrder.status === "completed") {
+        report.skipped++;
+        continue;
+      }
+
+      // Map Mana Pool SKUs back to inventory items
+      const items = mpOrder.items.map((li) => {
+        // SKU format: afterroar-{inventory_item_id}
+        const inventoryId = li.sku?.startsWith("afterroar-")
+          ? li.sku.slice(10)
+          : undefined;
+
+        return {
+          name: li.title,
+          sku: inventoryId,
+          quantity: li.quantity,
+          price_cents: li.price_cents,
+          fulfillment_type: "merchant" as const,
+        };
+      });
+
+      const result = await ingestOrder(store.id, store.name, {
+        external_id: mpOrder.id,
+        order_number: `MP-${mpOrder.order_number}`,
+        source: "manapool",
+        items,
+        total_cents: mpOrder.total_cents,
+        paid_at: mpOrder.created_at,
+        customer: mpOrder.buyer
+          ? {
+              name: mpOrder.buyer.name,
+              email: mpOrder.buyer.email || null,
+            }
+          : undefined,
+      });
+
+      if (result.deduplicated) {
+        report.skipped++;
+      } else if (result.ok) {
+        report.imported++;
+      }
+    }
+
+    // Update last poll time
+    await prisma.posStore.update({
+      where: { id: storeId },
+      data: {
+        settings: JSON.parse(JSON.stringify({
+          ...settings,
+          manapool_last_poll: new Date().toISOString(),
         })),
       },
     });

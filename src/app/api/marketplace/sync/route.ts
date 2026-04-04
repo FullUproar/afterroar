@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { pullEbayOrders, pushFullInventorySync } from "@/lib/marketplace-sync";
+import { pullEbayOrders, pullCardTraderOrders, pullManaPoolOrders, pushFullInventorySync } from "@/lib/marketplace-sync";
 
 /* ------------------------------------------------------------------ */
 /*  /api/marketplace/sync — Marketplace sync cron + manual trigger     */
@@ -35,10 +35,15 @@ export async function GET(request: NextRequest) {
 
   for (const store of stores) {
     try {
-      const ebayResult = await pullEbayOrders(store.id);
+      const [ebayResult, cardtraderResult, manapoolResult] = await Promise.all([
+        pullEbayOrders(store.id),
+        pullCardTraderOrders(store.id),
+        pullManaPoolOrders(store.id),
+      ]);
       results[store.name] = {
         ebay: ebayResult,
-        // Future: cardtrader, manapool results
+        cardtrader: cardtraderResult,
+        manapool: manapoolResult,
       };
     } catch (err) {
       results[store.name] = {
@@ -67,7 +72,12 @@ export async function POST(request: NextRequest) {
     const results: Record<string, unknown> = {};
 
     if (action === "full" || action === "pull") {
-      results.orders = await pullEbayOrders(storeId);
+      const [ebay, cardtrader, manapool] = await Promise.all([
+        pullEbayOrders(storeId),
+        pullCardTraderOrders(storeId),
+        pullManaPoolOrders(storeId),
+      ]);
+      results.orders = { ebay, cardtrader, manapool };
     }
 
     if (action === "full" || action === "push") {

@@ -599,6 +599,12 @@ model PosInventoryItem {
   ebay_offer_id       String?
   listed_on_ebay      Boolean  @default(false)
 
+  cardtrader_product_id String?
+  listed_on_cardtrader  Boolean  @default(false)
+
+  manapool_listing_id String?
+  listed_on_manapool  Boolean  @default(false)
+
   store           PosStore           @relation(fields: [store_id], references: [id], onDelete: Cascade)
   supplier        PosSupplier?       @relation(fields: [supplier_id], references: [id])
   catalog_product PosCatalogProduct? @relation(fields: [catalog_product_id], references: [id])

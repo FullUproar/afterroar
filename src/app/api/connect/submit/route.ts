@@ -1,30 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
+import { encryptCredential } from "@/lib/crypto";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/connect/submit — receive a credential from a store owner */
 /*  Public endpoint (no auth — the store owner isn't logged in yet).   */
 /*  Credential is encrypted with AES-256-GCM before storage.          */
 /* ------------------------------------------------------------------ */
-
-function encryptCredential(plaintext: string): { encrypted: string; iv: string; tag: string } {
-  const key = process.env.CREDENTIAL_ENCRYPTION_KEY || process.env.AUTH_SECRET || "";
-  // Derive a 32-byte key from the secret
-  const derivedKey = crypto.createHash("sha256").update(key).digest();
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv("aes-256-gcm", derivedKey, iv);
-
-  let encrypted = cipher.update(plaintext, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  const tag = cipher.getAuthTag().toString("hex");
-
-  return {
-    encrypted,
-    iv: iv.toString("hex"),
-    tag,
-  };
-}
 
 export async function POST(request: NextRequest) {
   let body: {

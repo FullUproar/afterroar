@@ -724,6 +724,50 @@ export default function RegisterPage() {
       setDiscounts(persisted.discounts as CartDiscount[]);
     }
     setParkedCount(getParkedCartCount());
+
+    // ---- Deck Builder cart pickup ----
+    try {
+      const deckBuilderRaw = localStorage.getItem("deck-builder-cart");
+      if (deckBuilderRaw) {
+        const deckItems = JSON.parse(deckBuilderRaw) as Array<{
+          inventory_item_id: string | null;
+          name: string;
+          price_cents: number;
+          quantity: number;
+          image_url: string | null;
+        }>;
+        if (deckItems.length > 0) {
+          setCart((prev) => {
+            const merged = [...prev];
+            for (const di of deckItems) {
+              const existingIdx = merged.findIndex(
+                (c) => c.inventory_item_id && c.inventory_item_id === di.inventory_item_id,
+              );
+              if (existingIdx >= 0) {
+                merged[existingIdx] = {
+                  ...merged[existingIdx],
+                  quantity: merged[existingIdx].quantity + di.quantity,
+                };
+              } else {
+                merged.push({
+                  inventory_item_id: di.inventory_item_id,
+                  name: di.name,
+                  category: "tcg_single",
+                  price_cents: di.price_cents,
+                  quantity: di.quantity,
+                  max_quantity: di.quantity + 10,
+                  image_url: di.image_url,
+                });
+              }
+            }
+            return merged;
+          });
+        }
+        localStorage.removeItem("deck-builder-cart");
+      }
+    } catch {
+      // ignore malformed deck-builder cart
+    }
   }, []);
 
   // ---- Cart persistence: auto-save on change ----

@@ -30,6 +30,7 @@ const NAV_GROUPS: NavGroup[] = [
     hrefs: [
       "/dashboard/inventory",
       "/dashboard/singles",
+      "/dashboard/deck-builder",
       "/dashboard/game-library",
       "/dashboard/purchase-orders",
       "/dashboard/stock-counts",
