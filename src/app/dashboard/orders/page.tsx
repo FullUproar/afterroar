@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatCents } from "@/lib/types";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { PageHeader } from "@/components/page-header";
+import { StatusBadge as SharedStatusBadge, EmptyState } from "@/components/shared/ui";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -202,17 +203,12 @@ export default function OrdersPage() {
           Loading orders...
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
-          <p>No orders found.</p>
-          {statusFilter && (
-            <button
-              onClick={() => setStatusFilter("")}
-              className="mt-3 text-sm text-accent hover:underline"
-            >
-              Clear filter to see all orders
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon="&#x1F4E6;"
+          title="No orders found"
+          description={statusFilter ? undefined : "Orders will appear here when placed"}
+          action={statusFilter ? { label: "Clear filter to see all orders", onClick: () => setStatusFilter("") } : undefined}
+        />
       ) : (
         <div className="space-y-2">
           {orders.map((order) => (
@@ -227,13 +223,7 @@ export default function OrdersPage() {
                     <span className="font-mono font-bold text-foreground text-sm">
                       {order.order_number}
                     </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        STATUS_COLORS[order.status] || "bg-zinc-700 text-foreground/70"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
+                    <SharedStatusBadge status={order.status} size="xs" />
                   </div>
                   <div className="text-xs text-muted mt-1">
                     {order.customer?.name || "Guest"} &middot;{" "}
@@ -267,13 +257,7 @@ export default function OrdersPage() {
                 <h2 className="text-lg font-bold text-foreground">
                   {selectedOrder.order_number}
                 </h2>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    STATUS_COLORS[selectedOrder.status] || "bg-zinc-700 text-foreground/70"
-                  }`}
-                >
-                  {selectedOrder.status}
-                </span>
+                <SharedStatusBadge status={selectedOrder.status} size="xs" />
               </div>
               <button
                 onClick={() => {

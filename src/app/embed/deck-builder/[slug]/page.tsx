@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { CardImageLight, PriceTagLight, StockBadge, ConditionBadge } from "@/components/tcg/shared";
 
@@ -97,6 +97,11 @@ export default function EmbedDeckBuilder() {
       setMetaLoading(false);
     }
   }
+
+  // Auto-load meta decks for default format on mount
+  useEffect(() => {
+    loadMeta(format);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function selectArchetype(archetype: string) {
     setLoading(true);

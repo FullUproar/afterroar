@@ -287,7 +287,7 @@ export default function ConnectPage() {
       <footer className="border-t border-white/5 px-6 py-4">
         <div className="max-w-lg mx-auto text-center text-xs text-white/20">
           Afterroar Store Ops by Full Uproar Games
-          <span className="mx-2">\u00B7</span>
+          <span className="mx-2">&middot;</span>
           Your data is protected in transit and at rest
         </div>
       </footer>

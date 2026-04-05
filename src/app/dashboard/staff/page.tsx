@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
 import { PageHeader } from "@/components/page-header";
+import { StatusBadge as SharedStatusBadge, EmptyState, ActionButton } from "@/components/shared/ui";
 
 interface StaffMember {
   id: string;
@@ -144,21 +145,21 @@ export default function StaffPage() {
       <PageHeader
         title="Staff"
         action={
-          <button
-            onClick={() => setShowInvite(true)}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-          >
+          <ActionButton variant="accent" onClick={() => setShowInvite(true)}>
             Invite Staff
-          </button>
+          </ActionButton>
         }
       />
 
       {loading ? (
         <p className="text-muted py-12 text-center">Loading staff...</p>
       ) : staffList.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
-          <p className="text-muted">No staff members yet.</p>
-        </div>
+        <EmptyState
+          icon="&#x1F465;"
+          title="No staff members yet"
+          description="Invite your first staff member to get started."
+          action={{ label: "Invite Staff", onClick: () => setShowInvite(true) }}
+        />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-card-border">
           <table className="w-full text-sm">
@@ -224,15 +225,7 @@ export default function StaffPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                          member.active
-                            ? "bg-green-900/50 text-green-400"
-                            : "bg-card-hover text-muted"
-                        }`}
-                      >
-                        {member.active ? "Active" : "Inactive"}
-                      </span>
+                      <SharedStatusBadge status={member.active ? "active" : "inactive"} size="xs" />
                     </td>
                     <td className="px-4 py-3">
                       {member.has_pin ? (
@@ -261,18 +254,13 @@ export default function StaffPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {!isCurrentUser && member.role !== "owner" && (
-                        <button
-                          onClick={() =>
-                            handleToggleActive(member.id, !member.active)
-                          }
-                          className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
-                            member.active
-                              ? "bg-red-900/30 text-red-400 hover:bg-red-900/50"
-                              : "bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50"
-                          }`}
+                        <ActionButton
+                          variant={member.active ? "destructive" : "primary"}
+                          size="sm"
+                          onClick={() => handleToggleActive(member.id, !member.active)}
                         >
                           {member.active ? "Deactivate" : "Reactivate"}
-                        </button>
+                        </ActionButton>
                       )}
                     </td>
                   </tr>

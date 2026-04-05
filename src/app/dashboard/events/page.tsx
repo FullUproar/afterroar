@@ -5,6 +5,7 @@ import { useStore } from '@/lib/store-context';
 import { GameEvent, EventCheckin, Customer, formatCents, parseDollars } from '@/lib/types';
 import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
+import { EmptyState } from '@/components/shared/ui';
 
 type EventWithCount = GameEvent & { checkin_count: number; rsvp_count: number | null };
 
@@ -307,15 +308,12 @@ export default function EventsPage() {
       {loading ? (
         <p className="text-muted">Loading events...</p>
       ) : events.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-          <p className="text-muted">No events yet.</p>
-          <button
-            onClick={() => { setShowForm(true); setCreateAsHQ(false); }}
-            className="mt-3 px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            Create Your First Event
-          </button>
-        </div>
+        <EmptyState
+          icon="&#x1F3AE;"
+          title="No events yet"
+          description="Create your first event to start tracking attendance and check-ins."
+          action={{ label: "Create Your First Event", onClick: () => { setShowForm(true); setCreateAsHQ(false); } }}
+        />
       ) : viewMode === "calendar" ? (
         <EventCalendar events={events} expandedId={expandedId} onEventClick={(id) => setExpandedId(expandedId === id ? null : id)} />
       ) : (

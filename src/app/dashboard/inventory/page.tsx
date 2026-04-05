@@ -11,6 +11,7 @@ import {
 } from "@/lib/types";
 import { StatusBadge } from "@/components/mobile-card";
 import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/shared/ui";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 import { useScanner } from "@/hooks/use-scanner";
@@ -600,21 +601,12 @@ export default function InventoryPage() {
           Loading inventory...
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-          <p className="text-muted">
-            {searchQuery
-              ? "No items match your search."
-              : "No inventory items yet."}
-          </p>
-          {!searchQuery && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="mt-3 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-            >
-              Add Your First Item
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon="&#x1F4E6;"
+          title={searchQuery ? "No items match your search" : "No inventory items yet"}
+          description={searchQuery ? undefined : "Add your first item to start tracking inventory."}
+          action={!searchQuery ? { label: "Add Your First Item", onClick: () => setShowAddForm(true) } : undefined}
+        />
       ) : (
         <>
           {/* Mobile sort controls */}

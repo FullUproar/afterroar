@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatCents } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
+import { StatusBadge, ActionButton, EmptyState, SectionHeader } from "@/components/shared/ui";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -324,18 +325,14 @@ ${sections.map((s: typeof sections[number]) => `
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader title="Fulfillment Queue" />
-        <button
+        <ActionButton
+          variant="secondary"
           onClick={printPullSheet}
-          disabled={pullSheetLoading}
-          className="py-2 px-4 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 shrink-0"
+          loading={pullSheetLoading}
         >
-          {pullSheetLoading ? (
-            <span className="animate-spin inline-block">&#9696;</span>
-          ) : (
-            <span>&#x1F5A8;</span>
-          )}
+          {!pullSheetLoading && <span>&#x1F5A8;</span>}
           Print Pull Sheet
-        </button>
+        </ActionButton>
       </div>
 
       {/* Tab bar with counts */}
@@ -374,17 +371,13 @@ ${sections.map((s: typeof sections[number]) => `
 
       {/* Empty state */}
       {!loading && orders.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <span className="text-4xl block mx-auto mb-3 opacity-50">&#x2714;</span>
-          <p className="text-lg font-medium">
-            {tab === "unfulfilled" ? "All caught up!" : "No orders"}
-          </p>
-          <p className="text-sm mt-1">
-            {tab === "unfulfilled"
-              ? "No orders waiting to be fulfilled"
-              : "No orders match this filter"}
-          </p>
-        </div>
+        <EmptyState
+          icon="&#x2714;"
+          title={tab === "unfulfilled" ? "All caught up!" : "No orders"}
+          description={tab === "unfulfilled"
+            ? "No orders waiting to be fulfilled"
+            : "No orders match this filter"}
+        />
       )}
 
       {/* Order list */}
@@ -413,9 +406,7 @@ ${sections.map((s: typeof sections[number]) => `
                     <span className="font-mono font-semibold text-sm">
                       #{order.order_number}
                     </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${FULFILLMENT_COLORS[order.fulfillment_status] || ""}`}>
-                      {order.fulfillment_status}
-                    </span>
+                    <StatusBadge status={order.fulfillment_status} size="xs" />
                     <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
                       {SOURCE_LABELS[order.source] || order.source}
                     </span>
@@ -468,9 +459,7 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* Pick list — merchant items */}
                   {merchantItems.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                        Pick List
-                      </h4>
+                      <SectionHeader className="text-xs uppercase tracking-wide mb-2">Pick List</SectionHeader>
                       <div className="space-y-1.5">
                         {merchantItems.map((item) => (
                           <div
@@ -558,9 +547,7 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* Existing labels */}
                   {order.shipping_labels.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                        Shipping Labels
-                      </h4>
+                      <SectionHeader className="text-xs uppercase tracking-wide mb-2">Shipping Labels</SectionHeader>
                       {order.shipping_labels.map((label) => (
                         <div
                           key={label.id}
@@ -628,24 +615,22 @@ ${sections.map((s: typeof sections[number]) => `
                             ))}
                           </div>
                           <div className="flex gap-2 mt-3">
-                            <button
+                            <ActionButton
+                              variant="accent"
                               onClick={() => generateLabel(order.id)}
-                              disabled={!selectedRate || generatingLabel}
-                              className="flex-1 py-2 px-4 bg-[#FF8200] text-white rounded-lg font-medium text-sm hover:bg-[#e67400] disabled:opacity-50 flex items-center justify-center gap-2"
+                              disabled={!selectedRate}
+                              loading={generatingLabel}
+                              className="flex-1"
                             >
-                              {generatingLabel ? (
-                                <span className="animate-spin inline-block">&#9696;</span>
-                              ) : (
-                                <span>&#x1F5A8;</span>
-                              )}
+                              {!generatingLabel && <span>&#x1F5A8;</span>}
                               {generatingLabel ? "Creating..." : "Buy Label"}
-                            </button>
-                            <button
+                            </ActionButton>
+                            <ActionButton
+                              variant="secondary"
                               onClick={() => { setRateOrderId(null); setRates([]); }}
-                              className="py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
                             >
                               Cancel
-                            </button>
+                            </ActionButton>
                           </div>
                         </>
                       )}
@@ -662,53 +647,60 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* Action buttons */}
                   <div className="flex gap-2 flex-wrap pt-2 border-t border-gray-100 dark:border-gray-800">
                     {order.fulfillment_status === "unfulfilled" && (
-                      <button
+                      <ActionButton
+                        variant="primary"
+                        size="sm"
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "picking" })}
-                        disabled={actionLoading === order.id}
-                        className="py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                        loading={actionLoading === order.id}
                       >
-                        {actionLoading === order.id ? <span className="animate-spin inline-block">&#9696;</span> : "&#x1F4E6;"}
+                        {actionLoading !== order.id && <span>&#x1F4E6;</span>}
                         Start Picking
-                      </button>
+                      </ActionButton>
                     )}
 
                     {(order.fulfillment_status === "picking" || order.fulfillment_status === "unfulfilled") && (
-                      <button
+                      <ActionButton
+                        variant="primary"
+                        size="sm"
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "packed" })}
                         disabled={actionLoading === order.id}
-                        className="py-2 px-4 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
                       >
                         &#x1F4E6; Mark Packed
-                      </button>
+                      </ActionButton>
                     )}
 
                     {(order.fulfillment_status === "picking" || order.fulfillment_status === "packed") && !isShowingRates && (
-                      <button
+                      <ActionButton
+                        variant="accent"
+                        size="sm"
                         onClick={() => fetchRates(order)}
-                        className="py-2 px-4 bg-[#FF8200] text-white rounded-lg text-sm font-medium hover:bg-[#e67400] flex items-center gap-2"
                       >
                         &#x1F69A; Buy Shipping Label
-                      </button>
+                      </ActionButton>
                     )}
 
                     {(order.fulfillment_status === "packed" || order.shipping_labels.length > 0) && (
-                      <button
+                      <ActionButton
+                        variant="primary"
+                        size="sm"
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "shipped" })}
-                        disabled={actionLoading === order.id}
-                        className="py-2 px-4 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                        loading={actionLoading === order.id}
                       >
-                        &#x1F69A; Mark Shipped
-                      </button>
+                        {actionLoading !== order.id && <span>&#x1F69A;</span>}
+                        Mark Shipped
+                      </ActionButton>
                     )}
 
                     {order.fulfillment_status === "shipped" && (
-                      <button
+                      <ActionButton
+                        variant="primary"
+                        size="sm"
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "delivered" })}
-                        disabled={actionLoading === order.id}
-                        className="py-2 px-4 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
+                        loading={actionLoading === order.id}
                       >
-                        &#x2705; Mark Delivered
-                      </button>
+                        {actionLoading !== order.id && <span>&#x2705;</span>}
+                        Mark Delivered
+                      </ActionButton>
                     )}
                   </div>
                 </div>

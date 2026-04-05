@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
 import { formatCents } from "@/lib/types";
 import { FeatureGate } from "@/components/feature-gate";
+import { StatCard, SectionHeader, EmptyState } from "@/components/shared/ui";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -180,15 +181,14 @@ export default function MarginsPage() {
           <>
             {/* Summary cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <SummaryCard label="Revenue" value={formatCents(data.summary.revenue_cents)} />
-              <SummaryCard label="COGS" value={formatCents(data.summary.cogs_cents)} />
-              <SummaryCard
+              <StatCard label="Revenue" value={formatCents(data.summary.revenue_cents)} />
+              <StatCard label="COGS" value={formatCents(data.summary.cogs_cents)} />
+              <StatCard
                 label="Gross Margin"
                 value={`${data.summary.margin_percent}%`}
-                accent={data.summary.margin_percent >= 40}
-                warn={data.summary.margin_percent < 25 && data.summary.margin_percent > 0}
+                accent={data.summary.margin_percent >= 40 ? "green" : data.summary.margin_percent < 25 && data.summary.margin_percent > 0 ? "amber" : "default"}
               />
-              <SummaryCard label="Gross Profit" value={formatCents(data.summary.margin_cents)} />
+              <StatCard label="Gross Profit" value={formatCents(data.summary.margin_cents)} />
             </div>
 
             <div className="text-xs text-muted">
@@ -197,7 +197,7 @@ export default function MarginsPage() {
 
             {/* By category */}
             <section className="space-y-3">
-              <h2 className="text-base font-semibold text-foreground">Margin by Category</h2>
+              <SectionHeader>Margin by Category</SectionHeader>
               {data.by_category.length === 0 ? (
                 <p className="text-sm text-muted">No category data for this period.</p>
               ) : (
@@ -263,13 +263,11 @@ export default function MarginsPage() {
         )}
 
         {!loading && !error && data && data.summary.transaction_count === 0 && (
-          <div className="rounded-xl border border-card-border bg-card p-8 text-center">
-            <p className="text-2xl mb-2">{"△"}</p>
-            <p className="text-muted">No sales with COGS data in this period.</p>
-            <p className="text-xs text-muted mt-1">
-              Margin tracking requires cost_cents on inventory items and COGS metadata on sales.
-            </p>
-          </div>
+          <EmptyState
+            icon={"\u25B3"}
+            title="No sales with COGS data in this period"
+            description="Margin tracking requires cost_cents on inventory items and COGS metadata on sales."
+          />
         )}
       </div>
     </FeatureGate>
@@ -279,31 +277,6 @@ export default function MarginsPage() {
 /* ------------------------------------------------------------------ */
 /*  Sub-components                                                      */
 /* ------------------------------------------------------------------ */
-
-function SummaryCard({
-  label,
-  value,
-  accent,
-  warn,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  warn?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-card-border bg-card p-4">
-      <p className="text-xs text-muted uppercase tracking-wide">{label}</p>
-      <p
-        className={`mt-1 text-xl font-bold ${
-          accent ? "text-green-400" : warn ? "text-amber-400" : "text-foreground"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function MarginBadge({ percent }: { percent: number }) {
   const color =
