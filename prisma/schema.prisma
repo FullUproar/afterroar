@@ -69,6 +69,9 @@ model PosStore {
   hq_outbox            PosHqOutbox[]
   shipping_labels      PosShippingLabel[]
   packaging_types      PosPackagingType[]
+  hosted_network_tournaments  PosNetworkTournament[]
+  network_tournament_entries  PosNetworkTournamentStore[]
+  network_player_ratings      PosNetworkPlayerRating[]
 
   @@map("pos_stores")
 }
@@ -1314,4 +1317,68 @@ model PosPackagingType {
 
   @@index([store_id])
   @@map("pos_packaging_types")
+}
+
+// ============================================================
+// AFTERROAR NETWORK
+// ============================================================
+
+model PosNetworkTournament {
+  id                    String    @id @default(cuid())
+  name                  String
+  format                String?
+  game                  String    @default("MTG")
+  host_store_id         String
+  starts_at             DateTime  @db.Timestamptz()
+  ends_at               DateTime? @db.Timestamptz()
+  entry_fee_cents       Int       @default(0)
+  max_players_per_store Int?
+  prize_pool_description String?
+  status                String    @default("upcoming") // upcoming, active, completed, cancelled
+  settings              Json      @default("{}")
+  created_at            DateTime  @default(now()) @db.Timestamptz()
+
+  host_store            PosStore  @relation(fields: [host_store_id], references: [id])
+  participating_stores  PosNetworkTournamentStore[]
+
+  @@index([status])
+  @@map("pos_network_tournaments")
+}
+
+model PosNetworkTournamentStore {
+  id                     String   @id @default(cuid())
+  network_tournament_id  String
+  store_id               String
+  local_tournament_id    String?
+  player_count           Int      @default(0)
+  joined_at              DateTime @default(now()) @db.Timestamptz()
+
+  network_tournament PosNetworkTournament @relation(fields: [network_tournament_id], references: [id], onDelete: Cascade)
+  store              PosStore             @relation(fields: [store_id], references: [id])
+
+  @@index([network_tournament_id])
+  @@map("pos_network_tournament_stores")
+}
+
+model PosNetworkPlayerRating {
+  id             String    @id @default(cuid())
+  player_name    String
+  customer_id    String?
+  store_id       String
+  game           String    @default("MTG")
+  format         String?
+  rating         Int       @default(1200)
+  wins           Int       @default(0)
+  losses         Int       @default(0)
+  draws          Int       @default(0)
+  events_played  Int       @default(0)
+  last_played_at DateTime? @db.Timestamptz()
+  created_at     DateTime  @default(now()) @db.Timestamptz()
+  updated_at     DateTime  @default(now()) @db.Timestamptz()
+
+  store PosStore @relation(fields: [store_id], references: [id])
+
+  @@index([game, format])
+  @@index([store_id])
+  @@map("pos_network_player_ratings")
 }

@@ -55,6 +55,10 @@ const NAV_GROUPS: NavGroup[] = [
     hrefs: ["/dashboard", "/dashboard/reports", "/dashboard/reports/inventory-health", "/dashboard/reports/sales", "/dashboard/reports/margins", "/dashboard/reports/staff", "/dashboard/reports/channels", "/dashboard/cash-flow"],
   },
   {
+    label: "Afterroar Network",
+    hrefs: ["/dashboard/network"],
+  },
+  {
     label: "Admin",
     hrefs: [
       "/dashboard/staff",

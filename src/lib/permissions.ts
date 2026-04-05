@@ -273,6 +273,7 @@ export function canAccess(
     "/dashboard/orders": "checkout",
     "/dashboard/fulfillment": "manage_orders",
     "/dashboard/help": "checkout",
+    "/dashboard/network": "store.settings",
     "/dashboard/issues": "reports",
     "/dashboard/ops-log": "ops_log",
     "/dashboard/onboarding": "store.settings",
@@ -343,6 +344,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/billing", label: "Billing", icon: "\u{1F4B3}", permission: "store.settings" },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙", permission: "store.settings" },
   { href: "/dashboard/help", label: "Help", icon: "?", permission: "checkout" },
+  { href: "/dashboard/network", label: "Network", icon: "\u25C9", permission: "store.settings" },
 ];
 
 /* ------------------------------------------------------------------ */
