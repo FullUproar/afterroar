@@ -1,0 +1,24 @@
+{
+  "name": "Afterroar Ops Monitor",
+  "short_name": "Ops Monitor",
+  "description": "Real-time system health monitoring",
+  "start_url": "/ops",
+  "scope": "/ops",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#FF8200",
+  "icons": [
+    {
+      "src": "/logo-ring-favicon.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-ring.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

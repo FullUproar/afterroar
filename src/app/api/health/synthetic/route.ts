@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendPushToStore } from "@/lib/web-push";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/health/synthetic — synthetic transaction bot               */
@@ -136,6 +137,51 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     // Log storage is non-critical
+  }
+
+  // Push notifications on failure or recovery
+  try {
+    const store = await prisma.posStore.findUnique({
+      where: { id: testStore.id },
+      select: { settings: true },
+    });
+    const settings = (store?.settings ?? {}) as Record<string, unknown>;
+    const subs = (settings.push_subscriptions ?? []) as Array<unknown>;
+
+    if (subs.length > 0) {
+      // Check previous result for recovery detection
+      const prevLog = await prisma.posOperationalLog.findFirst({
+        where: {
+          store_id: testStore.id,
+          event_type: "synthetic_health_check",
+          NOT: { created_at: { gte: new Date(Date.now() - 1000) } }, // exclude this run
+        },
+        orderBy: { created_at: "desc" },
+        select: { severity: true },
+      });
+      const wasFailing = prevLog?.severity === "warn";
+
+      if (!allPassed) {
+        // Alert: tests failing
+        const failedTests = results.filter((r) => !r.ok).map((r) => r.test).join(", ");
+        await sendPushToStore(settings, {
+          title: "System Alert",
+          body: `Failed: ${failedTests}`,
+          tag: "ops-failure",
+          url: "/ops",
+        });
+      } else if (wasFailing && allPassed) {
+        // Recovery notification
+        await sendPushToStore(settings, {
+          title: "All Systems Recovered",
+          body: `All ${results.length} checks passing — avg ${avgMs}ms`,
+          tag: "ops-recovery",
+          url: "/ops",
+        });
+      }
+    }
+  } catch {
+    // Push notification is non-critical
   }
 
   return NextResponse.json({
