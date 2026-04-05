@@ -1058,23 +1058,30 @@ export async function generateInsights(
       // Lookup legalities from catalog (shared table — use global prisma)
       const catalogCards = oracleIds.length > 0 ? await prisma.posCatalogProduct.findMany({
         where: { oracle_id: { in: oracleIds.slice(0, 200) } },
-        select: { oracle_id: true, legalities: true },
+        select: { oracle_id: true, scryfall_id: true, legalities: true, set_code: true },
       }) : [];
 
-      const legalityMap = new Map(catalogCards.map((c) => [c.oracle_id, c.legalities as Record<string, string> | null]));
+      const legalityMap = new Map(catalogCards.map((c) => [c.oracle_id, {
+        legalities: c.legalities as Record<string, string> | null,
+        scryfall_id: c.scryfall_id,
+        set_code: c.set_code,
+      }]));
 
       let rotatingValue = 0;
       let rotatingCount = 0;
-      const rotatingCards: Array<{ name: string; price_cents: number; quantity: number; total_cents: number }> = [];
+      const rotatingCards: Array<{ name: string; price_cents: number; quantity: number; total_cents: number; sources: Array<{ label: string; url: string }> }> = [];
       for (const item of tcgSingles) {
         if (!item.oracle_id) continue;
-        const legalities = legalityMap.get(item.oracle_id);
-        if (!legalities) continue;
-        if (legalities.standard === "legal" && legalities.future === "not_legal") {
+        const catalog = legalityMap.get(item.oracle_id);
+        if (!catalog?.legalities) continue;
+        if (catalog.legalities.standard === "legal" && catalog.legalities.future === "not_legal") {
           const total = item.price_cents * item.quantity;
           rotatingValue += total;
           rotatingCount++;
-          rotatingCards.push({ name: item.name, price_cents: item.price_cents, quantity: item.quantity, total_cents: total });
+          const sources: Array<{ label: string; url: string }> = [];
+          if (catalog.scryfall_id) sources.push({ label: "Scryfall", url: `https://scryfall.com/card/${catalog.set_code || ""}/${catalog.scryfall_id}` });
+          sources.push({ label: "MTGGoldfish", url: `https://www.mtggoldfish.com/price/${encodeURIComponent(item.name)}` });
+          rotatingCards.push({ name: item.name, price_cents: item.price_cents, quantity: item.quantity, total_cents: total, sources });
         }
       }
 
@@ -1093,7 +1100,10 @@ export async function generateInsights(
             total_value_cents: rotatingValue,
             card_count: rotatingCount,
             cards: rotatingCards.slice(0, 20),
-            source: "Scryfall legalities (synced daily)",
+            sources: [
+              { label: "Scryfall", url: "https://scryfall.com", note: "Format legalities synced daily" },
+              { label: "WotC Rotation", url: "https://magic.wizards.com/en/news/announcements/rotation", note: "Official Standard rotation schedule" },
+            ],
           },
         });
       }
@@ -1110,30 +1120,36 @@ export async function generateInsights(
 
     if (pricedSingles.length > 0) {
       const oracleIds = pricedSingles.map((s) => s.oracle_id).filter(Boolean) as string[];
-      const catalogCards = oracleIds.length > 0 ? await prisma.posCatalogProduct.findMany({
+      const catalogCards2 = oracleIds.length > 0 ? await prisma.posCatalogProduct.findMany({
         where: { oracle_id: { in: oracleIds.slice(0, 200) } },
-        select: { oracle_id: true, name: true, prices: true },
+        select: { oracle_id: true, name: true, prices: true, scryfall_id: true, set_code: true },
       }) : [];
 
-      const priceMap = new Map(catalogCards.map((c) => {
+      const priceMap = new Map(catalogCards2.map((c) => {
         const prices = (c.prices ?? {}) as Record<string, string>;
         const marketCents = prices.usd ? Math.round(parseFloat(prices.usd) * 100) : 0;
-        return [c.oracle_id, marketCents];
+        return [c.oracle_id, { marketCents, scryfall_id: c.scryfall_id, set_code: c.set_code }];
       }));
 
-      const underpriced: Array<{ name: string; storeCents: number; marketCents: number; qty: number }> = [];
-      const overpriced: Array<{ name: string; storeCents: number; marketCents: number; qty: number }> = [];
+      type PriceCard = { name: string; storeCents: number; marketCents: number; qty: number; sources: Array<{ label: string; url: string }> };
+      const underpriced: PriceCard[] = [];
+      const overpriced: PriceCard[] = [];
 
       for (const item of pricedSingles) {
         if (!item.oracle_id) continue;
-        const marketCents = priceMap.get(item.oracle_id);
-        if (!marketCents || marketCents < 100) continue; // Skip sub-$1 cards
+        const priceData = priceMap.get(item.oracle_id);
+        if (!priceData || priceData.marketCents < 100) continue;
 
-        const ratio = marketCents / item.price_cents;
+        const ratio = priceData.marketCents / item.price_cents;
+        const sources: Array<{ label: string; url: string }> = [];
+        if (priceData.scryfall_id) sources.push({ label: "Scryfall", url: `https://scryfall.com/card/${priceData.set_code || ""}/${priceData.scryfall_id}` });
+        sources.push({ label: "TCGPlayer", url: `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(item.name)}` });
+        sources.push({ label: "MTGGoldfish", url: `https://www.mtggoldfish.com/price/${encodeURIComponent(item.name)}` });
+
         if (ratio > 1.3) {
-          underpriced.push({ name: item.name, storeCents: item.price_cents, marketCents, qty: item.quantity });
+          underpriced.push({ name: item.name, storeCents: item.price_cents, marketCents: priceData.marketCents, qty: item.quantity, sources });
         } else if (ratio < 0.7) {
-          overpriced.push({ name: item.name, storeCents: item.price_cents, marketCents, qty: item.quantity });
+          overpriced.push({ name: item.name, storeCents: item.price_cents, marketCents: priceData.marketCents, qty: item.quantity, sources });
         }
       }
 
@@ -1162,8 +1178,13 @@ export async function generateInsights(
               market_price_cents: c.marketCents,
               quantity: c.qty,
               gap_cents: (c.marketCents - c.storeCents) * c.qty,
+              sources: c.sources,
             })),
-            source: "Scryfall market prices (synced daily)",
+            sources: [
+              { label: "Scryfall", url: "https://scryfall.com", note: "Market prices synced daily" },
+              { label: "TCGPlayer", url: "https://www.tcgplayer.com", note: "US marketplace reference" },
+              { label: "MTGGoldfish", url: "https://www.mtggoldfish.com", note: "Price history & trends" },
+            ],
           },
         });
       }
@@ -1186,8 +1207,12 @@ export async function generateInsights(
               store_price_cents: c.storeCents,
               market_price_cents: c.marketCents,
               quantity: c.qty,
+              sources: c.sources,
             })),
-            source: "Scryfall market prices (synced daily)",
+            sources: [
+              { label: "Scryfall", url: "https://scryfall.com", note: "Market prices synced daily" },
+              { label: "TCGPlayer", url: "https://www.tcgplayer.com", note: "US marketplace reference" },
+            ],
           },
         });
       }
