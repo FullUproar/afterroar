@@ -1,4 +1,5 @@
 import { type TenantPrismaClient } from "./tenant-prisma";
+import { prisma } from "./prisma";
 import { formatCents } from "./types";
 import { getStoreSettings, type StoreSettings } from "./store-settings-shared";
 
@@ -1042,6 +1043,123 @@ export async function generateInsights(
       category: "staff",
     });
   }
+
+  // ---- Rotation Risk ----
+  try {
+    const tcgSingles = await db.posInventoryItem.findMany({
+      where: { active: true, quantity: { gt: 0 }, category: "tcg_single", oracle_id: { not: null } },
+      select: { oracle_id: true, name: true, price_cents: true, quantity: true },
+    });
+
+    if (tcgSingles.length > 0) {
+      const oracleIds = tcgSingles.map((s) => s.oracle_id).filter(Boolean) as string[];
+      // Lookup legalities from catalog (shared table — use global prisma)
+      const catalogCards = oracleIds.length > 0 ? await prisma.posCatalogProduct.findMany({
+        where: { oracle_id: { in: oracleIds.slice(0, 200) } },
+        select: { oracle_id: true, legalities: true },
+      }) : [];
+
+      const legalityMap = new Map(catalogCards.map((c) => [c.oracle_id, c.legalities as Record<string, string> | null]));
+
+      let rotatingValue = 0;
+      let rotatingCount = 0;
+      for (const item of tcgSingles) {
+        if (!item.oracle_id) continue;
+        const legalities = legalityMap.get(item.oracle_id);
+        if (!legalities) continue;
+        // Card is legal in standard but not legal in future = rotating
+        if (legalities.standard === "legal" && legalities.future === "not_legal") {
+          rotatingValue += item.price_cents * item.quantity;
+          rotatingCount++;
+        }
+      }
+
+      if (rotatingCount > 0 && rotatingValue > 1000) {
+        insights.push({
+          id: "rotation-risk",
+          type: rotatingValue > 10000 ? "warning" : "action",
+          priority: rotatingValue > 10000 ? "high" : "medium",
+          icon: "\u{1F4C5}",
+          title: `${rotatingCount} cards rotating out of Standard`,
+          message: `You're holding ${formatCents(rotatingValue)} in cards that will rotate out of Standard. Consider discounting or moving them before they drop in value.`,
+          action: { label: "View Inventory", href: "/dashboard/inventory" },
+          category: "inventory",
+        });
+      }
+    }
+  } catch { /* non-critical */ }
+
+  // ---- Price Spike Detection ----
+  try {
+    const pricedSingles = await db.posInventoryItem.findMany({
+      where: { active: true, quantity: { gt: 0 }, category: "tcg_single", oracle_id: { not: null }, price_cents: { gt: 0 } },
+      select: { oracle_id: true, name: true, price_cents: true, quantity: true },
+      take: 500,
+    });
+
+    if (pricedSingles.length > 0) {
+      const oracleIds = pricedSingles.map((s) => s.oracle_id).filter(Boolean) as string[];
+      const catalogCards = oracleIds.length > 0 ? await prisma.posCatalogProduct.findMany({
+        where: { oracle_id: { in: oracleIds.slice(0, 200) } },
+        select: { oracle_id: true, name: true, prices: true },
+      }) : [];
+
+      const priceMap = new Map(catalogCards.map((c) => {
+        const prices = (c.prices ?? {}) as Record<string, string>;
+        const marketCents = prices.usd ? Math.round(parseFloat(prices.usd) * 100) : 0;
+        return [c.oracle_id, marketCents];
+      }));
+
+      const underpriced: Array<{ name: string; storeCents: number; marketCents: number; qty: number }> = [];
+      const overpriced: Array<{ name: string; storeCents: number; marketCents: number; qty: number }> = [];
+
+      for (const item of pricedSingles) {
+        if (!item.oracle_id) continue;
+        const marketCents = priceMap.get(item.oracle_id);
+        if (!marketCents || marketCents < 100) continue; // Skip sub-$1 cards
+
+        const ratio = marketCents / item.price_cents;
+        if (ratio > 1.3) {
+          underpriced.push({ name: item.name, storeCents: item.price_cents, marketCents, qty: item.quantity });
+        } else if (ratio < 0.7) {
+          overpriced.push({ name: item.name, storeCents: item.price_cents, marketCents, qty: item.quantity });
+        }
+      }
+
+      // Sort by biggest gap
+      underpriced.sort((a, b) => (b.marketCents - b.storeCents) * b.qty - (a.marketCents - a.storeCents) * a.qty);
+      overpriced.sort((a, b) => (b.storeCents - b.marketCents) * b.qty - (a.storeCents - a.marketCents) * a.qty);
+
+      if (underpriced.length > 0) {
+        const top3 = underpriced.slice(0, 3);
+        const lostRevenue = underpriced.reduce((s, c) => s + (c.marketCents - c.storeCents) * c.qty, 0);
+        insights.push({
+          id: "price-spike-up",
+          type: "warning",
+          priority: lostRevenue > 5000 ? "high" : "medium",
+          icon: "\u{1F4C8}",
+          title: `${underpriced.length} cards priced below market`,
+          message: `${top3.map((c) => `${c.name} (yours: ${formatCents(c.storeCents)}, market: ${formatCents(c.marketCents)})`).join("; ")}${underpriced.length > 3 ? ` and ${underpriced.length - 3} more` : ""}. Potential ${formatCents(lostRevenue)} in missed revenue.`,
+          action: { label: "Reprice", href: "/dashboard/singles" },
+          category: "inventory",
+        });
+      }
+
+      if (overpriced.length > 0) {
+        const top3 = overpriced.slice(0, 3);
+        insights.push({
+          id: "price-spike-down",
+          type: "opportunity",
+          priority: "low",
+          icon: "\u{1F4C9}",
+          title: `${overpriced.length} cards priced above market`,
+          message: `${top3.map((c) => `${c.name} (yours: ${formatCents(c.storeCents)}, market: ${formatCents(c.marketCents)})`).join("; ")}${overpriced.length > 3 ? ` and ${overpriced.length - 3} more` : ""}. These may not sell at current prices.`,
+          action: { label: "Review Prices", href: "/dashboard/singles" },
+          category: "inventory",
+        });
+      }
+    }
+  } catch { /* non-critical */ }
 
   // ---- Sort by priority ----
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
