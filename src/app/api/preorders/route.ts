@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     // If there's a deposit, create a ledger entry
     if (body.deposit_cents && body.deposit_cents > 0 && body.customer_id) {
-      await prisma.posLedgerEntry.create({
+      await db.posLedgerEntry.create({
         data: {
           store_id: storeId,
           type: "sale",

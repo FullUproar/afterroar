@@ -43,7 +43,7 @@ interface ReceiveBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("inventory.adjust");
+    const { staff, storeId, db } = await requirePermission("inventory.adjust");
 
     let body: ReceiveBody;
     try {
@@ -62,15 +62,15 @@ export async function POST(request: NextRequest) {
     const skus = items.map((i) => i.sku).filter(Boolean) as string[];
 
     const existingByBarcode = barcodes.length > 0
-      ? await prisma.posInventoryItem.findMany({
-          where: { store_id: storeId, barcode: { in: barcodes } },
+      ? await db.posInventoryItem.findMany({
+          where: { barcode: { in: barcodes } },
           select: { id: true, barcode: true, name: true, quantity: true },
         })
       : [];
 
     const existingBySku = skus.length > 0
-      ? await prisma.posInventoryItem.findMany({
-          where: { store_id: storeId, sku: { in: skus } },
+      ? await db.posInventoryItem.findMany({
+          where: { sku: { in: skus } },
           select: { id: true, sku: true, name: true, quantity: true },
         })
       : [];

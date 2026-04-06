@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
-import { prisma } from "@/lib/prisma";
 
 /* ------------------------------------------------------------------ */
 /*  Consignment API                                                    */
@@ -86,7 +85,8 @@ export async function POST(request: NextRequest) {
       const payoutAmount = salePrice - commission;
 
       // Create payout ledger entry (credit to consignor)
-      const ledgerEntry = await prisma.posLedgerEntry.create({
+      // SECURITY: use tenant-scoped db for ledger entries
+      const ledgerEntry = await db.posLedgerEntry.create({
         data: {
           store_id: storeId,
           type: "credit_issue",
@@ -104,7 +104,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Credit consignor's balance
-      await prisma.posCustomer.update({
+      // SECURITY: use tenant-scoped db for customer updates
+      await db.posCustomer.update({
         where: { id: item.consignor_id, store_id: storeId },
         data: { credit_balance_cents: { increment: payoutAmount } },
       });

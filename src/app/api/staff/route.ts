@@ -8,10 +8,9 @@ import { hash } from "bcryptjs";
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { storeId } = await requirePermission("staff.manage");
+    const { db } = await requirePermission("staff.manage");
 
-    const staff = await prisma.posStaff.findMany({
-      where: { store_id: storeId },
+    const staff = await db.posStaff.findMany({
       include: {
         user: { select: { email: true, displayName: true, avatarUrl: true } },
       },
@@ -42,7 +41,7 @@ export async function GET() {
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { storeId, role: callerRole } = await requirePermission("staff.manage");
+    const { storeId, role: callerRole, db } = await requirePermission("staff.manage");
 
     let body: { email: string; name: string; role: string };
     try {
@@ -96,8 +95,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if staff record already exists
-    const existing = await prisma.posStaff.findFirst({
-      where: { user_id: user.id, store_id: storeId },
+    const existing = await db.posStaff.findFirst({
+      where: { user_id: user.id },
     });
 
     if (existing) {
@@ -108,7 +107,7 @@ export async function POST(request: NextRequest) {
         );
       }
       // Reactivate
-      const updated = await prisma.posStaff.update({
+      const updated = await db.posStaff.update({
         where: { id: existing.id },
         data: { active: true, role, name: name.trim() },
       });
@@ -116,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new staff record
-    const staff = await prisma.posStaff.create({
+    const staff = await db.posStaff.create({
       data: {
         user_id: user.id,
         store_id: storeId,
@@ -139,7 +138,7 @@ export async function POST(request: NextRequest) {
 /* ------------------------------------------------------------------ */
 export async function PATCH(request: NextRequest) {
   try {
-    const { storeId, role: callerRole, staff: callerStaff } =
+    const { storeId, role: callerRole, staff: callerStaff, db } =
       await requirePermission("staff.manage");
 
     let body: { staff_id: string; role?: string; active?: boolean };
@@ -166,8 +165,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const target = await prisma.posStaff.findFirst({
-      where: { id: staff_id, store_id: storeId },
+    const target = await db.posStaff.findFirst({
+      where: { id: staff_id },
     });
 
     if (!target) {
@@ -201,7 +200,8 @@ export async function PATCH(request: NextRequest) {
       updateData.active = active;
     }
 
-    const updated = await prisma.posStaff.update({
+    // SECURITY: scope update to store_id via tenant client
+    const updated = await db.posStaff.update({
       where: { id: staff_id },
       data: updateData,
     });

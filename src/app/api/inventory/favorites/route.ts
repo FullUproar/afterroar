@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
-import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
 
     // Find top 6 items by sales frequency in the last 7 days
     // We look at ledger entries of type 'sale' and count item occurrences in metadata
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentSales = await prisma.posLedgerEntry.findMany({
+    const recentSales = await db.posLedgerEntry.findMany({
       where: {
-        store_id: storeId,
         type: "sale",
         created_at: { gte: sevenDaysAgo },
       },
@@ -48,10 +46,9 @@ export async function GET() {
       .map(([id]) => id);
 
     // Fetch full item details
-    const items = await prisma.posInventoryItem.findMany({
+    const items = await db.posInventoryItem.findMany({
       where: {
         id: { in: topIds },
-        store_id: storeId,
         active: true,
         quantity: { gt: 0 },
       },

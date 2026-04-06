@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -8,7 +7,7 @@ import { requirePermission, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function GET(request: NextRequest) {
   try {
-    const { storeId } = await requirePermission("returns");
+    const { storeId, db } = await requirePermission("returns");
 
     const url = new URL(request.url);
     const q = url.searchParams.get("q")?.trim();
@@ -27,9 +26,8 @@ export async function GET(request: NextRequest) {
     // If searching by customer name, first find matching customer IDs
     let customerIds: string[] | undefined;
     if (q && !ledgerId) {
-      const customers = await prisma.posCustomer.findMany({
+      const customers = await db.posCustomer.findMany({
         where: {
-          store_id: storeId,
           name: { contains: q, mode: "insensitive" },
         },
         select: { id: true },
@@ -42,7 +40,7 @@ export async function GET(request: NextRequest) {
       where.customer_id = { in: customerIds };
     }
 
-    const sales = await prisma.posLedgerEntry.findMany({
+    const sales = await db.posLedgerEntry.findMany({
       where,
       orderBy: { created_at: "desc" },
       take: 20,
@@ -53,7 +51,8 @@ export async function GET(request: NextRequest) {
 
     // For each sale, fetch any existing returns to calculate already-returned quantities
     const saleIds = sales.map((s) => s.id);
-    const existingReturns = await prisma.posReturn.findMany({
+    // SECURITY: scope to store_id via tenant client
+    const existingReturns = await db.posReturn.findMany({
       where: { original_ledger_entry_id: { in: saleIds } },
       include: { items: true },
     });
@@ -83,7 +82,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const inventoryItems = await prisma.posInventoryItem.findMany({
+    const inventoryItems = await db.posInventoryItem.findMany({
       where: { id: { in: [...allItemIds] } },
       select: { id: true, name: true, category: true },
     });

@@ -62,7 +62,7 @@ interface CreateTradeInBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     let body: CreateTradeInBody;
     try {
@@ -75,9 +75,8 @@ export async function POST(request: NextRequest) {
 
     // Idempotency: if this transaction was already processed, return the existing result
     if (client_tx_id) {
-      const existing = await prisma.posLedgerEntry.findFirst({
+      const existing = await db.posLedgerEntry.findFirst({
         where: {
-          store_id: storeId,
           type: "trade_in",
           metadata: { path: ["client_tx_id"], equals: client_tx_id },
         },

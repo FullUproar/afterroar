@@ -40,13 +40,17 @@ export async function POST(request: NextRequest) {
 
     // If we already have a catalog_product_id (from lookup), just link it
     if (catalog_product_id) {
-      await prisma.posInventoryItem.update({
-        where: { id: inventory_item_id },
+      // SECURITY: scope update to store_id to prevent cross-tenant writes
+      const result = await prisma.posInventoryItem.updateMany({
+        where: { id: inventory_item_id, store_id: storeId },
         data: {
           catalog_product_id,
           shared_to_catalog: false,
         },
       });
+      if (result.count === 0) {
+        return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      }
 
       return NextResponse.json({ linked: true, catalog_product_id });
     }
@@ -116,8 +120,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Link inventory item to catalog product
-    await prisma.posInventoryItem.update({
-      where: { id: inventory_item_id },
+    // SECURITY: scope update to store_id to prevent cross-tenant writes
+    await prisma.posInventoryItem.updateMany({
+      where: { id: inventory_item_id, store_id: storeId },
       data: {
         catalog_product_id: existing.id,
         shared_to_catalog: false,

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import {
   requireStaff,
   requirePermission,
@@ -27,7 +26,7 @@ const VALID_ISSUE_TYPES = [
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     let body: {
       type: string;
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const entry = await prisma.posLedgerEntry.create({
+    const entry = await db.posLedgerEntry.create({
       data: {
         store_id: storeId,
         type: "issue_flag",
@@ -102,14 +101,13 @@ export async function POST(request: NextRequest) {
 /* ------------------------------------------------------------------ */
 export async function GET(request: NextRequest) {
   try {
-    const { storeId } = await requirePermission("reports");
+    const { db } = await requirePermission("reports");
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") ?? "open";
 
-    const issues = await prisma.posLedgerEntry.findMany({
+    const issues = await db.posLedgerEntry.findMany({
       where: {
-        store_id: storeId,
         type: "issue_flag",
         ...(status !== "all"
           ? { metadata: { path: ["status"], equals: status } }
@@ -130,7 +128,7 @@ export async function GET(request: NextRequest) {
 /* ------------------------------------------------------------------ */
 export async function PATCH(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("reports");
+    const { staff, storeId, db } = await requirePermission("reports");
 
     let body: { id: string; status?: string; resolution_notes?: string };
     try {
@@ -143,8 +141,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
-    const entry = await prisma.posLedgerEntry.findFirst({
-      where: { id: body.id, store_id: storeId, type: "issue_flag" },
+    const entry = await db.posLedgerEntry.findFirst({
+      where: { id: body.id, type: "issue_flag" },
     });
 
     if (!entry) {
@@ -152,7 +150,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const currentMetadata = (entry.metadata as Record<string, unknown>) ?? {};
-    const updated = await prisma.posLedgerEntry.update({
+    // SECURITY: scope update to store_id to prevent cross-tenant writes
+    const updated = await db.posLedgerEntry.update({
       where: { id: body.id },
       data: {
         metadata: {

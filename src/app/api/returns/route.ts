@@ -61,7 +61,7 @@ interface CreateReturnBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("returns");
+    const { staff, storeId, db } = await requirePermission("returns");
 
     let body: CreateReturnBody;
     try {
@@ -83,9 +83,8 @@ export async function POST(request: NextRequest) {
 
     // Idempotency: if this transaction was already processed, return the existing result
     if (client_tx_id) {
-      const existing = await prisma.posLedgerEntry.findFirst({
+      const existing = await db.posLedgerEntry.findFirst({
         where: {
-          store_id: storeId,
           type: "refund",
           metadata: { path: ["client_tx_id"], equals: client_tx_id },
         },
@@ -103,10 +102,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Validate original sale exists and belongs to this store
-    const originalSale = await prisma.posLedgerEntry.findFirst({
+    const originalSale = await db.posLedgerEntry.findFirst({
       where: {
         id: original_ledger_entry_id,
-        store_id: storeId,
         type: "sale",
       },
     });
@@ -118,7 +116,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Double-return prevention: check already-returned quantities
-    const existingReturns = await prisma.posReturn.findMany({
+    // SECURITY: scope to store_id via tenant client
+    const existingReturns = await db.posReturn.findMany({
       where: { original_ledger_entry_id },
       include: { items: true },
     });
@@ -273,7 +272,8 @@ export async function POST(request: NextRequest) {
       try {
         const originalMeta = (originalSale.metadata ?? {}) as Record<string, unknown>;
         // Check if points were earned on the original transaction
-        const originalPoints = await prisma.posLoyaltyEntry.findFirst({
+        // SECURITY: scope to store_id via tenant client
+        const originalPoints = await db.posLoyaltyEntry.findFirst({
           where: {
             customer_id: originalSale.customer_id,
             reference_id: original_ledger_entry_id,
@@ -284,8 +284,8 @@ export async function POST(request: NextRequest) {
 
         if (originalPoints && originalPoints.points > 0) {
           // Get current balance
-          const cust = await prisma.posCustomer.findUnique({
-            where: { id: originalSale.customer_id, store_id: storeId },
+          const cust = await db.posCustomer.findFirst({
+            where: { id: originalSale.customer_id },
             select: { loyalty_points: true, afterroar_user_id: true },
           });
 
@@ -328,9 +328,8 @@ export async function POST(request: NextRequest) {
 
         // Check return frequency — flag frequent returners
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
-        const recentReturns = await prisma.posReturn.count({
+        const recentReturns = await db.posReturn.count({
           where: {
-            store_id: storeId,
             customer_id: originalSale.customer_id,
             created_at: { gte: thirtyDaysAgo },
           },
@@ -338,8 +337,8 @@ export async function POST(request: NextRequest) {
 
         if (recentReturns >= 3) {
           // Flag the customer
-          await prisma.posCustomer.update({
-            where: { id: originalSale.customer_id, store_id: storeId },
+          await db.posCustomer.update({
+            where: { id: originalSale.customer_id },
             data: {
               tags: {
                 push: "frequent_returner",

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -16,7 +15,7 @@ import { requirePermission, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { storeId } = await requirePermission("reports");
+    const { db } = await requirePermission("reports");
 
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 86400000);
@@ -26,8 +25,7 @@ export async function GET() {
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 86400000);
 
     // Get all customers with their recent activity
-    const customers = await prisma.posCustomer.findMany({
-      where: { store_id: storeId },
+    const customers = await db.posCustomer.findMany({
       select: {
         id: true,
         name: true,
@@ -39,10 +37,9 @@ export async function GET() {
     });
 
     // Get each customer's last transaction date + spend totals
-    const customerActivity = await prisma.posLedgerEntry.groupBy({
+    const customerActivity = await db.posLedgerEntry.groupBy({
       by: ["customer_id"],
       where: {
-        store_id: storeId,
         customer_id: { not: null },
         type: { in: ["sale", "event_fee"] },
       },
@@ -63,10 +60,9 @@ export async function GET() {
     );
 
     // Recent activity (last 30 days) for frequency
-    const recentActivity = await prisma.posLedgerEntry.groupBy({
+    const recentActivity = await db.posLedgerEntry.groupBy({
       by: ["customer_id"],
       where: {
-        store_id: storeId,
         customer_id: { not: null },
         type: { in: ["sale", "event_fee"] },
         created_at: { gte: thirtyDaysAgo },

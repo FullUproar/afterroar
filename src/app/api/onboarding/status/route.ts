@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
 export async function GET() {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
 
     const [inventoryCount, staffCount, ledgerCount, store] = await Promise.all([
-      prisma.posInventoryItem.count({ where: { store_id: storeId } }),
-      prisma.posStaff.count({ where: { store_id: storeId, active: true } }),
-      prisma.posLedgerEntry.count({ where: { store_id: storeId, type: "sale" } }),
-      prisma.posStore.findUnique({ where: { id: storeId }, select: { settings: true } }),
+      db.posInventoryItem.count({}),
+      db.posStaff.count({ where: { active: true } }),
+      db.posLedgerEntry.count({ where: { type: "sale" } }),
+      db.posStore.findFirst({ select: { settings: true } }),
     ]);
 
     const settings = (store?.settings ?? {}) as Record<string, unknown>;

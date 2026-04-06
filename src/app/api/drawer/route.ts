@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -7,11 +6,11 @@ import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
 
     // Find the most recent drawer_open that doesn't have a matching drawer_close
-    const lastOpen = await prisma.posLedgerEntry.findFirst({
-      where: { store_id: storeId, type: "drawer_open" },
+    const lastOpen = await db.posLedgerEntry.findFirst({
+      where: { type: "drawer_open" },
       orderBy: { created_at: "desc" },
     });
 
@@ -20,9 +19,8 @@ export async function GET() {
     }
 
     // Check if there's a drawer_close after it
-    const closeAfter = await prisma.posLedgerEntry.findFirst({
+    const closeAfter = await db.posLedgerEntry.findFirst({
       where: {
-        store_id: storeId,
         type: "drawer_close",
         created_at: { gte: lastOpen.created_at },
       },
@@ -33,9 +31,8 @@ export async function GET() {
     }
 
     // Drawer is open — count sales during session
-    const salesDuringSession = await prisma.posLedgerEntry.findMany({
+    const salesDuringSession = await db.posLedgerEntry.findMany({
       where: {
-        store_id: storeId,
         type: "sale",
         created_at: { gte: lastOpen.created_at },
       },
@@ -93,7 +90,7 @@ export async function GET() {
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("checkout");
+    const { staff, storeId, db } = await requirePermission("checkout");
 
     let body: { opening_amount_cents: number };
     try {
@@ -103,15 +100,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if a drawer is already open
-    const lastOpen = await prisma.posLedgerEntry.findFirst({
-      where: { store_id: storeId, type: "drawer_open" },
+    const lastOpen = await db.posLedgerEntry.findFirst({
+      where: { type: "drawer_open" },
       orderBy: { created_at: "desc" },
     });
 
     if (lastOpen) {
-      const closeAfter = await prisma.posLedgerEntry.findFirst({
+      const closeAfter = await db.posLedgerEntry.findFirst({
         where: {
-          store_id: storeId,
           type: "drawer_close",
           created_at: { gte: lastOpen.created_at },
         },
@@ -125,7 +121,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const entry = await prisma.posLedgerEntry.create({
+    const entry = await db.posLedgerEntry.create({
       data: {
         store_id: storeId,
         type: "drawer_open",
@@ -150,7 +146,7 @@ export async function POST(request: NextRequest) {
 /* ------------------------------------------------------------------ */
 export async function PATCH(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("checkout");
+    const { staff, storeId, db } = await requirePermission("checkout");
 
     let body: {
       closing_amount_cents: number;
@@ -165,8 +161,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Find the open drawer
-    const lastOpen = await prisma.posLedgerEntry.findFirst({
-      where: { store_id: storeId, type: "drawer_open" },
+    const lastOpen = await db.posLedgerEntry.findFirst({
+      where: { type: "drawer_open" },
       orderBy: { created_at: "desc" },
     });
 
@@ -174,9 +170,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "No drawer is open" }, { status: 400 });
     }
 
-    const closeAfter = await prisma.posLedgerEntry.findFirst({
+    const closeAfter = await db.posLedgerEntry.findFirst({
       where: {
-        store_id: storeId,
         type: "drawer_close",
         created_at: { gte: lastOpen.created_at },
       },
@@ -187,9 +182,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Calculate expected cash
-    const salesDuringSession = await prisma.posLedgerEntry.findMany({
+    const salesDuringSession = await db.posLedgerEntry.findMany({
       where: {
-        store_id: storeId,
         type: "sale",
         created_at: { gte: lastOpen.created_at },
       },
@@ -222,7 +216,7 @@ export async function PATCH(request: NextRequest) {
 
     const varianceCents = body.closing_amount_cents - expectedCashCents;
 
-    const closeEntry = await prisma.posLedgerEntry.create({
+    const closeEntry = await db.posLedgerEntry.create({
       data: {
         store_id: storeId,
         type: "drawer_close",

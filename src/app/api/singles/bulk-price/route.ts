@@ -12,7 +12,7 @@ import { prisma } from "@/lib/prisma";
  */
 export async function POST(request: NextRequest) {
   try {
-    const { storeId } = await requirePermission("inventory.adjust");
+    const { storeId, db } = await requirePermission("inventory.adjust");
 
     const body = await request.json();
     const { updates } = body;

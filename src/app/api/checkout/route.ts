@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { processPayment, PaymentMethod } from "@/lib/payment";
 import { formatCents } from "@/lib/types";
 import { getStoreSettings } from "@/lib/store-settings-shared";
@@ -10,6 +9,7 @@ import { calculateTaxFromSettings, getDefaultTaxRate } from "@/lib/tax";
 import { getStripe } from "@/lib/stripe";
 import { opLog } from "@/lib/op-log";
 import { getTaxCode } from "@/lib/tax-codes";
+import { prisma } from "@/lib/prisma";
 
 interface CheckoutItem {
   inventory_item_id: string | null;
@@ -42,10 +42,11 @@ interface CheckoutBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     // Fetch the store relation needed for receipt/settings
-    const staffWithStore = await prisma.posStaff.findFirst({
+    // SECURITY: use tenant-scoped db for staff lookup
+    const staffWithStore = await db.posStaff.findFirst({
       where: { id: staff.id },
       select: { id: true, store_id: true, store: { select: { name: true, settings: true } } },
     });
@@ -80,9 +81,8 @@ export async function POST(request: NextRequest) {
 
     // Idempotency: if this transaction was already processed, return the existing result
     if (client_tx_id) {
-      const existing = await prisma.posLedgerEntry.findFirst({
+      const existing = await db.posLedgerEntry.findFirst({
         where: {
-          store_id: storeId,
           type: "sale",
           metadata: { path: ["client_tx_id"], equals: client_tx_id },
         },
@@ -108,8 +108,8 @@ export async function POST(request: NextRequest) {
     const inventoryItems = items.filter((i) => i.inventory_item_id);
     const itemIds = inventoryItems.map((i) => i.inventory_item_id).filter(Boolean) as string[];
     const invItems = itemIds.length > 0
-      ? await prisma.posInventoryItem.findMany({
-          where: { id: { in: itemIds }, store_id: storeId },
+      ? await db.posInventoryItem.findMany({
+          where: { id: { in: itemIds } },
           select: { id: true, name: true, quantity: true, price_cents: true, cost_cents: true, category: true, attributes: true },
         })
       : [];
@@ -245,8 +245,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const customer = await prisma.posCustomer.findFirst({
-        where: { id: customer_id, store_id: storeId },
+      const customer = await db.posCustomer.findFirst({
+        where: { id: customer_id },
         select: { credit_balance_cents: true },
       });
 
@@ -510,8 +510,8 @@ export async function POST(request: NextRequest) {
     // Send store visit signal to HQ (customer walked in and bought something)
     if (customer_id) {
       try {
-        const visitCust = await prisma.posCustomer.findFirst({
-          where: { id: customer_id, store_id: storeId },
+        const visitCust = await db.posCustomer.findFirst({
+          where: { id: customer_id },
           select: { afterroar_user_id: true },
         });
         if (visitCust?.afterroar_user_id) {
@@ -532,8 +532,8 @@ export async function POST(request: NextRequest) {
             // Include board game details for game library integration
             if (cat === "board_game" && inv?.name && item.inventory_item_id) {
               // Get full item for catalog link and BGG ID
-              const fullItem = await prisma.posInventoryItem.findFirst({
-                where: { id: item.inventory_item_id, store_id: storeId },
+              const fullItem = await db.posInventoryItem.findFirst({
+                where: { id: item.inventory_item_id },
                 select: { catalog_product_id: true, attributes: true },
               });
               const attrs = (fullItem?.attributes ?? {}) as Record<string, unknown>;
@@ -593,7 +593,8 @@ export async function POST(request: NextRequest) {
 
     // Attach customer name if present
     if (customer_id) {
-      const cust = await prisma.posCustomer.findUnique({
+      // SECURITY: use tenant-scoped db to prevent cross-store customer lookup
+      const cust = await db.posCustomer.findFirst({
         where: { id: customer_id },
         select: { name: true },
       });
@@ -614,7 +615,7 @@ export async function POST(request: NextRequest) {
               code += chars[Math.floor(Math.random() * chars.length)];
             }
 
-            await prisma.posGiftCard.create({
+            await db.posGiftCard.create({
               data: {
                 store_id: storeId,
                 code,

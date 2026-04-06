@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
 export async function GET(request: NextRequest) {
   try {
-    const { storeId } = await requireStaff();
+    const { storeId, db } = await requireStaff();
 
     const url = request.nextUrl;
     const q = url.searchParams.get("q")?.trim() || "";
@@ -65,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [entries, total] = await Promise.all([
-      prisma.posLedgerEntry.findMany({
+      db.posLedgerEntry.findMany({
         where,
         include: {
           customer: { select: { id: true, name: true, email: true } },
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         skip: offset,
       }),
-      prisma.posLedgerEntry.count({ where }),
+      db.posLedgerEntry.count({ where }),
     ]);
 
     const transactions = entries.map((entry) => {

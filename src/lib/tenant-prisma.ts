@@ -12,6 +12,7 @@ const TENANT_MODELS = [
   "posStore",
   "posStaff",
   "posCustomer",
+  "posCustomerNote",
   "posInventoryItem",
   "posSupplier",
   "posEvent",
@@ -32,6 +33,15 @@ const TENANT_MODELS = [
   "posStockCount",
   "posTournament",
   "posOrder",
+  "posTab",
+  "posMenuItem",
+  "posMenuModifier",
+  "posConsignmentItem",
+  "posTimeEntry",
+  "posOperationalLog",
+  "posMobileSession",
+  "posAccessCodeAttempt",
+  "posAllocationPool",
 ] as const;
 
 type TenantModel = (typeof TENANT_MODELS)[number];
@@ -48,6 +58,10 @@ export type TenantPrismaClient = ReturnType<typeof getTenantClient>;
  * PosReturnItem) are scoped through their parent FK relationships.
  */
 export function getTenantClient(storeId: string) {
+  if (!storeId) {
+    throw new Error("SECURITY: getTenantClient called without storeId");
+  }
+
   return prisma.$extends({
     query: {
       $allModels: {
@@ -55,7 +69,20 @@ export function getTenantClient(storeId: string) {
           if (isTenantModel(model)) {
             args.where = { ...args.where, store_id: storeId };
           }
-          return query(args);
+          const results = await query(args);
+          // SECURITY: warn if any results leak from another store
+          if (isTenantModel(model) && Array.isArray(results) && results.length > 0) {
+            const leaked = (results as Array<Record<string, unknown>>).filter(
+              (r) => r.store_id && r.store_id !== storeId,
+            );
+            if (leaked.length > 0) {
+              console.error(
+                `[TENANT ISOLATION BREACH] ${model}.findMany returned ${leaked.length} rows ` +
+                `from wrong store(s). Expected store_id=${storeId}.`,
+              );
+            }
+          }
+          return results;
         },
         async findFirst({ model, args, query }) {
           if (isTenantModel(model)) {

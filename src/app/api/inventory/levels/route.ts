@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -7,7 +6,7 @@ import { requireStaff, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function GET(request: NextRequest) {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
 
     const itemId = request.nextUrl.searchParams.get("item_id");
     if (!itemId) {
@@ -17,8 +16,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const levels = await prisma.posInventoryLevel.findMany({
-      where: { store_id: storeId, inventory_item_id: itemId },
+    const levels = await db.posInventoryLevel.findMany({
+      where: { inventory_item_id: itemId },
       include: {
         location: { select: { id: true, name: true } },
       },

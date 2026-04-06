@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -8,9 +7,9 @@ import { requirePermission, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function POST() {
   try {
-    const { staff, storeId } = await requirePermission("checkout");
+    const { staff, storeId, db } = await requirePermission("checkout");
 
-    const entry = await prisma.posLedgerEntry.create({
+    const entry = await db.posLedgerEntry.create({
       data: {
         store_id: storeId,
         type: "no_sale",

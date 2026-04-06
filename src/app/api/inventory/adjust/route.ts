@@ -14,7 +14,7 @@ const VALID_REASONS = [
 
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("inventory.adjust");
+    const { staff, storeId, db } = await requirePermission("inventory.adjust");
 
     const body = await request.json();
     const { item_id, adjustment, reason, notes } = body;
@@ -40,9 +40,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify item belongs to this store
-    const item = await prisma.posInventoryItem.findFirst({
-      where: { id: item_id, store_id: storeId },
+    // Verify item belongs to this store (tenant-scoped)
+    const item = await db.posInventoryItem.findFirst({
+      where: { id: item_id },
     });
 
     if (!item) {

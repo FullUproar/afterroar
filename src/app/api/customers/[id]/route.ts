@@ -118,13 +118,13 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     const body = await request.json();
 
     // Verify customer belongs to this store before modifying
-    const customer = await prisma.posCustomer.findFirst({
-      where: { id, store_id: storeId },
+    const customer = await db.posCustomer.findFirst({
+      where: { id },
     });
     if (!customer) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
@@ -200,7 +200,7 @@ export async function POST(
         return NextResponse.json({ error: "Note content is required" }, { status: 400 });
       }
 
-      const note = await prisma.posCustomerNote.create({
+      const note = await db.posCustomerNote.create({
         data: {
           store_id: storeId,
           customer_id: id,

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getStoreSettings } from "@/lib/store-settings-shared";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
@@ -8,11 +7,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { storeId } = await requireStaff();
+    const { storeId, db } = await requireStaff();
     const { id } = await params;
 
-    const entry = await prisma.posLedgerEntry.findFirst({
-      where: { id, store_id: storeId },
+    const entry = await db.posLedgerEntry.findFirst({
+      where: { id },
       include: {
         customer: { select: { name: true, email: true } },
         staff: { select: { name: true } },
@@ -41,7 +40,7 @@ export async function GET(
         .filter((id): id is string => !!id);
 
       const invItems = itemIds.length > 0
-        ? await prisma.posInventoryItem.findMany({
+        ? await db.posInventoryItem.findMany({
             where: { id: { in: itemIds } },
             select: { id: true, name: true },
           })

@@ -113,7 +113,7 @@ export async function POST(
     // Resolve item names
     const itemIds = items.map((i) => i.inventory_item_id).filter((id): id is string => !!id);
     const invItems = itemIds.length > 0
-      ? await prisma.posInventoryItem.findMany({ where: { id: { in: itemIds } }, select: { id: true, name: true } })
+      ? await prisma.posInventoryItem.findMany({ where: { id: { in: itemIds }, store_id: storeId }, select: { id: true, name: true } })
       : [];
     const nameMap = new Map(invItems.map((i) => [i.id, i.name]));
 

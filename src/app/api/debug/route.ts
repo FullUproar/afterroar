@@ -19,9 +19,10 @@ export async function GET() {
       include: { store: true },
     });
 
-    const inventoryCount = await prisma.posInventoryItem.count({
-      where: staff ? { store_id: staff.store_id } : undefined,
-    });
+    // SECURITY: always scope to store_id — never count all stores' inventory
+    const inventoryCount = staff
+      ? await prisma.posInventoryItem.count({ where: { store_id: staff.store_id } })
+      : 0;
 
     return NextResponse.json({
       auth: "ok",

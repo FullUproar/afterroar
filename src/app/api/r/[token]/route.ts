@@ -50,7 +50,7 @@ export async function GET(
 
     const invItems = itemIds.length > 0
       ? await prisma.posInventoryItem.findMany({
-          where: { id: { in: itemIds } },
+          where: { id: { in: itemIds }, store_id: entry.store_id },
           select: { id: true, name: true },
         })
       : [];

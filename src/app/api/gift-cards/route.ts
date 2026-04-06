@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
+// Note: prisma is still imported for $transaction which doesn't support extensions
 
 function generateGiftCardCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0,O,1,I for readability
@@ -17,16 +18,16 @@ function generateGiftCardCode(): string {
 /* ------------------------------------------------------------------ */
 export async function GET(request: NextRequest) {
   try {
-    const { storeId } = await requirePermission("customers.edit");
+    const { db } = await requirePermission("customers.edit");
 
     const search = request.nextUrl.searchParams.get("q");
 
-    const where: Record<string, unknown> = { store_id: storeId };
+    const where: Record<string, unknown> = {};
     if (search) {
       where.code = { contains: search.toUpperCase(), mode: "insensitive" };
     }
 
-    const cards = await prisma.posGiftCard.findMany({
+    const cards = await db.posGiftCard.findMany({
       where,
       orderBy: { created_at: "desc" },
       take: 100,
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("customers.edit");
+    const { staff, storeId, db } = await requirePermission("customers.edit");
 
     let body: { amount_cents: number; customer_id?: string };
     try {
@@ -63,7 +64,8 @@ export async function POST(request: NextRequest) {
     let code = generateGiftCardCode();
     let attempts = 0;
     while (attempts < 10) {
-      const existing = await prisma.posGiftCard.findUnique({ where: { code } });
+      // SECURITY: scope to store_id — gift card codes could collide across stores
+      const existing = await db.posGiftCard.findFirst({ where: { code } });
       if (!existing) break;
       code = generateGiftCardCode();
       attempts++;

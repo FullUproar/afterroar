@@ -10,11 +10,11 @@ export async function GET(
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
     const { code } = await params;
 
-    const card = await prisma.posGiftCard.findFirst({
-      where: { code: code.toUpperCase(), store_id: storeId },
+    const card = await db.posGiftCard.findFirst({
+      where: { code: code.toUpperCase() },
     });
 
     if (!card) {
@@ -25,9 +25,8 @@ export async function GET(
     }
 
     // Get transaction history
-    const history = await prisma.posLedgerEntry.findMany({
+    const history = await db.posLedgerEntry.findMany({
       where: {
-        store_id: storeId,
         type: { in: ["gift_card_sale", "gift_card_redeem"] },
         metadata: { path: ["code"], equals: code.toUpperCase() },
       },
@@ -49,7 +48,7 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const { staff, storeId } = await requirePermission("checkout");
+    const { staff, storeId, db } = await requirePermission("checkout");
     const { code } = await params;
 
     let body: { amount_cents: number; customer_id?: string };
@@ -66,8 +65,8 @@ export async function POST(
       );
     }
 
-    const card = await prisma.posGiftCard.findFirst({
-      where: { code: code.toUpperCase(), store_id: storeId, active: true },
+    const card = await db.posGiftCard.findFirst({
+      where: { code: code.toUpperCase(), active: true },
     });
 
     if (!card) {

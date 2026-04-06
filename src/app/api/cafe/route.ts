@@ -231,7 +231,8 @@ export async function POST(request: NextRequest) {
 
       // Create ledger entry
       const itemNames = tab.items.map((i) => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ""}`).join(", ");
-      const ledgerEntry = await prisma.posLedgerEntry.create({
+      // SECURITY: use tenant-scoped db for ledger writes
+      const ledgerEntry = await db.posLedgerEntry.create({
         data: {
           store_id: storeId,
           type: "sale",

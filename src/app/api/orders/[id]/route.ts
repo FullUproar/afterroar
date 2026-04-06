@@ -7,11 +7,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
     const { id } = await params;
 
-    const order = await prisma.posOrder.findFirst({
-      where: { id, store_id: storeId },
+    const order = await db.posOrder.findFirst({
+      where: { id },
       include: {
         items: {
           include: {
@@ -37,13 +37,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { storeId } = await requireStaff();
+    const { storeId, db } = await requireStaff();
     const { id } = await params;
     const body = await request.json();
 
     // Verify order belongs to store
-    const existing = await prisma.posOrder.findFirst({
-      where: { id, store_id: storeId },
+    const existing = await db.posOrder.findFirst({
+      where: { id },
     });
 
     if (!existing) {
@@ -80,7 +80,7 @@ export async function PATCH(
       update.notes = body.notes;
     }
 
-    // Update individual item fulfillment status
+    // Update individual item fulfillment status (order_id verified above)
     if (body.fulfilled_items && Array.isArray(body.fulfilled_items)) {
       for (const itemId of body.fulfilled_items) {
         await prisma.posOrderItem.updateMany({
@@ -90,7 +90,8 @@ export async function PATCH(
       }
     }
 
-    const order = await prisma.posOrder.update({
+    // SECURITY: scope update via tenant client
+    const order = await db.posOrder.update({
       where: { id },
       data: update,
       include: {

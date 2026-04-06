@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff, handleAuthError } from "@/lib/require-staff";
-import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
-    const { storeId } = await requireStaff();
+    const { db } = await requireStaff();
 
     const status = request.nextUrl.searchParams.get("status")?.trim();
-    const where: Record<string, unknown> = { store_id: storeId };
+    const where: Record<string, unknown> = {};
     if (status) {
       where.status = status;
     }
 
-    const orders = await prisma.posOrder.findMany({
+    const orders = await db.posOrder.findMany({
       where,
       include: {
         items: true,
@@ -30,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { storeId, staff } = await requireStaff();
+    const { db, storeId } = await requireStaff();
     const body = await request.json();
 
     const {
@@ -51,12 +50,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate order number
-    const count = await prisma.posOrder.count({ where: { store_id: storeId } });
+    const count = await db.posOrder.count({});
     const orderNumber = `ORD-${String(count + 1).padStart(5, "0")}`;
 
     const totalCents = subtotal_cents + tax_cents + shipping_cents - discount_cents;
 
-    const order = await prisma.posOrder.create({
+    const order = await db.posOrder.create({
       data: {
         store_id: storeId,
         customer_id: customer_id || null,

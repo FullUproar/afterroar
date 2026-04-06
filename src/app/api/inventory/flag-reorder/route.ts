@@ -10,7 +10,7 @@ import { requireStaff, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requireStaff();
+    const { staff, storeId, db } = await requireStaff();
 
     let body: { inventory_item_id: string; note?: string };
     try {
@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "inventory_item_id is required" }, { status: 400 });
     }
 
-    // Verify item exists and belongs to this store
-    const item = await prisma.posInventoryItem.findFirst({
-      where: { id: inventory_item_id, store_id: storeId },
+    // Verify item exists and belongs to this store (tenant-scoped)
+    const item = await db.posInventoryItem.findFirst({
+      where: { id: inventory_item_id },
       select: { id: true, name: true, quantity: true, low_stock_threshold: true },
     });
     if (!item) {
@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Store the flag in the item's attributes (no new table needed)
-    const existing = await prisma.posInventoryItem.findUnique({
+    // SECURITY: scope via tenant client
+    const existing = await db.posInventoryItem.findFirst({
       where: { id: inventory_item_id },
       select: { attributes: true },
     });
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     attrs.reorder_flagged_by = staff.name;
     attrs.reorder_note = note ?? `Low/out of stock (qty: ${item.quantity})`;
 
-    await prisma.posInventoryItem.update({
+    await db.posInventoryItem.update({
       where: { id: inventory_item_id },
       data: { attributes: JSON.parse(JSON.stringify(attrs)) },
     });

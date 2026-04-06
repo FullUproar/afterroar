@@ -10,7 +10,7 @@ import { opLog } from "@/lib/op-log";
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("checkout");
+    const { staff, storeId, db } = await requirePermission("checkout");
 
     let body: { ledger_entry_id: string };
     try {
@@ -27,10 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the original transaction
-    const original = await prisma.posLedgerEntry.findFirst({
+    const original = await db.posLedgerEntry.findFirst({
       where: {
         id: body.ledger_entry_id,
-        store_id: storeId,
         type: "sale",
       },
     });
@@ -43,9 +42,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already voided
-    const existingVoid = await prisma.posLedgerEntry.findFirst({
+    const existingVoid = await db.posLedgerEntry.findFirst({
       where: {
-        store_id: storeId,
         type: "void",
         metadata: {
           path: ["original_ledger_entry_id"],
@@ -83,7 +81,8 @@ export async function POST(request: NextRequest) {
       price_cents: number;
     }>) ?? [];
 
-    // Process the void in a transaction
+    // Process the void in a transaction (uses base prisma for $transaction,
+    // but all data includes store_id explicitly)
     const result = await prisma.$transaction(async (tx) => {
       // Create reversing ledger entry
       const voidEntry = await tx.posLedgerEntry.create({
@@ -166,14 +165,13 @@ export async function POST(request: NextRequest) {
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { storeId } = await requirePermission("checkout");
+    const { db } = await requirePermission("checkout");
 
     const voidWindowMinutes = 30;
     const cutoff = new Date(Date.now() - voidWindowMinutes * 60000);
 
-    const lastSale = await prisma.posLedgerEntry.findFirst({
+    const lastSale = await db.posLedgerEntry.findFirst({
       where: {
-        store_id: storeId,
         type: "sale",
         created_at: { gte: cutoff },
       },
@@ -185,9 +183,8 @@ export async function GET() {
     }
 
     // Check if already voided
-    const existingVoid = await prisma.posLedgerEntry.findFirst({
+    const existingVoid = await db.posLedgerEntry.findFirst({
       where: {
-        store_id: storeId,
         type: "void",
         metadata: {
           path: ["original_ledger_entry_id"],
