@@ -70,7 +70,7 @@ const TAB_SECTIONS: Record<TabKey, string[]> = {
 /* ------------------------------------------------------------------ */
 
 export default function SettingsPage() {
-  const { can, store, isGodAdmin, isTestMode, effectiveRole, setTestRole } = useStore();
+  const { can, store, loading: storeLoading, isGodAdmin, isTestMode, effectiveRole, setTestRole } = useStore();
   const { theme, setTheme } = useTheme();
   const { isTraining, setTraining } = useTrainingMode();
   const currentSettings = useStoreSettings();
@@ -252,6 +252,16 @@ export default function SettingsPage() {
 
   function updateLocal(key: string, value: unknown) {
     setSettings((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Wait for store context before checking permissions — avoids hydration mismatch
+  // (server renders "no permission" → client renders full page = React crash)
+  if (storeLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-muted">Loading settings...</p>
+      </div>
+    );
   }
 
   if (!can('store.settings')) {
