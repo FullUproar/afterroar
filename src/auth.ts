@@ -79,9 +79,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      // Embed store/staff context in the JWT for faster tenant resolution
-      // Only look up if not already cached in token
-      if (token.id && !token.storeId) {
+      // Embed store/staff context in the JWT.
+      // SECURITY: Always refresh — storeId can change if store is recreated,
+      // staff is reassigned, or user is deactivated. A stale storeId could
+      // leak data from the wrong tenant.
+      if (token.id) {
         const staffRecord = await prisma.posStaff.findFirst({
           where: { user_id: token.id as string, active: true },
           select: { id: true, store_id: true, role: true },
@@ -90,6 +92,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.staffId = staffRecord.id;
           token.storeId = staffRecord.store_id;
           token.role = staffRecord.role;
+        } else {
+          // Staff was deactivated or deleted — clear tenant context
+          delete token.staffId;
+          delete token.storeId;
+          delete token.role;
         }
       }
 
