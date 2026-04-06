@@ -72,6 +72,7 @@ export async function PATCH(request: NextRequest) {
       "quantity",
       "barcode",
       "attributes",
+      "lendable",
       "active",
     ];
 

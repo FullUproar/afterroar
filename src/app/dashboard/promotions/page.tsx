@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store-context';
 import { PageHeader } from '@/components/page-header';
 import { formatCents } from '@/lib/types';
+import { EmptyState } from '@/components/shared/ui';
 import {
   PROMOTION_TYPES,
   PROMOTION_SCOPES,
@@ -283,10 +284,12 @@ export default function PromotionsPage() {
       {loading ? (
         <div className="text-muted">Loading promotions...</div>
       ) : promos.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
-          <p className="text-lg font-medium">No promotions yet</p>
-          <p className="mt-2 text-sm">Create a sale, discount, or coupon to get started.</p>
-        </div>
+        <EmptyState
+          icon="&#x1F3AF;"
+          title="No promotions yet"
+          description="Create sales, discounts, or coupons to drive traffic and move inventory."
+          action={{ label: "Create a Promotion", onClick: () => setShowCreate(true) }}
+        />
       ) : (
         <div className="space-y-3">
           {promos.map((promo) => {

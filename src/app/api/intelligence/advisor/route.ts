@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
 import { getStoreSnapshot, type StoreSnapshot } from "@/lib/store-intelligence";
 import { getStoreSettings } from "@/lib/store-settings-shared";
@@ -13,9 +14,12 @@ import { formatCents } from "@/lib/types";
 
 const anthropic = new Anthropic();
 
-// Rate-limit: 1 request per store per 30 seconds
+// In-memory rate-limit: 1 request per store per 30 seconds
 const lastRequest = new Map<string, number>();
 const RATE_LIMIT_MS = 30_000;
+
+// Default daily request limit per store
+const DEFAULT_DAILY_LIMIT = 20;
 
 function buildSystemPrompt(
   storeName: string,
@@ -104,19 +108,34 @@ export async function POST(request: Request) {
     }
     lastRequest.set(storeId, Date.now());
 
+    // Daily usage limit (persistent via store settings)
+    const storeRecord = await db.posStore.findUnique({
+      where: { id: storeId },
+      select: { name: true, settings: true },
+    });
+    const storeSettings = (storeRecord?.settings ?? {}) as Record<string, unknown>;
+    const dailyLimit = (storeSettings.advisor_daily_limit as number) || DEFAULT_DAILY_LIMIT;
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const usageData = (storeSettings.advisor_usage ?? {}) as Record<string, number>;
+    const todayUsage = usageData[today] ?? 0;
+
+    if (todayUsage >= dailyLimit) {
+      return NextResponse.json(
+        {
+          error: `Daily advisor limit reached (${dailyLimit} requests). Resets at midnight.`,
+          usage: { today: todayUsage, limit: dailyLimit },
+        },
+        { status: 429 },
+      );
+    }
+
     // Parse request
     const body = await request.json().catch(() => ({}));
     const question = typeof body.question === "string" ? body.question.slice(0, 500) : null;
 
-    // Get store info
-    const store = await db.posStore.findUnique({
-      where: { id: storeId },
-      select: { name: true, settings: true },
-    });
-    const settings = getStoreSettings(
-      (store?.settings ?? {}) as Record<string, unknown>,
-    );
-    const storeName = settings.store_display_name || store?.name || "Your Store";
+    // Use already-fetched store settings
+    const settings = getStoreSettings(storeSettings);
+    const storeName = settings.store_display_name || storeRecord?.name || "Your Store";
 
     // Build snapshot
     const snapshot = await getStoreSnapshot(db, storeId, settings);
@@ -141,8 +160,29 @@ export async function POST(request: Request) {
     const advice =
       response.content[0].type === "text" ? response.content[0].text : "";
 
+    // Increment daily usage counter (fire-and-forget)
+    const newUsage = todayUsage + 1;
+    // Keep only last 7 days of usage data to prevent bloat
+    const cleanedUsage: Record<string, number> = {};
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    for (const [date, count] of Object.entries(usageData)) {
+      if (date >= weekAgo) cleanedUsage[date] = count;
+    }
+    cleanedUsage[today] = newUsage;
+
+    prisma.posStore.update({
+      where: { id: storeId },
+      data: {
+        settings: {
+          ...storeSettings,
+          advisor_usage: cleanedUsage,
+        },
+      },
+    }).catch(() => {}); // fire-and-forget
+
     return NextResponse.json({
       advice,
+      usage: { today: newUsage, limit: dailyLimit },
       snapshot_summary: {
         revenue30d: snapshot.revenue30d,
         cashRunwayDays: snapshot.cashRunwayDays,

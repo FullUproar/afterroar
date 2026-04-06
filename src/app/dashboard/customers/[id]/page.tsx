@@ -391,6 +391,9 @@ export default function CustomerDetailPage() {
             <p className="text-sm text-muted">
               Link this customer to an Afterroar account to sync loyalty points, enable QR check-in, and view trust scores.
             </p>
+            <p className="text-[11px] text-muted/70">
+              The Afterroar Network connects game stores and players. Linked customers earn points that work across participating stores.
+            </p>
             {!showLinkForm ? (
               <button
                 onClick={() => setShowLinkForm(true)}

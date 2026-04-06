@@ -18,7 +18,8 @@ export type EventType =
   | "issue.flagged" | "issue.resolved"
   | "sync.failed" | "sync.retry"
   | "system.error" | "system.startup"
-  | "mobile.sale" | "mobile.paired" | "mobile.revoked";
+  | "mobile.sale" | "mobile.paired" | "mobile.revoked"
+  | "manager.override";
 
 export interface OpLogParams {
   storeId: string;

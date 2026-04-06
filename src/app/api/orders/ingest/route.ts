@@ -41,7 +41,7 @@ async function authenticateApiKey(
   // Check api_access feature module is enabled
   const settings = (store.settings ?? {}) as Record<string, unknown>;
   const plan = (settings.plan as string) || "free";
-  const addons = (settings.addon_modules as string[]) || [];
+  const addons = (settings.addons as string[]) || [];
 
   // api_access is available on pro/enterprise or as an add-on
   const hasApiAccess =

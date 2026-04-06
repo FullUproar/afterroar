@@ -167,12 +167,18 @@ export default function EventsPage() {
             </div>
           }
         />
-        {isConnected && (
+        {isConnected ? (
           <p className="text-sm text-muted">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-green-500" />
               Connected to {venueName || 'Afterroar'}
             </span>
+          </p>
+        ) : (
+          <p className="text-xs text-muted">
+            Connect to the Afterroar Network in{' '}
+            <a href="/dashboard/settings" className="text-accent hover:underline">Settings</a>
+            {' '}to enable online RSVPs, player identity linking, and cross-store leaderboards.
           </p>
         )}
       </div>
@@ -182,7 +188,7 @@ export default function EventsPage() {
           {createAsHQ && (
             <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 rounded-lg px-3 py-2">
               <span className="h-2 w-2 rounded-full bg-purple-500" />
-              This event will also be created on your Afterroar venue page. Players can RSVP online.
+              This event will also appear on your Afterroar store page. Players can RSVP online.
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

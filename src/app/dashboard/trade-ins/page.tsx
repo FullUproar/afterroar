@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCents } from '@/lib/types';
+import { EmptyState } from '@/components/shared/ui';
 import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
 
@@ -71,15 +72,12 @@ export default function TradeInsPage() {
       {loading ? (
         <div className="text-muted">Loading trade-ins...</div>
       ) : tradeIns.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-          <p className="text-muted">No trade-ins yet.</p>
-          <Link
-            href="/dashboard/trade-ins/new"
-            className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
-          >
-            Start Your First Trade-In
-          </Link>
-        </div>
+        <EmptyState
+          icon="&#x21C4;"
+          title="No trade-ins yet"
+          description="Accept trade-ins for cards, games, and accessories. Credit goes straight to the customer's account."
+          action={{ label: "Start Your First Trade-In", href: "/dashboard/trade-ins/new" }}
+        />
       ) : (
         <>
           {/* Mobile card view */}

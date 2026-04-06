@@ -28,7 +28,13 @@ interface Tab {
   age_verified: boolean;
 }
 
-const MENU_ITEMS = [
+interface QuickMenuItem {
+  name: string;
+  price: number;
+  ageRestricted?: boolean;
+}
+
+const MENU_ITEMS: QuickMenuItem[] = [
   { name: "Drip Coffee", price: 300 },
   { name: "Latte", price: 550 },
   { name: "Iced Americano", price: 450 },
@@ -37,6 +43,10 @@ const MENU_ITEMS = [
   { name: "Pizza Slice", price: 350 },
   { name: "Soft Pretzel", price: 400 },
   { name: "Chips & Salsa", price: 300 },
+  { name: "Draft Beer", price: 600, ageRestricted: true },
+  { name: "Canned Beer", price: 500, ageRestricted: true },
+  { name: "Wine (Glass)", price: 800, ageRestricted: true },
+  { name: "Hard Seltzer", price: 550, ageRestricted: true },
 ];
 
 export default function CafePage() {
@@ -45,6 +55,9 @@ export default function CafePage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"tabs" | "kds">("tabs");
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
+
+  // Age verification
+  const [ageVerifyPending, setAgeVerifyPending] = useState<{ tabId: string; item: QuickMenuItem } | null>(null);
 
   // New tab form
   const [showNewTab, setShowNewTab] = useState(false);
@@ -99,7 +112,36 @@ export default function CafePage() {
     }
   }
 
-  async function addItem(tabId: string, name: string, priceCents: number) {
+  function handleAddItem(tabId: string, item: QuickMenuItem) {
+    // Age-restricted items require verification on the tab first
+    if (item.ageRestricted) {
+      const tab = tabs.find((t) => t.id === tabId) || activeTab;
+      if (tab && !tab.age_verified) {
+        setAgeVerifyPending({ tabId, item });
+        return;
+      }
+    }
+    addItemToTab(tabId, item.name, item.price);
+  }
+
+  async function confirmAgeVerification() {
+    if (!ageVerifyPending) return;
+    const { tabId, item } = ageVerifyPending;
+    // Mark tab as age verified
+    await fetch("/api/cafe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "age_verify", tab_id: tabId }),
+    });
+    // Update local state
+    setTabs((prev) => prev.map((t) => t.id === tabId ? { ...t, age_verified: true } : t));
+    if (activeTab?.id === tabId) setActiveTab((prev) => prev ? { ...prev, age_verified: true } : prev);
+    setAgeVerifyPending(null);
+    // Now add the item
+    await addItemToTab(tabId, item.name, item.price);
+  }
+
+  async function addItemToTab(tabId: string, name: string, priceCents: number) {
     await fetch("/api/cafe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -220,6 +262,7 @@ export default function CafePage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium text-foreground">{tab.table_label || "Walk-up"}</span>
+                      {tab.age_verified && <span className="ml-1.5 rounded bg-amber-500/20 px-1 py-0.5 text-[9px] font-bold text-amber-400">21+</span>}
                       {tab.customer && <span className="text-xs text-muted ml-2">{tab.customer.name}</span>}
                     </div>
                     <span className="text-sm font-semibold text-accent tabular-nums">{formatCents(tab.subtotal_cents)}</span>
@@ -285,10 +328,17 @@ export default function CafePage() {
                     {MENU_ITEMS.map((item) => (
                       <button
                         key={item.name}
-                        onClick={() => addItem(activeTab.id, item.name, item.price)}
-                        className="rounded-lg border border-card-border bg-card-hover px-3 py-3 text-left hover:border-accent/30 transition-colors"
+                        onClick={() => handleAddItem(activeTab.id, item)}
+                        className={`rounded-lg border px-3 py-3 text-left transition-colors ${
+                          item.ageRestricted
+                            ? "border-amber-500/20 bg-amber-950/10 hover:border-amber-500/40"
+                            : "border-card-border bg-card-hover hover:border-accent/30"
+                        }`}
                       >
-                        <span className="text-sm font-medium text-foreground block">{item.name}</span>
+                        <span className="text-sm font-medium text-foreground block">
+                          {item.name}
+                          {item.ageRestricted && <span className="ml-1.5 text-amber-400 text-[10px]">21+</span>}
+                        </span>
                         <span className="text-xs text-muted">{formatCents(item.price)}</span>
                       </button>
                     ))}
@@ -300,6 +350,39 @@ export default function CafePage() {
                 <p className="text-muted">Select a tab or open a new one</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Age Verification Modal */}
+      {ageVerifyPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg">
+          <div className="w-full max-w-sm rounded-xl border border-amber-500/30 bg-card p-6 shadow-lg mx-4">
+            <div className="text-center space-y-4">
+              <span className="text-4xl block">🪪</span>
+              <h3 className="text-lg font-bold text-foreground">Age Verification Required</h3>
+              <p className="text-sm text-muted">
+                <strong className="text-foreground">{ageVerifyPending.item.name}</strong> requires age verification.
+                Confirm the customer is 21 or older before serving alcohol.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setAgeVerifyPending(null)}
+                  className="flex-1 rounded-lg border border-card-border py-2.5 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAgeVerification}
+                  className="flex-1 rounded-lg bg-amber-600 py-2.5 text-sm font-bold text-white hover:bg-amber-500 transition-colors"
+                >
+                  ID Verified — 21+
+                </button>
+              </div>
+              <p className="text-[10px] text-muted/60">
+                This marks the tab as age-verified. All future alcohol items on this tab will be allowed.
+              </p>
+            </div>
           </div>
         </div>
       )}

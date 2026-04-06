@@ -30,12 +30,8 @@ export default async function DashboardPage() {
     redirect("/setup");
   }
 
-  // Cashiers go straight to the register — no dashboard stats for them
-  if (staff.role === "cashier") {
-    redirect("/dashboard/register");
-  }
-
   const storeId = staff.store_id;
+  const isCashier = staff.role === "cashier";
 
   // Onboarding is now handled by the floating OnboardingPanel in the layout.
   // No redirect needed — the panel renders on top of whatever page the user is on.
@@ -64,6 +60,93 @@ export default async function DashboardPage() {
   const todayRevenueCents = todayRevenue._sum.amount_cents || 0;
   const mobileLedger = recentLedger.slice(0, 5);
 
+  if (isCashier) {
+    // ── SALES DASHBOARD (Cashier View) ──
+    return (
+      <DashboardModeGuard>
+      <div className="space-y-6">
+        {/* Shift summary */}
+        <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm dark:shadow-none">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">Your Shift</h2>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-sm text-muted block">Sales today</span>
+              <span className="text-2xl font-bold tabular-nums text-foreground">{todaySales}</span>
+            </div>
+            <div>
+              <span className="text-sm text-muted block">Revenue today</span>
+              <span className="text-2xl font-bold tabular-nums text-foreground">{formatCents(todayRevenueCents)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/dashboard/register"
+            className="flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-5 text-white active:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/10"
+          >
+            <span className="text-2xl">{"\u25C8"}</span>
+            <div>
+              <span className="text-base font-bold">Open Register</span>
+              <span className="block text-xs text-emerald-100/70">Start selling</span>
+            </div>
+          </Link>
+          <Link
+            href="/dashboard/trade-ins"
+            className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-5 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
+          >
+            <span className="text-2xl text-accent">{"\u21C4"}</span>
+            <div>
+              <span className="text-base font-semibold">Trade-Ins</span>
+              <span className="block text-xs text-muted">Buy cards & games</span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Recent transactions */}
+        <div>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Recent Transactions</h3>
+          {recentLedger.length === 0 ? (
+            <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
+              <p className="text-muted">No transactions yet. Open the register to make your first sale.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentLedger.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-xl border border-card-border bg-card px-4 py-3 shadow-sm dark:shadow-none"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full border border-card-border px-2 py-0.5 text-[10px] font-medium text-muted">
+                        {entry.type}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {new Date(entry.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    {entry.description && (
+                      <div className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                        {entry.description}
+                      </div>
+                    )}
+                  </div>
+                  <div className="ml-3 shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                    {formatCents(entry.amount_cents)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      </DashboardModeGuard>
+    );
+  }
+
+  // ── STORE DASHBOARD (Owner/Manager View) ──
   return (
     <DashboardModeGuard>
     <div className="space-y-6 md:space-y-8">

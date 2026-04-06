@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCents } from '@/lib/types';
+import { EmptyState } from '@/components/shared/ui';
 import { PageHeader } from '@/components/page-header';
 
 interface Preorder {
@@ -77,10 +78,11 @@ export default function PreordersPage() {
       {loading ? (
         <div className="text-muted">Loading...</div>
       ) : preorders.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
-          <p className="text-lg font-medium">No preorders yet</p>
-          <p className="mt-2 text-sm">Take preorders for upcoming releases — new MTG sets, Pokemon expansions, board games.</p>
-        </div>
+        <EmptyState
+          icon="&#x1F4E6;"
+          title="No preorders yet"
+          description="Take preorders for upcoming releases — new MTG sets, Pokemon expansions, board games."
+        />
       ) : (
         <div className="space-y-6">
           {/* Pending / Confirmed */}

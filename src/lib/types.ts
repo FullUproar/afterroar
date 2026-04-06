@@ -58,6 +58,7 @@ export interface InventoryItem {
   external_id: string | null;
   catalog_product_id: string | null;
   shared_to_catalog: boolean;
+  lendable: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;

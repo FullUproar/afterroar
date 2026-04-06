@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCents, RETURN_REASONS } from '@/lib/types';
+import { EmptyState } from '@/components/shared/ui';
 import { PageHeader } from '@/components/page-header';
 
 interface ReturnRow {
@@ -58,15 +59,12 @@ export default function ReturnsPage() {
       {loading ? (
         <div className="text-muted">Loading returns...</div>
       ) : returns.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-          <p className="text-muted">No returns yet.</p>
-          <Link
-            href="/dashboard/returns/new"
-            className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
-          >
-            Process a Return
-          </Link>
-        </div>
+        <EmptyState
+          icon="&#x21A9;"
+          title="No returns yet"
+          description="Process returns and exchanges. Stock is automatically restored and credit applied."
+          action={{ label: "Process a Return", href: "/dashboard/returns/new" }}
+        />
       ) : (
         <>
           {/* Mobile card view */}

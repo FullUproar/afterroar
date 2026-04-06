@@ -317,6 +317,24 @@ export default function InventoryPage() {
     }
   }
 
+  async function handleToggleLendable(item: InventoryItem) {
+    const newValue = !item.lendable;
+    try {
+      const res = await fetch("/api/inventory", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, lendable: newValue }),
+      });
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((i) => (i.id === item.id ? { ...i, lendable: newValue } : i))
+        );
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+
   const getCategoryLabel = (cat: string) =>
     CATEGORIES.find((c) => c.value === cat)?.label ?? cat;
 
@@ -663,6 +681,18 @@ export default function InventoryPage() {
                     </span>
                     {can("inventory.adjust") && (
                       <div className="flex items-center gap-1">
+                        {item.category === "board_game" && (
+                          <button
+                            onClick={() => handleToggleLendable(item)}
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-h-11 flex items-center ${
+                              item.lendable
+                                ? "bg-green-600/20 text-green-400 hover:bg-green-600/30"
+                                : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
+                            }`}
+                          >
+                            {item.lendable ? "Lendable" : "Lend"}
+                          </button>
+                        )}
                         <button
                           onClick={() => handleToggleCatalogShare(item)}
                           className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-h-11 flex items-center ${
@@ -745,6 +775,11 @@ export default function InventoryPage() {
                           Foil
                         </span>
                       )}
+                      {item.lendable && (
+                        <span className="ml-2 inline-block rounded bg-green-900/50 px-1.5 py-0.5 text-xs text-green-400">
+                          Lendable
+                        </span>
+                      )}
                       {item.shared_to_catalog && (
                         <span className="ml-2 inline-block rounded bg-blue-900/50 px-1.5 py-0.5 text-xs text-blue-400">
                           Shared
@@ -818,6 +853,18 @@ export default function InventoryPage() {
                     {can("inventory.adjust") && (
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-1">
+                          {item.category === "board_game" && (
+                            <button
+                              onClick={() => handleToggleLendable(item)}
+                              className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                                item.lendable
+                                  ? "bg-green-600/20 text-green-400 hover:bg-green-600/30"
+                                  : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
+                              }`}
+                            >
+                              {item.lendable ? "Lendable" : "Lend"}
+                            </button>
+                          )}
                           <button
                             onClick={() => handleToggleCatalogShare(item)}
                             className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${

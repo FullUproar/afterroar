@@ -10,6 +10,7 @@ import { useStore } from "@/lib/store-context";
 
 interface AdvisorResponse {
   advice: string;
+  usage?: { today: number; limit: number };
   snapshot_summary?: {
     revenue30d: number;
     cashRunwayDays: number;
@@ -250,9 +251,16 @@ export function StoreAdvisor() {
                 </button>
               </div>
 
-              <p className="text-[10px] text-muted/60">
-                Powered by Claude. Advice is based on your store data and may not account for external factors.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-muted/60">
+                  Powered by Claude. Advice is based on your store data and may not account for external factors.
+                </p>
+                {response.usage && (
+                  <p className="text-[10px] text-muted/60">
+                    {response.usage.limit - response.usage.today} of {response.usage.limit} requests remaining today
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>

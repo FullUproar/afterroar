@@ -32,7 +32,7 @@ const NAV_GROUPS: NavGroup[] = [
       "/dashboard/singles",
       "/dashboard/deck-builder",
       "/dashboard/game-library",
-      "/dashboard/purchase-orders",
+      // "/dashboard/purchase-orders", // Hidden until ready
       "/dashboard/stock-counts",
       "/dashboard/locations",
       "/dashboard/transfers",
@@ -65,7 +65,6 @@ const NAV_GROUPS: NavGroup[] = [
       "/dashboard/billing",
       "/dashboard/settings",
       "/dashboard/import",
-      "/dashboard/certification",
       "/dashboard/timeclock",
       "/dashboard/promotions",
       "/dashboard/preorders",

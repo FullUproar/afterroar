@@ -515,6 +515,16 @@ export default function RegisterPage() {
   const showGiftCardPaymentRef = useRef(showGiftCardPayment);
   showGiftCardPaymentRef.current = showGiftCardPayment;
 
+  // Auto-close payment sheet when cart becomes empty
+  useEffect(() => {
+    if (cart.length === 0 && showPaySheet) {
+      setShowPaySheet(false);
+      setShowCashInput(false);
+      setShowCreditConfirm(false);
+      setShowGiftCardPayment(false);
+    }
+  }, [cart.length, showPaySheet]);
+
   // Park / Recall
   const [showParkInput, setShowParkInput] = useState(false);
   const [parkLabel, setParkLabel] = useState("");

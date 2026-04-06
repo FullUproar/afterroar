@@ -41,19 +41,16 @@ export function NotificationCenter() {
     }
   }, []);
 
-  // Fetch on first open
+  // Fetch on mount (so badge shows proactively)
   useEffect(() => {
-    if (open && !fetched) {
-      fetchNotifications();
-    }
-  }, [open, fetched, fetchNotifications]);
+    fetchNotifications();
+  }, [fetchNotifications]);
 
-  // Refresh every 5 minutes when open
+  // Refresh every 5 minutes
   useEffect(() => {
-    if (!open) return;
     const interval = setInterval(fetchNotifications, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [open, fetchNotifications]);
+  }, [fetchNotifications]);
 
   // Close on click outside
   useEffect(() => {

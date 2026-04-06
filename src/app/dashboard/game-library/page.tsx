@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/lib/store-context";
 import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/shared/ui";
 
 interface InventoryItem {
   id: string;
@@ -266,12 +267,12 @@ export default function GameLibraryPage() {
           {gamesLoading ? (
             <p className="text-muted text-center py-12">Loading game library...</p>
           ) : games.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-input-border bg-card-hover p-12 text-center">
-              <p className="text-muted mb-2">No lendable games in inventory.</p>
-              <p className="text-muted text-sm">
-                Mark inventory items as &quot;lendable&quot; in Inventory to see them here.
-              </p>
-            </div>
+            <EmptyState
+              icon="&#x1F3B2;"
+              title="No lendable games"
+              description="Mark board games as 'Lendable' in your Inventory page — they'll appear here for check-out."
+              action={{ label: "Go to Inventory", href: "/dashboard/inventory" }}
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {games.map((game) => (

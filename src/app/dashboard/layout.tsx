@@ -28,6 +28,7 @@ export default function DashboardLayout({
           <ToastProvider>
             <StaffLockGate>
               <TrialBanner />
+              <TrainingBanner />
               <OnboardingSandboxBanner />
               <DashboardLayoutInner>
                 {children}
