@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { Customer, formatCents, parseDollars } from '@/lib/types';
 import { useStoreSettings } from '@/lib/store-settings';
@@ -26,14 +26,24 @@ interface TradeItem {
   category: string;
   market_price_cents: number;
   offer_price_cents: number;
-  condition: string;
+  condition: Condition;
   quantity: number;
   inventory_item_id?: string;
   image_url?: string | null;
   current_stock?: number;
+  manualOffer?: boolean; // true when user has manually edited the offer
 }
 
-const CONDITIONS = ['NM', 'LP', 'MP', 'HP', 'DMG'] as const;
+const CONDITIONS: Condition[] = ['NM', 'LP', 'MP', 'HP', 'DMG'];
+
+/* Condition button color classes (matches ConditionBadge from shared.tsx) */
+const CONDITION_COLORS: Record<Condition, { base: string; active: string }> = {
+  NM:  { base: 'border-green-500/30 text-green-400 hover:bg-green-500/20', active: 'bg-green-500/30 border-green-500 text-green-300 ring-1 ring-green-500/50' },
+  LP:  { base: 'border-blue-500/30 text-blue-400 hover:bg-blue-500/20', active: 'bg-blue-500/30 border-blue-500 text-blue-300 ring-1 ring-blue-500/50' },
+  MP:  { base: 'border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20', active: 'bg-yellow-500/30 border-yellow-500 text-yellow-300 ring-1 ring-yellow-500/50' },
+  HP:  { base: 'border-orange-500/30 text-orange-400 hover:bg-orange-500/20', active: 'bg-orange-500/30 border-orange-500 text-orange-300 ring-1 ring-orange-500/50' },
+  DMG: { base: 'border-red-500/30 text-red-400 hover:bg-red-500/20', active: 'bg-red-500/30 border-red-500 text-red-300 ring-1 ring-red-500/50' },
+};
 
 /* ---------- component ---------- */
 
@@ -108,6 +118,9 @@ export default function NewTradeInPage() {
       })
       .catch(() => {});
   }, [selectedCustomer, storeSettings.trade_in_credit_bonus_percent]);
+
+  // Track which items just had their offer recalculated (for flash animation)
+  const [flashingKeys, setFlashingKeys] = useState<Set<number>>(new Set());
 
   // submission
   const [submitting, setSubmitting] = useState(false);
@@ -184,7 +197,7 @@ export default function NewTradeInPage() {
         category: manualCategory.trim(),
         market_price_cents: 0,
         offer_price_cents: 0,
-        condition: 'LP',
+        condition: 'LP' as Condition,
         quantity: 1,
       },
     ]);
@@ -194,17 +207,41 @@ export default function NewTradeInPage() {
     searchRef.current?.focus();
   }
 
+  /** Flash the offer field briefly when auto-recalculated */
+  const triggerFlash = useCallback((key: number) => {
+    setFlashingKeys((prev) => new Set(prev).add(key));
+    setTimeout(() => {
+      setFlashingKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }, 600);
+  }, []);
+
+  /** Compute offer cents for an item given its properties */
+  function computeOffer(item: { category: string; market_price_cents: number }, condition: Condition): number {
+    const isTCG = item.category === "tcg_single";
+    if (isTCG && item.market_price_cents > 0) {
+      return calculateOffer({ marketPriceCents: item.market_price_cents, condition, isFoil: false });
+    }
+    return Math.round(item.market_price_cents * 0.5);
+  }
+
   function updateItem(key: number, patch: Partial<TradeItem>) {
     setItems((prev) => prev.map((i) => {
       if (i.key !== key) return i;
       const updated = { ...i, ...patch };
-      // Auto-recalculate offer when condition changes for TCG singles
-      if (patch.condition && i.category === "tcg_single" && i.market_price_cents > 0) {
-        updated.offer_price_cents = calculateOffer({
-          marketPriceCents: i.market_price_cents,
-          condition: patch.condition as Condition,
-          isFoil: false,
-        });
+
+      // If user manually edited the offer, mark it so condition changes don't override
+      if (patch.offer_price_cents !== undefined && !patch.condition) {
+        updated.manualOffer = true;
+      }
+
+      // Auto-recalculate offer when condition changes (unless user manually overrode)
+      if (patch.condition && !updated.manualOffer && i.market_price_cents > 0) {
+        updated.offer_price_cents = computeOffer(i, patch.condition as Condition);
+        triggerFlash(key);
       }
       return updated;
     }));
@@ -539,19 +576,20 @@ export default function NewTradeInPage() {
               {items.map((item) => (
                 <div
                   key={item.key}
-                  className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2"
+                  className="rounded-xl border border-input-border bg-card-hover p-4 space-y-3"
                 >
+                  {/* Row 1: Item info left, remove button right */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex gap-3">
-                      {/* Card image preview */}
+                    <div className="flex gap-3 min-w-0">
+                      {/* Card image */}
                       {item.image_url && item.category === "tcg_single" && (
-                        <div className="shrink-0 w-16 h-22 rounded-lg overflow-hidden bg-background border border-card-border">
+                        <div className="shrink-0 w-14 h-[78px] rounded-lg overflow-hidden bg-background border border-card-border">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                         </div>
                       )}
-                      <div>
-                        <div className="font-medium text-foreground">{item.name}</div>
+                      <div className="min-w-0">
+                        <div className="font-medium text-foreground truncate">{item.name}</div>
                         {item.category && (
                           <div className="text-xs text-muted">{item.category}</div>
                         )}
@@ -575,13 +613,33 @@ export default function NewTradeInPage() {
                     </div>
                     <button
                       onClick={() => removeItem(item.key)}
-                      className="text-muted hover:text-red-400 transition-colors"
+                      className="text-muted hover:text-red-400 transition-colors text-lg leading-none"
                       title="Remove item"
                     >
                       &times;
                     </button>
                   </div>
 
+                  {/* Row 2: Condition buttons (prominent, big) */}
+                  <div className="flex gap-1.5">
+                    {CONDITIONS.map((c) => {
+                      const isActive = item.condition === c;
+                      const colors = CONDITION_COLORS[c];
+                      return (
+                        <button
+                          key={c}
+                          onClick={() => updateItem(item.key, { condition: c })}
+                          className={`flex-1 rounded-lg border py-2 text-sm font-bold transition-all ${
+                            isActive ? colors.active : colors.base
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Row 3: Offer + Qty + Line total */}
                   <div className="flex flex-wrap items-center gap-3 text-sm">
                     <label className="flex items-center gap-1.5 text-muted">
                       Offer $
@@ -595,23 +653,27 @@ export default function NewTradeInPage() {
                             offer_price_cents: parseDollars(e.target.value),
                           })
                         }
-                        className="w-24 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
+                        className={`w-24 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none transition-all ${
+                          flashingKeys.has(item.key)
+                            ? 'ring-2 ring-accent bg-accent/10'
+                            : ''
+                        }`}
                       />
-                    </label>
-
-                    <label className="flex items-center gap-1.5 text-muted">
-                      Cond
-                      <select
-                        value={item.condition}
-                        onChange={(e) => updateItem(item.key, { condition: e.target.value })}
-                        className="rounded border border-zinc-600 bg-card px-2 py-1 text-foreground focus:border-accent focus:outline-none"
-                      >
-                        {CONDITIONS.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
+                      {item.manualOffer && (
+                        <button
+                          onClick={() => {
+                            const recalc = computeOffer(item, item.condition);
+                            setItems((prev) => prev.map((i) =>
+                              i.key === item.key ? { ...i, offer_price_cents: recalc, manualOffer: false } : i
+                            ));
+                            triggerFlash(item.key);
+                          }}
+                          className="text-[10px] text-accent hover:text-accent/80 underline"
+                          title="Reset to auto-calculated offer"
+                        >
+                          reset
+                        </button>
+                      )}
                     </label>
 
                     <label className="flex items-center gap-1.5 text-muted">
@@ -627,7 +689,7 @@ export default function NewTradeInPage() {
                       />
                     </label>
 
-                    <div className="ml-auto font-medium text-foreground tabular-nums">
+                    <div className="ml-auto font-semibold text-foreground tabular-nums text-base">
                       {formatCents(item.offer_price_cents * item.quantity)}
                     </div>
                   </div>
