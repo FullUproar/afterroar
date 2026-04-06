@@ -4,10 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 import Link from "next/link";
 import { DashboardModeGuard } from "@/components/dashboard-mode-guard";
-import { GettingStarted } from "@/components/getting-started";
 import { IntelligenceFeed } from "@/components/intelligence-feed";
 import { StoreAdvisor } from "@/components/store-advisor";
-import { HealthScore } from "@/components/health-score";
 import { DailyClose } from "@/components/daily-close";
 
 export default async function DashboardPage() {
@@ -150,58 +148,11 @@ export default async function DashboardPage() {
   return (
     <DashboardModeGuard>
     <div className="space-y-6 md:space-y-8">
-      {/* Store Health — single-glance status */}
-      <HealthScore />
-
-      {/* Quick Actions — always visible, primary CTAs */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-        <Link
-          href="/dashboard/register"
-          className="flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-4 md:py-5 text-white active:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/10"
-        >
-          <span className="text-2xl">{"\u25C8"}</span>
-          <div>
-            <span className="text-sm md:text-base font-bold">Open Register</span>
-            <span className="block text-xs text-emerald-100/70">Start selling</span>
-          </div>
-        </Link>
-        <Link
-          href="/dashboard/cash-flow"
-          className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-4 md:py-5 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
-        >
-          <span className="text-2xl text-accent">{"\u25CE"}</span>
-          <div>
-            <span className="text-sm md:text-base font-semibold">Cash Flow</span>
-            <span className="block text-xs text-muted">{formatCents(todayRevenueCents)} today</span>
-          </div>
-        </Link>
-        <Link
-          href="/dashboard/trade-ins"
-          className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-4 md:py-5 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
-        >
-          <span className="text-2xl text-accent">{"\u21C4"}</span>
-          <div>
-            <span className="text-sm md:text-base font-semibold">Trade-Ins</span>
-            <span className="block text-xs text-muted">Buy cards & games</span>
-          </div>
-        </Link>
-        <Link
-          href="/dashboard/events"
-          className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-4 md:py-5 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
-        >
-          <span className="text-2xl text-accent">{"\u2605"}</span>
-          <div>
-            <span className="text-sm md:text-base font-semibold">Events</span>
-            <span className="block text-xs text-muted">{upcomingEvents} upcoming</span>
-          </div>
-        </Link>
-      </div>
+      {/* Intelligence Feed — actionable store alerts (includes low stock, dead stock, etc.) */}
+      <IntelligenceFeed compact />
 
       {/* Store Advisor — business co-pilot */}
       <StoreAdvisor />
-
-      {/* Intelligence Feed — rule-based store alerts */}
-      <IntelligenceFeed compact />
 
       {/* Today's Summary + Recent Activity side by side on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">

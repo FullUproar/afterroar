@@ -308,7 +308,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/deck-builder", label: "Deck Builder", icon: "\u2660", permission: "checkout", feature: "tcg_engine" },
   { href: "/dashboard/game-library", label: "Game Library", icon: "♜", permission: "inventory.view" },
   { href: "/dashboard/cafe", label: "Cafe", icon: "\u2615", permission: "checkout", feature: "cafe" },
-  { href: "/dashboard/consignment", label: "Consignment", icon: "\u{1F4B0}", permission: "inventory.view" },
+  { href: "/dashboard/consignment", label: "Consignment", icon: "", permission: "inventory.view" },
   { href: "/dashboard/preorders", label: "Preorders", icon: "⏳", permission: "inventory.adjust" },
   { href: "/dashboard/trade-ins", label: "Trade-Ins", icon: "⇄", permission: "trade_ins" },
   { href: "/dashboard/returns", label: "Returns", icon: "↩", permission: "returns" },

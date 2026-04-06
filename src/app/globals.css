@@ -46,9 +46,10 @@ html.light {
   --font-mono: var(--font-geist-mono);
 }
 
-/* Prevent ANY horizontal overflow on mobile */
+/* Prevent horizontal overflow on mobile, ensure vertical scroll works */
 html, body {
   overflow-x: hidden;
+  overflow-y: auto;
   max-width: 100vw;
 }
 

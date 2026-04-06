@@ -43,14 +43,15 @@ interface StripeConnectStatus {
 /*  Tab definitions — which SETTINGS_SECTIONS keys go where            */
 /* ------------------------------------------------------------------ */
 
-type TabKey = 'store' | 'payments' | 'staff' | 'integrations' | 'advanced';
+type TabKey = 'store' | 'payments' | 'staff' | 'integrations' | 'intelligence' | 'operations';
 
 const TABS: { key: TabKey; label: string; icon: string; description: string }[] = [
   { key: 'store', label: 'Store', icon: '🏪', description: 'Your store identity, tax, checkout, and receipt settings' },
   { key: 'payments', label: 'Payments', icon: '💳', description: 'Stripe, card reader, and payment method configuration' },
   { key: 'staff', label: 'Staff', icon: '👥', description: 'Roles, permissions, training mode, and mobile access' },
   { key: 'integrations', label: 'Integrations', icon: '🔗', description: 'Afterroar Network and external connections' },
-  { key: 'advanced', label: 'Advanced', icon: '⚙', description: 'Intelligence, cafe, loyalty, promotions, and appearance' },
+  { key: 'intelligence', label: 'Intelligence', icon: '🧠', description: 'Store advisor, cash flow thresholds, and monthly fixed costs' },
+  { key: 'operations', label: 'Operations', icon: '⚙', description: 'Cafe, loyalty, promotions, and appearance' },
 ];
 
 const TAB_SECTIONS: Record<TabKey, string[]> = {
@@ -58,7 +59,8 @@ const TAB_SECTIONS: Record<TabKey, string[]> = {
   payments: ['payments'],
   staff: ['staff_lock', 'mobile_register'], // timeclock rendered manually for GPS button
   integrations: [],
-  advanced: ['intelligence', 'intelligence_costs', 'intelligence_thresholds', 'cafe', 'loyalty', 'promo_guardrails'],
+  intelligence: ['intelligence', 'intelligence_costs', 'intelligence_thresholds'],
+  operations: ['cafe', 'loyalty', 'promo_guardrails'],
 };
 
 /* ------------------------------------------------------------------ */
@@ -636,10 +638,27 @@ export default function SettingsPage() {
           </>
         )}
 
-        {/* ════════════════ ADVANCED TAB ════════════════ */}
-        {activeTab === 'advanced' && (
+        {/* ════════════════ INTELLIGENCE TAB ════════════════ */}
+        {activeTab === 'intelligence' && (
           <>
-            {/* Dynamic sections: intelligence, costs, thresholds, cafe, loyalty, promo guardrails */}
+            {tabSections.map((section) => (
+              <SettingsSection
+                key={section.key}
+                section={section}
+                settings={settings}
+                saving={saving}
+                saved={saved}
+                updateLocal={updateLocal}
+                saveField={saveField}
+                resetSection={resetSection}
+              />
+            ))}
+          </>
+        )}
+
+        {/* ════════════════ OPERATIONS TAB ════════════════ */}
+        {activeTab === 'operations' && (
+          <>
             {tabSections.map((section) => (
               <SettingsSection
                 key={section.key}

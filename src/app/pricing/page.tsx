@@ -157,14 +157,6 @@ export default function PricingPage() {
         ))}
       </section>
 
-      {/* All plans include */}
-      <div className="mx-auto mt-10 max-w-4xl px-6 text-center">
-        <p className="text-sm text-[#94a3b8]">
-          Every plan includes: barcode scanning, Stripe card processing, receipt
-          printing, and free data migration.
-        </p>
-      </div>
-
       {/* Migration */}
       <section className="mx-auto mt-16 max-w-4xl px-6">
         <div className="rounded-2xl border border-[#FF8200]/30 bg-[#FF8200]/5 p-8 text-center sm:p-10">

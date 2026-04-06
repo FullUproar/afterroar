@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store-context";
 import { PageHeader } from "@/components/page-header";
-import type { FeatureModule } from "@/lib/permissions";
 
 /* ------------------------------------------------------------------ */
 /*  Subscription — plan management + add-on modules                    */
@@ -44,16 +43,6 @@ const PLANS = [
   },
 ];
 
-const ADDONS: { key: FeatureModule; label: string; desc: string; icon: string }[] = [
-  { key: "intelligence", label: "Store Intelligence", desc: "Cash flow insights, smart advisor, seasonal alerts", icon: "🧠" },
-  { key: "tcg_engine", label: "TCG Engine", desc: "Scryfall/Pokemon/Yu-Gi-Oh search, bulk pricing, buylist", icon: "🃏" },
-  { key: "events", label: "Events & Tournaments", desc: "Swiss pairing, check-ins, prize payouts", icon: "🏆" },
-  { key: "multi_location", label: "Multi-Location", desc: "Warehouses, transfers, location inventory", icon: "🏢" },
-  { key: "cafe", label: "Cafe Module", desc: "Tabs, KDS, table ordering, menu builder", icon: "☕" },
-  { key: "ecommerce", label: "E-Commerce", desc: "eBay listings, marketplace sync", icon: "🛒" },
-  { key: "advanced_reports", label: "Advanced Reports", desc: "Margin analysis, category drill-down, CSV export", icon: "📊" },
-  { key: "api_access", label: "API Access", desc: "External API for custom integrations", icon: "🔗" },
-];
 
 export default function SubscriptionPage() {
   const { store, can } = useStore();
@@ -69,7 +58,6 @@ export default function SubscriptionPage() {
 
   const settings = (store?.settings ?? {}) as Record<string, unknown>;
   const currentPlan = (settings.plan as string) || "pro";
-  const currentAddons = (settings.addons as string[]) || [];
   const subscriptionStatus = (settings.subscription_status as string) || "trial";
   const trialStartedAt = settings.trial_started_at as string | undefined;
   const trialDays = (settings.trial_days as number) || 30;
@@ -98,22 +86,6 @@ export default function SubscriptionPage() {
     }
   }
 
-  async function toggleAddon(addon: string) {
-    setSaving(true);
-    try {
-      const updated = currentAddons.includes(addon)
-        ? currentAddons.filter((a) => a !== addon)
-        : [...currentAddons, addon];
-      await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addons: updated }),
-      });
-      window.location.reload();
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -191,59 +163,6 @@ export default function SubscriptionPage() {
                       } disabled:opacity-50`}
                     >
                       {saving ? "Saving..." : `Switch to ${tier.name}`}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Add-On Modules */}
-        <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
-          <h2 className="text-sm font-semibold text-foreground">Add-On Modules</h2>
-          <p className="mt-1 text-xs text-muted">
-            Some modules are included with your plan. Toggle extras as needed.
-          </p>
-
-          <div className="mt-4 space-y-3">
-            {ADDONS.map((addon) => {
-              const includedInPlan = currentPlan === "enterprise" ||
-                (currentPlan === "pro" && ["intelligence", "events", "tcg_engine", "advanced_reports"].includes(addon.key));
-              const isEnabled = includedInPlan || currentAddons.includes(addon.key);
-
-              return (
-                <div
-                  key={addon.key}
-                  className={`flex items-center justify-between rounded-lg border p-3 ${
-                    isEnabled
-                      ? "border-green-500/20 bg-green-500/5"
-                      : "border-card-border bg-card-hover"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{addon.icon}</span>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{addon.label}</p>
-                      <p className="text-xs text-muted">{addon.desc}</p>
-                    </div>
-                  </div>
-
-                  {includedInPlan ? (
-                    <span className="text-xs text-green-400 font-medium whitespace-nowrap">
-                      Included
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => toggleAddon(addon.key)}
-                      disabled={saving}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap ${
-                        isEnabled
-                          ? "bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/20"
-                          : "bg-accent/20 text-accent hover:bg-accent/30 border border-accent/20"
-                      } disabled:opacity-50`}
-                    >
-                      {isEnabled ? "Remove" : "Add"}
                     </button>
                   )}
                 </div>
