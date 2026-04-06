@@ -3,14 +3,15 @@ import { requireStaff, handleAuthError } from "@/lib/require-staff";
 
 export async function GET(request: NextRequest) {
   try {
-    const { db } = await requireStaff();
+    const { db, storeId } = await requireStaff();
 
     const q = request.nextUrl.searchParams.get("q")?.trim();
     const category = request.nextUrl.searchParams.get("category")?.trim();
     const inStock = request.nextUrl.searchParams.get("in_stock") === "true";
 
     // Build where clause
-    const where: Record<string, unknown> = { active: true };
+    // SECURITY: explicit store_id filter for defense-in-depth
+    const where: Record<string, unknown> = { active: true, store_id: storeId };
 
     if (category) {
       where.category = category;

@@ -8,9 +8,10 @@ import { hash } from "bcryptjs";
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { db } = await requirePermission("staff.manage");
-
+    const { db, storeId } = await requirePermission("staff.manage");
+    // SECURITY: explicit store_id filter + tenant client for defense-in-depth
     const staff = await db.posStaff.findMany({
+      where: { store_id: storeId },
       include: {
         user: { select: { email: true, displayName: true, avatarUrl: true } },
       },
