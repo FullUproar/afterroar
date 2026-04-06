@@ -98,10 +98,8 @@ function storeExpanded(state: Record<string, boolean>) {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { store, staff, loading, effectiveRole, isTestMode, can, hasModule, activeStaff, endShift } = useStore();
+  const { store, staff, effectiveRole, isTestMode, can, hasModule, activeStaff, endShift } = useStore();
   const { mode, setMode } = useMode();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   // Build visible items per group — filter by permission AND feature module
   const visibleNav = NAV_ITEMS.filter(
@@ -182,14 +180,14 @@ export function Sidebar() {
         <img src="/logo-ring-favicon.png" alt="Afterroar" className="h-7 w-7 lg:hidden" />
         <div className="hidden lg:block">
           <h1 className="text-lg font-bold text-foreground">Afterroar</h1>
-          {mounted && store && (
+          {store && (
             <p className="truncate text-xs text-muted">{store.name}</p>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3" suppressHydrationWarning>
-        {!mounted ? null : visibleGroups.map((group) => {
+      <nav className="flex-1 overflow-y-auto px-2 py-3">
+        {visibleGroups.map((group) => {
           const expanded = hydrated ? isGroupExpanded(group) : (activeGroup?.label === group.label);
           return (
             <div key={group.label} className="mb-1">
@@ -252,8 +250,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-card-border px-2 lg:px-4 py-3" suppressHydrationWarning>
-        {mounted && (activeStaff || staff) && (
+      <div className="border-t border-card-border px-2 lg:px-4 py-3">
+        {(activeStaff || staff) && (
           <p className="truncate text-xs text-muted hidden lg:block">
             {activeStaff?.name || staff?.name} &middot;{" "}
             <span className={isTestMode ? "text-purple-400" : ""}>
@@ -264,7 +262,7 @@ export function Sidebar() {
             )}
           </p>
         )}
-        {mounted && activeStaff && (
+        {activeStaff && (
           <button
             onClick={endShift}
             className="mt-2 w-full text-xs text-amber-400 hover:text-amber-300 transition-colors flex items-center justify-center lg:justify-start gap-1"

@@ -67,6 +67,19 @@ test.describe("authenticated: settings navigation", () => {
     await expect(page).toHaveURL(/\/dashboard$/);
   });
 
+  test("no hydration errors on dashboard page", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (err) => errors.push(`PAGE_ERROR: ${err.message}`));
+
+    await page.goto("/dashboard", { waitUntil: "networkidle" });
+    await page.waitForTimeout(3000);
+
+    const critical = errors.filter((e) => e.includes("418") || e.includes("Hydration"));
+    console.log("=== DASHBOARD ERRORS ===");
+    errors.forEach((e) => console.log("  ", e.slice(0, 200)));
+    expect(critical).toEqual([]);
+  });
+
   test("no console errors on settings page", async ({ page }) => {
     const errors: string[] = [];
     const warnings: string[] = [];
