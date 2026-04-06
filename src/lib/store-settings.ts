@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useStore } from "./store-context";
 
 /* ------------------------------------------------------------------ */
@@ -453,20 +454,29 @@ function setCachedSettings(settings: Partial<StoreSettings>) {
 }
 
 /** Client-side: get typed settings merged with defaults.
- *  Uses localStorage cache for instant load, updates when store context arrives. */
+ *  Uses localStorage cache for instant load, updates when store context arrives.
+ *  IMPORTANT: localStorage is only read in useEffect to avoid hydration mismatch. */
 export function useStoreSettings(): StoreSettings {
   const { store } = useStore();
+  const [cachedSettings, setCached] = useState<Partial<StoreSettings>>({});
+  const [hydrated, setHydrated] = useState(false);
+
+  // Read localStorage AFTER hydration to avoid server/client mismatch
+  useEffect(() => {
+    setCached(getCachedSettings());
+    setHydrated(true);
+  }, []);
+
   const raw = (store?.settings ?? null) as Partial<StoreSettings> | null;
 
   // When store settings arrive, cache them
   if (raw && Object.keys(raw).length > 0) {
-    setCachedSettings(raw);
+    if (hydrated) setCachedSettings(raw);
     return { ...SETTINGS_DEFAULTS, ...raw };
   }
 
   // Before store loads, use cached settings from last session
-  const cached = getCachedSettings();
-  return { ...SETTINGS_DEFAULTS, ...cached };
+  return { ...SETTINGS_DEFAULTS, ...cachedSettings };
 }
 
 /** Get the effective store display name */
