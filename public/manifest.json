@@ -1,1 +1,20 @@
-{"name":"Afterroar Store Ops","short_name":"Afterroar Ops","start_url":"/dashboard","display":"standalone","background_color":"#0a0a0a","theme_color":"#FF8200","icons":[]}
+{
+  "name": "Afterroar Store Ops",
+  "short_name": "Afterroar Ops",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#FF8200",
+  "icons": [
+    {
+      "src": "/logo-ring-favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-ring.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

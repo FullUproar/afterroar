@@ -200,32 +200,29 @@ export function Sidebar() {
                 <span className="lg:hidden text-center w-full text-[10px]">···</span>
                 <span className="text-[10px] hidden lg:inline">{expanded ? "\u25BE" : "\u25B8"}</span>
               </button>
-              <div
-                className={cn(
-                  "overflow-hidden transition-all duration-200 ease-in-out",
-                  expanded ? "max-h-125 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
-                )}
-              >
-                {group.items.map((item) => {
-                  const active = isActive(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      title={item.label}
-                      className={cn(
-                        "flex items-center gap-2 rounded-md px-2 lg:pl-6 lg:pr-3 py-2 text-sm transition-colors justify-center lg:justify-start",
-                        active
-                          ? "bg-card-hover text-foreground font-medium lg:border-l-2 lg:border-accent"
-                          : "text-muted hover:bg-card-hover hover:text-foreground lg:border-l-2 lg:border-transparent"
-                      )}
-                    >
-                      <span className="w-5 text-center opacity-60" style={{ fontFamily: 'inherit' }}>{item.icon}</span>
-                      <span className="hidden lg:inline">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              {expanded && (
+                <div>
+                  {group.items.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={item.label}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-2 lg:pl-6 lg:pr-3 py-2 text-sm transition-colors justify-center lg:justify-start",
+                          active
+                            ? "bg-card-hover text-foreground font-medium lg:border-l-2 lg:border-accent"
+                            : "text-muted hover:bg-card-hover hover:text-foreground lg:border-l-2 lg:border-transparent"
+                        )}
+                      >
+                        <span className="w-5 text-center opacity-60" style={{ fontFamily: 'inherit' }}>{item.icon}</span>
+                        <span className="hidden lg:inline">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
