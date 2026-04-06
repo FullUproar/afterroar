@@ -632,7 +632,7 @@ export default function RegisterPage() {
       let found: InventoryItem | null = null;
       let zeroStockMatch: InventoryItem | null = null;
       try {
-        const localResults = await searchInventoryLocal(barcode);
+        const localResults = await searchInventoryLocal(barcode).catch(() => []);
         const match = localResults.find((r) => r.barcode === barcode);
         if (match) {
           const asItem = { ...match, low_stock_threshold: 5, image_url: null, external_id: null, catalog_product_id: null, shared_to_catalog: false, created_at: "", updated_at: "" } as InventoryItem;
@@ -856,8 +856,9 @@ export default function RegisterPage() {
         if (exactBarcode) { addToCart(exactBarcode); setSearchQuery(""); setSearchResults([]); setActivePanel(null); return; }
         setSearchResults(cached.filter((d) => d.quantity > 0));
       }
+      // Try offline cache first (non-blocking — if IDB fails, fall through to API)
       try {
-        const localResults = await searchInventoryLocal(trimmed);
+        const localResults = await searchInventoryLocal(trimmed).catch(() => []);
         if (localResults.length > 0) {
           const asInventory = localResults.map((r) => ({ ...r, low_stock_threshold: 5, image_url: null, external_id: null, catalog_product_id: null, shared_to_catalog: false, created_at: "", updated_at: "" })) as InventoryItem[];
           const exactBarcode = asInventory.find((d) => d.barcode && d.barcode === trimmed && d.quantity > 0);
@@ -866,7 +867,9 @@ export default function RegisterPage() {
           searchCache.current.set(trimmed.toLowerCase(), filtered);
           setSearchResults(filtered);
         }
-      } catch {}
+      } catch {
+        // IDB completely broken — skip to API
+      }
       try {
         const res = await fetch(`/api/inventory/search?q=${encodeURIComponent(trimmed)}`);
         const data: InventoryItem[] = await res.json();
