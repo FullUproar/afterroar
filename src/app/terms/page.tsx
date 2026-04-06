@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import MarketingNav from "@/components/marketing-nav";
+import MarketingFooter from "@/components/marketing-footer";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Afterroar Store Ops",
@@ -9,18 +10,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <nav className="flex items-center justify-between px-6 py-5 sm:px-10">
-        <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-ring.png" alt="" className="h-8 w-8" />
-          <span className="text-lg font-semibold tracking-tight">Afterroar</span>
-        </Link>
-        <Link
-          href="/login"
-          className="rounded-lg bg-[#FF8200] px-5 py-2 text-sm font-medium transition-colors hover:bg-[#e67400]"
-        >
-          Sign In
-        </Link>
-      </nav>
+      <MarketingNav />
 
       <article className="mx-auto max-w-3xl px-6 pb-24 pt-12">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -159,14 +149,7 @@ export default function TermsPage() {
         </div>
       </article>
 
-      <footer className="border-t border-[#2a2a3e] px-6 py-10 text-center text-xs text-[#4a4a6a]">
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link href="/pricing" className="hover:text-[#94a3b8]">Pricing</Link>
-          <Link href="/privacy" className="hover:text-[#94a3b8]">Privacy</Link>
-          <Link href="/support" className="hover:text-[#94a3b8]">Support</Link>
-        </div>
-        <p className="mt-4">Afterroar Store Ops &mdash; by Full Uproar Games</p>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

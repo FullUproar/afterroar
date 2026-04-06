@@ -14,9 +14,10 @@ export default function LoginPage() {
 }
 
 function LoginContent() {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [error, setError] = useState("");
   const searchParams = useSearchParams();
+  const isNewParam = searchParams.get("new") === "true";
+  const [isSignUp, setIsSignUp] = useState(isNewParam);
+  const [error, setError] = useState("");
 
   // Show NextAuth errors from redirect
   useEffect(() => {
@@ -103,11 +104,11 @@ function LoginContent() {
       <div className="mb-8 text-center">
         <img src="/logo-ring.png" alt="Afterroar" className="mx-auto mb-3 h-14 w-14 object-contain" />
         <h1 className="text-2xl font-bold text-white">
-          {isSignUp ? "Create your store" : "Welcome back"}
+          {isSignUp ? "Create Your Account" : "Welcome Back"}
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           {isSignUp
-            ? "Set up your game store in seconds"
+            ? "Set up your game store on Afterroar"
             : "Sign in to Afterroar Store Ops"}
         </p>
       </div>
