@@ -48,11 +48,11 @@ interface StripeConnectStatus {
 type TabKey = 'store' | 'payments' | 'staff' | 'integrations' | 'intelligence' | 'operations';
 
 const TABS: { key: TabKey; label: string; icon: string; description: string }[] = [
-  { key: 'store', label: 'Store', icon: '🏪', description: 'Your store identity, tax, checkout, and receipt settings' },
-  { key: 'payments', label: 'Payments', icon: '💳', description: 'Stripe, card reader, and payment method configuration' },
-  { key: 'staff', label: 'Staff', icon: '👥', description: 'Roles, permissions, training mode, and mobile access' },
-  { key: 'integrations', label: 'Integrations', icon: '🔗', description: 'Afterroar Network and external connections' },
-  { key: 'intelligence', label: 'Intelligence', icon: '🧠', description: 'Store advisor, cash flow thresholds, and monthly fixed costs' },
+  { key: 'store', label: 'Store', icon: '⌂', description: 'Your store identity, tax, checkout, and receipt settings' },
+  { key: 'payments', label: 'Payments', icon: '◈', description: 'Stripe, card reader, and payment method configuration' },
+  { key: 'staff', label: 'Staff', icon: '⊞', description: 'Roles, permissions, training mode, and mobile access' },
+  { key: 'integrations', label: 'Integrations', icon: '◎', description: 'Afterroar Network and external connections' },
+  { key: 'intelligence', label: 'Intelligence', icon: '◉', description: 'Store advisor, cash flow thresholds, and monthly fixed costs' },
   { key: 'operations', label: 'Operations', icon: '⚙', description: 'Cafe, loyalty, promotions, and appearance' },
 ];
 
