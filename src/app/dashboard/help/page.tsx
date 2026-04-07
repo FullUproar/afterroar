@@ -211,7 +211,8 @@ export default function HelpPage() {
       </div>
 
       {/* Category pills */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
+      <div className="overflow-hidden w-full">
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
         <button
           onClick={() => setSelectedCategory(null)}
           className={`rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
@@ -243,6 +244,7 @@ export default function HelpPage() {
             </button>
           );
         })}
+      </div>
       </div>
 
       {/* Popular articles (shown when no search and no category filter) */}

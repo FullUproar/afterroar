@@ -340,7 +340,8 @@ function InventoryTab({
       </div>
 
       {/* Game Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
+      <div className="overflow-hidden w-full">
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
         {GAME_TABS.map((tab) => (
           <button
             key={tab}
@@ -354,6 +355,7 @@ function InventoryTab({
             {tab}
           </button>
         ))}
+      </div>
       </div>
 
       {/* Search */}
