@@ -176,15 +176,24 @@ export default function CafePage() {
     loadKDS();
   }
 
-  async function closeTab(tabId: string) {
-    const res = await fetch("/api/cafe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "close_tab", tab_id: tabId, payment_method: "cash" }),
-    });
-    if (res.ok) {
-      setActiveTab(null);
-      loadTabs();
+  const [showClosePayment, setShowClosePayment] = useState<string | null>(null); // tab_id
+  const [closing, setClosing] = useState(false);
+
+  async function closeTab(tabId: string, paymentMethod: string) {
+    setClosing(true);
+    try {
+      const res = await fetch("/api/cafe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "close_tab", tab_id: tabId, payment_method: paymentMethod }),
+      });
+      if (res.ok) {
+        setActiveTab(null);
+        setShowClosePayment(null);
+        loadTabs();
+      }
+    } finally {
+      setClosing(false);
     }
   }
 
@@ -324,12 +333,36 @@ export default function CafePage() {
                       ))}
                     </div>
                   )}
-                  <button
-                    onClick={() => closeTab(activeTab.id)}
-                    className="mt-4 w-full rounded-lg bg-green-700 py-2.5 text-sm font-semibold text-white hover:bg-green-600 transition-colors"
-                  >
-                    Close Tab — {formatCents(activeTab.subtotal_cents)}
-                  </button>
+                  {showClosePayment === activeTab.id ? (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs text-muted text-center">Payment method</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {["cash", "card", "store_credit"].map((method) => (
+                          <button
+                            key={method}
+                            onClick={() => closeTab(activeTab.id, method)}
+                            disabled={closing}
+                            className="rounded-lg border border-card-border bg-card-hover py-2.5 text-sm font-medium text-foreground hover:border-accent/50 disabled:opacity-50 transition-colors capitalize"
+                          >
+                            {method === "store_credit" ? "Credit" : method}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setShowClosePayment(null)}
+                        className="w-full text-xs text-muted hover:text-foreground transition-colors py-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowClosePayment(activeTab.id)}
+                      className="mt-4 w-full rounded-lg bg-green-700 py-2.5 text-sm font-semibold text-white hover:bg-green-600 transition-colors"
+                    >
+                      Close Tab — {formatCents(activeTab.subtotal_cents)}
+                    </button>
+                  )}
                 </div>
 
                 {/* Quick menu */}
