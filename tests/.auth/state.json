@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "__Host-authjs.csrf-token",
-      "value": "1e3ef362087764974a5b8afb907686d9cdc01b7257d11fbd6a024308c4e969a9%7C1df66cde3b88e84e4b74a65d27af18cd7b01555a6bb74dc748dc3a5a3f035e98",
+      "value": "c3450f77b255b992b60bf0cb840b7333cf7c1507399585c03dbe81e7d064737b%7Cb9c60dac2e0258e4407ba1709d14942acd05ec469d35aeb028f15a59d321391d",
       "domain": "www.afterroar.store",
       "path": "/",
       "expires": -1,
@@ -22,10 +22,10 @@
     },
     {
       "name": "__Secure-authjs.session-token",
-      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoidW44QVA2YlRHeHhUMzFPZ1h1Y1JXN3RrRlpGdVd1cXV4Q0s5ZHF2N2Zwd2MyTi1PNFQ1YUxQTUwwTWtqQllTd2xaVUVENlhMZHBmamdqZ1JoWGRYU1EifQ..O0BpG2LjdmAqeqBYN_x3VA.kMFS1GoIH8voTV4ECHlEEFKsLlcEletaScW4nGJoIgNxMATJcUyGYXF9q5UfRe6JMrU76S2_RFclZZjFqHTu75CDfgdg1w0ZwC9_KDFSpvkPvv6fqhKcSvoHrWYpT277_bjYyCZkGIfoO7bG09pyaNnGAw5DfNjsOFJrMC1tNiL2CkCN4GGvsoZaDLJdtSRZypX9bP5CwlW9nW5sQBleH0UEBZpTlMdy9TUmmgtsbjod8OJJAqrJU_qT1fJcD3MGRFrSMblpH6esXL00G2dSDLMzD1OsU581rhLUGB5xufJe6lYhYEijhQxccHTQzXsYukVAo2mYVHL1pzs-gQCdM9pnGlUE5F-KL98VR-xbZeso0Xr9EAuvCxlYnZuNnubuvXWKTShgJLu2kPAHxGju7g.hnSF-ERndrfUI1zDNpvBYLnlbCjf1xHi2byo0zRmyXw",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoidW44QVA2YlRHeHhUMzFPZ1h1Y1JXN3RrRlpGdVd1cXV4Q0s5ZHF2N2Zwd2MyTi1PNFQ1YUxQTUwwTWtqQllTd2xaVUVENlhMZHBmamdqZ1JoWGRYU1EifQ..zHOCLmxM5zssDVMOHKSaJg.n8TsZzsEflewwGJGCVUyMShGkAAGB_znme-7lDMd2BUBb_FXsUOxmNxN4ifw67phMcii4Olw7RRPWgAUOKyMu1EZ6S7hvCBuvnb1lkP4bPUsO_BsQVwkzLA0Zu2y_oNpXXuT0Vm5_xZ6lISuFt19vSrZFxmg3iEnwe1CW0k_30vadYvIhy6jk3Y8qn00rr4-Ld29g26H7bZ8mF66S4_TO2pzsgxj9X-2aIh8diqtg1I6hedOki5Dz6EX4J-zm3SsQxIgXEi11NNQPGrCcDSemGfYnDkl4SYSBMMVjZRabxhxTxUxFKgXJFzurQorBbzjNcEr5XPj7n_h2PE5DGKU0CKSbQcIDUFzNLk2aIoGtJ8QuY2LidY_i_J3Ynucsgyz-uLBYYHRU8KdEvNM_Uyexw.018sAIbMHUrAMPVzlwzh4rJk5KouLRIURRzJYMRwvPM",
       "domain": "www.afterroar.store",
       "path": "/",
-      "expires": 1778125405.278688,
+      "expires": 1778127344.886411,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"

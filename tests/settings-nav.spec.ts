@@ -34,7 +34,8 @@ test.describe("authenticated: settings navigation", () => {
 
     // Click through each tab — if any crashes, the page dies
     for (const tab of ["Payments", "Staff", "Integrations", "Intelligence", "Operations", "Store"]) {
-      await page.getByRole("button", { name: tab }).click();
+      // Use exact match to avoid sidebar group name collision
+      await page.locator(`button:has-text("${tab}")`).last().click();
       await page.waitForTimeout(500);
     }
 
@@ -63,7 +64,7 @@ test.describe("authenticated: settings navigation", () => {
     }
 
     // Try clicking the Register link (should be in Sales group)
-    const registerLink = page.locator('a[href="/dashboard/register"]');
+    const registerLink = page.locator('a[href="/dashboard/register"]').first();
     if (await registerLink.isVisible()) {
       await registerLink.click();
       await page.waitForURL("**/dashboard/register**", { timeout: 10_000 });
