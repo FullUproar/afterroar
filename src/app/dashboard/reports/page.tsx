@@ -7,8 +7,13 @@ export default async function ReportsPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
+  const sessionStoreId = (session as unknown as Record<string, unknown>).storeId as string | undefined;
   const staff = await prisma.posStaff.findFirst({
-    where: { user_id: session.user.id, active: true },
+    where: {
+      user_id: session.user.id,
+      active: true,
+      ...(sessionStoreId ? { store_id: sessionStoreId } : {}),
+    },
   });
   if (!staff) return null;
 

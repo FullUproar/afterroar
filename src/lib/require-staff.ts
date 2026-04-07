@@ -77,8 +77,15 @@ export async function requireStaff(): Promise<StaffContext> {
   }
 
   // Find the session user's staff record (Layer 1)
+  // SECURITY: Use storeId from session JWT to scope lookup — prevents
+  // multi-store users (e.g., god admin) from randomly landing on wrong store.
+  const sessionStoreId = (session as unknown as Record<string, unknown>).storeId as string | undefined;
   const sessionStaff = await prisma.posStaff.findFirst({
-    where: { user_id: session.user.id, active: true },
+    where: {
+      user_id: session.user.id,
+      active: true,
+      ...(sessionStoreId ? { store_id: sessionStoreId } : {}),
+    },
     include: { store: { select: { settings: true } } },
   });
   if (!sessionStaff) {

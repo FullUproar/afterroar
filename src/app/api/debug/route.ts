@@ -14,8 +14,13 @@ export async function GET() {
       return NextResponse.json({ auth: "no_user", cookies: allCookies });
     }
 
+    const sessionStoreId = (session as unknown as Record<string, unknown>).storeId as string | undefined;
     const staff = await prisma.posStaff.findFirst({
-      where: { user_id: session.user.id, active: true },
+      where: {
+        user_id: session.user.id,
+        active: true,
+        ...(sessionStoreId ? { store_id: sessionStoreId } : {}),
+      },
       include: { store: true },
     });
 

@@ -80,20 +80,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // Embed store/staff context in the JWT.
-      // SECURITY: Always refresh — storeId can change if store is recreated,
-      // staff is reassigned, or user is deactivated. A stale storeId could
-      // leak data from the wrong tenant.
+      // SECURITY: Always refresh role/active status. Use existing storeId to scope
+      // the lookup — prevents multi-store users from getting the wrong store.
       if (token.id) {
+        const existingStoreId = token.storeId as string | undefined;
         const staffRecord = await prisma.posStaff.findFirst({
-          where: { user_id: token.id as string, active: true },
+          where: {
+            user_id: token.id as string,
+            active: true,
+            // If we already know the store, stay on it. Otherwise pick first.
+            ...(existingStoreId ? { store_id: existingStoreId } : {}),
+          },
           select: { id: true, store_id: true, role: true },
         });
         if (staffRecord) {
           token.staffId = staffRecord.id;
           token.storeId = staffRecord.store_id;
           token.role = staffRecord.role;
+        } else if (existingStoreId) {
+          // Staff deactivated on this store — try any other store
+          const fallback = await prisma.posStaff.findFirst({
+            where: { user_id: token.id as string, active: true },
+            select: { id: true, store_id: true, role: true },
+          });
+          if (fallback) {
+            token.staffId = fallback.id;
+            token.storeId = fallback.store_id;
+            token.role = fallback.role;
+          } else {
+            delete token.staffId;
+            delete token.storeId;
+            delete token.role;
+          }
         } else {
-          // Staff was deactivated or deleted — clear tenant context
           delete token.staffId;
           delete token.storeId;
           delete token.role;

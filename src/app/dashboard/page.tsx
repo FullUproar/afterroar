@@ -19,8 +19,14 @@ export default async function DashboardPage() {
     );
   }
 
+  // SECURITY: scope to storeId from session JWT for multi-store users
+  const sessionStoreId = (session as unknown as Record<string, unknown>).storeId as string | undefined;
   const staff = await prisma.posStaff.findFirst({
-    where: { user_id: session.user.id, active: true },
+    where: {
+      user_id: session.user.id,
+      active: true,
+      ...(sessionStoreId ? { store_id: sessionStoreId } : {}),
+    },
   });
 
   if (!staff) {
