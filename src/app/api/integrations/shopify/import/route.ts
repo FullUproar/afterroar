@@ -229,7 +229,8 @@ export async function POST(request: NextRequest) {
       try {
         await prisma.$transaction(createOps);
         imported += chunk.length;
-      } catch {
+      } catch (batchErr) {
+        console.error("[Shopify Import] Batch failed, trying one-by-one:", batchErr instanceof Error ? batchErr.message : batchErr);
         // If batch fails, try one-by-one to isolate the bad record
         for (const op of chunk) {
           try {
@@ -284,7 +285,9 @@ export async function POST(request: NextRequest) {
       imported,
       skipped,
       total_in_shopify: totalCount,
-      errors: errors.slice(0, 50), // Cap error list
+      products_fetched: products.length,
+      items_to_create: itemsToCreate.length,
+      errors: errors.slice(0, 50),
     });
   } catch (error) {
     return handleAuthError(error);

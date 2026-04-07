@@ -157,11 +157,15 @@ function DirectImportSection() {
 
       const data = await res.json();
       if (res.ok) {
+        const created = data.imported ?? data.created ?? 0;
+        const skipped = data.skipped ?? 0;
+        const errCount = data.errors?.length ?? 0;
         setResult({
           success: true,
-          message: data.message || `Imported ${data.created ?? 0} products, skipped ${data.skipped ?? 0} duplicates.`,
-          details: { created: data.created, skipped: data.skipped, updated: data.updated },
+          message: `Imported ${created} products, skipped ${skipped} duplicates.${errCount > 0 ? ` ${errCount} errors.` : ""}`,
+          details: { created, skipped, updated: data.updated ?? 0 },
         });
+        if (data.errors?.length) console.log("[Import errors]", data.errors);
       } else {
         setImportError(data.error || "Import failed.");
       }
