@@ -70,7 +70,7 @@ export function getTenantClient(storeId: string) {
             args.where = { ...args.where, store_id: storeId };
             // DIAGNOSTIC: log to verify extension is running
             if (model === "posCustomer") {
-              console.log(`[TENANT] ${model}.findMany scoped to store_id=${storeId}, where=`, JSON.stringify(args.where).slice(0, 200));
+              console.log(`[TENANT] ${model}.findMany scoped to store_id=${storeId}, where=`, JSON.stringify((args as Record<string, unknown>).where).slice(0, 200));
             }
           }
           const results = await query(args);

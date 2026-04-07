@@ -182,7 +182,7 @@ test.describe("authenticated: tenant isolation", () => {
       headers: { "Content-Type": "application/json", Cookie: sessionA.cookie },
       body: JSON.stringify({ name: uniqueName, email: `${uniqueName.toLowerCase()}@test.com` }),
     });
-    expect(createRes.ok()).toBeTruthy();
+    expect(createRes.ok).toBeTruthy();
     const created = await createRes.json();
     expect(created.store_id).toEqual(sessionA.storeId);
 
