@@ -485,9 +485,17 @@ export default function InventoryPage() {
                 }}
                 disabled={syncing}
                 title={btn.desc}
-                className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2 text-xs font-medium text-blue-300 hover:bg-blue-500/15 disabled:opacity-50 transition-colors"
+                className={`rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2 text-xs font-medium text-blue-300 hover:bg-blue-500/15 disabled:opacity-50 transition-colors ${syncing ? "animate-pulse" : ""}`}
               >
-                {syncing ? "..." : btn.label}
+                {syncing ? (
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Syncing...
+                  </span>
+                ) : btn.label}
               </button>
             ))}
           </div>
