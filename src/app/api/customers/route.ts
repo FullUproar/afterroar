@@ -6,26 +6,27 @@ import { requireStaff, handleAuthError } from "@/lib/require-staff";
 /* ------------------------------------------------------------------ */
 export async function GET(request: NextRequest) {
   try {
-    const { db } = await requireStaff();
+    const { db, storeId } = await requireStaff();
 
     const q = request.nextUrl.searchParams.get("q")?.trim();
 
     // Build search — match on name, email, phone, or afterroar_user_id
-    const where = q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
-            { email: { contains: q, mode: "insensitive" as const } },
-            { phone: { contains: q } },
-            { afterroar_user_id: q },
-          ],
-        }
-      : {};
+    // SECURITY: explicit store_id filter (belt-and-suspenders with tenant extension)
+    const where: Record<string, unknown> = { store_id: storeId };
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" as const } },
+        { email: { contains: q, mode: "insensitive" as const } },
+        { phone: { contains: q } },
+        { afterroar_user_id: q },
+      ];
+    }
 
     const data = await db.posCustomer.findMany({
       where,
       select: {
         id: true,
+        store_id: true,
         name: true,
         email: true,
         phone: true,
