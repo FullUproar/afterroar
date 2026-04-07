@@ -87,7 +87,7 @@ export const SETTINGS_DEFAULTS: StoreSettings = {
   intel_monthly_payroll: 0,
   intel_monthly_other_fixed: 0,
   intel_dead_stock_days: 30,
-  intel_at_risk_days: 14,
+  intel_at_risk_days: 60,
   intel_buylist_cash_comfort_days: 14,
   intel_credit_liability_warn_percent: 50,
   intel_prefer_credit_buylists: false,
