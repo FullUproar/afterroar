@@ -15,12 +15,16 @@ import { OnboardingPanel, OnboardingSandboxBanner } from "@/components/onboardin
 export default function DashboardChrome({ children }: { children: React.ReactNode }) {
   return (
     <StaffLockGate>
-      <TrialBanner />
-      <TrainingBanner />
-      <OnboardingSandboxBanner />
-      <DashboardLayoutInner>
-        {children}
-      </DashboardLayoutInner>
+      <div className="flex flex-col h-screen overflow-hidden">
+        <TrialBanner />
+        <TrainingBanner />
+        <OnboardingSandboxBanner />
+        <div className="flex-1 min-h-0">
+          <DashboardLayoutInner>
+            {children}
+          </DashboardLayoutInner>
+        </div>
+      </div>
       <OnboardingPanel />
       <ShortcutsHelp />
     </StaffLockGate>
