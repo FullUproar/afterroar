@@ -59,6 +59,9 @@ export interface InventoryItem {
   catalog_product_id: string | null;
   shared_to_catalog: boolean;
   lendable: boolean;
+  online_allocation: number;
+  shopify_variant_id: string | null;
+  shopify_inventory_item_id: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;

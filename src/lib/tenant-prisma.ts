@@ -42,6 +42,7 @@ const TENANT_MODELS = [
   "posMobileSession",
   "posAccessCodeAttempt",
   "posAllocationPool",
+  "posInventoryHold",
 ] as const;
 
 type TenantModel = (typeof TENANT_MODELS)[number];

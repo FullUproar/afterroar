@@ -74,6 +74,7 @@ export async function PATCH(request: NextRequest) {
       "barcode",
       "attributes",
       "lendable",
+      "online_allocation",
       "active",
     ];
 

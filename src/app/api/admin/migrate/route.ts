@@ -81,6 +81,28 @@ export async function POST(request: NextRequest) {
     }
     results.push("034: staff invite fields added");
 
+    // 035: Inventory allocation + holds
+    await prisma.$executeRawUnsafe(`ALTER TABLE pos_inventory_items ADD COLUMN IF NOT EXISTS online_allocation INT DEFAULT 0`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE pos_inventory_items ADD COLUMN IF NOT EXISTS shopify_variant_id TEXT`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE pos_inventory_items ADD COLUMN IF NOT EXISTS shopify_inventory_item_id TEXT`);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS pos_inventory_holds (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        store_id TEXT NOT NULL REFERENCES pos_stores(id) ON DELETE CASCADE,
+        item_id TEXT NOT NULL REFERENCES pos_inventory_items(id) ON DELETE CASCADE,
+        customer_id TEXT REFERENCES pos_customers(id),
+        staff_id TEXT NOT NULL REFERENCES pos_staff(id),
+        quantity INT NOT NULL DEFAULT 1,
+        reason TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        held_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        fulfilled_at TIMESTAMPTZ,
+        released_at TIMESTAMPTZ
+      )
+    `);
+    results.push("035: inventory allocation + holds table added");
+
     return NextResponse.json({ success: true, results });
   } catch (error) {
     return NextResponse.json(

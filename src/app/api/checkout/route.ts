@@ -9,6 +9,7 @@ import { calculateTaxFromSettings, getDefaultTaxRate } from "@/lib/tax";
 import { getStripe } from "@/lib/stripe";
 import { opLog } from "@/lib/op-log";
 import { getTaxCode } from "@/lib/tax-codes";
+import { pushInventoryToShopify } from "@/lib/shopify-sync";
 import { prisma } from "@/lib/prisma";
 
 interface CheckoutItem {
@@ -507,6 +508,14 @@ export async function POST(request: NextRequest) {
 
       return { ledgerEntry, pointsEarned };
     });
+
+    // Fire-and-forget: sync sold items to Shopify (pushInventoryToShopify
+    // short-circuits if the item has no shopify_inventory_item_id)
+    for (const item of items) {
+      if (item.inventory_item_id) {
+        pushInventoryToShopify(storeId, item.inventory_item_id).catch(() => {});
+      }
+    }
 
     // Send store visit signal to HQ (customer walked in and bought something)
     if (customer_id) {

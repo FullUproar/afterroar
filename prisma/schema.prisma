@@ -64,6 +64,7 @@ model PosStore {
   allocation_pools     PosAllocationPool[]
   tabs                 PosTab[]
   consignment_items    PosConsignmentItem[]
+  inventory_holds      PosInventoryHold[]
   menu_items           PosMenuItem[]
   menu_modifiers       PosMenuModifier[]
   hq_outbox            PosHqOutbox[]
@@ -441,6 +442,7 @@ model PosStaff {
   game_checkouts  PosGameCheckout[]
   stock_counts     PosStockCount[]
   mobile_sessions  PosMobileSession[]
+  inventory_holds  PosInventoryHold[]
 
   @@unique([user_id, store_id])
   @@map("pos_staff")
@@ -502,6 +504,7 @@ model PosCustomer {
   customer_notes     PosCustomerNote[]
   tabs               PosTab[]
   consignment_items  PosConsignmentItem[]
+  inventory_holds    PosInventoryHold[]
 
   @@index([store_id])
   @@map("pos_customers")
@@ -595,6 +598,9 @@ model PosInventoryItem {
   safety_stock        Int      @default(0)
   active              Boolean  @default(true)
   lendable            Boolean  @default(false)
+  online_allocation   Int      @default(0)   // qty allocated for online sale (pushed to Shopify)
+  shopify_variant_id  String?                // Shopify variant ID for sync
+  shopify_inventory_item_id String?          // Shopify inventory item ID for level sync
   created_at          DateTime @default(now()) @db.Timestamptz()
   updated_at          DateTime @default(now()) @db.Timestamptz()
 
@@ -630,6 +636,7 @@ model PosInventoryItem {
   stock_count_items    PosStockCountItem[]
   order_items          PosOrderItem[]
   consignment_items    PosConsignmentItem[]
+  holds                PosInventoryHold[]
 
   @@index([store_id])
   @@index([store_id, active])
@@ -639,6 +646,31 @@ model PosInventoryItem {
   @@index([catalog_product_id])
   @@index([oracle_id])
   @@map("pos_inventory_items")
+}
+
+model PosInventoryHold {
+  id              String    @id @default(cuid())
+  store_id        String
+  item_id         String
+  customer_id     String?
+  staff_id        String
+  quantity        Int       @default(1)
+  reason          String?   // "Customer request", "Phone order", etc.
+  status          String    @default("active") // active | fulfilled | released | expired
+  held_at         DateTime  @default(now()) @db.Timestamptz()
+  expires_at      DateTime  @db.Timestamptz()
+  fulfilled_at    DateTime? @db.Timestamptz()
+  released_at     DateTime? @db.Timestamptz()
+
+  store    PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  item     PosInventoryItem @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  customer PosCustomer?     @relation(fields: [customer_id], references: [id])
+  staff    PosStaff         @relation(fields: [staff_id], references: [id])
+
+  @@index([store_id, status])
+  @@index([item_id, status])
+  @@index([expires_at])
+  @@map("pos_inventory_holds")
 }
 
 model PosSupplier {

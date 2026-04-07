@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------ */
-/*  Shopify Admin REST API client (read-only, 2024-01)                 */
-/*  Used for product catalog import during onboarding.                 */
+/*  Shopify Admin REST API client (2024-01)                            */
+/*  Used for product catalog import + inventory sync.                  */
 /* ------------------------------------------------------------------ */
 
 const API_VERSION = "2024-01";
@@ -159,6 +159,36 @@ export class ShopifyClient {
     return { data, linkNext };
   }
 
+  /* -- Internal POST/PUT --------------------------------------------- */
+
+  private async post<T>(path: string, body: unknown): Promise<T> {
+    const now = Date.now();
+    const elapsed = now - this.lastRequestAt;
+    if (elapsed < RATE_LIMIT_MS) {
+      await new Promise((r) => setTimeout(r, RATE_LIMIT_MS - elapsed));
+    }
+
+    const url = `${this.baseUrl}${path}`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-Shopify-Access-Token": this.accessToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    this.lastRequestAt = Date.now();
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Shopify API ${res.status}: ${text.slice(0, 300)}`);
+    }
+
+    return (await res.json()) as T;
+  }
+
   /* -- Public methods ----------------------------------------------- */
 
   /** Total number of products in the store. */
@@ -229,5 +259,25 @@ export class ShopifyClient {
     }
 
     return levels;
+  }
+
+  /**
+   * Set the available quantity for an inventory item at a location.
+   * This is an absolute set, not a delta — pass the exact quantity you want.
+   */
+  async setInventoryLevel(
+    locationId: number,
+    inventoryItemId: number,
+    available: number,
+  ): Promise<ShopifyInventoryLevel> {
+    const result = await this.post<{ inventory_level: ShopifyInventoryLevel }>(
+      "/inventory_levels/set.json",
+      {
+        location_id: locationId,
+        inventory_item_id: inventoryItemId,
+        available,
+      },
+    );
+    return result.inventory_level;
   }
 }

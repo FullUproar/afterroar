@@ -961,6 +961,16 @@ export default function InventoryDetailPage() {
         </div>
       )}
 
+      {/* Online Allocation (Shopify Sync) */}
+      {can("inventory.adjust") && item.shopify_variant_id && (
+        <OnlineAllocationSection item={item} onUpdate={(updated) => setItem(updated)} />
+      )}
+
+      {/* Holds */}
+      {can("inventory.adjust") && (
+        <HoldsSection itemId={item.id} itemName={item.name} />
+      )}
+
       {/* Delete Item */}
       {can("inventory.adjust") && (
         <div className="rounded-xl border border-red-500/10 bg-card p-5">
@@ -994,6 +1004,189 @@ export default function InventoryDetailPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Online Allocation Section                                          */
+/* ------------------------------------------------------------------ */
+
+function OnlineAllocationSection({ item, onUpdate }: { item: InventoryItem; onUpdate: (i: InventoryItem) => void }) {
+  const [allocation, setAllocation] = useState(item.online_allocation ?? 0);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/inventory", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, online_allocation: allocation }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        onUpdate(updated);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-500/20 bg-blue-950/5 p-5 shadow-sm dark:shadow-none">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-3">Online Allocation (Shopify)</h3>
+      <p className="text-xs text-muted mb-3">
+        How many of your {item.quantity} in stock should be available for online sale? The rest stays in-store only.
+      </p>
+      <div className="flex items-center gap-3">
+        <input
+          type="number"
+          min={0}
+          max={item.quantity}
+          value={allocation}
+          onChange={(e) => setAllocation(Math.min(item.quantity, Math.max(0, parseInt(e.target.value) || 0)))}
+          className="w-24 rounded-lg border border-input-border bg-input-bg px-3 py-2 text-sm text-foreground tabular-nums focus:border-blue-500 focus:outline-none"
+        />
+        <span className="text-sm text-muted">of {item.quantity} available online</span>
+        <button
+          onClick={save}
+          disabled={saving || allocation === (item.online_allocation ?? 0)}
+          className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
+        >
+          {saving ? "Saving..." : saved ? "Saved!" : "Update"}
+        </button>
+      </div>
+      {item.quantity > 0 && (
+        <p className="mt-2 text-[11px] text-muted">
+          In-store only: {item.quantity - allocation} · Online: {allocation}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Holds Section                                                      */
+/* ------------------------------------------------------------------ */
+
+interface Hold {
+  id: string;
+  quantity: number;
+  reason: string | null;
+  status: string;
+  held_at: string;
+  expires_at: string;
+  customer?: { name: string } | null;
+  staff?: { name: string } | null;
+}
+
+function HoldsSection({ itemId, itemName }: { itemId: string; itemName: string }) {
+  const [holds, setHolds] = useState<Hold[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [qty, setQty] = useState("1");
+  const [reason, setReason] = useState("");
+  const [hours, setHours] = useState("24");
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/inventory/holds?item_id=${itemId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(setHolds)
+      .finally(() => setLoading(false));
+  }, [itemId]);
+
+  async function createHold() {
+    setCreating(true);
+    try {
+      const res = await fetch("/api/inventory/holds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: itemId, quantity: parseInt(qty), reason: reason || null, expires_hours: parseInt(hours) }),
+      });
+      if (res.ok) {
+        const hold = await res.json();
+        setHolds(prev => [hold, ...prev]);
+        setShowCreate(false);
+        setQty("1"); setReason(""); setHours("24");
+      }
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function releaseHold(holdId: string) {
+    const res = await fetch("/api/inventory/holds", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hold_id: holdId }),
+    });
+    if (res.ok) {
+      setHolds(prev => prev.map(h => h.id === holdId ? { ...h, status: "released" } : h));
+    }
+  }
+
+  const activeHolds = holds.filter(h => h.status === "active");
+
+  return (
+    <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm dark:shadow-none">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Holds</h3>
+        <button
+          onClick={() => setShowCreate(!showCreate)}
+          className="text-xs text-accent hover:underline"
+        >
+          {showCreate ? "Cancel" : "+ Hold for Customer"}
+        </button>
+      </div>
+
+      {showCreate && (
+        <div className="mb-4 p-3 rounded-lg border border-card-border bg-card-hover space-y-2">
+          <div className="flex gap-2">
+            <div>
+              <label className="block text-[10px] text-muted mb-0.5">Qty</label>
+              <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} className="w-16 rounded border border-input-border bg-input-bg px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-[10px] text-muted mb-0.5">Reason</label>
+              <input value={reason} onChange={e => setReason(e.target.value)} placeholder="Customer request, phone order..." className="w-full rounded border border-input-border bg-input-bg px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-[10px] text-muted mb-0.5">Hours</label>
+              <input type="number" min="1" max="168" value={hours} onChange={e => setHours(e.target.value)} className="w-16 rounded border border-input-border bg-input-bg px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none" />
+            </div>
+          </div>
+          <button onClick={createHold} disabled={creating} className="px-3 py-1.5 bg-accent text-white rounded text-xs font-medium disabled:opacity-50">
+            {creating ? "Holding..." : `Hold ${qty} ${itemName}`}
+          </button>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-xs text-muted">Loading holds...</p>
+      ) : activeHolds.length === 0 ? (
+        <p className="text-xs text-muted">No active holds</p>
+      ) : (
+        <div className="space-y-2">
+          {activeHolds.map(h => (
+            <div key={h.id} className="flex items-center justify-between py-2 border-b border-card-border/50 last:border-b-0">
+              <div>
+                <span className="text-sm text-foreground">{h.quantity}x held</span>
+                {h.reason && <span className="text-xs text-muted ml-2">— {h.reason}</span>}
+                <p className="text-[10px] text-muted">
+                  Expires {new Date(h.expires_at).toLocaleString()}
+                  {h.staff && ` · by ${h.staff.name}`}
+                </p>
+              </div>
+              <button onClick={() => releaseHold(h.id)} className="text-xs text-red-400 hover:text-red-300">Release</button>
+            </div>
+          ))}
         </div>
       )}
     </div>
