@@ -184,14 +184,23 @@ export function Sidebar() {
       <div className="border-b border-card-border px-2 lg:px-4 py-4 flex items-center justify-center lg:justify-start">
         <img src="/logo-ring-favicon.png" alt="Afterroar" className="h-7 w-7 lg:hidden" />
         <div className="hidden lg:block">
-          <h1 className="text-lg font-bold text-foreground">Afterroar</h1>
-          {store && (
-            <p className="truncate text-xs text-muted">{store.name}</p>
-          )}
+          <h1 className="text-base font-bold text-foreground truncate">{store?.name || 'Store Ops'}</h1>
+          <p className="text-[10px] text-muted/50">Afterroar Ops</p>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      {/* Pinned shortcut: Register */}
+      <div className="px-2 pt-3 pb-1">
+        <Link
+          href="/dashboard/register"
+          className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
+        >
+          <span className="text-base">◈</span>
+          <span className="hidden lg:inline">Open Register</span>
+        </Link>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-2 py-2">
         {visibleGroups.map((group) => {
           const expanded = hydrated ? isGroupExpanded(group) : (activeGroup?.label === group.label);
           return (
