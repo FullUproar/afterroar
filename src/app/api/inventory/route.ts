@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
+import { pushInventoryToShopify } from "@/lib/shopify-sync";
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,6 +99,13 @@ export async function PATCH(request: NextRequest) {
       where: { id },
       data: sanitized as any,
     });
+
+    // Push to Shopify if allocation or quantity changed on a synced item
+    if (('online_allocation' in sanitized || 'quantity' in sanitized) && data.shopify_inventory_item_id) {
+      pushInventoryToShopify(storeId, id).catch((err) =>
+        console.error("[Shopify sync] Failed after inventory update:", err)
+      );
+    }
 
     return NextResponse.json(data);
   } catch (error) {
