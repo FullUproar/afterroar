@@ -60,7 +60,7 @@ export function PaymentButtons({
   taxReady,
 }: PaymentButtonsProps) {
   return (
-    <div className="px-4 pb-3 pt-1">
+    <div className="px-2 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
       {showGiftCardPayment ? (
         /* Gift card payment input */
         <div className="space-y-2">

@@ -67,7 +67,7 @@ export function StatusBar({
   }
 
   return (
-    <div className="shrink-0 flex items-center justify-between px-4 h-8 border-t border-card-border bg-card/30 text-[11px] text-muted font-mono tabular-nums">
+    <div className="shrink-0 hidden sm:flex items-center justify-between px-4 h-8 border-t border-card-border bg-card/30 text-[11px] text-muted font-mono tabular-nums">
       {/* Left: date */}
       <span>
         {now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}

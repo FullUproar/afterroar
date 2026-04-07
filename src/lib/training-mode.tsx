@@ -58,9 +58,9 @@ export function TrainingBanner() {
   if (!isTraining || onboarding) return null;
 
   return (
-    <div className="w-full bg-yellow-500/15 border-b border-yellow-500/30 px-4 py-2 text-center">
-      <span className="text-xs font-bold text-yellow-400 tracking-wider uppercase">
-        Training Mode — Transactions are not real
+    <div className="w-full bg-yellow-500/15 border-b border-yellow-500/30 px-2 py-1 sm:px-4 sm:py-2 text-center">
+      <span className="text-[10px] sm:text-xs font-bold text-yellow-400 tracking-wider uppercase">
+        Training — Not Real
       </span>
     </div>
   );
