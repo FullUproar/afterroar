@@ -305,7 +305,7 @@ export default function SettingsPage() {
       </p>
 
       {/* ── Tab Content ── */}
-      <div className="max-w-2xl space-y-4 pb-8">
+      <div className="max-w-2xl space-y-6 pb-8">
 
         {/* ════════════════ STORE TAB ════════════════ */}
         {activeTab === 'store' && (
