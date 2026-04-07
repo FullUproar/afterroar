@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
+import { requirePermission, handleAuthError } from "@/lib/require-staff";
 import { prisma } from "@/lib/prisma";
 import { ShopifyClient, type ShopifyProduct, type ShopifyVariant } from "@/lib/shopify";
 import { decryptCredential } from "@/lib/crypto";
@@ -45,7 +45,7 @@ function buildExternalId(variantId: number): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const ctx = await requirePermissionAndFeature("store.settings", "ecommerce");
+    const ctx = await requirePermission("store.settings");
     const { storeId } = ctx;
 
     const body = await request.json().catch(() => ({})) as {
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const ctx = await requirePermissionAndFeature("store.settings", "ecommerce");
+    const ctx = await requirePermission("store.settings");
     const { storeId } = ctx;
 
     const count = await prisma.posInventoryItem.count({
