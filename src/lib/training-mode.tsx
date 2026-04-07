@@ -48,10 +48,14 @@ export function useTrainingMode() {
   return useContext(TrainingModeContext);
 }
 
-/** Banner component that shows when training mode is active */
+/** Banner component that shows when training mode is active.
+ *  Hidden during onboarding (Sandbox banner takes priority). */
 export function TrainingBanner() {
   const { isTraining } = useTrainingMode();
-  if (!isTraining) return null;
+  const { store } = useStore();
+
+  const onboarding = !((store?.settings as Record<string, unknown>)?.onboarding_complete);
+  if (!isTraining || onboarding) return null;
 
   return (
     <div className="w-full bg-yellow-500/15 border-b border-yellow-500/30 px-4 py-2 text-center">
