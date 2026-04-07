@@ -11,9 +11,10 @@ import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-
  *   foil      — "true" or "false"
  *   set       — filter by set code
  *   search    — text search on name
- *   sort      — price, name, set, quantity, condition (default: name)
+ *   sort      — price, name, set, quantity, condition, cost, margin (default: name)
  *   dir       — asc or desc (default: asc)
- *   cursor    — last item ID for pagination
+ *   cursor    — last item ID for cursor-based pagination (legacy)
+ *   page      — 1-based page number for offset pagination
  *   limit     — items per page (default 40, max 100)
  *   stats     — "true" to include KPI stats (default true)
  */
@@ -30,6 +31,7 @@ export async function GET(request: NextRequest) {
     const sort = params.get("sort") || "name";
     const dir = params.get("dir") === "desc" ? "desc" : "asc";
     const cursor = params.get("cursor");
+    const page = params.get("page") ? parseInt(params.get("page")!, 10) : null;
     const limit = Math.min(parseInt(params.get("limit") || "40", 10), 100);
     const includeStats = params.get("stats") !== "false";
 
@@ -68,19 +70,15 @@ export async function GET(request: NextRequest) {
       where.AND = attrFilters;
     }
 
-    // Cursor-based pagination
-    const paginationArgs: Record<string, unknown> = {};
-    if (cursor) {
-      paginationArgs.cursor = { id: cursor };
-      paginationArgs.skip = 1;
-    }
-
     // Build orderBy
     type OrderByValue = Record<string, "asc" | "desc">;
     let orderBy: OrderByValue;
     switch (sort) {
       case "price":
         orderBy = { price_cents: dir };
+        break;
+      case "cost":
+        orderBy = { cost_cents: dir };
         break;
       case "quantity":
         orderBy = { quantity: dir };
@@ -91,15 +89,38 @@ export async function GET(request: NextRequest) {
       case "condition":
         orderBy = { name: dir }; // condition is in attributes
         break;
+      case "margin":
+        // Can't sort by computed field, sort by price as proxy
+        orderBy = { price_cents: dir };
+        break;
       default:
         orderBy = { name: dir };
+    }
+
+    // Pagination — offset-based (page param) or cursor-based (legacy)
+    const paginationArgs: Record<string, unknown> = {};
+    let totalCount: number | null = null;
+
+    if (page && page >= 1) {
+      // Offset-based pagination
+      paginationArgs.skip = (page - 1) * limit;
+      paginationArgs.take = limit;
+
+      // Get total count for offset pagination
+      totalCount = await db.posInventoryItem.count({ where });
+    } else {
+      // Cursor-based pagination (legacy)
+      if (cursor) {
+        paginationArgs.cursor = { id: cursor };
+        paginationArgs.skip = 1;
+      }
+      paginationArgs.take = limit + 1; // +1 to detect if there are more
     }
 
     // Fetch items
     const items = await db.posInventoryItem.findMany({
       where,
       orderBy,
-      take: limit + 1, // +1 to detect if there are more
       ...paginationArgs,
       select: {
         id: true,
@@ -118,9 +139,21 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const hasMore = items.length > limit;
-    const pageItems = hasMore ? items.slice(0, limit) : items;
-    const nextCursor = hasMore ? pageItems[pageItems.length - 1]?.id : null;
+    // Determine pagination results
+    let hasMore: boolean;
+    let pageItems: typeof items;
+    let nextCursor: string | null = null;
+
+    if (page && page >= 1) {
+      // Offset pagination — items are already the right slice
+      pageItems = items;
+      hasMore = totalCount !== null ? page * limit < totalCount : false;
+    } else {
+      // Cursor pagination (legacy)
+      hasMore = items.length > limit;
+      pageItems = hasMore ? items.slice(0, limit) : items;
+      nextCursor = hasMore ? pageItems[pageItems.length - 1]?.id : null;
+    }
 
     // Enrich items with parsed attributes and margin calculation
     const enriched = pageItems.map((item) => {
@@ -148,7 +181,7 @@ export async function GET(request: NextRequest) {
 
     // KPI stats (computed once, not on every page)
     let stats = null;
-    if (includeStats && !cursor) {
+    if (includeStats && !cursor && (!page || page === 1)) {
       const allSingles = await db.posInventoryItem.findMany({
         where: { category: "tcg_single", active: true },
         select: {
@@ -158,7 +191,7 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const totalCount = allSingles.reduce((s, i) => s + i.quantity, 0);
+      const totalQty = allSingles.reduce((s, i) => s + i.quantity, 0);
       const totalCostCents = allSingles.reduce(
         (s, i) => s + i.cost_cents * i.quantity,
         0
@@ -180,7 +213,7 @@ export async function GET(request: NextRequest) {
       ).length;
 
       stats = {
-        total_singles: totalCount,
+        total_singles: totalQty,
         unique_cards: allSingles.length,
         total_cost_cents: totalCostCents,
         total_retail_cents: totalRetailCents,
@@ -194,6 +227,7 @@ export async function GET(request: NextRequest) {
       stats,
       nextCursor,
       hasMore,
+      ...(totalCount !== null ? { total: totalCount } : {}),
     });
   } catch (error) {
     return handleAuthError(error);
