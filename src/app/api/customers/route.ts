@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       },
       select: {
         id: true,
+        store_id: true,
         name: true,
         email: true,
         phone: true,

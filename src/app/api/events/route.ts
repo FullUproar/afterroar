@@ -5,9 +5,10 @@ import { createHQGameNight } from "@/lib/hq-bridge";
 
 export async function GET() {
   try {
-    const { db } = await requireStaff();
+    const { db, storeId } = await requireStaff();
 
     const events = await db.posEvent.findMany({
+      where: { store_id: storeId },
       orderBy: { starts_at: "desc" },
       take: 100,
       include: {

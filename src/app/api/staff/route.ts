@@ -21,6 +21,7 @@ export async function GET() {
     return NextResponse.json(
       staff.map((s) => ({
         id: s.id,
+        store_id: s.store_id,
         user_id: s.user_id,
         name: s.name,
         email: s.user.email,

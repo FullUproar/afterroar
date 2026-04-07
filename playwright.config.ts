@@ -53,5 +53,12 @@ export default defineConfig({
       testMatch: /visual-qa\.spec\.ts/,
       dependencies: ["setup"],
     },
+    {
+      name: "isolation",
+      use: {
+        viewport: { width: 1280, height: 800 },
+      },
+      testMatch: /tenant-isolation\.spec\.ts/,
+    },
   ],
 });
