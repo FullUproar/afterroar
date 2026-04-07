@@ -9,7 +9,20 @@ import { StoreAdvisor } from "@/components/store-advisor";
 import { DailyClose } from "@/components/daily-close";
 
 export default async function DashboardPage() {
-  const session = await auth();
+  let session;
+  try {
+    session = await auth();
+  } catch {
+    // Auth failed (transient DB error) — show retry message
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="text-center space-y-3">
+          <p className="text-muted">Unable to load. The server may be temporarily unavailable.</p>
+          <a href="/dashboard" className="text-xs text-accent hover:underline">Try again</a>
+        </div>
+      </div>
+    );
+  }
 
   if (!session?.user?.id) {
     return (
@@ -21,16 +34,27 @@ export default async function DashboardPage() {
 
   // SECURITY: scope to storeId from session JWT for multi-store users
   const sessionStoreId = (session as unknown as Record<string, unknown>).storeId as string | undefined;
-  const staff = await prisma.posStaff.findFirst({
-    where: {
-      user_id: session.user.id,
-      active: true,
-      ...(sessionStoreId ? { store_id: sessionStoreId } : {}),
-    },
-  });
+  let staff;
+  try {
+    staff = await prisma.posStaff.findFirst({
+      where: {
+        user_id: session.user.id,
+        active: true,
+        ...(sessionStoreId ? { store_id: sessionStoreId } : {}),
+      },
+    });
+  } catch {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="text-center space-y-3">
+          <p className="text-muted">Unable to load store data. Please try again.</p>
+          <a href="/dashboard" className="text-xs text-accent hover:underline">Retry</a>
+        </div>
+      </div>
+    );
+  }
 
   if (!staff) {
-    // User exists but has no store — redirect to store creation
     redirect("/setup");
   }
 
