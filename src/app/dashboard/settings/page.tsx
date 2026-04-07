@@ -1402,11 +1402,34 @@ function DemoDataButtons() {
     }
   }
 
+  async function clearAll() {
+    if (!confirm("This will delete ALL inventory, customers, events, and transactions. Are you sure?")) return;
+    setCleaning(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/store/seed-demo", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clear_all: true }),
+      });
+      const data = await res.json();
+      setMessage(res.ok ? data.message : data.error);
+    } catch {
+      setMessage("Failed to clear data.");
+    } finally {
+      setCleaning(false);
+    }
+  }
+
   async function cleanDemo() {
     setCleaning(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/store/seed-demo", { method: "DELETE" });
+      const res = await fetch("/api/store/seed-demo", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       const data = await res.json();
       setMessage(res.ok ? data.message : data.error);
     } catch {
@@ -1436,6 +1459,13 @@ function DemoDataButtons() {
           className="px-3 py-1.5 border border-yellow-500/30 text-yellow-400 rounded text-xs font-medium hover:bg-yellow-950/30 disabled:opacity-50 transition-colors"
         >
           {cleaning ? "Cleaning..." : "Clean Up Demo Data"}
+        </button>
+        <button
+          onClick={clearAll}
+          disabled={seeding || cleaning}
+          className="px-3 py-1.5 border border-red-500/30 text-red-400 rounded text-xs font-medium hover:bg-red-950/30 disabled:opacity-50 transition-colors"
+        >
+          {cleaning ? "Clearing..." : "Clear All Store Data"}
         </button>
       </div>
       {message && <p className="text-xs text-yellow-300">{message}</p>}

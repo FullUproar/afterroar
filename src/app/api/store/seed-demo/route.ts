@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
@@ -141,21 +142,89 @@ export async function POST() {
 /*  DELETE /api/store/seed-demo — remove all demo data                  */
 /*  Cleans up demo customers (@demo.example), seeded inventory, events  */
 /* ------------------------------------------------------------------ */
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
     const { db, storeId } = await requirePermission("store.settings");
 
-    // Delete demo customers (identifiable by @demo.example email)
+    const body = await request.json().catch(() => ({})) as { clear_all?: boolean };
+    const clearAll = body.clear_all === true;
+
+    const deleted: Record<string, number> = {};
+
+    if (clearAll) {
+      // Nuclear option: clear ALL store data (for fresh start)
+      // Order matters — delete children before parents to avoid FK violations
+
+      // Delete child records first
+      const consignment = await db.posConsignmentItem.deleteMany({ where: { store_id: storeId } });
+      deleted.consignment = consignment.count;
+
+      const loyaltyEntries = await db.posLoyaltyEntry.deleteMany({ where: { store_id: storeId } });
+      deleted.loyalty_entries = loyaltyEntries.count;
+
+      const ledger = await db.posLedgerEntry.deleteMany({ where: { store_id: storeId } });
+      deleted.ledger_entries = ledger.count;
+
+      const tabItems = await prisma.$executeRawUnsafe(
+        `DELETE FROM pos_tab_items WHERE tab_id IN (SELECT id FROM pos_tabs WHERE store_id = $1)`, storeId
+      );
+      deleted.tab_items = typeof tabItems === 'number' ? tabItems : 0;
+
+      const tabs = await db.posTab.deleteMany({ where: { store_id: storeId } });
+      deleted.tabs = tabs.count;
+
+      const gameCheckouts = await db.posGameCheckout.deleteMany({ where: { store_id: storeId } });
+      deleted.game_checkouts = gameCheckouts.count;
+
+      const giftCards = await db.posGiftCard.deleteMany({ where: { store_id: storeId } });
+      deleted.gift_cards = giftCards.count;
+
+      // Now safe to delete customers and inventory
+      const customers = await db.posCustomer.deleteMany({ where: { store_id: storeId } });
+      deleted.customers = customers.count;
+
+      const inventory = await db.posInventoryItem.deleteMany({ where: { store_id: storeId } });
+      deleted.inventory = inventory.count;
+
+      const events = await db.posEvent.deleteMany({ where: { store_id: storeId } });
+      deleted.events = events.count;
+
+      const total = Object.values(deleted).reduce((s, n) => s + n, 0);
+      return NextResponse.json({
+        success: true,
+        deleted,
+        message: `Cleared ${total} records from store.`,
+      });
+    }
+
+    // Default: only delete demo data
+    // Delete consignment items for demo customers first
+    const demoCustomerIds = await db.posCustomer.findMany({
+      where: { store_id: storeId, email: { endsWith: "@demo.example" } },
+      select: { id: true },
+    });
+    const demoIds = demoCustomerIds.map(c => c.id);
+
+    if (demoIds.length > 0) {
+      await db.posConsignmentItem.deleteMany({
+        where: { store_id: storeId, consignor_id: { in: demoIds } },
+      });
+      await db.posLoyaltyEntry.deleteMany({
+        where: { store_id: storeId, customer_id: { in: demoIds } },
+      });
+      await db.posLedgerEntry.deleteMany({
+        where: { store_id: storeId, customer_id: { in: demoIds } },
+      });
+    }
+
     const deletedCustomers = await db.posCustomer.deleteMany({
       where: { store_id: storeId, email: { endsWith: "@demo.example" } },
     });
-
-    // Delete demo events (optional — keep if they want them)
-    // Not deleting inventory since they may have modified it
+    deleted.customers = deletedCustomers.count;
 
     return NextResponse.json({
       success: true,
-      deleted: { customers: deletedCustomers.count },
+      deleted,
       message: `Removed ${deletedCustomers.count} demo customers.`,
     });
   } catch (error) {
