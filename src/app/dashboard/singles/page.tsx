@@ -125,7 +125,7 @@ export default function SinglesDashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 pb-8">
+    <div className="mx-auto max-w-6xl space-y-4 pb-8 min-w-0">
       {/* Toast notification */}
       {toast && (
         <div

@@ -409,27 +409,28 @@ export default function InventoryPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <PageHeader
         title="Inventory"
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <button
               onClick={() => setShowLabels(true)}
-              className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+              className="hidden sm:block rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
             >
               Print Labels
             </button>
             <button
               onClick={() => setShowScanner(true)}
-              className="flex items-center gap-2 rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+              className="flex items-center gap-1.5 rounded-xl border border-card-border px-2.5 sm:px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors shrink-0"
             >
               <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Scanner listening" />
-              Scan to Add
+              <span className="hidden sm:inline">Scan to Add</span>
+              <span className="sm:hidden">Scan</span>
             </button>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+              className="rounded-xl bg-accent px-3 sm:px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors shrink-0"
             >
               {showAddForm ? "Cancel" : "Add Item"}
             </button>

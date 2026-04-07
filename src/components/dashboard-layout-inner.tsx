@@ -38,7 +38,7 @@ export function DashboardLayoutInner({ children }: { children: React.ReactNode }
   return (
     <div className="flex h-full bg-background overflow-hidden max-w-[100vw]">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto overflow-x-hidden lg:pb-0" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden lg:pb-0" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
         <div className="flex items-center gap-2 p-3 sm:p-4 md:p-5 lg:p-6 pb-0">
           <div className="flex-1 min-w-0">
             <NetworkStatusBar />
