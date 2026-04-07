@@ -168,13 +168,13 @@ export default function CustomersPage() {
   // Reset page when filters change
   useEffect(() => { setPage(0); }, [search, segmentFilter]);
 
-  const segmentButtons: Array<{ key: CustomerSegment | 'all'; label: string; count: number | null }> = [
-    { key: 'all', label: 'All', count: counts?.total ?? null },
-    { key: 'vip', label: '\u{1F31F} VIP', count: counts?.vip ?? null },
-    { key: 'regular', label: '\u{1F504} Regular', count: counts?.regular ?? null },
-    { key: 'new', label: '\u{1F195} New', count: counts?.new ?? null },
-    { key: 'at_risk', label: '\u26A0\uFE0F At Risk', count: counts?.at_risk ?? null },
-    { key: 'dormant', label: '\u{1F4A4} Dormant', count: counts?.dormant ?? null },
+  const segmentButtons: Array<{ key: CustomerSegment | 'all'; label: string; count: number | null; tooltip: string }> = [
+    { key: 'all', label: 'All', count: counts?.total ?? null, tooltip: 'All customers' },
+    { key: 'vip', label: 'VIP', count: counts?.vip ?? null, tooltip: 'Lifetime spend $500+' },
+    { key: 'regular', label: 'Regular', count: counts?.regular ?? null, tooltip: '3+ purchases in the last 30 days' },
+    { key: 'new', label: 'New', count: counts?.new ?? null, tooltip: 'Created in the last 14 days' },
+    { key: 'at_risk', label: 'At Risk', count: counts?.at_risk ?? null, tooltip: 'Spent $100+ but hasn\'t visited in 30-60 days' },
+    { key: 'dormant', label: 'Dormant', count: counts?.dormant ?? null, tooltip: 'Spent $100+ but hasn\'t visited in 60+ days' },
   ];
 
   return (
@@ -243,23 +243,31 @@ export default function CustomersPage() {
 
       {/* Segment Filter Bar */}
       {counts && (
-        <div className="flex flex-wrap gap-2">
-          {segmentButtons.map((seg) => (
-            <button
-              key={seg.key}
-              onClick={() => setSegmentFilter(seg.key)}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                segmentFilter === seg.key
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-card-border bg-card text-muted hover:text-foreground hover:border-input-border'
-              }`}
-            >
-              {seg.label}
-              {seg.count !== null && (
-                <span className="text-xs opacity-70 tabular-nums">{seg.count}</span>
-              )}
-            </button>
-          ))}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap gap-2">
+            {segmentButtons.map((seg) => (
+              <button
+                key={seg.key}
+                onClick={() => setSegmentFilter(seg.key)}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  segmentFilter === seg.key
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-card-border bg-card text-muted hover:text-foreground hover:border-input-border'
+                }`}
+              >
+                {seg.label}
+                {seg.count !== null && (
+                  <span className="text-xs opacity-70 tabular-nums">{seg.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          {segmentFilter !== 'all' && (
+            <p className="text-xs text-muted">
+              {segmentButtons.find(s => s.key === segmentFilter)?.tooltip}
+              {' '}— auto-tagged based on purchase history
+            </p>
+          )}
         </div>
       )}
 
