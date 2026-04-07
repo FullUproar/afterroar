@@ -174,10 +174,26 @@ export async function POST(request: NextRequest) {
       variant: ShopifyVariant;
     }> = [];
 
+    let updated = 0;
     for (const product of products) {
       for (const variant of product.variants) {
         const externalId = buildExternalId(variant.id);
         if (existingIds.has(externalId)) {
+          // Update existing items with Shopify IDs (for sync) if missing
+          try {
+            await prisma.posInventoryItem.updateMany({
+              where: {
+                store_id: storeId,
+                external_id: externalId,
+                shopify_variant_id: null,
+              },
+              data: {
+                shopify_variant_id: String(variant.id),
+                shopify_inventory_item_id: String(variant.inventory_item_id),
+              },
+            });
+            updated++;
+          } catch {}
           skipped++;
           continue;
         }
@@ -287,6 +303,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       imported,
+      updated,
       skipped,
       total_in_shopify: totalCount,
       products_fetched: products.length,
