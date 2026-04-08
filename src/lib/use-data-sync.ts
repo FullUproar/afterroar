@@ -51,22 +51,41 @@ export function useDataSync(): DataSyncStatus {
     setError(null);
 
     try {
-      // Fetch both in parallel
+      // Delta sync: only fetch changes since last sync (saves ~144MB/day)
+      const sinceInv = inventorySyncedAt ? `&since=${encodeURIComponent(inventorySyncedAt)}` : "";
+      const sinceCust = customersSyncedAt ? `&since=${encodeURIComponent(customersSyncedAt)}` : "";
+
       const [invRes, custRes] = await Promise.all([
-        fetch("/api/inventory/bulk"),
-        fetch("/api/customers/bulk"),
+        fetch(`/api/inventory/bulk?_=${Date.now()}${sinceInv}`),
+        fetch(`/api/customers/bulk?_=${Date.now()}${sinceCust}`),
       ]);
 
       if (invRes.ok) {
         const invData = await invRes.json();
-        await cacheInventory(invData.items);
-        setInventoryCount(invData.items.length);
+        if (invData.full) {
+          // First load or forced full sync — replace entire cache
+          await cacheInventory(invData.items);
+          setInventoryCount(invData.items.length);
+        } else {
+          // Delta sync — merge changes into existing cache
+          const { mergeInventoryDelta } = await import("./offline-db");
+          await mergeInventoryDelta(invData.items, invData.deactivated ?? []);
+          // Update count from cache
+          const { isCacheReady } = await import("./offline-db");
+          const status = await isCacheReady();
+          setInventoryCount(status.inventoryCount);
+        }
         setInventorySyncedAt(invData.syncedAt);
       }
 
       if (custRes.ok) {
         const custData = await custRes.json();
-        await cacheCustomers(custData.customers);
+        if (custData.full) {
+          await cacheCustomers(custData.customers);
+        } else {
+          const { mergeCustomerDelta } = await import("./offline-db");
+          await mergeCustomerDelta(custData.customers);
+        }
         setCustomerCount(custData.customers.length);
         setCustomersSyncedAt(custData.syncedAt);
       }

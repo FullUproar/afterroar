@@ -257,13 +257,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Deduct inventory for retail items on the tab
+      // Deduct inventory for retail items on the tab (parallel, not sequential)
       const retailItems = tab.items.filter((i) => i.item_type === "retail" && i.inventory_item_id);
-      for (const ri of retailItems) {
-        await db.posInventoryItem.updateMany({
-          where: { id: ri.inventory_item_id!, store_id: storeId },
-          data: { quantity: { decrement: ri.quantity } },
-        });
+      if (retailItems.length > 0) {
+        await Promise.all(
+          retailItems.map((ri) =>
+            db.posInventoryItem.updateMany({
+              where: { id: ri.inventory_item_id!, store_id: storeId },
+              data: { quantity: { decrement: ri.quantity } },
+            })
+          )
+        );
       }
 
       // Close tab
@@ -351,10 +355,10 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Move items
-      for (const item of itemsToMove) {
-        await db.posTabItem.update({
-          where: { id: item.id },
+      // Move items (batch update instead of per-item)
+      if (itemsToMove.length > 0) {
+        await db.posTabItem.updateMany({
+          where: { id: { in: itemsToMove.map((i) => i.id) } },
           data: { tab_id: newTab.id },
         });
       }

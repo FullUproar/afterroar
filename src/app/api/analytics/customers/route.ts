@@ -159,7 +159,7 @@ export async function GET() {
       ).slice(0, 20),
       top_by_spend: topBySpend,
       top_by_frequency: topByFrequency,
-      all_customers: customerIntel,
+      all_customers: customerIntel.slice(0, 500), // Paginated — first 500 by risk/spend
     });
   } catch (error) {
     return handleAuthError(error);

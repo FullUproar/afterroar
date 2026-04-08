@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
           where: { type: "sale" },
           select: { amount_cents: true, created_at: true },
           orderBy: { created_at: "desc" as const },
+          take: 200, // Limit per customer to prevent timeout on high-volume stores
         },
       },
     });

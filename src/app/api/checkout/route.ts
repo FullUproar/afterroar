@@ -457,14 +457,19 @@ export async function POST(request: NextRequest) {
 
       // Deduct inventory quantities (skip manual items like gift cards)
       // Re-validate quantities INSIDE the transaction to prevent overselling
-      // (the pre-transaction check at line ~108 is a fast-fail optimization,
-      // but this is the authoritative check under transactional isolation)
+      // Single batch fetch (not per-item) then validate + decrement
+      const txItemIds = items.map((i) => i.inventory_item_id).filter(Boolean) as string[];
+      const txCurrentStock = txItemIds.length > 0
+        ? await tx.posInventoryItem.findMany({
+            where: { id: { in: txItemIds } },
+            select: { id: true, quantity: true, name: true },
+          })
+        : [];
+      const txStockMap = new Map(txCurrentStock.map((s) => [s.id, s]));
+
       for (const item of items) {
         if (item.inventory_item_id) {
-          const current = await tx.posInventoryItem.findUnique({
-            where: { id: item.inventory_item_id },
-            select: { quantity: true, name: true },
-          });
+          const current = txStockMap.get(item.inventory_item_id);
           if (current && current.quantity < item.quantity && !body.allow_negative_stock) {
             throw new Error(
               `Insufficient quantity for "${current.name}". Available: ${current.quantity}, requested: ${item.quantity}`

@@ -165,6 +165,38 @@ export async function cacheInventory(
   await setMeta("inventory_synced_at", new Date().toISOString());
 }
 
+/** Merge delta inventory changes into existing cache (instead of full replace) */
+export async function mergeInventoryDelta(
+  updated: OfflineDB["inventory"]["value"][],
+  deactivatedIds: string[]
+): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction("inventory", "readwrite");
+  // Upsert changed items
+  for (const item of updated) {
+    await tx.store.put(item);
+  }
+  // Remove deactivated items
+  for (const id of deactivatedIds) {
+    await tx.store.delete(id);
+  }
+  await tx.done;
+  await setMeta("inventory_synced_at", new Date().toISOString());
+}
+
+/** Merge delta customer changes into existing cache */
+export async function mergeCustomerDelta(
+  updated: OfflineDB["customers"]["value"][]
+): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction("customers", "readwrite");
+  for (const customer of updated) {
+    await tx.store.put(customer);
+  }
+  await tx.done;
+  await setMeta("customers_synced_at", new Date().toISOString());
+}
+
 export async function searchInventoryLocal(
   query: string
 ): Promise<OfflineDB["inventory"]["value"][]> {
