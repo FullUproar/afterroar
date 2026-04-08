@@ -57,16 +57,16 @@ function parsePassportCode(code: string): {
   return { userId: null, shortCode: null };
 }
 
-/** Look up HQ user by short code — try shortCode field first, fall back to last 8 chars of ID */
+/** Look up HQ user by passport code — try passportCode field first, fall back to last 8 chars of ID */
 async function lookupByShortCode(
   shortCode: string,
 ): Promise<HQUserRow | null> {
-  // Try shortCode field (may not exist yet)
+  // Try passportCode field
   try {
     const rows = await prisma.$queryRawUnsafe<HQUserRow[]>(
       `SELECT id, "displayName", "avatarUrl", "reputationScore", "identityVerified"
        FROM "User"
-       WHERE "shortCode" = $1
+       WHERE "passportCode" = $1
        LIMIT 1`,
       shortCode,
     );

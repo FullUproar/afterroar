@@ -395,12 +395,44 @@ export default function CustomerDetailPage() {
               The Afterroar Network connects game stores and players. Linked customers earn points that work across participating stores.
             </p>
             {!showLinkForm ? (
-              <button
-                onClick={() => setShowLinkForm(true)}
-                className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
-              >
-                Link Afterroar Account
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowLinkForm(true)}
+                  className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+                >
+                  Link by Email
+                </button>
+                <button
+                  onClick={async () => {
+                    const code = prompt("Scan or enter Passport code:");
+                    if (!code) return;
+                    try {
+                      const res = await fetch("/api/passport/scan", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code }),
+                      });
+                      const data = await res.json();
+                      if (data.found && data.afterroar_user_id) {
+                        const linkRes = await fetch("/api/passport/link", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ afterroar_user_id: data.afterroar_user_id, customer_id: customer.id }),
+                        });
+                        if (linkRes.ok) window.location.reload();
+                        else setLinkError("Failed to link account");
+                      } else if (data.alreadyLinked) {
+                        setLinkError("This Afterroar account is already linked to a customer");
+                      } else {
+                        setLinkError("Passport code not found");
+                      }
+                    } catch { setLinkError("Failed to scan passport"); }
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-sm font-medium"
+                >
+                  Scan Passport
+                </button>
+              </div>
             ) : (
               <form onSubmit={handleLinkAfterroar} className="space-y-3">
                 <div>

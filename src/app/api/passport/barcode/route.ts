@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       const rows = await prisma.$queryRawUnsafe<HQUserRow[]>(
         `SELECT id, "displayName", "avatarUrl", "reputationScore", "identityVerified"
          FROM "User"
-         WHERE "shortCode" = $1
+         WHERE "passportCode" = $1
          LIMIT 1`,
         shortCode,
       );
