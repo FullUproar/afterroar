@@ -1006,13 +1006,13 @@ export default function RegisterPage() {
       noticeBannerTimerRef.current = setTimeout(() => setNoticeBanner(null), 6000);
       return;
     }
-    // True errors → red banner
+    // True errors → red banner (persistent — must be manually dismissed)
     let friendly = message;
     if (/payment.*fail/i.test(message)) friendly = "Card payment failed. Try again or use a different method.";
     else if (/network|fetch|connect/i.test(message)) friendly = "Connection lost. Transaction saved offline.";
+    else if (/stripe.*not.*config/i.test(message)) friendly = "Stripe is not configured. Use Cash or set up Stripe in Settings.";
     setErrorBanner(friendly);
-    if (errorBannerTimerRef.current) clearTimeout(errorBannerTimerRef.current);
-    errorBannerTimerRef.current = setTimeout(() => setErrorBanner(null), 8000);
+    // No auto-dismiss for errors — user must acknowledge
   }
 
   function addToCart(item: InventoryItem) {
@@ -1641,9 +1641,12 @@ export default function RegisterPage() {
 
       {/* ====== ERROR BANNER (true errors: network, crashes) ====== */}
       {errorBanner && (
-        <div className="absolute top-14 left-4 right-4 z-[65] flex items-center gap-3 rounded-xl bg-red-950 border border-red-500/40 px-4 py-3 shadow-lg animate-slide-down">
-          <span className="flex-1 text-sm font-medium text-red-200">{errorBanner}</span>
-          <button onClick={() => { setErrorBanner(null); if (errorBannerTimerRef.current) clearTimeout(errorBannerTimerRef.current); }} className="shrink-0 text-red-400 hover:text-red-200 text-lg leading-none" style={{ minHeight: "auto" }}>{"\u00D7"}</button>
+        <div className="absolute top-14 left-4 right-4 z-[65] rounded-xl bg-red-950 border border-red-500/40 px-4 py-3 shadow-lg animate-slide-down">
+          <div className="flex items-center gap-3">
+            <span className="text-red-400 text-lg shrink-0">&#x26A0;</span>
+            <span className="flex-1 text-sm font-medium text-red-200">{errorBanner}</span>
+            <button onClick={() => setErrorBanner(null)} className="shrink-0 px-2 py-1 text-xs text-red-400 hover:text-red-200 border border-red-500/30 rounded transition-colors" style={{ minHeight: "auto" }}>Dismiss</button>
+          </div>
         </div>
       )}
 
