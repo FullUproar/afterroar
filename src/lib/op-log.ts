@@ -20,7 +20,9 @@ export type EventType =
   | "system.error" | "system.startup"
   | "mobile.sale" | "mobile.paired" | "mobile.revoked"
   | "manager.override"
-  | "passport.linked" | "passport.disconnected" | "passport.deleted";
+  | "passport.linked" | "passport.disconnected" | "passport.deleted"
+  | "passport.frozen" | "passport.unfrozen" | "passport.updated"
+  | "passport.fraud_flag";
 
 export interface OpLogParams {
   storeId: string;

@@ -315,11 +315,11 @@ export async function POST(request: NextRequest) {
             // Sync deduction to HQ
             if (cust?.afterroar_user_id) {
               const { enqueueHQ } = await import("@/lib/hq-outbox");
-              await enqueueHQ(storeId, "points_earned", {
+              await enqueueHQ(storeId, "points_reversed", {
                 userId: cust.afterroar_user_id,
                 storeId,
-                points: -deduction,
-                category: "return",
+                points: deduction,
+                reason: "return",
                 transactionId: result.ledgerEntry.id,
               });
             }

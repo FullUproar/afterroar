@@ -346,7 +346,10 @@ export async function POST(request: NextRequest) {
           description: `Sale: ${itemNames}`,
           metadata: JSON.parse(JSON.stringify({
             receipt_token: receiptToken,
-            items,
+            items: items.map((i) => {
+              const inv = i.inventory_item_id ? invMap.get(i.inventory_item_id) : null;
+              return { ...i, name: inv?.name || i.category || "Manual" };
+            }),
             payment_method,
             transaction_id: paymentResult.transaction_id,
             amount_tendered_cents,
