@@ -1692,9 +1692,9 @@ export default function RegisterPage() {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         {/* Receipt tape */}
         {!activePanel ? (
-          <CartList cart={cart} discounts={discounts} subtotal={subtotal} lastAddedIndex={lastAddedIndex} editingQtyIndex={editingQtyIndex} editQtyValue={editQtyValue} onSetEditingQtyIndex={setEditingQtyIndex} onSetEditQtyValue={setEditQtyValue} onCommitQtyEdit={commitQtyEdit} onRemoveItem={removeItem} onRemoveDiscount={removeDiscount} cartEndRef={cartEndRef} />
+          <CartList cart={cart} discounts={discounts} subtotal={subtotal} customerName={customer?.name ?? null} lastAddedIndex={lastAddedIndex} editingQtyIndex={editingQtyIndex} editQtyValue={editQtyValue} onSetEditingQtyIndex={setEditingQtyIndex} onSetEditQtyValue={setEditQtyValue} onCommitQtyEdit={commitQtyEdit} onRemoveItem={removeItem} onRemoveDiscount={removeDiscount} cartEndRef={cartEndRef} />
         ) : (
-          <CartList cart={cart} discounts={discounts} subtotal={subtotal} lastAddedIndex={lastAddedIndex} editingQtyIndex={editingQtyIndex} editQtyValue={editQtyValue} onSetEditingQtyIndex={setEditingQtyIndex} onSetEditQtyValue={setEditQtyValue} onCommitQtyEdit={commitQtyEdit} onRemoveItem={removeItem} onRemoveDiscount={removeDiscount} cartEndRef={cartEndRef} />
+          <CartList cart={cart} discounts={discounts} subtotal={subtotal} customerName={customer?.name ?? null} lastAddedIndex={lastAddedIndex} editingQtyIndex={editingQtyIndex} editQtyValue={editQtyValue} onSetEditingQtyIndex={setEditingQtyIndex} onSetEditQtyValue={setEditQtyValue} onCommitQtyEdit={commitQtyEdit} onRemoveItem={removeItem} onRemoveDiscount={removeDiscount} cartEndRef={cartEndRef} />
         )}
 
         {/* Right panel (desktop): active panel content */}

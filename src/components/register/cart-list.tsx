@@ -28,6 +28,7 @@ interface CartListProps {
   cart: CartItem[];
   discounts: CartDiscount[];
   subtotal: number;
+  customerName: string | null;
   lastAddedIndex: number | null;
   editingQtyIndex: number | null;
   editQtyValue: string;
@@ -43,6 +44,7 @@ export function CartList({
   cart,
   discounts,
   subtotal,
+  customerName,
   lastAddedIndex,
   editingQtyIndex,
   editQtyValue,
@@ -74,6 +76,13 @@ export function CartList({
       style={{ scrollBehavior: "smooth" }}
       onClick={() => (document.activeElement as HTMLElement)?.blur()}
     >
+      {/* Customer header — receipt style */}
+      {customerName && (
+        <div className="px-4 py-2 border-b border-accent/20 bg-accent/5">
+          <span className="text-sm font-semibold text-accent">&#x25C8; {customerName}</span>
+        </div>
+      )}
+
       {cart.length === 0 ? (
         <div className="flex items-center justify-center h-full text-muted text-lg">
           Scan or search to add items
