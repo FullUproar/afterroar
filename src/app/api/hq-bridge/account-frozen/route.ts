@@ -7,30 +7,29 @@ import { opLog } from "@/lib/op-log";
 /*  HQ notifies us that an Afterroar user's account was frozen or      */
 /*  unfrozen. We tag/untag ALL matching customers across ALL stores.    */
 /*                                                                     */
-/*  Auth: Bearer token matched against each store's hq_webhook_secret  */
+/*  Auth: Platform webhook secret (HQ_BRIDGE_SECRET env var)           */
+/*  This is a PLATFORM-LEVEL operation, not store-scoped.              */
 /* ------------------------------------------------------------------ */
 
 export async function POST(request: NextRequest) {
+  // Authenticate using platform-level secret (not per-store)
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Missing auth" }, { status: 401 });
+    return NextResponse.json({ error: "Missing authorization" }, { status: 401 });
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  if (!token) {
-    return NextResponse.json({ error: "Missing auth" }, { status: 401 });
+  const token = authHeader.replace("Bearer ", "").trim();
+  const platformSecret = process.env.HQ_BRIDGE_SECRET;
+
+  if (!platformSecret || platformSecret.length < 16) {
+    console.error("[HQ Bridge] HQ_BRIDGE_SECRET not configured or too short");
+    return NextResponse.json({ error: "Bridge not configured" }, { status: 500 });
   }
 
-  // Verify the bearer token matches at least one store's webhook secret.
-  const stores = await prisma.posStore.findMany({
-    where: {
-      settings: { path: ["hq_webhook_secret"], equals: token },
-    },
-    select: { id: true },
-  });
-
-  if (stores.length === 0) {
-    return NextResponse.json({ error: "Invalid auth" }, { status: 401 });
+  // Constant-time comparison
+  const crypto = require("crypto");
+  if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(platformSecret))) {
+    return NextResponse.json({ error: "Invalid authorization" }, { status: 401 });
   }
 
   let body: { afterroar_user_id: string; frozen: boolean; reason?: string };
@@ -48,10 +47,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Validate afterroar_user_id format
+  if (!/^[a-zA-Z0-9_-]{5,128}$/.test(afterroar_user_id)) {
+    return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 });
+  }
+
   // Find ALL customers across ALL stores linked to this Afterroar user
   const linkedCustomers = await prisma.posCustomer.findMany({
     where: { afterroar_user_id },
     select: { id: true, store_id: true, name: true, tags: true },
+    take: 1000, // Safety limit
   });
 
   if (linkedCustomers.length === 0) {
@@ -65,13 +70,11 @@ export async function POST(request: NextRequest) {
     const hasTag = currentTags.includes(TAG);
 
     if (frozen && !hasTag) {
-      // Add frozen tag
       await prisma.posCustomer.update({
         where: { id: cust.id },
         data: { tags: { push: TAG } },
       });
     } else if (!frozen && hasTag) {
-      // Remove frozen tag
       const newTags = currentTags.filter((t) => t !== TAG);
       await prisma.posCustomer.update({
         where: { id: cust.id },

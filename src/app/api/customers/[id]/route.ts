@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
 
 export async function GET(
   _request: NextRequest,
@@ -131,11 +131,22 @@ export async function POST(
     }
 
     if (body.action === "adjust_credit") {
+      // Require customers.credit permission for credit adjustments
+      const ctx = await requirePermission("customers.credit");
+
       const { amount_cents, description } = body;
       if (!amount_cents || typeof amount_cents !== "number") {
         return NextResponse.json(
           { error: "amount_cents is required and must be a number" },
           { status: 400 }
+        );
+      }
+
+      // Cap single adjustment at $500 — larger adjustments require manager approval
+      if (Math.abs(amount_cents) > 50000) {
+        return NextResponse.json(
+          { error: "Adjustment exceeds $500 limit — manager approval required" },
+          { status: 403 }
         );
       }
 

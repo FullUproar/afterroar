@@ -45,6 +45,31 @@ export interface AIExtractionResult {
   tokenUsage: { input: number; output: number };
 }
 
+/**
+ * Mask PII fields before sending data to external AI service.
+ * Preserves data structure for validation but removes identifying info.
+ */
+function maskPII(row: Record<string, unknown>): Record<string, unknown> {
+  const masked = { ...row };
+  // Mask email: "john@example.com" → "j***@e***.com"
+  if (typeof masked.email === "string" && masked.email.includes("@")) {
+    const [local, domain] = masked.email.split("@");
+    masked.email = `${local[0]}***@${domain[0]}***.${domain.split(".").pop()}`;
+  }
+  // Mask phone: "(555) 123-4567" → "***-4567"
+  if (typeof masked.phone === "string" && masked.phone.length > 4) {
+    masked.phone = `***${masked.phone.slice(-4)}`;
+  }
+  // Mask name: "John Smith" → "J. S."
+  if (typeof masked.name === "string") {
+    const parts = masked.name.split(" ").filter(Boolean);
+    masked.name = parts.map((p) => `${(p as string)[0]}.`).join(" ");
+  }
+  // Remove notes (often contain personal info)
+  delete masked.notes;
+  return masked;
+}
+
 /* ------------------------------------------------------------------ */
 /*  MODE 1: VALIDATE — sanity check mapped data                         */
 /* ------------------------------------------------------------------ */
@@ -59,8 +84,11 @@ export async function aiValidateImport(
   const sampleSize = options?.sampleSize ?? 50;
 
   // Sample rows for AI review (first N + last 5 + random 5 from middle)
-  const sample = sampleRows(mappedRows, sampleSize);
+  const rawSample = sampleRows(mappedRows, sampleSize);
   const totalRows = mappedRows.length;
+
+  // Mask PII before sending to external AI service
+  const sample = rawSample.map((row) => maskPII(row));
 
   // Compute summary stats for context
   const stats = computeStats(entityType, mappedRows);

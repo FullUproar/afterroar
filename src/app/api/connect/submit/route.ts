@@ -4,11 +4,21 @@ import { encryptCredential } from "@/lib/crypto";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/connect/submit — receive a credential from a store owner */
-/*  Public endpoint (no auth — the store owner isn't logged in yet).   */
+/*  Auth: Bearer token must match the store's hq_webhook_secret.       */
 /*  Credential is encrypted with AES-256-GCM before storage.          */
 /* ------------------------------------------------------------------ */
 
 export async function POST(request: NextRequest) {
+  // Require Bearer token auth
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Missing authorization" }, { status: 401 });
+  }
+  const token = authHeader.replace("Bearer ", "").trim();
+  if (!token || token.length < 8) {
+    return NextResponse.json({ error: "Invalid authorization" }, { status: 401 });
+  }
+
   let body: {
     store_slug: string;
     credential_type: string;
@@ -41,11 +51,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  // Verify the token matches this store's hq_webhook_secret
+  const settings = (store.settings ?? {}) as Record<string, unknown>;
+  const storeSecret = settings.hq_webhook_secret as string | undefined;
+  if (!storeSecret) {
+    return NextResponse.json({ error: "Store not configured for credential submission" }, { status: 403 });
+  }
+  const crypto = require("crypto");
+  if (
+    token.length !== storeSecret.length ||
+    !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(storeSecret))
+  ) {
+    return NextResponse.json({ error: "Invalid authorization" }, { status: 401 });
+  }
+
   // Encrypt the credential
   const { encrypted, iv, tag } = encryptCredential(body.credential);
 
   // Store in the store's settings as a pending credential
-  const settings = (store.settings ?? {}) as Record<string, unknown>;
   const pendingCredentials = (settings.pending_credentials ?? []) as Array<Record<string, unknown>>;
 
   pendingCredentials.push({

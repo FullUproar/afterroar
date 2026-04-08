@@ -36,14 +36,21 @@ export async function POST(request: NextRequest) {
       console.error("[Stripe Webhook] Signature verification failed:", err);
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
-  } else {
-    // Development mode: parse without verification (log warning)
-    console.warn("[Stripe Webhook] No STRIPE_WEBHOOK_SECRET set — processing without signature verification");
+  } else if (process.env.NODE_ENV === "development") {
+    // Development mode only: parse without verification (log warning)
+    console.warn("[Stripe Webhook] No STRIPE_WEBHOOK_SECRET set — processing without signature verification (dev only)");
     try {
       event = JSON.parse(body) as Stripe.Event;
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
+  } else {
+    // Production: reject webhooks without signature verification
+    console.error("[Stripe Webhook] STRIPE_WEBHOOK_SECRET not configured — rejecting webhook in production");
+    return NextResponse.json(
+      { error: "Webhook signature verification not configured" },
+      { status: 500 },
+    );
   }
 
   // Handle events
