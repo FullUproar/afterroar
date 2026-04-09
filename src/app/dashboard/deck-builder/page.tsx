@@ -6,6 +6,12 @@ import { PageHeader } from "@/components/page-header";
 import { FeatureGate } from "@/components/feature-gate";
 import { formatCents } from "@/lib/types";
 import { CardImage, StockBadge, PriceTag } from "@/components/tcg/shared";
+import { FormatSelector } from "@/components/deck-builder/format-selector";
+import { InventoryCard } from "@/components/deck-builder/inventory-card";
+import { DeckSummary } from "@/components/deck-builder/deck-summary";
+import { Recommendations as RecommendationsPanel } from "@/components/deck-builder/recommendations";
+import { MetaArchetypes } from "@/components/deck-builder/meta-archetypes";
+import { DeckBuilderEmptyState } from "@/components/deck-builder/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -463,28 +469,8 @@ function DeckBuilderContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ---- Left Panel: Deck Building ---- */}
         <div className="space-y-4">
-          {/* Format selector */}
-          <div>
-            <label className="block text-sm font-semibold text-muted uppercase tracking-wider mb-2">
-              Format
-            </label>
-            <div className="flex gap-1 bg-card-hover rounded-xl p-1 overflow-x-auto">
-              {FORMATS.map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => handleFormatChange(f.key)}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors whitespace-nowrap px-2 ${
-                    format === f.key
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                  style={{ minHeight: "auto" }}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Format selector — grouped by game */}
+          <FormatSelector value={format} onChange={handleFormatChange} />
 
           {/* ---- Commander Tab ---- */}
           {isCommander && (
@@ -714,35 +700,11 @@ function DeckBuilderContent() {
           {!isCommander && !isPokemon && (
             <>
               {/* Meta deck suggestions — live data */}
-              {metaLoading && (
-                <div className="flex items-center justify-center h-12 text-muted text-sm">
-                  Loading live meta data...
-                </div>
-              )}
-              {!metaLoading && metaDecks.length > 0 && (
-                <div>
-                  <label className="block text-sm font-semibold text-muted uppercase tracking-wider mb-2">
-                    Popular Archetypes
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {metaDecks.slice(0, 12).map((deck) => (
-                      <button
-                        key={deck.name}
-                        onClick={() => handleFetchDeck(deck.name)}
-                        className="rounded-lg border border-card-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-card-hover hover:border-accent/50 transition-colors"
-                        style={{ minHeight: "auto" }}
-                      >
-                        {deck.name}
-                        {deck.metaShare > 0 && (
-                          <span className="ml-1.5 text-xs text-muted font-mono">
-                            {deck.metaShare.toFixed(1)}%
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <MetaArchetypes
+                decks={metaDecks}
+                loading={metaLoading}
+                onSelect={handleFetchDeck}
+              />
 
               {/* Tab: Search vs Paste */}
               <div className="flex gap-1 bg-card-hover rounded-xl p-1">
@@ -905,87 +867,27 @@ function DeckBuilderContent() {
                 Inventory Match
               </div>
 
-              <div className="space-y-2 max-h-[32rem] overflow-y-auto">
+              <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-1">
                 {inventoryResults.map((match, i) => (
-                  <div key={`${match.name}-${i}`} className="space-y-1">
-                  <div
-                    className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-3 py-2.5"
-                  >
-                    {/* Card image */}
-                    <CardImage src={match.image_url} alt={match.name} size="sm" />
-
-                    {/* Card info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground truncate">
-                        {match.name}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs mt-0.5">
-                        <StockBadge quantity={match.in_stock} needed={match.needed} />
-                        <span className="text-muted">
-                          Need {match.needed} / Have {match.in_stock}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Price */}
-                    {match.price_cents > 0 && (
-                      <PriceTag cents={match.price_cents} size="sm" />
-                    )}
-
-                    {/* Add to cart */}
-                    {match.status !== "unavailable" && match.inventory_item_id && (
-                      <button
-                        onClick={() => addToCart(match)}
-                        className="shrink-0 rounded-lg bg-green-600/20 px-2.5 py-1 text-xs font-medium text-green-400 hover:bg-green-600/30 transition-colors"
-                        style={{ minHeight: "auto" }}
-                        title="Add to cart"
-                      >
-                        + Cart
-                      </button>
-                    )}
-                  </div>
-                  {/* Substitute suggestion */}
-                  {match.substitute && (match.status === "unavailable" || match.status === "partial") && (
-                    <div className="ml-14 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs">
-                      <span className="text-amber-400 shrink-0">&#x21B3; Try instead:</span>
-                      {match.substitute.image_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={match.substitute.image_url} alt="" className="w-6 h-8 rounded object-cover shrink-0" />
-                      )}
-                      <span className="text-foreground font-medium truncate">{match.substitute.name}</span>
-                      <span className="text-muted shrink-0">{match.substitute.reason}</span>
-                      <span className="text-foreground font-mono shrink-0">{formatCents(match.substitute.price_cents)}</span>
-                      <button
-                        onClick={() => addToCart({
-                          name: match.substitute!.name,
-                          needed: match.needed - match.in_stock,
-                          in_stock: 1,
-                          price_cents: match.substitute!.price_cents,
-                          inventory_item_id: match.substitute!.inventory_item_id,
-                          image_url: match.substitute!.image_url,
-                          status: "available",
-                        })}
-                        className="shrink-0 rounded bg-amber-500/20 px-2 py-0.5 text-amber-400 font-medium hover:bg-amber-500/30 transition-colors"
-                      >
-                        + Sub
-                      </button>
-                    </div>
-                  )}
-                  {/* Network availability */}
-                  {match.network && match.network.length > 0 && (
-                    <div className="ml-14 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/5 border border-purple-500/20 text-xs">
-                      <span className="text-purple-400 shrink-0">&#x1F310; Available nearby:</span>
-                      {match.network.map((ns, ni) => (
-                        <span key={ni} className="text-foreground">
-                          <span className="font-medium">{ns.store_name}</span>
-                          {ns.city && <span className="text-muted"> ({ns.city}{ns.state ? `, ${ns.state}` : ""})</span>}
-                          <span className="text-purple-400 ml-1">×{ns.quantity}</span>
-                          {ni < match.network!.length - 1 && <span className="text-muted mx-1">·</span>}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  </div>
+                  <InventoryCard
+                    key={`${match.name}-${i}`}
+                    match={match}
+                    onAddToCart={() => addToCart(match)}
+                    onAddSubstitute={
+                      match.substitute
+                        ? () =>
+                            addToCart({
+                              name: match.substitute!.name,
+                              needed: match.needed - match.in_stock,
+                              in_stock: 1,
+                              price_cents: match.substitute!.price_cents,
+                              inventory_item_id: match.substitute!.inventory_item_id,
+                              image_url: match.substitute!.image_url,
+                              status: "available",
+                            })
+                        : undefined
+                    }
+                  />
                 ))}
               </div>
 
@@ -1006,107 +908,31 @@ function DeckBuilderContent() {
                 </button>
               </div>
 
-              {/* Summary */}
-              <div className="rounded-xl border border-card-border bg-card p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted">Total cards needed</span>
-                  <span className="text-foreground font-medium">
-                    {totalCards}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted">In stock</span>
-                  <span className="text-green-400 font-medium">
-                    {inStockCards}
-                  </span>
-                </div>
-                {needToOrder > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted">Need to order</span>
-                    <span className="text-red-400 font-medium">
-                      {needToOrder}
-                    </span>
-                  </div>
-                )}
-                <div className="border-t border-card-border my-2" />
-                <div className="flex justify-between text-base">
-                  <span className="text-muted">Estimated total (in stock)</span>
-                  <span className="text-foreground font-bold font-mono tabular-nums">
-                    {formatCents(estimatedTotal)}
-                  </span>
-                </div>
+              {/* Summary — sticky at bottom */}
+              <DeckSummary
+                totalCards={totalCards}
+                inStockCards={inStockCards}
+                needToOrder={needToOrder}
+                estimatedTotal={estimatedTotal}
+                onAddAllToCart={addAllToCart}
+              />
 
-                <button
-                  onClick={addAllToCart}
-                  disabled={inStockCards === 0}
-                  className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity mt-2"
-                >
-                  Add All Available to Cart ({inStockCards} cards)
-                </button>
-              </div>
-
-              {/* Recommendations / Upsells */}
-              {recommendations.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-card-border">
-                  <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
-                    You Might Also Need
-                  </h3>
-                  <div className="space-y-2">
-                    {recommendations.map((rec, i) => (
-                      <div
-                        key={`${rec.inventory_item_id}-${i}`}
-                        className="flex items-center gap-3 rounded-xl border border-card-border bg-card p-3"
-                      >
-                        {rec.image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={rec.image_url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-card-hover flex items-center justify-center text-muted text-xs shrink-0">
-                            {rec.type === "accessory" ? "\uD83D\uDEE1" : rec.type === "upgrade" ? "\u2728" : "\u2660"}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-foreground truncate">{rec.name}</div>
-                          <div className="text-xs text-muted">{rec.reason}</div>
-                        </div>
-                        <div className="text-sm font-mono font-semibold text-foreground shrink-0 mr-2">
-                          {formatCents(rec.price_cents)}
-                        </div>
-                        <button
-                          onClick={() => {
-                            const cartItems = [{ inventory_item_id: rec.inventory_item_id, name: rec.name, price_cents: rec.price_cents, quantity: 1 }];
-                            const existing = localStorage.getItem("deck-builder-cart");
-                            const merged = existing ? [...JSON.parse(existing), ...cartItems] : cartItems;
-                            localStorage.setItem("deck-builder-cart", JSON.stringify(merged));
-                            setRecommendations((prev) => prev.filter((_, j) => j !== i));
-                          }}
-                          className="shrink-0 rounded-lg bg-accent/10 border border-accent/30 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors"
-                        >
-                          + Add
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Recommendations carousel */}
+              <RecommendationsPanel
+                items={recommendations}
+                onAdd={(rec) => {
+                  const cartItems = [{ inventory_item_id: rec.inventory_item_id, name: rec.name, price_cents: rec.price_cents, quantity: 1 }];
+                  const existing = localStorage.getItem("deck-builder-cart");
+                  const merged = existing ? [...JSON.parse(existing), ...cartItems] : cartItems;
+                  localStorage.setItem("deck-builder-cart", JSON.stringify(merged));
+                  setRecommendations((prev) => prev.filter((r) => r.inventory_item_id !== rec.inventory_item_id));
+                }}
+              />
             </>
           )}
 
           {!matchLoading && inventoryResults.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-64 text-muted text-center px-4">
-              <div className="text-4xl mb-3">{"\u2660"}</div>
-              <div className="text-base font-medium mb-1">
-                Deck Builder
-              </div>
-              <div className="text-sm">
-                {isCommander
-                  ? "Search for a commander to see EDHREC synergy cards matched against your inventory."
-                  : isPokemon
-                    ? "Browse tournament decks or paste a decklist to check your store inventory."
-                    : "Search for cards or paste a decklist to check your store inventory. Results will appear here with stock availability and pricing."
-                }
-              </div>
-            </div>
+            <DeckBuilderEmptyState format={format} />
           )}
         </div>
       </div>
