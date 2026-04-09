@@ -85,8 +85,9 @@ export default function SettingsPage() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Derive active tab from URL pathname
+  // Derive active tab from URL pathname — 'settings' root shows overview
   const pathTab = pathname.split('/').pop();
+  const isOverview = pathTab === 'settings';
   const activeTab: TabKey = (TABS.some(t => t.key === pathTab) ? pathTab : 'store') as TabKey;
   const setActiveTab = (tab: TabKey) => router.push(`/dashboard/settings/${tab}`);
 
@@ -288,9 +289,101 @@ export default function SettingsPage() {
   const tabSectionKeys = TAB_SECTIONS[activeTab] || [];
   const tabSections = SETTINGS_SECTIONS.filter((s) => tabSectionKeys.includes(s.key));
 
+  // ── Settings overview: compute status summaries per tab ──
+  function getTabSummary(tab: TabKey): { status: 'configured' | 'needs-setup' | 'info'; summary: string } {
+    switch (tab) {
+      case 'store': {
+        const hasName = settings.store_display_name || store?.name;
+        const hasTax = (settings.tax_rate_percent as number) > 0;
+        return {
+          status: hasName && hasTax ? 'configured' : 'needs-setup',
+          summary: [
+            hasName ? (settings.store_display_name || store?.name) : 'Name not set',
+            hasTax ? `Tax: ${settings.tax_rate_percent}%` : 'No tax configured',
+            `Credit bonus: ${settings.trade_in_credit_bonus_percent}%`,
+          ].join(' · '),
+        };
+      }
+      case 'payments': {
+        const hasStripe = !!((store?.settings as Record<string, unknown>)?.stripe_connected_account_id);
+        return {
+          status: hasStripe ? 'configured' : 'needs-setup',
+          summary: hasStripe ? 'Stripe connected' : 'No payment processor connected',
+        };
+      }
+      case 'staff':
+        return { status: 'info', summary: 'Permissions, mobile register, time clock' };
+      case 'integrations': {
+        const hasShopify = !!((store?.settings as Record<string, unknown>)?.shopify_store_domain);
+        const hasAfterroar = !!((store?.settings as Record<string, unknown>)?.venueName);
+        const parts = [];
+        if (hasAfterroar) parts.push('Afterroar linked');
+        if (hasShopify) parts.push('Shopify connected');
+        if (parts.length === 0) parts.push('No integrations connected');
+        return { status: parts.length > 0 && (hasShopify || hasAfterroar) ? 'configured' : 'info', summary: parts.join(' · ') };
+      }
+      case 'intelligence':
+        return { status: 'info', summary: `Advisor tone: ${settings.intel_advisor_tone ?? 'default'} · Thresholds configured` };
+      case 'operations': {
+        const parts = [];
+        if (settings.loyalty_enabled) parts.push('Loyalty on');
+        if ((settings as unknown as Record<string, unknown>).cafe_enabled) parts.push('Café on');
+        if (parts.length === 0) parts.push('Loyalty, promotions, café');
+        return { status: 'info', summary: parts.join(' · ') };
+      }
+      case 'test-mode':
+        return { status: 'info', summary: isTraining ? 'Training mode active' : 'Training mode off' };
+      default:
+        return { status: 'info', summary: '' };
+    }
+  }
+
+  // ── OVERVIEW: settings hub (when at /dashboard/settings root) ──
+  if (isOverview) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Settings" backHref="/dashboard" />
+        <p className="text-sm text-muted -mt-2">
+          {store?.name} · Tap a section to configure
+        </p>
+
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {TABS.map((tab) => {
+            const { status, summary } = getTabSummary(tab.key);
+            const needsSetup = status === 'needs-setup';
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-xl border p-5 text-left transition-all active:scale-[0.98] ${
+                  needsSetup
+                    ? 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
+                    : 'border-card-border bg-card hover:border-accent/30 hover:bg-card-hover'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">{tab.icon}</span>
+                  <span className="text-sm font-semibold text-foreground">{tab.label}</span>
+                  {needsSetup && (
+                    <span className="ml-auto text-xs font-medium text-amber-400">Setup needed</span>
+                  )}
+                </div>
+                <p className="text-xs text-muted leading-relaxed line-clamp-2">{summary}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <PageHeader title={TABS.find(t => t.key === activeTab)?.label || 'Settings'} backHref="/dashboard" />
+      <PageHeader title={TABS.find(t => t.key === activeTab)?.label || 'Settings'} backHref="/dashboard/settings" />
       <p className="text-sm text-muted -mt-2">
         {store?.name} &middot; Changes save automatically
       </p>
