@@ -182,7 +182,7 @@ export default function TransfersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Transfers"
         action={

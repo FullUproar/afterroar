@@ -110,7 +110,7 @@ export default function TimeclockPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="flex flex-col h-full gap-4 max-w-3xl mx-auto">
       <PageHeader title="Time Clock" />
 
       {data && (

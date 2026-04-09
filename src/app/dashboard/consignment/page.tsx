@@ -109,7 +109,7 @@ export default function ConsignmentPage() {
   const totalCommission = filtered.filter((i) => i.status === "sold").reduce((s, i) => s + (i.asking_price_cents * Number(i.commission_percent) / 100), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Consignment"
         action={

@@ -47,7 +47,7 @@ export default async function ReportsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-4">
       <PageHeader title="Event ROI" />
 
       {results.length === 0 ? (

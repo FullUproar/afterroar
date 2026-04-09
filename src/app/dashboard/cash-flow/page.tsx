@@ -569,7 +569,7 @@ export default function CashFlowPage() {
   const totalDeadStockValue = data.dead_stock.reduce((s, d) => s + d.cost_trapped_cents, 0);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="flex flex-col h-full gap-4 pb-12">
       {/* ---- HEADER + PERIOD SELECTOR ---- */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

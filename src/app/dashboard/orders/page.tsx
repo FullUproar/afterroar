@@ -175,7 +175,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className="mx-auto max-w-5xl flex flex-col h-full gap-4">
       <PageHeader title="Orders" />
 
       {/* Status filter tabs */}

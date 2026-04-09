@@ -62,7 +62,7 @@ export default function PreordersPage() {
   const fulfilled = preorders.filter((p) => p.status === 'fulfilled');
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Preorders"
         action={

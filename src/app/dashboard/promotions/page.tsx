@@ -163,7 +163,7 @@ export default function PromotionsPage() {
   const needsScopeValue = ['category', 'item', 'customer_tag', 'quantity_min', 'combo', 'coupon'].includes(scope);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Promotions & Discounts"
         action={

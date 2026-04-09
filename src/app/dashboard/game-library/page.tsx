@@ -234,7 +234,7 @@ export default function GameLibraryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-4">
       <div className="flex items-center justify-between">
         <PageHeader title="Game Library" />
         <div className="flex gap-1 rounded-xl border border-card-border bg-card p-1">

@@ -808,9 +808,36 @@ export default function SettingsPage() {
         )}
 
         {/* ════════════════ INTELLIGENCE TAB ════════════════ */}
-        {activeTab === 'intelligence' && (
+        {activeTab === 'intelligence' && !activeSection && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {tabSections.map((section) => {
+              const fieldSummary = section.fields.slice(0, 2).map((f) => {
+                const val = settings[f.key as keyof StoreSettings];
+                if (f.type === 'toggle') return `${f.label}: ${val ? 'On' : 'Off'}`;
+                if (f.type === 'number' && val !== undefined) return `${f.label}: ${val}`;
+                if (f.type === 'text' && val) return String(val).slice(0, 30);
+                return null;
+              }).filter(Boolean).join(' · ') || section.description;
+
+              return (
+                <button
+                  key={section.key}
+                  onClick={() => setActiveSection(section.key)}
+                  className="rounded-xl border border-card-border bg-card p-4 text-left hover:border-accent/30 hover:bg-card-hover active:scale-[0.98] transition-all"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-foreground">{section.label}</span>
+                    <span className="text-xs text-muted">→</span>
+                  </div>
+                  <p className="text-xs text-muted line-clamp-2">{fieldSummary}</p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {activeTab === 'intelligence' && activeSection && (
           <>
-            {tabSections.map((section) => (
+            {tabSections.filter((s) => s.key === activeSection).map((section) => (
               <SettingsSection
                 key={section.key}
                 section={section}
@@ -826,9 +853,46 @@ export default function SettingsPage() {
         )}
 
         {/* ════════════════ OPERATIONS TAB ════════════════ */}
-        {activeTab === 'operations' && (
+        {activeTab === 'operations' && !activeSection && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {tabSections.map((section) => {
+              const fieldSummary = section.fields.slice(0, 2).map((f) => {
+                const val = settings[f.key as keyof StoreSettings];
+                if (f.type === 'toggle') return `${f.label}: ${val ? 'On' : 'Off'}`;
+                if (f.type === 'number' && val !== undefined) return `${f.label}: ${val}`;
+                if (f.type === 'text' && val) return String(val).slice(0, 30);
+                return null;
+              }).filter(Boolean).join(' · ') || section.description;
+
+              return (
+                <button
+                  key={section.key}
+                  onClick={() => setActiveSection(section.key)}
+                  className="rounded-xl border border-card-border bg-card p-4 text-left hover:border-accent/30 hover:bg-card-hover active:scale-[0.98] transition-all"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-foreground">{section.label}</span>
+                    <span className="text-xs text-muted">→</span>
+                  </div>
+                  <p className="text-xs text-muted line-clamp-2">{fieldSummary}</p>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setActiveSection('appearance')}
+              className="rounded-xl border border-card-border bg-card p-4 text-left hover:border-accent/30 hover:bg-card-hover active:scale-[0.98] transition-all"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-semibold text-foreground">Appearance</span>
+                <span className="text-xs text-muted">→</span>
+              </div>
+              <p className="text-xs text-muted line-clamp-2">Theme: {theme === 'system' ? 'System' : theme === 'dark' ? 'Dark' : 'Light'}</p>
+            </button>
+          </div>
+        )}
+        {activeTab === 'operations' && activeSection && activeSection !== 'appearance' && (
           <>
-            {tabSections.map((section) => (
+            {tabSections.filter((s) => s.key === activeSection).map((section) => (
               <SettingsSection
                 key={section.key}
                 section={section}
@@ -840,34 +904,34 @@ export default function SettingsPage() {
                 resetSection={resetSection}
               />
             ))}
-
-            {/* Appearance */}
-            <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
-              <h2 className="text-sm font-semibold text-foreground">Appearance</h2>
-              <p className="mt-0.5 text-xs text-muted">
-                Choose your preferred color theme. Applies to this device only.
-              </p>
-              <div className="mt-4 flex gap-2">
-                {([
-                  { value: 'light' as const, label: 'Light' },
-                  { value: 'dark' as const, label: 'Dark' },
-                  { value: 'system' as const, label: 'System' },
-                ]).map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setTheme(opt.value)}
-                    className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-                      theme === opt.value
-                        ? 'border-accent bg-accent-light text-accent'
-                        : 'border-card-border bg-card text-muted hover:border-accent/50'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </>
+        )}
+        {activeTab === 'operations' && activeSection === 'appearance' && (
+          <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm dark:shadow-none">
+            <h2 className="text-sm font-semibold text-foreground">Appearance</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Choose your preferred color theme. Applies to this device only.
+            </p>
+            <div className="mt-4 flex gap-2">
+              {([
+                { value: 'light' as const, label: 'Light' },
+                { value: 'dark' as const, label: 'Dark' },
+                { value: 'system' as const, label: 'System' },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                    theme === opt.value
+                      ? 'border-accent bg-accent-light text-accent'
+                      : 'border-card-border bg-card text-muted hover:border-accent/50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* ════════════════ TEST MODE TAB ════════════════ */}

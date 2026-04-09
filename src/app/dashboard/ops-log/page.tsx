@@ -167,7 +167,7 @@ export default function OpsLogPage() {
   }
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-4xl">
+    <div className="flex flex-col h-full gap-4 p-4 md:p-6 max-w-4xl">
       <PageHeader
         title="Operational Log"
         action={
