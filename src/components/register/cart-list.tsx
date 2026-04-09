@@ -72,7 +72,7 @@ export function CartList({
 
   return (
     <div
-      className="flex-1 overflow-y-auto"
+      className="flex-1 overflow-y-auto scroll-visible"
       style={{ scrollBehavior: "smooth" }}
       onClick={() => (document.activeElement as HTMLElement)?.blur()}
     >

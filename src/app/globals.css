@@ -46,6 +46,37 @@ html.light {
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── No-Scrollbar Design ──
+   Scrolling still works (touch, trackpad, keyboard) but the visual
+   scrollbar track is hidden. This creates a clean, app-like feel.
+   Exception: data tables with class .scroll-visible retain scrollbars. */
+* {
+  scrollbar-width: none; /* Firefox */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+/* Opt-in: add .scroll-visible to any container that NEEDS a scrollbar */
+.scroll-visible {
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+}
+.scroll-visible::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+.scroll-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-visible::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 3px;
+}
+.scroll-visible::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
 /* Prevent horizontal overflow on mobile, ensure vertical scroll works */
 html, body {
   overflow-x: hidden;
