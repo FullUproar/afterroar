@@ -14,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         background: '#0a0a0a',
         color: '#e2e8f0',
         minHeight: '100vh',
+        overflowX: 'hidden',
       }}>
         {children}
       </body>
