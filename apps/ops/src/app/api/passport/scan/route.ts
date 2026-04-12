@@ -25,7 +25,7 @@ function parsePassportCode(code: string): {
   userId: string | null;
   shortCode: string | null;
 } {
-  // URL format: https://fulluproar.com/p/{userId} or /p/{userId}
+  // URL format: https://afterroar.me/p/{userId} or /p/{userId}
   const urlMatch = code.match(/\/p\/([a-zA-Z0-9_-]+)/);
   if (urlMatch) {
     return { userId: urlMatch[1], shortCode: null };
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       // Try HQ lookup API
       try {
         const hqRes = await fetch(
-          `https://www.fulluproar.com/api/passport/lookup?id=${encodeURIComponent(parsed.userId)}`,
+          `https://www.afterroar.me/api/passport/lookup?id=${encodeURIComponent(parsed.userId)}`,
           { signal: AbortSignal.timeout(3000) },
         );
         if (hqRes.ok) {

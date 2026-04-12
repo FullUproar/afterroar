@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const hqRes = await fetch(
-        `https://www.fulluproar.com/api/passport/lookup?id=${encodeURIComponent(afterroarUserId)}`,
+        `https://www.afterroar.me/api/passport/lookup?id=${encodeURIComponent(afterroarUserId)}`,
         {
           headers: {
             "Authorization": `Bearer ${webhookSecret}`,
