@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       body = await request.json();
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
       const text = await request.text();
+      console.log('[token] raw body length:', text.length, 'snippet:', text.slice(0, 200));
       const params = new URLSearchParams(text);
       body = Object.fromEntries(params.entries());
     } else {
@@ -47,8 +48,9 @@ export async function POST(request: NextRequest) {
       has_code: !!code,
       redirect_uri,
       client_id,
-      has_client_secret: !!client_secret,
+      secret_len: client_secret?.length,
       content_type: contentType,
+      has_basic_auth: !!request.headers.get('authorization'),
     });
 
     if (grant_type !== 'authorization_code') {
