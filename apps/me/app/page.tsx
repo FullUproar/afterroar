@@ -74,21 +74,40 @@ export default async function PassportLanding() {
                 </p>
               </div>
             </div>
-            <p style={{
-              color: '#9ca3af',
-              fontSize: '0.875rem',
-              margin: 0,
-              lineHeight: 1.5,
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+              justifyContent: 'center',
+              marginTop: '0.25rem',
             }}>
-              Your Passport is active. Settings, library, points, and
-              data management pages are coming soon.
-            </p>
+              {[
+                { href: '/library', label: 'Library' },
+                { href: '/points', label: 'Points' },
+                { href: '/history', label: 'History' },
+                { href: '/stores', label: 'Stores' },
+                { href: '/settings', label: 'Settings' },
+              ].map(({ href, label }) => (
+                <Link key={href} href={href} style={{
+                  padding: '0.5rem 1rem',
+                  background: '#374151',
+                  borderRadius: '6px',
+                  color: '#e2e8f0',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}>
+                  {label}
+                </Link>
+              ))}
+            </div>
             <Link
               href="/api/auth/signout"
               style={{
                 color: '#6b7280',
                 fontSize: '0.8rem',
                 textDecoration: 'underline',
+                marginTop: '0.25rem',
               }}
             >
               Sign out
