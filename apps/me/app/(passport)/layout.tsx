@@ -35,6 +35,7 @@ export default async function PassportLayout({ children }: { children: React.Rea
               { href: '/history', label: 'History' },
               { href: '/stores', label: 'Stores' },
               { href: '/settings', label: 'Settings' },
+              { href: '/data', label: 'Data' },
             ].map(({ href, label }) => (
               <Link key={href} href={href} style={{
                 color: '#9ca3af',
