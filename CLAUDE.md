@@ -9,7 +9,7 @@ Part of the Full Uproar Games ecosystem.
 - Next.js 16 + React 19 + TypeScript + Tailwind CSS
 - Prisma ORM with @prisma/adapter-pg (NOT Supabase — fully migrated)
 - NextAuth v5 (Google OAuth + Credentials)
-- Shared PostgreSQL with Afterroar HQ (Prisma Postgres at db.prisma.io)
+- Shared PostgreSQL with Afterroar HQ — **Neon** (`ep-crimson-surf-amyp1ski-pooler.c-5.us-east-1.aws.neon.tech`), migrated from Prisma Postgres 2026-04-11
 - Vercel hosting
 
 ## Database
