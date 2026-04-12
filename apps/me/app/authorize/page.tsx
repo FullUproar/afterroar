@@ -130,7 +130,7 @@ async function AuthorizeContent({ searchParams }: { searchParams: Promise<Search
             This app is requesting:
           </p>
           <ul style={{ margin: 0, padding: '0 0 0 1.25rem', color: '#9ca3af', fontSize: '0.875rem', lineHeight: 2 }}>
-            {requestedScopes.includes('openid') && <li>Verify your identity</li>}
+            {requestedScopes.includes('openid') && <li>Know who you are on Afterroar</li>}
             {requestedScopes.includes('profile') && <li>Your display name and avatar</li>}
             {requestedScopes.includes('email') && <li>Your email address</li>}
             {requestedScopes.includes('library:read') && <li>View your game library</li>}
