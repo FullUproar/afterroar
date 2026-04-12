@@ -12,18 +12,125 @@ datasource db {
 // Only fields Store Ops needs are declared here.
 // ============================================================
 model User {
-  id           String    @id
-  email        String    @unique
-  displayName  String?
-  avatarUrl    String?
-  passwordHash String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @default(now()) @updatedAt
+  id              String    @id
+  email           String    @unique
+  displayName     String?
+  username        String?   @unique
+  avatarUrl       String?
+  passwordHash    String?
+  passportCode    String?   @unique @db.VarChar(8)
+  membershipTier  String    @default("FREE")
+  gameLibrary     String?
+  identityVerified Boolean  @default(false)
+  reputationScore Int       @default(100)
+  isFrozen        Boolean   @default(false)
+  marketingConsent Boolean  @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
 
-  pos_staff PosStaff[]
-  accounts  Account[]
+  pos_staff    PosStaff[]
+  accounts     Account[]
+  consents     UserConsent[]
+  pointsLedger PointsLedger[]
+  activities   UserActivity[]
 
   @@map("User")
+}
+
+// ============================================================
+// USER CONSENT — Granular per-category consent for the Afterroar
+// consent architecture. Mirrors the table created by
+// full-uproar-site migration 2026-04-12.
+// ============================================================
+model UserConsent {
+  id        String    @id @default(cuid())
+  userId    String
+  category  String
+  granted   Boolean
+  grantedAt DateTime?
+  revokedAt DateTime?
+  source    String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
+  @@index([category])
+}
+
+// ============================================================
+// POINTS LEDGER — Append-only ledger with running balance per store.
+// Read view of the table owned by full-uproar-site. The afterroar
+// app reads this to display points on the Passport.
+// ============================================================
+model PointsLedger {
+  id          String    @id @default(cuid())
+  userId      String
+  storeId     String?
+  amount      Int
+  balance     Int
+  action      String
+  category    String
+  description String
+  metadata    String?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, storeId])
+  @@index([createdAt])
+}
+
+// ============================================================
+// USER ACTIVITY — Activity log for check-ins, events, tournaments.
+// Read view of the table owned by full-uproar-site.
+// ============================================================
+model UserActivity {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  action     String
+  targetType String?
+  targetId   Int?
+  metadata   String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, action])
+}
+
+// ============================================================
+// VENUE — The federated store directory. Read view of the table
+// owned by full-uproar-site. Used for /stores on afterroar.me.
+// ============================================================
+model Venue {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  status           String   @default("unclaimed")
+  email            String?
+  phone            String?
+  website          String?
+  address          String?
+  city             String?
+  state            String?
+  zip              String?
+  lat              Float?
+  lng              Float?
+  venueType        String?
+  googleRating     Float?
+  reviewCount      Int?
+  description      String?
+  shortDescription String?
+  logoUrl          String?
+  coverImageUrl    String?
+  hours            String?
+  amenities        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([slug])
+  @@index([city, state])
 }
 
 // NextAuth required models — these tables already exist in the shared
