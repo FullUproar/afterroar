@@ -3,16 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "description": "Afterroar Passport — player identity, consent, data sovereignty. Served at afterroar.me.",
+  "prisma": {
+    "schema": "../../packages/database/prisma/schema.prisma"
+  },
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "next build",
+    "build": "prisma generate --schema=../../packages/database/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "^15.2.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "jose": "^6.0.11",
+    "next": "16.2.1",
+    "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.20.0",
+    "prisma": "^7.5.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@types/node": "^20",
