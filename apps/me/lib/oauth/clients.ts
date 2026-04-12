@@ -60,21 +60,12 @@ export function validateClientSecret(client: OAuthClient, secret: string): boole
   const expected = client.secret.trim();
   let received = secret.trim();
 
-  // Defensive: NextAuth may send URL-encoded secrets in form bodies
-  // that don't get fully decoded (double-encoding edge case)
   if (expected !== received && received.includes('%')) {
     try { received = decodeURIComponent(received); } catch {}
   }
 
   if (expected !== received) {
-    console.error('[oauth] secret mismatch debug:', {
-      client: client.id,
-      expected_len: expected.length,
-      received_len: received.length,
-      expected_prefix: expected.slice(0, 4),
-      received_prefix: received.slice(0, 4),
-      from_env: client.id === 'fulluproar-site' ? !!process.env.OAUTH_CLIENT_SECRET_FULLUPROAR : 'n/a',
-    });
+    console.error('[oauth] client secret mismatch for:', client.id);
   }
   return expected === received;
 }
