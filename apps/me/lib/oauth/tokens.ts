@@ -6,8 +6,10 @@ import { SignJWT, jwtVerify } from 'jose';
  * Auth codes are self-contained signed JWTs (5-min expiry, single-use intent).
  * Access tokens are signed JWTs (15-min expiry) containing userId + scopes.
  *
- * Uses AUTH_SECRET as the signing key for Phase 1. A dedicated
- * JWT_SIGNING_SECRET should be introduced when the real IdP ships.
+ * Uses JWT_SIGNING_SECRET (preferred) or falls back to AUTH_SECRET.
+ * These SHOULD be different keys — AUTH_SECRET signs NextAuth sessions,
+ * JWT_SIGNING_SECRET signs OAuth tokens. Separate keys limit blast radius
+ * if either one leaks.
  *
  * Security notes (per feedback_security_first.md):
  * - No PII in token payload — only userId, scopes, expiry, issuer
@@ -17,8 +19,8 @@ import { SignJWT, jwtVerify } from 'jose';
  */
 
 function getSigningKey(): Uint8Array {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error('AUTH_SECRET is required for JWT signing');
+  const secret = process.env.JWT_SIGNING_SECRET || process.env.AUTH_SECRET;
+  if (!secret) throw new Error('JWT_SIGNING_SECRET or AUTH_SECRET is required for OAuth token signing');
   return new TextEncoder().encode(secret);
 }
 
