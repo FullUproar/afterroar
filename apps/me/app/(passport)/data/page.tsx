@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { DeletePassport } from './delete-passport';
 
 export default async function DataPage() {
   const session = await auth();
@@ -176,26 +177,7 @@ export default async function DataPage() {
             </p>
           </a>
 
-          <div style={{
-            padding: '1rem 1.25rem',
-            background: 'rgba(239, 68, 68, 0.05)',
-            borderRadius: '8px',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-          }}>
-            <p style={{ fontWeight: 700, margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#ef4444' }}>
-              Delete my Passport
-            </p>
-            <p style={{ color: '#6b7280', margin: '0 0 1rem 0', fontSize: '0.8rem' }}>
-              Permanently deletes your Afterroar identity, all consent grants, points,
-              and activity history. Stores running our POS have their records deleted
-              automatically. This cannot be undone.
-            </p>
-            <p style={{ color: '#4b5563', margin: 0, fontSize: '0.75rem', fontStyle: 'italic' }}>
-              Full account deletion is coming soon. For now, contact{' '}
-              <a href="mailto:ssp@fulluproar.com" style={{ color: '#FF8200' }}>ssp@fulluproar.com</a>{' '}
-              to request deletion.
-            </p>
-          </div>
+          <DeletePassport userEmail={user?.email || ''} />
         </div>
       </section>
 

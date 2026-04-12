@@ -148,10 +148,21 @@ export default async function PassportLanding() {
 
         <div style={{
           marginTop: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.5rem',
           fontSize: '0.75rem',
           color: '#6b7280',
         }}>
-          Powered by Afterroar • Founded February 2025
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Link href="/credo" style={{ color: '#FF8200', textDecoration: 'none', fontWeight: 600 }}>
+              The Credo
+            </Link>
+            <Link href="/privacy" style={{ color: '#6b7280', textDecoration: 'none' }}>Privacy</Link>
+            <Link href="/terms" style={{ color: '#6b7280', textDecoration: 'none' }}>Terms</Link>
+          </div>
+          <span>Powered by Afterroar • Founded February 2025</span>
         </div>
       </div>
     </main>

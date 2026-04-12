@@ -105,8 +105,8 @@ function LoginContent() {
           By signing in, you create an Afterroar Passport and agree to our{' '}
           <a href="/terms" style={{ color: '#FF8200' }}>Terms of Service</a> and{' '}
           <a href="/privacy" style={{ color: '#FF8200' }}>Privacy Policy</a>.
-          Your data is yours — see it, control it, delete it anytime
-          at afterroar.me/settings.
+          Governed by <a href="/credo" style={{ color: '#FF8200' }}>the Afterroar Credo</a>:
+          your data is yours — see it, control it, delete it anytime.
         </div>
       </div>
     </main>
