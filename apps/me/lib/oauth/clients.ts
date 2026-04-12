@@ -57,5 +57,17 @@ export function validateRedirectUri(client: OAuthClient, redirectUri: string): b
 
 export function validateClientSecret(client: OAuthClient, secret: string): boolean {
   if (!client.secret || !secret) return false;
-  return client.secret === secret;
+  const expected = client.secret.trim();
+  const received = secret.trim();
+  if (expected !== received) {
+    console.log('[oauth] secret mismatch debug:', {
+      client: client.id,
+      expected_len: expected.length,
+      received_len: received.length,
+      expected_prefix: expected.slice(0, 4),
+      received_prefix: received.slice(0, 4),
+      from_env: client.id === 'fulluproar-site' ? !!process.env.OAUTH_CLIENT_SECRET_FULLUPROAR : 'n/a',
+    });
+  }
+  return expected === received;
 }
