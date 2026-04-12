@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient, validateClientSecret } from '@/lib/oauth/clients';
-import { verifyAuthCode, mintAccessToken } from '@/lib/oauth/tokens';
+import { verifyAuthCode, mintAccessToken, verifyPkce } from '@/lib/oauth/tokens';
 
 /**
  * POST /api/token — OAuth token exchange endpoint.
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let { grant_type, code, redirect_uri, client_id, client_secret } = body;
+    let { grant_type, code, redirect_uri, client_id, client_secret, code_verifier } = body;
 
     // Also check Authorization header for Basic auth (some OAuth clients send credentials this way)
     if (!client_id || !client_secret) {
@@ -89,6 +89,16 @@ export async function POST(request: NextRequest) {
       console.error('[token] FAIL: invalid or expired auth code');
       return NextResponse.json(
         { error: 'invalid_grant', error_description: 'Auth code is invalid or expired' },
+        { status: 400 }
+      );
+    }
+
+    // PKCE: validate code_verifier against code_challenge stored in the auth code
+    const pkceValid = await verifyPkce(codePayload.codeChallenge, codePayload.codeChallengeMethod, code_verifier);
+    if (!pkceValid) {
+      console.error('[token] FAIL: PKCE verification failed');
+      return NextResponse.json(
+        { error: 'invalid_grant', error_description: 'PKCE code_verifier is missing or invalid' },
         { status: 400 }
       );
     }

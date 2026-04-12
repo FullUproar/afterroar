@@ -10,11 +10,13 @@ interface SearchParams {
   scope?: string;
   state?: string;
   response_type?: string;
+  code_challenge?: string;
+  code_challenge_method?: string;
 }
 
 async function AuthorizeContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const { client_id, redirect_uri, scope, state, response_type } = params;
+  const { client_id, redirect_uri, scope, state, response_type, code_challenge, code_challenge_method } = params;
 
   // Validate required params
   if (!client_id || !redirect_uri || response_type !== 'code') {
@@ -49,7 +51,8 @@ async function AuthorizeContent({ searchParams }: { searchParams: Promise<Search
   // Check auth — redirect to login if not signed in
   const session = await auth();
   if (!session?.user?.id) {
-    const returnUrl = `/authorize?client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${encodeURIComponent(scope || 'openid profile')}&state=${encodeURIComponent(state || '')}&response_type=code`;
+    let returnUrl = `/authorize?client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${encodeURIComponent(scope || 'openid profile')}&state=${encodeURIComponent(state || '')}&response_type=code`;
+    if (code_challenge) returnUrl += `&code_challenge=${encodeURIComponent(code_challenge)}&code_challenge_method=${encodeURIComponent(code_challenge_method || 'S256')}`;
     redirect(`/login?callbackUrl=${encodeURIComponent(returnUrl)}`);
   }
 
@@ -65,6 +68,8 @@ async function AuthorizeContent({ searchParams }: { searchParams: Promise<Search
       clientId: client_id!,
       redirectUri: redirect_uri!,
       scope: scope || 'openid profile',
+      codeChallenge: code_challenge,
+      codeChallengeMethod: code_challenge_method,
     });
 
     const url = new URL(redirect_uri!);
