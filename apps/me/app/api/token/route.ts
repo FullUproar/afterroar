@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (grant_type !== 'authorization_code') {
-      console.log('[token] FAIL: unsupported_grant_type:', grant_type);
+      console.error('[token] FAIL: unsupported_grant_type:', grant_type);
       return NextResponse.json(
         { error: 'unsupported_grant_type', error_description: `Only authorization_code is supported, got: ${grant_type}` },
         { status: 400 }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!code || !redirect_uri || !client_id || !client_secret) {
-      console.log('[token] FAIL: missing params:', { code: !!code, redirect_uri: !!redirect_uri, client_id: !!client_id, client_secret: !!client_secret });
+      console.error('[token] FAIL: missing params:', { code: !!code, redirect_uri: !!redirect_uri, client_id: !!client_id, client_secret: !!client_secret });
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'Missing required parameters' },
         { status: 400 }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     const client = getClient(client_id);
     if (!client) {
-      console.log('[token] FAIL: unknown client_id:', client_id);
+      console.error('[token] FAIL: unknown client_id:', client_id);
       return NextResponse.json(
         { error: 'invalid_client', error_description: 'Unknown client' },
         { status: 401 }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!validateClientSecret(client, client_secret)) {
-      console.log('[token] FAIL: invalid client_secret for:', client_id);
+      console.error('[token] FAIL: invalid client_secret for:', client_id);
       return NextResponse.json(
         { error: 'invalid_client', error_description: 'Invalid client credentials' },
         { status: 401 }
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     const codePayload = await verifyAuthCode(code);
     if (!codePayload) {
-      console.log('[token] FAIL: invalid or expired auth code');
+      console.error('[token] FAIL: invalid or expired auth code');
       return NextResponse.json(
         { error: 'invalid_grant', error_description: 'Auth code is invalid or expired' },
         { status: 400 }
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (codePayload.clientId !== client_id || codePayload.redirectUri !== redirect_uri) {
-      console.log('[token] FAIL: code mismatch:', {
+      console.error('[token] FAIL: code mismatch:', {
         code_client: codePayload.clientId, req_client: client_id,
         code_redirect: codePayload.redirectUri, req_redirect: redirect_uri,
       });

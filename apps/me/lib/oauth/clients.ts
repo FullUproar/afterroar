@@ -60,7 +60,7 @@ export function validateClientSecret(client: OAuthClient, secret: string): boole
   const expected = client.secret.trim();
   const received = secret.trim();
   if (expected !== received) {
-    console.log('[oauth] secret mismatch debug:', {
+    console.error('[oauth] secret mismatch debug:', {
       client: client.id,
       expected_len: expected.length,
       received_len: received.length,
