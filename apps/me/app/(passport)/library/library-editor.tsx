@@ -16,6 +16,8 @@ import { Search, X, Plus, Loader2 } from 'lucide-react';
 interface GameEntry {
   title: string;
   slug?: string;
+  bggId?: number;
+  tags?: string[];
 }
 
 interface SearchResult {
@@ -69,6 +71,33 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
 
   const removeGame = (title: string) => {
     const updated = games.filter((g) => g.title !== title);
+    setGames(updated);
+    save(updated);
+  };
+
+  const addTag = (gameTitle: string, tag: string) => {
+    const slug = tag.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const updated = games.map((g) => {
+      if (g.title !== gameTitle) return g;
+      const existing = g.tags || [];
+      if (existing.some((t) => t.toLowerCase() === slug)) return g;
+      return { ...g, tags: [...existing, tag.toUpperCase()] };
+    });
+    setGames(updated);
+    save(updated);
+    // Register tag globally (fire-and-forget)
+    fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: tag }),
+    }).catch(() => {});
+  };
+
+  const removeTag = (gameTitle: string, tag: string) => {
+    const updated = games.map((g) => {
+      if (g.title !== gameTitle) return g;
+      return { ...g, tags: (g.tags || []).filter((t) => t !== tag) };
+    });
     setGames(updated);
     save(updated);
   };
@@ -261,29 +290,56 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {games.map((game) => (
             <div key={game.title} style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
               padding: '0.75rem 1rem',
               background: '#1f2937',
               borderRadius: '8px',
             }}>
-              <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem' }}>
-                {game.title}
-              </span>
-              <button
-                onClick={() => removeGame(game.title)}
-                title="Remove from library"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '0.25rem',
-                  color: '#4b5563',
-                }}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem' }}>
+                  {game.title}
+                </span>
+                <button
+                  onClick={() => removeGame(game.title)}
+                  title="Remove from library"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    color: '#4b5563',
+                  }}
               >
                 <X size={14} />
               </button>
+              </div>
+              {/* Tags */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.4rem' }}>
+                {(game.tags || []).map((tag) => (
+                  <span key={tag} style={{
+                    padding: '0.15rem 0.5rem', background: 'rgba(255, 130, 0, 0.1)',
+                    border: '1px solid rgba(255, 130, 0, 0.25)', borderRadius: '4px',
+                    color: '#FF8200', fontSize: '0.7rem', fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: '0.2rem',
+                  }}>
+                    #{tag}
+                    <button onClick={() => { removeTag(game.title, tag); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF8200', padding: 0, lineHeight: 1 }}>
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+                <button onClick={() => {
+                  const tag = prompt('Add tag (e.g., GOTO, BASEMENT, PARTY):');
+                  if (tag?.trim()) addTag(game.title, tag.trim());
+                }}
+                  style={{
+                    padding: '0.15rem 0.4rem', background: 'transparent',
+                    border: '1px dashed #374151', borderRadius: '4px',
+                    color: '#6b7280', fontSize: '0.65rem', cursor: 'pointer',
+                  }}>
+                  + tag
+                </button>
+              </div>
             </div>
           ))}
 

@@ -35,8 +35,28 @@ model User {
   activities   UserActivity[]
   gameLoans    GameLoan[]
   wishlistItems WishlistItem[]
+  createdTags  GameTag[]
 
   @@map("User")
+}
+
+// ============================================================
+// GAME TAG — Shared vocabulary for organizing collections.
+// Like hashtags: anyone can create, popular ones gain meaning.
+// ============================================================
+model GameTag {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  type      String   @default("custom")
+  useCount  Int      @default(0)
+  createdBy String?
+  createdAt DateTime @default(now())
+  creator   User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([slug])
+  @@index([type])
+  @@index([useCount(sort: Desc)])
 }
 
 // ============================================================
