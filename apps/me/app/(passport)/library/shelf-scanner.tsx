@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import { Camera, Loader2, Check, X, Plus, Star, Users, Clock } from 'lucide-react';
-import { ScanOverlay } from './scan-overlay';
 
 interface ResolvedGame {
   title: string;
@@ -38,8 +37,6 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
   const [error, setError] = useState('');
   const [scansRemaining, setScansRemaining] = useState<number | null>(null);
   const [scanStats, setScanStats] = useState<{ totalVisible: number; identified: number; unidentified: number } | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [unidentifiedRegions, setUnidentifiedRegions] = useState<Array<{ bounds: [number, number, number, number]; description: string }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const resizeImage = (file: File): Promise<string> => {
@@ -97,7 +94,6 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
       setSelected(new Set(newGames.map((g) => g.title)));
       if (data.scansRemaining !== undefined) setScansRemaining(data.scansRemaining);
       setScanStats({ totalVisible: data.totalVisible || 0, identified: data.identified || 0, unidentified: data.unidentified || 0 });
-      setUnidentifiedRegions(data.unidentifiedRegions || []);
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -159,18 +155,6 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
       )}
 
       {/* Bounding box overlay on the scanned image */}
-      {results && imagePreview && (
-        <ScanOverlay
-          imageDataUrl={imagePreview}
-          games={results.map((g) => ({
-            title: g.title,
-            confidence: g.confidence,
-            bounds: g.bounds,
-            rawGuess: g.rawGuess,
-            bggRating: g.bggRating,
-          }))}
-          unidentifiedRegions={unidentifiedRegions}
-        />
       )}
 
       {results && (
