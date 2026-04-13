@@ -74,7 +74,6 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
 
     try {
       const resized = await resizeImage(file);
-      setImagePreview(resized);
       const res = await fetch('/api/library/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,9 +151,6 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
         <p style={{ color: '#4b5563', fontSize: '0.75rem', margin: '0.5rem 0 0', textAlign: 'center' }}>
           {scansRemaining} scan{scansRemaining !== 1 ? 's' : ''} remaining today
         </p>
-      )}
-
-      {/* Bounding box overlay on the scanned image */}
       )}
 
       {results && (
