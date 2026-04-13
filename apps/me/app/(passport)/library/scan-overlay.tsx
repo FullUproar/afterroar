@@ -96,7 +96,7 @@ export function ScanOverlay({
       </div>
 
       {/* Image with overlay */}
-      <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', lineHeight: 0 }}>
+      <div style={{ position: 'relative', borderRadius: '8px', overflow: 'visible', lineHeight: 0, isolation: 'isolate' }}>
         <img
           src={imageDataUrl}
           alt="Scanned shelf"
@@ -127,12 +127,15 @@ export function ScanOverlay({
                     zIndex: isHovered ? 20 : 10,
                   }}
                 >
-                  {/* Hover tooltip */}
+                  {/* Hover tooltip — flips below if near top of image */}
                   {isHovered && (
                     <div style={{
                       position: 'absolute',
-                      bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-                      marginBottom: '4px',
+                      ...(y1 < 20
+                        ? { top: '100%', marginTop: '4px' }
+                        : { bottom: '100%', marginBottom: '4px' }),
+                      left: `clamp(0px, 50%, calc(100% - 10px))`,
+                      transform: x1 > 70 ? 'translateX(-80%)' : x1 < 15 ? 'translateX(-10%)' : 'translateX(-50%)',
                       padding: '6px 10px',
                       background: '#0a0a0a',
                       border: `1px solid ${colors.border}`,
