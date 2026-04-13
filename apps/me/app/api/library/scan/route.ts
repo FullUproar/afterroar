@@ -355,7 +355,7 @@ If no games are visible, return: {"totalVisible": 0, "games": []}`,
     if (!response.ok) {
       const errBody = await response.text();
       console.error('[library/scan] Anthropic API error:', response.status, errBody);
-      return NextResponse.json({ error: 'Vision service error' }, { status: 502 });
+      return NextResponse.json({ error: `Vision service error (${response.status}): ${errBody.slice(0, 200)}` }, { status: 502 });
     }
 
     const result = await response.json();
@@ -396,7 +396,8 @@ If no games are visible, return: {"totalVisible": 0, "games": []}`,
       scansRemaining: rateCheck.remaining - 1,
     });
   } catch (err) {
-    console.error('[library/scan] Vision call failed:', err);
-    return NextResponse.json({ error: 'Vision service unavailable' }, { status: 502 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[library/scan] Vision call failed:', msg);
+    return NextResponse.json({ error: `Vision service unavailable: ${msg}` }, { status: 502 });
   }
 }
