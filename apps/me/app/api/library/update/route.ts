@@ -5,8 +5,8 @@ import { prisma } from '@/lib/prisma';
 /**
  * POST /api/library/update — Update the user's game library.
  *
- * Body: { games: Array<{ title, slug?, own?, bring?, love?, nope? }> }
- * Replaces the entire library (client sends the full list).
+ * Body: { games: Array<{ title, slug? }> }
+ * Replaces the entire library. Ownership only — no app-specific preferences.
  */
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let body: { games: Array<{ title: string; slug?: string; own?: boolean; bring?: boolean; love?: boolean; nope?: boolean }> };
+  let body: { games: Array<{ title: string; slug?: string }> };
   try {
     body = await request.json();
   } catch {
@@ -29,10 +29,6 @@ export async function POST(request: NextRequest) {
     name: g.title,
     title: g.title,
     slug: g.slug || undefined,
-    own: g.own ?? true,
-    bring: g.bring ?? false,
-    love: g.love ?? false,
-    nope: g.nope ?? false,
     addedAt: new Date().toISOString(),
   }));
 

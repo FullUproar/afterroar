@@ -12,7 +12,7 @@ export default async function LibraryPage() {
     select: { gameLibrary: true },
   });
 
-  let library: Array<{ title: string; slug?: string; own: boolean; bring: boolean; love: boolean; nope: boolean }> = [];
+  let library: Array<{ title: string; slug?: string }> = [];
   if (user?.gameLibrary) {
     try {
       const parsed = JSON.parse(user.gameLibrary);
@@ -20,10 +20,6 @@ export default async function LibraryPage() {
         library = parsed.map((g: Record<string, unknown>) => ({
           title: (g.title || g.name || '') as string,
           slug: g.slug as string | undefined,
-          own: (g.own ?? true) as boolean,
-          bring: (g.bring ?? g.willingToBring ?? false) as boolean,
-          love: (g.love ?? false) as boolean,
-          nope: (g.nope ?? false) as boolean,
         }));
       }
     } catch {
@@ -37,8 +33,8 @@ export default async function LibraryPage() {
         Game Library
       </h1>
       <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
-        Games you own, love, or are willing to bring to game night.
-        Apps you connect to your Passport can use this for smart game suggestions.
+        Games you own. Apps you connect to your Passport can use this
+        for recommendations and matchmaking.
       </p>
 
       <LibraryEditor initialGames={library} />

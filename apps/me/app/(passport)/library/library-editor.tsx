@@ -1,15 +1,21 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Search, X, Plus, Package, Truck, Heart, ThumbsDown, Loader2 } from 'lucide-react';
+import { Search, X, Plus, Loader2 } from 'lucide-react';
+
+/**
+ * Passport Game Library Editor — ownership only.
+ *
+ * The Passport stores what you own. That's universally relevant data
+ * that any connected app can read via /api/library.
+ *
+ * App-specific preferences (bring, love, nope for game nights) are
+ * owned by the app that needs them — HQ stores those in its own DB.
+ */
 
 interface GameEntry {
   title: string;
   slug?: string;
-  own: boolean;
-  bring: boolean;
-  love: boolean;
-  nope: boolean;
 }
 
 interface SearchResult {
@@ -18,34 +24,6 @@ interface SearchResult {
   minPlayers?: number;
   maxPlayers?: number;
   complexity?: number;
-}
-
-function FlagButton({ active, icon: Icon, label, color, onClick }: {
-  active: boolean;
-  icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
-  label: string;
-  color: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={label}
-      style={{
-        padding: '0.3rem 0.5rem',
-        background: active ? `${color}20` : 'transparent',
-        border: `1px solid ${active ? color : '#374151'}`,
-        borderRadius: '6px',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.25rem',
-      }}
-    >
-      <Icon size={14} style={{ color: active ? color : '#6b7280' }} />
-      <span style={{ fontSize: '0.7rem', color: active ? color : '#6b7280' }}>{label}</span>
-    </button>
-  );
 }
 
 export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
@@ -80,7 +58,7 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
 
   const addGame = (title: string, slug?: string) => {
     if (games.some((g) => g.title.toLowerCase() === title.toLowerCase())) return;
-    const updated = [...games, { title, slug, own: true, bring: false, love: false, nope: false }];
+    const updated = [...games, { title, slug }];
     setGames(updated);
     setSearch('');
     setResults([]);
@@ -91,14 +69,6 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
 
   const removeGame = (title: string) => {
     const updated = games.filter((g) => g.title !== title);
-    setGames(updated);
-    save(updated);
-  };
-
-  const toggleFlag = (title: string, flag: keyof Pick<GameEntry, 'own' | 'bring' | 'love' | 'nope'>) => {
-    const updated = games.map((g) =>
-      g.title === title ? { ...g, [flag]: !g[flag] } : g
-    );
     setGames(updated);
     save(updated);
   };
@@ -155,7 +125,7 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
           {searching && <Loader2 size={16} style={{ color: '#FF8200', animation: 'spin 1s linear infinite' }} />}
         </div>
 
-        {/* Search results dropdown */}
+        {/* Search results */}
         {results.length > 0 && (
           <div style={{
             marginTop: '0.25rem',
@@ -165,35 +135,38 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
             maxHeight: '250px',
             overflowY: 'auto',
           }}>
-            {results.map((r) => (
-              <button
-                key={r.slug || r.title}
-                onClick={() => addGame(r.title, r.slug)}
-                disabled={games.some((g) => g.title.toLowerCase() === r.title.toLowerCase())}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '1px solid #374151',
-                  color: '#e2e8f0',
-                  fontSize: '0.9rem',
-                  cursor: games.some((g) => g.title.toLowerCase() === r.title.toLowerCase()) ? 'default' : 'pointer',
-                  opacity: games.some((g) => g.title.toLowerCase() === r.title.toLowerCase()) ? 0.4 : 1,
-                  textAlign: 'left',
-                }}
-              >
-                <span>{r.title}</span>
-                {r.minPlayers && r.maxPlayers && (
-                  <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-                    {r.minPlayers}-{r.maxPlayers}p
-                  </span>
-                )}
-              </button>
-            ))}
+            {results.map((r) => {
+              const alreadyAdded = games.some((g) => g.title.toLowerCase() === r.title.toLowerCase());
+              return (
+                <button
+                  key={r.slug || r.title}
+                  onClick={() => addGame(r.title, r.slug)}
+                  disabled={alreadyAdded}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: '1px solid #374151',
+                    color: alreadyAdded ? '#6b7280' : '#e2e8f0',
+                    fontSize: '0.9rem',
+                    cursor: alreadyAdded ? 'default' : 'pointer',
+                    opacity: alreadyAdded ? 0.4 : 1,
+                    textAlign: 'left',
+                  }}
+                >
+                  <span>{r.title}{alreadyAdded ? ' (added)' : ''}</span>
+                  {r.minPlayers && r.maxPlayers && (
+                    <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                      {r.minPlayers}–{r.maxPlayers}p
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -281,7 +254,7 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
             Your library is empty
           </p>
           <p style={{ color: '#4b5563', fontSize: '0.85rem', margin: 0 }}>
-            Search above to add games you own, love, or are willing to bring to game night.
+            Search above to add games you own.
           </p>
         </div>
       ) : (
@@ -294,28 +267,29 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
               padding: '0.75rem 1rem',
               background: '#1f2937',
               borderRadius: '8px',
-              gap: '0.75rem',
-              flexWrap: 'wrap',
             }}>
-              <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem', minWidth: 0, flex: 1 }}>
+              <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem' }}>
                 {game.title}
               </span>
-
-              <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
-                <FlagButton active={game.own} icon={Package} label="Own" color="#FF8200" onClick={() => toggleFlag(game.title, 'own')} />
-                <FlagButton active={game.bring} icon={Truck} label="Bring" color="#3b82f6" onClick={() => toggleFlag(game.title, 'bring')} />
-                <FlagButton active={game.love} icon={Heart} label="Love" color="#ec4899" onClick={() => toggleFlag(game.title, 'love')} />
-                <FlagButton active={game.nope} icon={ThumbsDown} label="Nope" color="#6b7280" onClick={() => toggleFlag(game.title, 'nope')} />
-              </div>
-
               <button
                 onClick={() => removeGame(game.title)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', flexShrink: 0 }}
+                title="Remove from library"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  color: '#4b5563',
+                }}
               >
-                <X size={14} style={{ color: '#4b5563' }} />
+                <X size={14} />
               </button>
             </div>
           ))}
+
+          <p style={{ color: '#4b5563', fontSize: '0.75rem', margin: '0.5rem 0 0', textAlign: 'center' }}>
+            {games.length} {games.length === 1 ? 'game' : 'games'} in your library
+          </p>
         </div>
       )}
     </div>
