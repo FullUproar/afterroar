@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Camera, Loader2, Check, X, Plus, Star, Users, Clock } from 'lucide-react';
+import { ScanOverlay } from './scan-overlay';
 
 interface ResolvedGame {
   title: string;
@@ -16,6 +17,7 @@ interface ResolvedGame {
   thumbnail: string | null;
   confidence: 'high' | 'medium' | 'low';
   rawGuess: string;
+  bounds?: [number, number, number, number];
 }
 
 interface ShelfScannerProps {
@@ -36,6 +38,8 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
   const [error, setError] = useState('');
   const [scansRemaining, setScansRemaining] = useState<number | null>(null);
   const [scanStats, setScanStats] = useState<{ totalVisible: number; identified: number; unidentified: number } | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [unidentifiedRegions, setUnidentifiedRegions] = useState<Array<{ bounds: [number, number, number, number]; description: string }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const resizeImage = (file: File): Promise<string> => {
@@ -73,6 +77,7 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
 
     try {
       const resized = await resizeImage(file);
+      setImagePreview(resized);
       const res = await fetch('/api/library/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,6 +97,7 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
       setSelected(new Set(newGames.map((g) => g.title)));
       if (data.scansRemaining !== undefined) setScansRemaining(data.scansRemaining);
       setScanStats({ totalVisible: data.totalVisible || 0, identified: data.identified || 0, unidentified: data.unidentified || 0 });
+      setUnidentifiedRegions(data.unidentifiedRegions || []);
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -150,6 +156,21 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
         <p style={{ color: '#4b5563', fontSize: '0.75rem', margin: '0.5rem 0 0', textAlign: 'center' }}>
           {scansRemaining} scan{scansRemaining !== 1 ? 's' : ''} remaining today
         </p>
+      )}
+
+      {/* Bounding box overlay on the scanned image */}
+      {results && imagePreview && (
+        <ScanOverlay
+          imageDataUrl={imagePreview}
+          games={results.map((g) => ({
+            title: g.title,
+            confidence: g.confidence,
+            bounds: g.bounds,
+            rawGuess: g.rawGuess,
+            bggRating: g.bggRating,
+          }))}
+          unidentifiedRegions={unidentifiedRegions}
+        />
       )}
 
       {results && (

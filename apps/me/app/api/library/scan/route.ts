@@ -44,6 +44,12 @@ interface VisionGame {
   title: string;
   publisher?: string;
   description?: string;
+  bounds?: [number, number, number, number]; // [x1%, y1%, x2%, y2%] as percentages
+}
+
+interface UnidentifiedRegion {
+  bounds: [number, number, number, number];
+  description: string;
 }
 
 interface ResolvedGame {
@@ -59,6 +65,7 @@ interface ResolvedGame {
   thumbnail: string | null;
   confidence: 'high' | 'medium' | 'low';
   rawGuess: string;
+  bounds?: [number, number, number, number];
 }
 
 function decodeXmlEntities(str: string): string {
@@ -169,7 +176,7 @@ async function resolveAgainstBGG(games: VisionGame[]): Promise<ResolvedGame[]> {
       bggApiCalls++;
     }
     if (bggExact) {
-      results.push({ ...bggExact, confidence: 'high', rawGuess: game.title });
+      results.push({ ...bggExact, confidence: 'high', rawGuess: game.title, bounds: game.bounds });
       continue;
     }
 
@@ -262,13 +269,14 @@ async function resolveAgainstBGG(games: VisionGame[]): Promise<ResolvedGame[]> {
         thumbnail: m.thumbnailUrl,
         confidence,
         rawGuess: game.title,
+        bounds: game.bounds,
       });
     } else {
       // Fallback: search BGG API directly (if under call cap)
       const bggResult = bggApiCalls < MAX_BGG_CALLS ? await searchBGGApi(game.title) : null;
       if (bggResult) bggApiCalls++;
       if (bggResult) {
-        results.push({ ...bggResult, confidence: 'medium', rawGuess: game.title });
+        results.push({ ...bggResult, confidence: 'medium', rawGuess: game.title, bounds: game.bounds });
       } else {
         results.push({
           title: game.title,
@@ -279,6 +287,7 @@ async function resolveAgainstBGG(games: VisionGame[]): Promise<ResolvedGame[]> {
           thumbnail: null,
           confidence: 'low',
           rawGuess: game.title,
+          bounds: game.bounds,
         });
       }
     }
@@ -351,30 +360,39 @@ export async function POST(request: NextRequest) {
               type: 'text',
               text: `You are identifying board games, card games, and tabletop games visible in this photo of a game shelf or collection.
 
-Return a JSON object with two fields:
+Return a JSON object with three fields:
 - "totalVisible": The total number of game boxes/items you can see in the photo, including ones you cannot identify
-- "games": An array of identified games
+- "games": An array of identified games (with bounding boxes)
+- "unidentified": An array of game-shaped objects you can see but cannot identify (with bounding boxes)
 
 For each game you CAN identify, include:
 - "title": Your best guess at the full, official game title (e.g., "Star Wars: Armada" not just "Armada")
-- "publisher": The publisher if you can determine it (e.g., "Fantasy Flight Games", "Stonemaier Games")
-- "description": A brief physical description to help verify — box color, distinctive art, size (e.g., "large blue box with spaceship art")
+- "publisher": The publisher if you can determine it
+- "description": A brief physical description (box color, distinctive art, size)
+- "bounds": [x1, y1, x2, y2] as percentages (0-100) of image width/height for the bounding box. Top-left is [0,0], bottom-right is [100,100].
 
-Be specific with titles — include franchise names, subtitles, and edition markers. If you see "Armada" with Star Wars imagery, return "Star Wars: Armada". If you see "Catan" in an older box, return "The Settlers of Catan".
+For each UNIDENTIFIED game box, include:
+- "bounds": [x1, y1, x2, y2] as percentages
+- "description": What you can see (e.g., "dark blue box spine, text not readable")
 
-Only include games you can identify with reasonable confidence. It is OK to have totalVisible > games.length.
+Be specific with titles — include franchise names, subtitles, and edition markers. If you see "Armada" with Star Wars imagery, return "Star Wars: Armada".
+
+Only include identified games you are reasonably confident about.
 
 Example output:
 {
-  "totalVisible": 12,
+  "totalVisible": 5,
   "games": [
-    {"title": "Star Wars: Armada", "publisher": "Fantasy Flight Games", "description": "large rectangular box with Star Destroyer art"},
-    {"title": "Wingspan", "publisher": "Stonemaier Games", "description": "medium box with bird illustration, teal/nature colors"},
-    {"title": "Carcassonne", "publisher": "Z-Man Games", "description": "square box with medieval landscape"}
+    {"title": "Star Wars: Armada", "publisher": "Fantasy Flight Games", "description": "large box with Star Destroyer art", "bounds": [10, 20, 35, 80]},
+    {"title": "Wingspan", "publisher": "Stonemaier Games", "description": "teal box with bird", "bounds": [36, 20, 55, 80]}
+  ],
+  "unidentified": [
+    {"bounds": [56, 20, 70, 80], "description": "dark spine, text too small to read"},
+    {"bounds": [71, 20, 85, 80], "description": "partially hidden behind Wingspan"}
   ]
 }
 
-If no games are visible, return: {"totalVisible": 0, "games": []}`,
+If no games are visible, return: {"totalVisible": 0, "games": [], "unidentified": []}`,
             },
           ],
         }],
@@ -392,8 +410,8 @@ If no games are visible, return: {"totalVisible": 0, "games": []}`,
 
     let visionGames: VisionGame[] = [];
     let totalVisible = 0;
+    let unidentifiedRegions: UnidentifiedRegion[] = [];
     try {
-      // Try parsing as object first (new format), fall back to array
       const jsonMatch = text.match(/\{[\s\S]*\}/) || text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -403,6 +421,10 @@ If no games are visible, return: {"totalVisible": 0, "games": []}`,
         } else {
           visionGames = parsed.games || [];
           totalVisible = parsed.totalVisible || visionGames.length;
+          unidentifiedRegions = (parsed.unidentified || []).map((u: { bounds?: number[]; description?: string }) => ({
+            bounds: u.bounds || [0, 0, 0, 0],
+            description: u.description || 'Unknown',
+          }));
         }
       }
     } catch {
@@ -422,6 +444,7 @@ If no games are visible, return: {"totalVisible": 0, "games": []}`,
       totalVisible,
       identified: visionGames.length,
       unidentified,
+      unidentifiedRegions,
       scansRemaining: rateCheck.remaining - 1,
     });
   } catch (err) {
