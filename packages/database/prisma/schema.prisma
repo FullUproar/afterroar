@@ -37,6 +37,8 @@ model User {
   wishlistItems WishlistItem[]
   createdTags  GameTag[]
   badges       UserBadge[]
+  entityMemberships EntityMember[]
+  entityConsents    EntityConsent[]
 
   @@map("User")
 }
@@ -49,6 +51,79 @@ model User {
 // PASSPORT BADGES â€” Portable identity markers. Native to Afterroar,
 // also issuable by Full Uproar, stores, and other platform entities.
 // ============================================================
+// ============================================================
+// AFTERROAR ENTITY — Canonical identity for stores, publishers,
+// organizers, creators. Other apps (HQ, Store Ops) wrap with metadata.
+// ============================================================
+model AfterroarEntity {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  type         String    @default("store")
+  status       String    @default("pending")
+  contactEmail String
+  contactName  String?
+  contactPhone String?
+  websiteUrl   String?
+  logoUrl      String?
+  description  String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?   @default("US")
+  latitude     Float?
+  longitude    Float?
+  timezone     String?
+  metadata     Json?     @default("{}")
+  createdAt    DateTime  @default(now())
+  approvedAt   DateTime?
+  suspendedAt  DateTime?
+  notes        String?
+
+  members  EntityMember[]
+  consents EntityConsent[]
+
+  @@index([type])
+  @@index([status])
+  @@index([city])
+}
+
+model EntityMember {
+  id       String   @id @default(cuid())
+  entityId String
+  userId   String
+  role     String   @default("member")
+  addedAt  DateTime @default(now())
+  addedBy  String?
+
+  entity AfterroarEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, userId])
+  @@index([entityId])
+  @@index([userId])
+}
+
+model EntityConsent {
+  id         String    @id @default(cuid())
+  userId     String
+  entityId   String
+  scopes     String[]
+  grantedAt  DateTime  @default(now())
+  revokedAt  DateTime?
+  expiresAt  DateTime?
+  source     String?
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entity AfterroarEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, entityId])
+  @@index([userId])
+  @@index([entityId])
+}
+
 model PassportBadge {
   id          String    @id @default(cuid())
   slug        String    @unique

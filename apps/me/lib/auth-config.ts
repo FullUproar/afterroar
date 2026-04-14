@@ -33,8 +33,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   events: {
     async createUser({ user }) {
-      // Auto-issue Passport Pioneer badge to new users
       if (!user.id) return;
+
+      // Generate an 8-char Passport code (unambiguous chars, collision-safe)
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      for (let attempt = 0; attempt < 5; attempt++) {
+        let code = '';
+        for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        try {
+          await prisma.user.update({ where: { id: user.id }, data: { passportCode: code } });
+          break;
+        } catch {
+          // collision on unique constraint — retry with a new code
+        }
+      }
+
+      // Auto-issue Passport Pioneer badge to new users
       try {
         const badge = await prisma.passportBadge.findUnique({ where: { slug: 'passport-pioneer' } });
         if (!badge || badge.retiredAt) return;
