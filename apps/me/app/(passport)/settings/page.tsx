@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 import { audit } from '@/lib/audit';
+import { BadgeIcon } from '@/app/components/badge-icon';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
@@ -185,14 +186,13 @@ export default async function SettingsPage() {
                 alignItems: 'flex-start',
                 gap: '0.75rem',
               }}>
-                <div style={{
-                  fontSize: '2rem',
-                  lineHeight: 1,
-                  flexShrink: 0,
-                  filter: `drop-shadow(0 0 12px ${ub.badge.color}44)`,
-                }}>
-                  {ub.badge.iconEmoji || '🏅'}
-                </div>
+                <BadgeIcon
+                  iconUrl={ub.badge.iconUrl}
+                  iconEmoji={ub.badge.iconEmoji}
+                  name={ub.badge.name}
+                  size={56}
+                  glowColor={ub.badge.color}
+                />
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: ub.badge.color }}>
                     {ub.badge.name}

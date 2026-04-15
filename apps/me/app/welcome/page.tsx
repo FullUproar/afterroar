@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
+import { BadgeIcon } from '@/app/components/badge-icon';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
@@ -181,13 +182,13 @@ export default async function WelcomePage({ searchParams }: WelcomePageProps) {
                   alignItems: 'center',
                   gap: '0.5rem',
                 }}>
-                  <div style={{
-                    fontSize: '2.25rem',
-                    lineHeight: 1,
-                    filter: `drop-shadow(0 0 16px ${ub.badge.color}66)`,
-                  }}>
-                    {ub.badge.iconEmoji || '🏅'}
-                  </div>
+                  <BadgeIcon
+                    iconUrl={ub.badge.iconUrl}
+                    iconEmoji={ub.badge.iconEmoji}
+                    name={ub.badge.name}
+                    size={64}
+                    glowColor={ub.badge.color}
+                  />
                   <p style={{ margin: 0, color: ub.badge.color, fontWeight: 700, fontSize: '0.85rem' }}>
                     {ub.badge.name}
                   </p>
