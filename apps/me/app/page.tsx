@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { LayoutGrid, ArrowRight } from 'lucide-react';
 import { PassportCard } from './passport-card';
 
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const RECENT_WINDOW_LABEL = 'last 24h';
 const MAX_RECENT_VISIBLE = 5;
 
 export default async function PassportLanding() {
@@ -39,11 +40,11 @@ export default async function PassportLanding() {
   ]);
 
   // Recent activity rule:
-  //  - inside 2hr window: show all events (cap MAX_RECENT_VISIBLE)
+  //  - inside RECENT_WINDOW_MS: show all events (cap MAX_RECENT_VISIBLE)
   //  - outside window: show the single most recent event (any age) so the
   //    section isn't empty for occasional users
   const allRecent = mergeRecent(recentBadges, recentPoints);
-  const cutoff = Date.now() - TWO_HOURS_MS;
+  const cutoff = Date.now() - RECENT_WINDOW_MS;
   const inWindow = allRecent.filter((e) => e.when.getTime() >= cutoff);
   const visibleRecent = inWindow.length > 0
     ? inWindow.slice(0, MAX_RECENT_VISIBLE)
@@ -98,7 +99,7 @@ export default async function PassportLanding() {
         {visibleRecent.length > 0 && (
           <div style={{ width: '100%' }}>
             <p style={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 0.6rem' }}>
-              Recent
+              Recent <span style={{ color: '#6b7280', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'none' }}>({RECENT_WINDOW_LABEL})</span>
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {visibleRecent.map((item) => (
