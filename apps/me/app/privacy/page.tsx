@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         Privacy Policy
       </h1>
       <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '0.85rem' }}>
-        Last updated: April 12, 2026
+        Last updated: April 14, 2026
       </p>
 
       <section style={{ marginBottom: '2rem' }}>
@@ -73,6 +73,41 @@ export default function PrivacyPage() {
           Full Uproar Games, Inc. (the company that built this platform) has no privileged
           access to your data. They operate under the same consent rules as every other
           store or app. Per the Afterroar Credo: the platform is a commons, not a tollbooth.
+        </p>
+      </section>
+
+      <section style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.5rem' }}>
+          Shopify merchants and their customers
+        </h2>
+        <p style={{ color: '#9ca3af' }}>
+          When a store installs Afterroar Connect from the Shopify App Store, we receive
+          a read-only OAuth token for that store&apos;s <code style={{ color: '#e2e8f0' }}>read_orders</code>
+          {' '}and <code style={{ color: '#e2e8f0' }}>read_customers</code> scopes. We use this
+          access solely to match incoming paid orders to the customer&apos;s Afterroar Passport
+          (by email or by a Passport code the customer supplied at checkout) and to award
+          store-specific loyalty points.
+        </p>
+        <p style={{ color: '#9ca3af' }}>
+          <strong>Customer personal data from Shopify webhooks</strong> (names, emails, order
+          details) is retained in raw form for up to 30 days for idempotency and audit, then
+          automatically stripped while we keep only a non-PII metadata row (topic, dedupe key,
+          processing result) for 180 days. We do not store Shopify card data, shipping
+          addresses, product catalogs, or any data we don&apos;t need to match to a Passport.
+        </p>
+        <p style={{ color: '#9ca3af' }}>
+          <strong>Mandatory Shopify compliance webhooks:</strong> we handle{' '}
+          <code style={{ color: '#e2e8f0' }}>customers/data_request</code>,{' '}
+          <code style={{ color: '#e2e8f0' }}>customers/redact</code>, and{' '}
+          <code style={{ color: '#e2e8f0' }}>shop/redact</code>. Customer redact requests are
+          effectively no-ops on our side because we don&apos;t persist Shopify customer records —
+          the customer&apos;s actual data lives in their own Passport, which they control. Shop
+          redact purges all our data about that merchant within 48 hours of the request.
+        </p>
+        <p style={{ color: '#9ca3af' }}>
+          Merchants can disconnect Afterroar Connect from their Shopify admin at any time.
+          On uninstall, the connection is deactivated immediately; all retained data then
+          follows the retention schedule above.
         </p>
       </section>
 

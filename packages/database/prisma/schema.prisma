@@ -52,7 +52,7 @@ model User {
 // also issuable by Full Uproar, stores, and other platform entities.
 // ============================================================
 // ============================================================
-// AFTERROAR ENTITY — Canonical identity for stores, publishers,
+// AFTERROAR ENTITY ï¿½ Canonical identity for stores, publishers,
 // organizers, creators. Other apps (HQ, Store Ops) wrap with metadata.
 // ============================================================
 model AfterroarEntity {
@@ -122,6 +122,96 @@ model EntityConsent {
   @@unique([userId, entityId])
   @@index([userId])
   @@index([entityId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorEmail  String?
+  actorRole   String?
+  action      String
+  targetType  String?
+  targetId    String?
+  entityId    String?
+  scopesUsed  String[]
+  metadata    Json?    @default("{}")
+  ipHash      String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([targetId])
+  @@index([entityId])
+  @@index([createdAt])
+}
+
+model ShopifyConnection {
+  id              String    @id @default(cuid())
+  entityId        String    @unique
+  shopDomain      String    @unique
+  accessToken     String
+  scopes          String
+  shopName        String?
+  shopEmail       String?
+  currency        String?
+  pointsPerDollar Int       @default(1)
+  minOrderCents   Int       @default(0)
+  active          Boolean   @default(true)
+  installedAt     DateTime  @default(now())
+  uninstalledAt   DateTime?
+  lastWebhookAt   DateTime?
+  metadata        Json?     @default("{}")
+
+  @@index([entityId])
+  @@index([shopDomain])
+  @@index([active])
+}
+
+model ShopifyWebhookEvent {
+  id          String    @id @default(cuid())
+  shopDomain  String
+  topic       String
+  eventId     String
+  orderId     String?
+  payload     Json
+  processedAt DateTime?
+  result      String?
+  pointsDelta Int?
+  userId      String?
+  createdAt   DateTime  @default(now())
+
+  @@unique([shopDomain, topic, eventId])
+  @@index([shopDomain])
+  @@index([topic])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model ShopifyOauthState {
+  state      String   @id
+  shopDomain String
+  entityId   String?
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([expiresAt])
+}
+
+model EntityConsentRequest {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  entityId        String
+  requestedScopes String[]
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  claimedAt       DateTime?
+  claimedByUserId String?
+  note            String?
+
+  @@index([entityId])
+  @@index([token])
+  @@index([expiresAt])
 }
 
 model PassportBadge {

@@ -18,10 +18,8 @@ interface WelcomePageProps {
   searchParams: Promise<{ event?: string; ref?: string }>;
 }
 
-async function issueEventBadge(userId: string, eventSlug: string): Promise<{ name: string; emoji: string } | null> {
-  const badge = await prisma.passportBadge.findUnique({
-    where: { slug: eventSlug },
-  });
+async function issueBadgeBySlug(userId: string, slug: string, reason: string): Promise<{ name: string; emoji: string } | null> {
+  const badge = await prisma.passportBadge.findUnique({ where: { slug } });
   if (!badge || badge.retiredAt) return null;
   if (badge.maxSupply && badge.totalIssued >= badge.maxSupply) return null;
 
@@ -36,12 +34,7 @@ async function issueEventBadge(userId: string, eventSlug: string): Promise<{ nam
     await prisma.$transaction([
       prisma.userBadge.upsert({
         where: { userId_badgeId: { userId, badgeId: badge.id } },
-        create: {
-          userId,
-          badgeId: badge.id,
-          issuedBy: 'afterroar',
-          reason: `Event: ${badge.name}`,
-        },
+        create: { userId, badgeId: badge.id, issuedBy: 'afterroar', reason },
         update: { revokedAt: null },
       }),
       prisma.passportBadge.update({
@@ -55,6 +48,18 @@ async function issueEventBadge(userId: string, eventSlug: string): Promise<{ nam
   }
 }
 
+// Backfill Pioneer for users who predate the badge seed (NextAuth createUser
+// only fires for new sign-ins, so existing Full Uproar users never got it).
+async function ensurePioneerBadge(userId: string): Promise<void> {
+  await issueBadgeBySlug(userId, 'passport-pioneer', 'Early Passport adopter');
+}
+
+async function issueEventBadge(userId: string, eventSlug: string) {
+  const badge = await prisma.passportBadge.findUnique({ where: { slug: eventSlug } });
+  const reason = badge ? `Event: ${badge.name}` : `Event: ${eventSlug}`;
+  return issueBadgeBySlug(userId, eventSlug, reason);
+}
+
 export default async function WelcomePage({ searchParams }: WelcomePageProps) {
   const params = await searchParams;
   const session = await auth();
@@ -65,6 +70,9 @@ export default async function WelcomePage({ searchParams }: WelcomePageProps) {
   }
 
   const userId = session.user.id;
+
+  // Ensure Pioneer — covers users created before the badge was seeded
+  await ensurePioneerBadge(userId);
 
   // If an event slug is provided, try to issue the event badge
   let eventBadge: { name: string; emoji: string } | null = null;

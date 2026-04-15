@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
+import { audit } from '@/lib/audit';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
@@ -36,7 +37,7 @@ export default async function SettingsPage() {
 
   const userId = session.user.id;
 
-  const [user, consents, userBadges] = await Promise.all([
+  const [user, consents, userBadges, entityConsents] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -62,6 +63,11 @@ export default async function SettingsPage() {
       where: { userId, revokedAt: null },
       include: { badge: true },
       orderBy: { issuedAt: 'desc' },
+    }),
+    prisma.entityConsent.findMany({
+      where: { userId, revokedAt: null },
+      include: { entity: { select: { id: true, name: true, slug: true, type: true, city: true, state: true } } },
+      orderBy: { grantedAt: 'desc' },
     }),
   ]);
 
@@ -93,6 +99,25 @@ export default async function SettingsPage() {
       },
     });
 
+    revalidatePath('/settings');
+  }
+
+  async function revokeEntityConsent(formData: FormData) {
+    'use server';
+    const entityId = formData.get('entityId') as string;
+    if (!entityId) return;
+    await prisma.entityConsent.update({
+      where: { userId_entityId: { userId, entityId } },
+      data: { revokedAt: new Date(), scopes: [] },
+    });
+    audit({
+      actorUserId: userId,
+      actorEmail: session?.user?.email,
+      actorRole: 'self',
+      action: 'consent.revoke',
+      targetType: 'EntityConsent',
+      entityId,
+    });
     revalidatePath('/settings');
   }
 
@@ -185,6 +210,74 @@ export default async function SettingsPage() {
           </div>
         </section>
       )}
+
+      {/* Connected stores & entities */}
+      <section style={{ marginBottom: '2.5rem' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.5rem' }}>
+          Connected stores & creators
+        </h2>
+        <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1rem' }}>
+          Stores and creators you&apos;ve granted access to your Passport data. Revoke any time — they lose access immediately.
+        </p>
+        {entityConsents.length === 0 ? (
+          <div style={{ padding: '1.25rem', background: '#1f2937', borderRadius: '8px', color: '#6b7280', fontSize: '0.85rem', textAlign: 'center' }}>
+            You haven&apos;t connected with anyone yet. Stores can generate a QR code for you to scan.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {entityConsents.map((ec) => (
+              <form key={ec.id} action={revokeEntityConsent} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1rem 1.25rem',
+                background: '#1f2937',
+                borderRadius: '8px',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                gap: '1rem',
+                flexWrap: 'wrap',
+              }}>
+                <input type="hidden" name="entityId" value={ec.entity.id} />
+                <div style={{ flex: 1, minWidth: '12rem' }}>
+                  <p style={{ color: '#e2e8f0', fontWeight: 700, margin: '0 0 0.2rem', fontSize: '0.95rem' }}>
+                    {ec.entity.name}
+                  </p>
+                  <p style={{ color: '#6b7280', fontSize: '0.75rem', margin: '0 0 0.4rem' }}>
+                    {ec.entity.type}
+                    {ec.entity.city && ec.entity.state && ` · ${ec.entity.city}, ${ec.entity.state}`}
+                    {' · since '}{new Date(ec.grantedAt).toLocaleDateString()}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                    {ec.scopes.map((s) => (
+                      <span key={s} style={{
+                        padding: '0.15rem 0.5rem',
+                        background: 'rgba(255, 130, 0, 0.1)',
+                        border: '1px solid rgba(255, 130, 0, 0.3)',
+                        borderRadius: '999px',
+                        color: '#FF8200',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                      }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <button type="submit" style={{
+                  padding: '0.4rem 0.9rem',
+                  background: 'transparent',
+                  border: '1px solid #ef4444',
+                  borderRadius: '999px',
+                  color: '#fca5a5',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}>
+                  Revoke
+                </button>
+              </form>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Consent toggles */}
       <section style={{ marginBottom: '2.5rem' }}>
