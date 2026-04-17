@@ -87,15 +87,22 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  if (scopes.has('wishlist')) {
-    const items = await prisma.wishlistItem.findMany({
-      where: { userId: user.id },
-      orderBy: [{ priority: 'asc' }, { addedAt: 'desc' }],
-    });
-    response.wishlist = items.map((w) => ({
-      gameTitle: w.gameTitle,
-      priority: w.priority,
-      notes: w.notes || undefined,
+  // Fetch all consented scopes in parallel
+  const [wishlistItems, userBadges, pointsEntries] = await Promise.all([
+    scopes.has('wishlist')
+      ? prisma.wishlistItem.findMany({ where: { userId: user.id }, orderBy: [{ priority: 'asc' }, { addedAt: 'desc' }] })
+      : null,
+    scopes.has('badges') || scopes.has('reputation')
+      ? prisma.userBadge.findMany({ where: { userId: user.id, revokedAt: null }, include: { badge: true }, orderBy: { issuedAt: 'desc' } })
+      : null,
+    scopes.has('points')
+      ? prisma.pointsLedger.findMany({ where: { userId: user.id, storeId: entity.id }, orderBy: { createdAt: 'desc' }, take: 5 })
+      : null,
+  ]);
+
+  if (wishlistItems) {
+    response.wishlist = wishlistItems.map((w) => ({
+      gameTitle: w.gameTitle, priority: w.priority, notes: w.notes || undefined,
     }));
   }
 
@@ -103,33 +110,19 @@ export async function GET(request: NextRequest) {
     response.library = parseLibrary(user.gameLibrary);
   }
 
-  if (scopes.has('badges') || scopes.has('reputation')) {
-    const userBadges = await prisma.userBadge.findMany({
-      where: { userId: user.id, revokedAt: null },
-      include: { badge: true },
-      orderBy: { issuedAt: 'desc' },
-    });
+  if (userBadges) {
     response.badges = userBadges.map((ub) => ({
-      name: ub.badge.name,
-      emoji: ub.badge.iconEmoji || '🏅',
-      color: ub.badge.color,
+      name: ub.badge.name, emoji: ub.badge.iconEmoji || '🏅', color: ub.badge.color,
       issuerName: ub.badge.issuerName || undefined,
     }));
   }
 
-  if (scopes.has('points')) {
-    const entries = await prisma.pointsLedger.findMany({
-      where: { userId: user.id, storeId: entity.id },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
-    const balance = entries[0]?.balance ?? 0;
+  if (pointsEntries) {
+    const balance = pointsEntries[0]?.balance ?? 0;
     response.points = {
       balance,
-      recentTransactions: entries.map((e) => ({
-        amount: e.amount,
-        description: e.description,
-        createdAt: e.createdAt.toISOString(),
+      recentTransactions: pointsEntries.map((e) => ({
+        amount: e.amount, description: e.description, createdAt: e.createdAt.toISOString(),
       })),
     };
   }

@@ -86,12 +86,13 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  // Re-register webhooks (idempotent — duplicates return 422 which we swallow)
-  for (const topic of WEBHOOK_TOPICS) {
-    try { await registerWebhook(shop, token, topic); } catch (err) {
-      console.error(`[shopify-claim] webhook ${topic} failed:`, err);
-    }
-  }
+  await Promise.allSettled(
+    WEBHOOK_TOPICS.map((topic) =>
+      registerWebhook(shop, token, topic).catch((err) =>
+        console.error(`[shopify-claim] webhook ${topic} failed:`, err)
+      )
+    )
+  );
 
   return NextResponse.json({ ok: true, slug: member.entity.slug });
 }

@@ -102,14 +102,14 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  // Register webhooks (best-effort, non-blocking on individual failures)
-  for (const topic of WEBHOOK_TOPICS) {
-    try {
-      await registerWebhook(shop, accessToken, topic);
-    } catch (err) {
-      console.error(`[shopify-callback] webhook ${topic} register failed:`, err);
-    }
-  }
+  // Register webhooks in parallel (best-effort, non-blocking on individual failures)
+  await Promise.allSettled(
+    WEBHOOK_TOPICS.map((topic) =>
+      registerWebhook(shop, accessToken, topic).catch((err) =>
+        console.error(`[shopify-callback] webhook ${topic} register failed:`, err)
+      )
+    )
+  );
 
   // Look up entity slug for redirect
   const entity = await prisma.afterroarEntity.findUnique({
