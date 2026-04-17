@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Afterroar Store Ops",
+  title: "Store Ops — Full Uproar",
   description: "The POS platform built for friendly local game stores.",
   manifest: "/manifest.json",
   icons: {

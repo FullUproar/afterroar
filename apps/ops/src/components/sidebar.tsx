@@ -64,10 +64,10 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex h-full w-56 flex-col border-r border-card-border bg-card transition-all duration-200">
       <div className="border-b border-card-border px-2 lg:px-4 py-4 flex items-center justify-center lg:justify-start">
-        <img src="/logo-ring-favicon.png" alt="Afterroar" className="h-7 w-7 lg:hidden" />
+        <img src="/logo-ring-favicon.png" alt="Store Ops" className="h-7 w-7 lg:hidden" />
         <div className="hidden lg:block">
           <h1 className="text-sm font-bold text-foreground leading-tight line-clamp-2">{store?.name || 'Store Ops'}</h1>
-          <p className="text-[10px] text-muted/50">Afterroar Ops</p>
+          <p className="text-[10px] text-muted/50">Store Ops</p>
         </div>
       </div>
 

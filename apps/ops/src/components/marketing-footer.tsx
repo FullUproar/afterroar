@@ -10,7 +10,7 @@ export default function MarketingFooter() {
             alt=""
             className="h-5 w-5 object-contain opacity-50"
           />
-          Afterroar Store Ops &mdash; by Full Uproar Games
+          Store Ops &mdash; by Full Uproar Games
         </div>
         <div className="flex flex-wrap gap-6 text-xs text-[#4a4a6a]">
           <Link href="/pricing" className="hover:text-[#94a3b8]">Pricing</Link>
