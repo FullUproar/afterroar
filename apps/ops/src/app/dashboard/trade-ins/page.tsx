@@ -7,6 +7,15 @@ import { EmptyState } from '@/components/shared/ui';
 import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/ui/pagination';
+import { SubNav } from "@/components/ui/sub-nav";
+
+const INVENTORY_TABS = [
+  { href: '/dashboard/inventory', label: 'Inventory' },
+  { href: '/dashboard/catalog', label: 'Card Catalog' },
+  { href: '/dashboard/deck-builder', label: 'Deck Builder' },
+  { href: '/dashboard/trade-ins', label: 'Trade-Ins' },
+  { href: '/dashboard/consignment', label: 'Consignment' },
+];
 
 interface TradeInRow {
   id: string;
@@ -55,6 +64,7 @@ export default function TradeInsPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={INVENTORY_TABS} />
       <PageHeader
         title="Trade-Ins"
         action={

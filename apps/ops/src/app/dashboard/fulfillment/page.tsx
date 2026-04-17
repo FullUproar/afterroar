@@ -4,6 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { formatCents } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge, ActionButton, EmptyState, SectionHeader } from "@/components/shared/ui";
+import { SubNav } from "@/components/ui/sub-nav";
+
+const ORDERS_TABS = [
+  { href: '/dashboard/orders', label: 'Orders' },
+  { href: '/dashboard/fulfillment', label: 'Fulfillment' },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -323,6 +329,7 @@ ${sections.map((s: typeof sections[number]) => `
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={ORDERS_TABS} />
       <div className="flex items-center justify-between">
         <PageHeader title="Fulfillment Queue" />
         <ActionButton

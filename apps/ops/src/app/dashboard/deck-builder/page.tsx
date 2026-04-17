@@ -4,6 +4,15 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { FeatureGate } from "@/components/feature-gate";
+import { SubNav } from "@/components/ui/sub-nav";
+
+const INVENTORY_TABS = [
+  { href: '/dashboard/inventory', label: 'Inventory' },
+  { href: '/dashboard/catalog', label: 'Card Catalog' },
+  { href: '/dashboard/deck-builder', label: 'Deck Builder' },
+  { href: '/dashboard/trade-ins', label: 'Trade-Ins' },
+  { href: '/dashboard/consignment', label: 'Consignment' },
+];
 import { formatCents } from "@/lib/types";
 import { CardImage, StockBadge, PriceTag } from "@/components/tcg/shared";
 import { FormatSelector } from "@/components/deck-builder/format-selector";
@@ -464,6 +473,7 @@ function DeckBuilderContent() {
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={INVENTORY_TABS} />
       <PageHeader title="Deck Builder" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

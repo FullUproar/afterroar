@@ -14,9 +14,15 @@ import { useTrainingMode } from '@/lib/training-mode';
 import { PageHeader } from '@/components/page-header';
 import { HelpTooltip } from '@/components/help-tooltip';
 import { PermissionsEditor } from '@/components/permissions-editor';
+import { SubNav } from "@/components/ui/sub-nav";
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+
+const SETTINGS_TABS = [
+  { href: '/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard/help', label: 'Help Center' },
+];
 
 const LocationPicker = dynamic(() => import('@/components/location-picker').then(m => ({ default: m.LocationPicker })), { ssr: false });
 
@@ -347,6 +353,7 @@ export default function SettingsPage() {
   if (isOverview) {
     return (
       <div className="flex flex-col h-full gap-4">
+        <SubNav items={SETTINGS_TABS} />
         <PageHeader title="Settings" backHref="/dashboard" />
         <p className="text-sm text-muted -mt-2">
           {store?.name} · Tap a section to configure
@@ -388,6 +395,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={SETTINGS_TABS} />
       <PageHeader title={TABS.find(t => t.key === activeTab)?.label || 'Settings'} backHref="/dashboard/settings" />
       <p className="text-sm text-muted -mt-2">
         {store?.name} &middot; Changes save automatically

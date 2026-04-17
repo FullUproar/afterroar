@@ -17,14 +17,11 @@ const SIDEBAR_ITEMS: { href: string; label: string; icon: string; permission: Pe
   { href: "/dashboard", label: "Dashboard", icon: "⌂", permission: "checkout" },
   { href: "/dashboard/inventory", label: "Inventory", icon: "▦", permission: "inventory.view" },
   { href: "/dashboard/customers", label: "Customers", icon: "♟", permission: "customers.view" },
-  { href: "/dashboard/trade-ins", label: "Trade-Ins", icon: "⇄", permission: "trade_ins" },
-  { href: "/dashboard/consignment", label: "Consignment", icon: "🏷", permission: "inventory.view" },
   { href: "/dashboard/events", label: "Events", icon: "★", permission: "events.checkin" },
   { href: "/dashboard/cash-flow", label: "Intelligence", icon: "◉", permission: "cash_flow" },
   { href: "/dashboard/orders", label: "Orders", icon: "⊟", permission: "checkout" },
   { href: "/dashboard/staff", label: "Staff", icon: "⊞", permission: "staff.manage" },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙", permission: "store.settings" },
-  { href: "/dashboard/help", label: "Help", icon: "?", permission: "checkout" },
 ];
 
 /* (accordion state removed — sidebar is now flat) */
@@ -41,6 +38,17 @@ export function Sidebar() {
   const isActive = useCallback(
     (href: string) => {
       if (href === "/dashboard") return pathname === "/dashboard";
+      if (href === "/dashboard/inventory") {
+        return ["/dashboard/inventory", "/dashboard/catalog", "/dashboard/deck-builder", "/dashboard/trade-ins", "/dashboard/consignment"].some(
+          (p) => pathname === p || pathname.startsWith(p + "/")
+        );
+      }
+      if (href === "/dashboard/orders") {
+        return pathname === "/dashboard/orders" || pathname.startsWith("/dashboard/orders/") || pathname.startsWith("/dashboard/fulfillment");
+      }
+      if (href === "/dashboard/settings") {
+        return pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/") || pathname.startsWith("/dashboard/help");
+      }
       return pathname === href || pathname.startsWith(href + "/");
     },
     [pathname]

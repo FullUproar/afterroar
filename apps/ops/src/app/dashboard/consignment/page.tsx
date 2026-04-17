@@ -4,6 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
 import { formatCents, parseDollars } from "@/lib/types";
 import { Pagination } from "@/components/ui/pagination";
+import { SubNav } from "@/components/ui/sub-nav";
+
+const INVENTORY_TABS = [
+  { href: '/dashboard/inventory', label: 'Inventory' },
+  { href: '/dashboard/catalog', label: 'Card Catalog' },
+  { href: '/dashboard/deck-builder', label: 'Deck Builder' },
+  { href: '/dashboard/trade-ins', label: 'Trade-Ins' },
+  { href: '/dashboard/consignment', label: 'Consignment' },
+];
 
 interface ConsignmentItem {
   id: string;
@@ -118,6 +127,7 @@ export default function ConsignmentPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={INVENTORY_TABS} />
       <PageHeader
         title="Consignment"
         action={

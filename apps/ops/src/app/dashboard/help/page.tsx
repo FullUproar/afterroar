@@ -2,7 +2,13 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { PageHeader } from "@/components/page-header";
+import { SubNav } from "@/components/ui/sub-nav";
 import { ARTICLES, CATEGORIES, type HelpArticle } from "@/lib/help-articles";
+
+const SETTINGS_TABS = [
+  { href: '/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard/help', label: 'Help Center' },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Search scoring                                                      */
@@ -191,6 +197,7 @@ export default function HelpPage() {
 
   return (
     <div className="mx-auto max-w-3xl flex flex-col h-full gap-4 pb-8 min-w-0">
+      <SubNav items={SETTINGS_TABS} />
       <PageHeader title="Help Center" backHref="/dashboard" />
 
       {/* Search */}

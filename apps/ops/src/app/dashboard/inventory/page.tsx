@@ -4,6 +4,15 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { SearchInput } from "@/components/search-input";
 import { Pagination } from "@/components/ui/pagination";
+import { SubNav } from "@/components/ui/sub-nav";
+
+const INVENTORY_TABS = [
+  { href: '/dashboard/inventory', label: 'Inventory' },
+  { href: '/dashboard/catalog', label: 'Card Catalog' },
+  { href: '/dashboard/deck-builder', label: 'Deck Builder' },
+  { href: '/dashboard/trade-ins', label: 'Trade-Ins' },
+  { href: '/dashboard/consignment', label: 'Consignment' },
+];
 import { useStore } from "@/lib/store-context";
 import {
   InventoryItem,
@@ -415,22 +424,11 @@ export default function InventoryPage() {
 
   return (
     <div className="flex flex-col h-full gap-4 min-w-0">
+      <SubNav items={INVENTORY_TABS} />
       <PageHeader
         title={`Inventory${totalItems > 0 ? ` (${totalItems.toLocaleString()})` : ""}`}
         action={
           <div className="flex gap-1.5 sm:gap-2">
-            <Link
-              href="/dashboard/catalog"
-              className="hidden sm:block rounded-xl border border-accent/30 px-4 py-2 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
-            >
-              Card Catalog
-            </Link>
-            <Link
-              href="/dashboard/deck-builder"
-              className="hidden sm:block rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
-            >
-              Deck Builder
-            </Link>
             <button
               onClick={() => setShowShopifySync(!showShopifySync)}
               className="hidden sm:block rounded-xl border border-blue-500/30 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/10 transition-colors"

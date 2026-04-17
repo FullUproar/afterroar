@@ -1,12 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { formatCents } from "@/lib/types";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge as SharedStatusBadge, EmptyState } from "@/components/shared/ui";
 import { Pagination } from "@/components/ui/pagination";
+import { SubNav } from "@/components/ui/sub-nav";
+
+const ORDERS_TABS = [
+  { href: '/dashboard/orders', label: 'Orders' },
+  { href: '/dashboard/fulfillment', label: 'Fulfillment' },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -183,17 +188,8 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-5xl flex flex-col h-full gap-4">
-      <PageHeader
-        title="Orders"
-        action={
-          <Link
-            href="/dashboard/fulfillment"
-            className="rounded-xl border border-accent/30 px-4 py-2 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
-          >
-            Fulfillment
-          </Link>
-        }
-      />
+      <SubNav items={ORDERS_TABS} />
+      <PageHeader title="Orders" />
 
       {/* Status filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scroll-visible">
