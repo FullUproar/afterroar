@@ -183,15 +183,9 @@ export default function InventoryPage() {
   // Reset to full list when search is cleared
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      (async () => {
-        const res = await fetch("/api/inventory");
-        if (res.ok) {
-          const data = await res.json();
-          setItems(data as InventoryItem[]);
-        }
-      })();
+      loadInventory();
     }
-  }, [searchQuery]);
+  }, [searchQuery, loadInventory]);
 
   const handleCreate = useCallback(async () => {
     if (!form.name.trim()) {
@@ -422,9 +416,15 @@ export default function InventoryPage() {
   return (
     <div className="flex flex-col h-full gap-4 min-w-0">
       <PageHeader
-        title={`Inventory${items.length > 0 ? ` (${items.length})` : ""}`}
+        title={`Inventory${totalItems > 0 ? ` (${totalItems.toLocaleString()})` : ""}`}
         action={
           <div className="flex gap-1.5 sm:gap-2">
+            <Link
+              href="/dashboard/catalog"
+              className="hidden sm:block rounded-xl border border-accent/30 px-4 py-2 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
+            >
+              Card Catalog
+            </Link>
             <button
               onClick={() => setShowShopifySync(!showShopifySync)}
               className="hidden sm:block rounded-xl border border-blue-500/30 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/10 transition-colors"
