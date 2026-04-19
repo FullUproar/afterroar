@@ -12,7 +12,7 @@ export function SubNav({ items }: { items: SubNavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex gap-1 overflow-x-auto pb-1 mb-4 border-b border-card-border">
+    <div className="flex-shrink-0 flex gap-1 overflow-x-auto pb-1 mb-2 border-b border-card-border sticky top-0 bg-background z-10">
       {items.map((item) => {
         const active = pathname === item.href || (item.href !== items[0].href && pathname.startsWith(item.href));
         return (
