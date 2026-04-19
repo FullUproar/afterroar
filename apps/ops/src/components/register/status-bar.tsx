@@ -24,12 +24,27 @@ export function StatusBar({
   const [now, setNow] = useState(new Date());
   const [heartbeat, setHeartbeat] = useState(true); // pulse animation trigger
   const [systemOk, setSystemOk] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
   const heartbeatRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   // Clock updates every second
   useEffect(() => {
     const clockInterval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(clockInterval);
+  }, []);
+
+  // Track navigator.onLine — show offline indicator when network is down
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    setIsOffline(!navigator.onLine);
+    function handleOnline() { setIsOffline(false); }
+    function handleOffline() { setIsOffline(true); }
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // Health check every 30 seconds — pulse heartbeat on success
@@ -74,8 +89,13 @@ export function StatusBar({
       </span>
 
       {/* Center: status */}
-      <span className="truncate max-w-[60%] text-center text-muted/70">
-        {statusMessage}
+      <span className="truncate max-w-[60%] text-center text-muted/70 flex items-center justify-center gap-2">
+        {isOffline && (
+          <span className="inline-flex items-center rounded-full bg-red-600/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            Offline {"\u2014"} sales will sync
+          </span>
+        )}
+        {statusMessage && <span className="truncate">{statusMessage}</span>}
       </span>
 
       {/* Right: heartbeat clock */}

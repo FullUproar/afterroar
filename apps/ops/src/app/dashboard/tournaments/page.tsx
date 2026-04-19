@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
+import { SubNav } from '@/components/ui/sub-nav';
+import { EVENTS_TABS } from '@/lib/nav-groups';
 
 interface Tournament {
   id: string;
@@ -539,6 +541,7 @@ export default function TournamentsPage() {
   // Tournament list view
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={EVENTS_TABS} />
       <PageHeader
         title="Tournaments"
         action={

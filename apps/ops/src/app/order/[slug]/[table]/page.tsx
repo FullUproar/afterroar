@@ -194,7 +194,7 @@ export default function QROrderPage() {
       {cartCount > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 safe-area-pb">
           {/* Cart items */}
-          <div className="space-y-1 mb-3 max-h-32 overflow-y-auto">
+          <div className="space-y-1 mb-3 max-h-[40vh] overflow-y-auto">
             {cart.map((c) => (
               <div key={c.item.id} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">

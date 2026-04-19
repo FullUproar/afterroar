@@ -241,6 +241,14 @@ export function PanelContent(props: PanelContentProps) {
                   <div className="text-lg font-medium text-accent tabular-nums font-mono">{formatCents(customer.credit_balance_cents)} credit</div>
                 )}
               </div>
+              {customer.loyalty_points > 0 && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 flex items-center justify-between">
+                  <span className="text-base font-medium text-amber-300">Loyalty</span>
+                  <span className="text-lg font-bold text-amber-300 tabular-nums">
+                    {customer.loyalty_points.toLocaleString()} points
+                  </span>
+                </div>
+              )}
               <button onClick={() => { setCustomer(null); setActivePanel(null); }} className="w-full rounded-xl border border-red-500/30 px-4 py-2.5 text-lg font-medium text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: 44 }}>Detach Customer</button>
             </div>
           ) : (

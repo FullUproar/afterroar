@@ -86,10 +86,25 @@ export async function POST(
       );
     }
 
+    // Atomic deduct: only decrement when balance still covers the amount.
+    // Guards against concurrent redeems racing past the read-then-write window.
     const result = await prisma.$transaction(async (tx) => {
-      const updated = await tx.posGiftCard.update({
-        where: { id: card.id },
+      const deducted = await tx.posGiftCard.updateMany({
+        where: {
+          id: card.id,
+          active: true,
+          balance_cents: { gte: body.amount_cents },
+        },
         data: { balance_cents: { decrement: body.amount_cents } },
+      });
+
+      if (deducted.count === 0) {
+        // Another request consumed the balance between our read and write.
+        throw new Error("CONFLICT");
+      }
+
+      const updated = await tx.posGiftCard.findUniqueOrThrow({
+        where: { id: card.id },
       });
 
       await tx.posLedgerEntry.create({
@@ -110,7 +125,17 @@ export async function POST(
       });
 
       return updated;
+    }).catch((err: unknown) => {
+      if (err instanceof Error && err.message === "CONFLICT") return null;
+      throw err;
     });
+
+    if (!result) {
+      return NextResponse.json(
+        { error: "Gift card balance changed; please retry" },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

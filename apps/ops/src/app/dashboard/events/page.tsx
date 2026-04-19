@@ -8,6 +8,8 @@ import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
 import { EmptyState } from '@/components/shared/ui';
 import { Pagination } from '@/components/ui/pagination';
+import { SubNav } from '@/components/ui/sub-nav';
+import { EVENTS_TABS } from '@/lib/nav-groups';
 
 type EventWithCount = GameEvent & { checkin_count: number; rsvp_count: number | null };
 
@@ -234,6 +236,7 @@ export default function EventsPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={EVENTS_TABS} />
       <div className="space-y-1">
         <PageHeader
           title="Events"

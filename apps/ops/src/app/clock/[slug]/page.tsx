@@ -291,6 +291,12 @@ export default function MobileTimeclockPage() {
               maxLength={8}
               value={pin}
               onChange={(e) => { setPin(e.target.value.replace(/\D/g, "")); setAuthError(null); }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 8);
+                setPin((prev) => (prev + pasted).slice(0, 8));
+                setAuthError(null);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && pin.length >= 4) {
                   handlePunch("clock_in");

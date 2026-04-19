@@ -39,6 +39,7 @@ export default function PublicBuylistPage() {
   const [gameFilter, setGameFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "price" | "offer">("offer");
   const [creditBonus, setCreditBonus] = useState(0);
+  const [pricesAsOf, setPricesAsOf] = useState<Date | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function PublicBuylistPage() {
         const data = await res.json();
         setItems(data.buylist || []);
         setCreditBonus(data.credit_bonus_percent || 0);
+        setPricesAsOf(new Date());
       } catch {
         setError("Unable to load buylist");
       } finally {
@@ -98,6 +100,11 @@ export default function PublicBuylistPage() {
       <header className="border-b border-zinc-800 px-4 py-6 text-center">
         <p className="text-xs uppercase tracking-widest text-amber-500/70 font-semibold">{storeName}</p>
         <h1 className="text-2xl font-bold mt-1">What We&apos;re Buying</h1>
+        {pricesAsOf && (
+          <p className="text-[11px] text-zinc-500 mt-2">
+            Prices as of {pricesAsOf.toLocaleString()}. Check in-store for current offers.
+          </p>
+        )}
         <p className="text-sm text-zinc-500 mt-1">
           Prices update daily. Bring your cards in for an offer.
           {creditBonus > 0 && (

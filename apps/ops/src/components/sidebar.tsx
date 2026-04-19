@@ -44,7 +44,17 @@ export function Sidebar() {
         );
       }
       if (href === "/dashboard/orders") {
-        return pathname === "/dashboard/orders" || pathname.startsWith("/dashboard/orders/") || pathname.startsWith("/dashboard/fulfillment");
+        return pathname === "/dashboard/orders"
+          || pathname.startsWith("/dashboard/orders/")
+          || pathname.startsWith("/dashboard/fulfillment")
+          || pathname === "/dashboard/returns"
+          || pathname.startsWith("/dashboard/returns/");
+      }
+      if (href === "/dashboard/events") {
+        return pathname === "/dashboard/events"
+          || pathname.startsWith("/dashboard/events/")
+          || pathname === "/dashboard/tournaments"
+          || pathname.startsWith("/dashboard/tournaments/");
       }
       if (href === "/dashboard/settings") {
         return pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/") || pathname.startsWith("/dashboard/help");

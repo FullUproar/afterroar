@@ -7,11 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge as SharedStatusBadge, EmptyState } from "@/components/shared/ui";
 import { Pagination } from "@/components/ui/pagination";
 import { SubNav } from "@/components/ui/sub-nav";
-
-const ORDERS_TABS = [
-  { href: '/dashboard/orders', label: 'Orders' },
-  { href: '/dashboard/fulfillment', label: 'Fulfillment' },
-];
+import { ORDERS_TABS } from "@/lib/nav-groups";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

@@ -5,11 +5,7 @@ import { formatCents } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge, ActionButton, EmptyState, SectionHeader } from "@/components/shared/ui";
 import { SubNav } from "@/components/ui/sub-nav";
-
-const ORDERS_TABS = [
-  { href: '/dashboard/orders', label: 'Orders' },
-  { href: '/dashboard/fulfillment', label: 'Fulfillment' },
-];
+import { ORDERS_TABS } from "@/lib/nav-groups";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

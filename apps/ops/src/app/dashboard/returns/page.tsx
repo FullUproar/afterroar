@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { formatCents, RETURN_REASONS } from '@/lib/types';
 import { EmptyState } from '@/components/shared/ui';
 import { PageHeader } from '@/components/page-header';
+import { SubNav } from '@/components/ui/sub-nav';
+import { ORDERS_TABS } from '@/lib/nav-groups';
 
 interface ReturnRow {
   id: string;
@@ -38,6 +40,7 @@ export default function ReturnsPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <SubNav items={ORDERS_TABS} />
       <PageHeader
         title="Returns"
         action={

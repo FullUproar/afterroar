@@ -137,6 +137,11 @@ export default function NewReturnPage() {
 
   /* ---- submit ---- */
   async function handleSubmit() {
+    const methodLabel = refundMethod === 'store_credit' ? 'store credit' : 'cash';
+    const confirmed = window.confirm(
+      `Refund ${formatCents(totalRefundCents)} to ${methodLabel}? This cannot be undone.`
+    );
+    if (!confirmed) return;
     setSubmitting(true);
     setError('');
     try {

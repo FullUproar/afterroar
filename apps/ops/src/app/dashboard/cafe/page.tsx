@@ -199,6 +199,12 @@ export default function CafePage() {
   const [closing, setClosing] = useState(false);
 
   async function closeTab(tabId: string, paymentMethod: string) {
+    const tab = tabs.find((t) => t.id === tabId) ?? activeTab;
+    const total = tab?.subtotal_cents ?? 0;
+    const confirmed = window.confirm(
+      `Close tab and charge ${formatCents(total)}? This finalizes the order.`
+    );
+    if (!confirmed) return;
     setClosing(true);
     try {
       const res = await fetch("/api/cafe", {
