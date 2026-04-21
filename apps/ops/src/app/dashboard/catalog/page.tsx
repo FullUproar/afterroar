@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store-context";
 import { formatCents, parseDollars } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { SubNav } from "@/components/ui/sub-nav";
+import { FeatureGate } from "@/components/feature-gate";
 
 const INVENTORY_TABS = [
   { href: '/dashboard/inventory', label: 'Inventory' },
@@ -306,6 +307,7 @@ export default function CatalogPage() {
         </p>
       </div>
 
+      <FeatureGate module="tcg_engine">
       {/* Game Tabs */}
       <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 w-fit">
         <button
@@ -363,13 +365,29 @@ export default function CatalogPage() {
       {/* Advanced Filters (MTG only) */}
       {gameTab === "mtg" && (
         <div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="text-xs text-muted hover:text-foreground transition-colors"
-            style={{ minHeight: "auto" }}
-          >
-            {showFilters ? "Hide filters" : "Advanced filters"}
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-xs text-muted hover:text-foreground transition-colors"
+              style={{ minHeight: "auto" }}
+            >
+              {showFilters ? "Hide filters" : "Advanced filters"}
+            </button>
+            <a
+              href="/dashboard/catalog/sealed-ev"
+              className="text-xs text-accent hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+            >
+              Sealed EV Calculator
+              <span aria-hidden>→</span>
+            </a>
+            <a
+              href="/dashboard/catalog/import"
+              className="text-xs text-accent hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+            >
+              Import Collection
+              <span aria-hidden>→</span>
+            </a>
+          </div>
           {showFilters && (
             <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               <div>
@@ -856,6 +874,7 @@ export default function CatalogPage() {
           </div>
         </div>
       )}
+      </FeatureGate>
 
       {/* Toast */}
       {toast && (

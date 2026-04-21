@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermission, handleAuthError } from "@/lib/require-staff";
+import { requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 import { searchCards } from "@/lib/scryfall";
 
 /* ------------------------------------------------------------------ */
@@ -82,7 +82,7 @@ function normalizeCondition(raw: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { db, storeId } = await requirePermission("inventory.create");
+    const { db, storeId } = await requirePermissionAndFeature("inventory.create", "tcg_engine");
 
     const body = await request.json();
     const { csv, dry_run } = body as { csv: string; dry_run?: boolean };

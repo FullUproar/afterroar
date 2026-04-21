@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireFeature, handleAuthError } from "@/lib/require-staff";
 
 /**
  * GET /api/catalog/scryfall/check?ids=["scryfall:abc123",...]
@@ -9,7 +9,7 @@ import { requireStaff, handleAuthError } from "@/lib/require-staff";
  */
 export async function GET(request: NextRequest) {
   try {
-    const { db } = await requireStaff();
+    const { db } = await requireFeature("tcg_engine");
 
     const idsParam = request.nextUrl.searchParams.get("ids");
     if (!idsParam) {

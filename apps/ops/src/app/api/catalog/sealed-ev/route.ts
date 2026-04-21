@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireFeature, handleAuthError } from "@/lib/require-staff";
 import { searchCards } from "@/lib/scryfall";
 
 /* ------------------------------------------------------------------ */
@@ -18,7 +18,7 @@ const FOIL_RATE = 1 / 6; // ~1 in 6 packs has a foil rare
 
 export async function GET(request: NextRequest) {
   try {
-    await requireStaff();
+    await requireFeature("tcg_engine");
 
     const setCode = request.nextUrl.searchParams.get("set")?.trim();
     if (!setCode || setCode.length < 2) {

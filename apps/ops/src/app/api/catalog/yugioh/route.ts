@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireFeature, requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 import { searchYuGiOhCards, yugiohToCatalogCard, type CatalogYuGiOhCard } from "@/lib/yugioh-api";
 
 /* ------------------------------------------------------------------ */
@@ -11,7 +11,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireStaff();
+    await requireFeature("tcg_engine");
     const q = request.nextUrl.searchParams.get("q")?.trim();
     if (!q || q.length < 2) return NextResponse.json({ cards: [], total: 0 });
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { db, storeId } = await requireStaff();
+    const { db, storeId } = await requirePermissionAndFeature("inventory.adjust", "tcg_engine");
     const body = await request.json();
     const { yugioh_id, name, set_name, rarity, image_url, price_cents, cost_cents, quantity, condition } = body;
 

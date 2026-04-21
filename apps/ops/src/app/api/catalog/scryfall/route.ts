@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
+import { requireFeature, requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 import { prisma } from "@/lib/prisma";
 import {
   searchCards,
@@ -17,7 +17,7 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    await requireStaff();
+    await requireFeature("tcg_engine");
 
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim();
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { db, storeId } = await requirePermission("inventory.adjust");
+    const { db, storeId } = await requirePermissionAndFeature("inventory.adjust", "tcg_engine");
 
     const body = await request.json();
     const {

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatCents } from "@/lib/types";
+import { CardHoverPreview } from "@/components/tcg/card-hover-preview";
 
 /* ------------------------------------------------------------------ */
 /*  Inventory Match Card — shows a card's availability in-store         */
@@ -92,7 +93,13 @@ export function InventoryCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-                {match.name}
+                <CardHoverPreview
+                  imageUrl={match.image_url}
+                  name={match.name}
+                  className="hover:underline decoration-dotted underline-offset-2 cursor-help"
+                >
+                  {match.name}
+                </CardHoverPreview>
               </h3>
               {/* Status badge */}
               <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${style.badge}`}>
@@ -138,7 +145,13 @@ export function InventoryCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={match.substitute.image_url} alt="" className="w-6 h-8 rounded object-cover shrink-0" />
           )}
-          <span className="text-sm font-medium text-foreground truncate">{match.substitute.name}</span>
+          <CardHoverPreview
+            imageUrl={match.substitute.image_url}
+            name={match.substitute.name}
+            className="text-sm font-medium text-foreground truncate hover:underline decoration-dotted underline-offset-2 cursor-help"
+          >
+            {match.substitute.name}
+          </CardHoverPreview>
           <span className="text-xs text-muted hidden sm:inline shrink-0">{match.substitute.reason}</span>
           <span className="text-xs font-mono text-foreground shrink-0">{formatCents(match.substitute.price_cents)}</span>
           {onAddSubstitute && (
