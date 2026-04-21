@@ -18,6 +18,8 @@ import { CardImage, StockBadge, PriceTag } from "@/components/tcg/shared";
 import { FormatSelector } from "@/components/deck-builder/format-selector";
 import { InventoryCard } from "@/components/deck-builder/inventory-card";
 import { DeckSummary } from "@/components/deck-builder/deck-summary";
+import { AnalysisPanel } from "@/components/deck-builder/analysis-panel";
+import type { DeckAnalysis } from "@/lib/deck-analysis";
 import { Recommendations as RecommendationsPanel } from "@/components/deck-builder/recommendations";
 import { MetaArchetypes } from "@/components/deck-builder/meta-archetypes";
 import { DeckBuilderEmptyState } from "@/components/deck-builder/empty-state";
@@ -186,6 +188,21 @@ function DeckBuilderContent() {
   // Pokemon state
   const [pokemonDecks, setPokemonDecks] = useState<PokemonMetaDeck[]>([]);
   const [pokemonLoading, setPokemonLoading] = useState(false);
+
+  // URL import state (Moxfield / Archidekt)
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importedDeck, setImportedDeck] = useState<{
+    name: string | null;
+    source: string;
+    format: string | null;
+    url: string;
+  } | null>(null);
+
+  // Deck analysis state (mana curve, colors, legality)
+  const [deckAnalysis, setDeckAnalysis] = useState<DeckAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const currentFormat = FORMATS.find((f) => f.key === format);
   const isCommander = format === "commander";
@@ -403,6 +420,8 @@ function DeckBuilderContent() {
   // Match cards against store inventory
   async function checkInventory(cards: ParsedCard[]) {
     setMatchLoading(true);
+    // Kick off analysis in parallel — independent network call
+    void runDeckAnalysis(cards);
     try {
       const res = await fetch("/api/deck-builder", {
         method: "POST",
@@ -418,6 +437,79 @@ function DeckBuilderContent() {
       // ignore
     } finally {
       setMatchLoading(false);
+    }
+  }
+
+  // Analyze deck (mana curve, colors, legality) — uses Scryfall batch lookup
+  async function runDeckAnalysis(cards: ParsedCard[]) {
+    if (cards.length === 0) return;
+    setAnalyzing(true);
+    setDeckAnalysis(null);
+    try {
+      const res = await fetch("/api/deck-builder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "analyze", cards }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDeckAnalysis(data.analysis ?? null);
+      }
+    } catch {
+      // Analysis is non-critical — inventory match is the main workflow.
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
+  // Import a decklist from a URL (Moxfield / Archidekt)
+  async function handleImportUrl() {
+    if (!importUrl.trim()) return;
+    setImporting(true);
+    setImportError(null);
+    setImportedDeck(null);
+    try {
+      const res = await fetch("/api/deck-builder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "import_url", url: importUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImportError(data.error ?? "Import failed");
+        return;
+      }
+      const deck = data.deck as {
+        source: string;
+        source_url: string;
+        deck_name: string | null;
+        format: string | null;
+        cards: ParsedCard[];
+        sideboard: ParsedCard[];
+        commanders: ParsedCard[];
+      };
+
+      // Flatten mainboard + commanders for the decklist text view
+      const allCards = [...deck.commanders, ...deck.cards];
+      const text = allCards.map((c) => `${c.quantity} ${c.name}`).join("\n");
+      setDecklistText(text);
+      setParsedCards(allCards);
+      setImportedDeck({
+        name: deck.deck_name,
+        source: deck.source,
+        format: deck.format,
+        url: deck.source_url,
+      });
+      // If the imported deck specifies a format we support, switch to it.
+      if (deck.format && FORMATS.some((f) => f.key === deck.format)) {
+        setFormat(deck.format);
+      }
+      // Kick off inventory match automatically
+      await checkInventory(allCards);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -819,6 +911,77 @@ function DeckBuilderContent() {
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {/* URL import — Moxfield / Archidekt */}
+                  <div className="rounded-xl border border-card-border bg-card p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="text-[11px] text-muted uppercase tracking-wider">
+                        Import from URL
+                      </label>
+                      <span className="text-[10px] text-muted/70">
+                        Moxfield · Archidekt
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={importUrl}
+                        onChange={(e) => setImportUrl(e.target.value)}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === "Enter" && importUrl.trim() && !importing) {
+                            handleImportUrl();
+                          }
+                        }}
+                        placeholder="https://www.moxfield.com/decks/..."
+                        className="flex-1 min-w-0 rounded-lg border border-input-border bg-input-bg px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                      />
+                      <button
+                        onClick={handleImportUrl}
+                        disabled={importing || !importUrl.trim()}
+                        className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      >
+                        {importing ? "Importing..." : "Import"}
+                      </button>
+                    </div>
+                    {importError && (
+                      <div className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-2 py-1">
+                        {importError}
+                      </div>
+                    )}
+                    {importedDeck && (
+                      <div className="text-[11px] text-muted flex items-center gap-2 flex-wrap">
+                        <span className="text-green-400">✓</span>
+                        <span className="text-foreground font-medium truncate">
+                          {importedDeck.name ?? "Untitled deck"}
+                        </span>
+                        <span className="text-card-border">·</span>
+                        <span>from {importedDeck.source}</span>
+                        {importedDeck.format && (
+                          <>
+                            <span className="text-card-border">·</span>
+                            <span className="capitalize">{importedDeck.format}</span>
+                          </>
+                        )}
+                        <a
+                          href={importedDeck.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent hover:underline ml-auto"
+                        >
+                          view original →
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-card-border" />
+                    <span className="text-[10px] text-muted uppercase tracking-wider">
+                      or paste
+                    </span>
+                    <div className="flex-1 h-px bg-card-border" />
+                  </div>
+
                   {/* Paste decklist */}
                   <textarea
                     value={decklistText}
@@ -868,6 +1031,20 @@ function DeckBuilderContent() {
           {matchLoading && (
             <div className="flex items-center justify-center h-32 text-muted">
               Checking store inventory...
+            </div>
+          )}
+
+          {/* Deck analysis — mana curve, colors, format legality */}
+          {deckAnalysis && (
+            <AnalysisPanel analysis={deckAnalysis} targetFormat={format} />
+          )}
+          {analyzing && !deckAnalysis && (
+            <div className="rounded-xl border border-card-border bg-card p-4 text-xs text-muted flex items-center gap-2">
+              <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Analyzing deck (colors, curve, legality)...
             </div>
           )}
 

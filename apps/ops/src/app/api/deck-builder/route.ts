@@ -11,6 +11,9 @@ import {
   fetchTopPokemonDecks,
   getRecommendations,
 } from "@/lib/deck-builder";
+import { fetchCardMetadataByName } from "@/lib/scryfall-batch";
+import { analyzeDeck, type DeckCardWithQuantity } from "@/lib/deck-analysis";
+import { importDeckFromUrl } from "@/lib/deck-url-import";
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,6 +127,33 @@ export async function POST(request: NextRequest) {
           typeof limit === "number" ? limit : 8,
         );
         return NextResponse.json({ decks });
+      }
+
+      case "analyze": {
+        const { cards } = body as { cards: DeckCardWithQuantity[] };
+        if (!Array.isArray(cards) || cards.length === 0) {
+          return NextResponse.json({ error: "cards array is required" }, { status: 400 });
+        }
+        const names = cards.map((c) => c.name);
+        const metadata = await fetchCardMetadataByName(names);
+        const analysis = analyzeDeck(cards, metadata);
+        return NextResponse.json({ analysis });
+      }
+
+      case "import_url": {
+        const { url } = body as { url: string };
+        if (!url || typeof url !== "string") {
+          return NextResponse.json({ error: "url is required" }, { status: 400 });
+        }
+        try {
+          const imported = await importDeckFromUrl(url);
+          return NextResponse.json({ deck: imported });
+        } catch (err) {
+          return NextResponse.json(
+            { error: err instanceof Error ? err.message : "Import failed" },
+            { status: 400 },
+          );
+        }
       }
 
       default:
