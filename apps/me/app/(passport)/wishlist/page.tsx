@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, X, Star, Loader2, Share2, Check } from 'lucide-react';
+import { Plus, X, Share2, Check } from 'lucide-react';
+import { TitleBar, SecHero, Button, Chip, EmptyState, TYPE, SpinnerInline, inputStyle } from '@/app/components/ui';
 
 interface WishlistItem {
   id: string;
@@ -12,11 +13,11 @@ interface WishlistItem {
   addedAt: string;
 }
 
-const PRIORITY_LABELS: Record<number, { label: string; color: string }> = {
-  1: { label: 'Must have', color: '#ef4444' },
-  2: { label: 'Want', color: '#FF8200' },
-  3: { label: 'Interested', color: '#3b82f6' },
-  4: { label: 'Maybe someday', color: '#6b7280' },
+const PRIORITY: Record<number, { label: string; tone: 'red' | 'orange' | 'blue' | 'neutral' }> = {
+  1: { label: 'Must have', tone: 'red' },
+  2: { label: 'Want', tone: 'orange' },
+  3: { label: 'Interested', tone: 'blue' },
+  4: { label: 'Maybe someday', tone: 'neutral' },
 };
 
 export default function WishlistPage() {
@@ -60,120 +61,106 @@ export default function WishlistPage() {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback
-    }
+    } catch { /* noop */ }
   };
 
-  if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /></div>;
-
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#FF8200', margin: 0 }}>
-          Wishlist
-        </h1>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {items.length > 0 && (
-            <button onClick={handleShare}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.35rem',
-                padding: '0.5rem 0.75rem', background: '#1f2937',
-                border: '1px solid #374151', borderRadius: '6px',
-                color: copied ? '#10b981' : '#9ca3af', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
-              }}>
-              {copied ? <><Check size={14} /> Copied!</> : <><Share2 size={14} /> Share</>}
-            </button>
-          )}
-          <button onClick={() => setShowForm(!showForm)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.35rem',
-              padding: '0.5rem 1rem', background: '#FF8200', border: 'none', borderRadius: '6px',
-              color: '#0a0a0a', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
-            }}>
-            <Plus size={16} /> Add game
-          </button>
-        </div>
-      </div>
-      <p style={{ color: '#9ca3af', marginBottom: '1.5rem' }}>
-        Games you want. Share this list with family for gift ideas,
-        or let stores see it when you scan your Passport.
-      </p>
+    <>
+      <TitleBar left="Wishlist" right={`${items.length} ${items.length === 1 ? 'title' : 'titles'}`} />
+      <SecHero
+        fieldNum="02"
+        fieldType="Desires"
+        title="Wishlist"
+        count={loading ? '—' : `${items.length} ${items.length === 1 ? 'title' : 'titles'}`}
+        desc="Games you want. Share this list with family for gift ideas, or let stores see it when you scan your Passport."
+        actions={
+          <>
+            <Button onClick={() => setShowForm(!showForm)}>
+              <Plus size={15} /> Add game
+            </Button>
+            {items.length > 0 ? (
+              <Button variant="ghost" onClick={handleShare}>
+                {copied ? <><Check size={14} /> Copied</> : <><Share2 size={14} /> Share</>}
+              </Button>
+            ) : null}
+          </>
+        }
+      />
 
-      {/* Add form */}
-      {showForm && (
-        <div style={{
-          background: '#1f2937', borderRadius: '12px', padding: '1.25rem',
-          border: '2px solid #FF8200', marginBottom: '1.5rem',
-        }}>
-          <input placeholder="Game title *" value={form.gameTitle} onChange={(e) => setForm({ ...form, gameTitle: e.target.value })}
-            autoFocus
-            style={{ width: '100%', padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid #374151', borderRadius: '6px', color: '#e2e8f0', fontSize: '0.85rem', outline: 'none', marginBottom: '0.75rem', boxSizing: 'border-box' }} />
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-            {Object.entries(PRIORITY_LABELS).map(([val, { label, color }]) => (
-              <button key={val} onClick={() => setForm({ ...form, priority: Number(val) })}
-                style={{
-                  padding: '0.4rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-                  background: form.priority === Number(val) ? `${color}20` : 'transparent',
-                  border: `1px solid ${form.priority === Number(val) ? color : '#374151'}`,
-                  color: form.priority === Number(val) ? color : '#6b7280',
-                }}>
-                {label}
-              </button>
-            ))}
+      <div style={{ padding: '1rem var(--pad-x) 1.5rem', ...TYPE.body }}>
+        {/* Add form */}
+        {showForm ? (
+          <div style={{ background: 'var(--panel-mute)', border: '2px solid var(--orange)', padding: '1rem', marginBottom: '1.25rem' }}>
+            <input
+              placeholder="Game title"
+              value={form.gameTitle}
+              onChange={(e) => setForm({ ...form, gameTitle: e.target.value })}
+              autoFocus
+              style={{ ...inputStyle(), marginBottom: '0.75rem' }}
+            />
+            <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
+              {Object.entries(PRIORITY).map(([val, { label, tone }]) => {
+                const isOn = form.priority === Number(val);
+                return (
+                  <button key={val} onClick={() => setForm({ ...form, priority: Number(val) })} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                    <Chip tone={tone} on={isOn}>{label}</Chip>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Button onClick={handleAdd} disabled={!form.gameTitle.trim() || saving}>
+                {saving ? 'Adding…' : 'Add to wishlist'}
+              </Button>
+              <Button variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={handleAdd} disabled={!form.gameTitle.trim() || saving}
-              style={{
-                padding: '0.6rem 1.25rem', background: form.gameTitle.trim() ? '#FF8200' : '#374151',
-                border: 'none', borderRadius: '6px', color: '#0a0a0a', fontWeight: 700, fontSize: '0.85rem',
-                cursor: form.gameTitle.trim() ? 'pointer' : 'not-allowed',
-              }}>
-              {saving ? 'Adding...' : 'Add to wishlist'}
-            </button>
-            <button onClick={() => setShowForm(false)}
-              style={{ padding: '0.6rem 1rem', background: '#374151', border: 'none', borderRadius: '6px', color: '#9ca3af', fontSize: '0.85rem', cursor: 'pointer' }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+        ) : null}
 
-      {/* Wishlist items */}
-      {items.length === 0 ? (
-        <div style={{ padding: '3rem', background: '#1f2937', borderRadius: '12px', textAlign: 'center', color: '#6b7280' }}>
-          <p style={{ fontSize: '1.1rem', margin: '0 0 0.5rem 0' }}>Your wishlist is empty</p>
-          <p style={{ fontSize: '0.85rem', margin: 0 }}>Add games you want — share the list with family or let stores see it at checkout.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {items.map((item) => {
-            const pri = PRIORITY_LABELS[item.priority] || PRIORITY_LABELS[3];
-            return (
-              <div key={item.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '0.75rem 1rem', background: '#1f2937', borderRadius: '8px',
-                borderLeft: `3px solid ${pri.color}`,
-              }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem' }}>{item.gameTitle}</span>
-                    <span style={{ color: pri.color, fontSize: '0.7rem', fontWeight: 700 }}>{pri.label}</span>
-                  </div>
-                  {item.notes && <p style={{ color: '#6b7280', fontSize: '0.75rem', margin: '0.15rem 0 0' }}>{item.notes}</p>}
-                </div>
-                <button onClick={() => handleRemove(item.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#4b5563' }}>
-                  <X size={14} />
-                </button>
-              </div>
-            );
-          })}
-          <p style={{ color: '#4b5563', fontSize: '0.75rem', margin: '0.5rem 0 0', textAlign: 'center' }}>
-            {items.length} game{items.length !== 1 ? 's' : ''} on your wishlist
+        {loading ? (
+          <p style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.75rem', textAlign: 'center', padding: '2rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            <SpinnerInline /> Loading…
           </p>
-        </div>
-      )}
-    </div>
+        ) : items.length === 0 ? (
+          <EmptyState title="Your wishlist is empty" desc="Add games you want — share the list with family or let stores see it at checkout." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
+            {items.map((item) => {
+              const pri = PRIORITY[item.priority] || PRIORITY[3];
+              return (
+                <div key={item.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1rem',
+                  background: 'var(--panel-mute)',
+                  gap: '0.75rem',
+                  borderLeft: `2px solid var(--${pri.tone === 'red' ? 'red' : pri.tone === 'orange' ? 'orange' : pri.tone === 'blue' ? 'blue' : 'ink-faint'})`,
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ ...TYPE.displayMd, color: 'var(--cream)', fontSize: '0.95rem' }}>{item.gameTitle}</span>
+                      <Chip tone={pri.tone}>{pri.label}</Chip>
+                    </div>
+                    {item.notes ? (
+                      <p style={{ ...TYPE.body, color: 'var(--ink-soft)', fontSize: '0.78rem', margin: '0.2rem 0 0' }}>{item.notes}</p>
+                    ) : null}
+                  </div>
+                  <button onClick={() => handleRemove(item.id)} style={{
+                    background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--ink-faint)',
+                  }}><X size={14} /></button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {items.length > 0 ? (
+          <p style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.68rem', margin: '0.75rem 0 0', textAlign: 'center', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            {items.length} {items.length === 1 ? 'title' : 'titles'} on your wishlist
+          </p>
+        ) : null}
+      </div>
+    </>
   );
 }

@@ -21,48 +21,47 @@ export function PassportCard({ code }: { code: string }) {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '1rem',
-      padding: '1.5rem',
-      background: '#1f2937',
-      border: '2px solid rgba(255, 130, 0, 0.3)',
-      borderRadius: '16px',
+      gap: '0.9rem',
+      padding: '1.1rem',
+      background: 'var(--panel)',
+      border: '1px dashed var(--orange)',
       width: '100%',
       maxWidth: '20rem',
+      position: 'relative',
     }}>
       <p style={{
-        color: '#9ca3af',
-        fontSize: '0.7rem',
+        fontFamily: 'var(--font-mono), ui-monospace, Menlo, monospace',
+        color: 'var(--orange)',
+        fontSize: '0.62rem',
         margin: 0,
         textTransform: 'uppercase',
-        letterSpacing: '0.15em',
+        letterSpacing: '0.25em',
         fontWeight: 700,
       }}>
         Show this at the counter
       </p>
 
-      <div style={{
-        padding: '0.75rem',
-        background: '#ffffff',
-        borderRadius: '10px',
-      }}>
+      <div style={{ padding: '0.75rem', background: '#ffffff' }}>
         <canvas ref={canvasRef} aria-label={`QR code for Passport ${code}`} />
       </div>
 
       <div style={{ textAlign: 'center' }}>
         <p style={{
-          color: '#FBDB65',
+          fontFamily: 'var(--font-mono), ui-monospace, Menlo, monospace',
+          color: 'var(--yellow)',
           fontSize: '1.5rem',
-          fontWeight: 900,
+          fontWeight: 700,
           letterSpacing: '0.2em',
           margin: 0,
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         }}>
           {code}
         </p>
         <p style={{
-          color: '#6b7280',
-          fontSize: '0.7rem',
+          fontFamily: 'var(--font-body), system-ui, sans-serif',
+          color: 'var(--ink-faint)',
+          fontSize: '0.72rem',
           margin: '0.35rem 0 0',
+          fontStyle: 'italic',
         }}>
           Or read this code out loud
         </p>

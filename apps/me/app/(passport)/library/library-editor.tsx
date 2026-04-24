@@ -1,17 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Search, X, Plus, Loader2 } from 'lucide-react';
-
-/**
- * Passport Game Library Editor — ownership only.
- *
- * The Passport stores what you own. That's universally relevant data
- * that any connected app can read via /api/library.
- *
- * App-specific preferences (bring, love, nope for game nights) are
- * owned by the app that needs them — HQ stores those in its own DB.
- */
+import { Search, X, Plus } from 'lucide-react';
+import { Button, Chip, EmptyState, TYPE, SpinnerInline, inputStyle } from '@/app/components/ui';
 
 interface GameEntry {
   title: string;
@@ -52,9 +43,7 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
           const data = await res.json();
           setResults(data.results || []);
         }
-      } catch {} finally {
-        setSearching(false);
-      }
+      } catch {} finally { setSearching(false); }
     }, 300);
   };
 
@@ -85,7 +74,6 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
     });
     setGames(updated);
     save(updated);
-    // Register tag globally (fire-and-forget)
     fetch('/api/tags', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -113,55 +101,44 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch {} finally {
-      setSaving(false);
-    }
+    } catch {} finally { setSaving(false); }
   };
 
   return (
     <div>
-      {/* Search bar */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem',
-          alignItems: 'center',
-          background: '#1f2937',
-          borderRadius: '8px',
-          padding: '0.5rem 0.75rem',
-          border: '1px solid #374151',
-        }}>
-          <Search size={16} style={{ color: '#6b7280', flexShrink: 0 }} />
+      {/* Search */}
+      <div style={{ marginBottom: '1rem', position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
+          <Search size={15} style={{ position: 'absolute', top: '50%', left: '0.7rem', transform: 'translateY(-50%)', color: 'var(--ink-faint)', pointerEvents: 'none' }} />
           <input
             type="text"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search games to add..."
+            placeholder="Search games to add…"
             style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              color: '#e2e8f0',
-              fontSize: '0.9rem',
-              outline: 'none',
+              ...inputStyle({ paddingLeft: '2.1rem', paddingRight: search ? '2.4rem' : '0.85rem' }),
             }}
           />
-          {search && (
-            <button onClick={() => { setSearch(''); setResults([]); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <X size={16} style={{ color: '#6b7280' }} />
-            </button>
-          )}
-          {searching && <Loader2 size={16} style={{ color: '#FF8200', animation: 'spin 1s linear infinite' }} />}
+          {search ? (
+            <button onClick={() => { setSearch(''); setResults([]); }} style={{
+              position: 'absolute', top: '50%', right: '0.7rem', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--ink-soft)',
+            }}><X size={15} /></button>
+          ) : null}
         </div>
 
-        {/* Search results */}
-        {results.length > 0 && (
+        {searching ? (
+          <p style={{ ...TYPE.mono, fontSize: '0.66rem', color: 'var(--orange)', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0.4rem 0 0' }}>
+            <SpinnerInline size={12} /> Searching…
+          </p>
+        ) : null}
+
+        {results.length > 0 ? (
           <div style={{
-            marginTop: '0.25rem',
-            background: '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '8px',
-            maxHeight: '250px',
+            marginTop: '0.35rem',
+            background: 'var(--panel-mute)',
+            border: '1px solid var(--rule)',
+            maxHeight: '280px',
             overflowY: 'auto',
           }}>
             {results.map((r) => {
@@ -176,178 +153,131 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     width: '100%',
-                    padding: '0.75rem 1rem',
+                    padding: '0.7rem 0.9rem',
                     background: 'transparent',
                     border: 'none',
-                    borderBottom: '1px solid #374151',
-                    color: alreadyAdded ? '#6b7280' : '#e2e8f0',
-                    fontSize: '0.9rem',
+                    borderBottom: '1px solid var(--rule)',
+                    color: alreadyAdded ? 'var(--ink-faint)' : 'var(--cream)',
+                    ...TYPE.body,
+                    fontSize: '0.88rem',
                     cursor: alreadyAdded ? 'default' : 'pointer',
-                    opacity: alreadyAdded ? 0.4 : 1,
+                    opacity: alreadyAdded ? 0.5 : 1,
                     textAlign: 'left',
                   }}
                 >
                   <span>{r.title}{alreadyAdded ? ' (added)' : ''}</span>
-                  {r.minPlayers && r.maxPlayers && (
-                    <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                  {r.minPlayers && r.maxPlayers ? (
+                    <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.7rem' }}>
                       {r.minPlayers}–{r.maxPlayers}p
                     </span>
-                  )}
+                  ) : null}
                 </button>
               );
             })}
           </div>
-        )}
+        ) : null}
+      </div>
 
-        {/* Manual add */}
-        <div style={{ marginTop: '0.5rem' }}>
-          {!manualAdd ? (
-            <button
-              onClick={() => setManualAdd(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#6b7280',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-              }}
-            >
-              <Plus size={14} /> Add a game not in the database
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="text"
-                value={manualTitle}
-                onChange={(e) => setManualTitle(e.target.value)}
-                placeholder="Game title"
-                autoFocus
-                onKeyDown={(e) => { if (e.key === 'Enter' && manualTitle.trim()) addGame(manualTitle.trim()); }}
-                style={{
-                  flex: 1,
-                  padding: '0.5rem 0.75rem',
-                  background: '#0a0a0a',
-                  border: '1px solid #374151',
-                  borderRadius: '6px',
-                  color: '#e2e8f0',
-                  fontSize: '0.85rem',
-                  outline: 'none',
-                }}
-              />
-              <button
-                onClick={() => { if (manualTitle.trim()) addGame(manualTitle.trim()); }}
-                disabled={!manualTitle.trim()}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: manualTitle.trim() ? '#FF8200' : '#374151',
-                  border: 'none',
-                  borderRadius: '6px',
-                  color: manualTitle.trim() ? '#0a0a0a' : '#6b7280',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: manualTitle.trim() ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Add
-              </button>
-              <button
-                onClick={() => { setManualAdd(false); setManualTitle(''); }}
-                style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer' }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Manual add */}
+      <div style={{ marginBottom: '1.25rem' }}>
+        {!manualAdd ? (
+          <button onClick={() => setManualAdd(true)} style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--ink-soft)',
+            ...TYPE.mono,
+            fontSize: '0.7rem',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: 0,
+          }}>
+            <Plus size={13} /> Add a game not in the database
+          </button>
+        ) : (
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              value={manualTitle}
+              onChange={(e) => setManualTitle(e.target.value)}
+              placeholder="Game title"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter' && manualTitle.trim()) addGame(manualTitle.trim()); }}
+              style={inputStyle()}
+            />
+            <Button size="sm" onClick={() => { if (manualTitle.trim()) addGame(manualTitle.trim()); }} disabled={!manualTitle.trim()}>Add</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setManualAdd(false); setManualTitle(''); }}><X size={14} /></Button>
+          </div>
+        )}
       </div>
 
       {/* Save status */}
-      {(saving || saved) && (
-        <p style={{ color: saved ? '#10b981' : '#6b7280', fontSize: '0.8rem', margin: '0 0 1rem' }}>
-          {saving ? 'Saving...' : 'Saved'}
+      {(saving || saved) ? (
+        <p style={{ ...TYPE.mono, color: saved ? 'var(--green)' : 'var(--ink-soft)', fontSize: '0.7rem', margin: '0 0 0.9rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          {saving ? 'Saving…' : 'Saved'}
         </p>
-      )}
+      ) : null}
 
       {/* Game list */}
       {games.length === 0 ? (
-        <div style={{
-          padding: '3rem',
-          background: '#1f2937',
-          borderRadius: '12px',
-          textAlign: 'center',
-        }}>
-          <p style={{ color: '#6b7280', fontSize: '1.1rem', margin: '0 0 0.5rem 0' }}>
-            Your library is empty
-          </p>
-          <p style={{ color: '#4b5563', fontSize: '0.85rem', margin: 0 }}>
-            Search above to add games you own.
-          </p>
-        </div>
+        <EmptyState title="Your library is empty" desc="Search above to add games you own." />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
           {games.map((game) => (
-            <div key={game.title} style={{
-              padding: '0.75rem 1rem',
-              background: '#1f2937',
-              borderRadius: '8px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.9rem' }}>
-                  {game.title}
-                </span>
-                <button
-                  onClick={() => removeGame(game.title)}
-                  title="Remove from library"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '0.25rem',
-                    color: '#4b5563',
-                  }}
-              >
-                <X size={14} />
-              </button>
+            <div key={game.title} style={{ padding: '0.85rem 1rem', background: 'var(--panel-mute)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <span style={{ ...TYPE.displayMd, color: 'var(--cream)', fontSize: '0.95rem' }}>{game.title}</span>
+                <button onClick={() => removeGame(game.title)} title="Remove from library" style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--ink-faint)',
+                }}><X size={14} /></button>
               </div>
-              {/* Tags */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.4rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.5rem' }}>
                 {(game.tags || []).map((tag) => (
                   <span key={tag} style={{
-                    padding: '0.15rem 0.5rem', background: 'rgba(255, 130, 0, 0.1)',
-                    border: '1px solid rgba(255, 130, 0, 0.25)', borderRadius: '4px',
-                    color: '#FF8200', fontSize: '0.7rem', fontWeight: 600,
-                    display: 'flex', alignItems: 'center', gap: '0.2rem',
+                    padding: '0.15rem 0.5rem',
+                    background: 'var(--orange-weak)',
+                    border: '1px solid var(--orange)',
+                    color: 'var(--orange)',
+                    ...TYPE.mono,
+                    fontSize: '0.62rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
                   }}>
                     #{tag}
-                    <button onClick={() => { removeTag(game.title, tag); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF8200', padding: 0, lineHeight: 1 }}>
-                      <X size={10} />
-                    </button>
+                    <button onClick={() => removeTag(game.title, tag)} style={{
+                      background: 'none', border: 'none', cursor: 'pointer', color: 'var(--orange)', padding: 0, lineHeight: 1,
+                    }}><X size={10} /></button>
                   </span>
                 ))}
                 <button onClick={() => {
                   const tag = prompt('Add tag (e.g., GOTO, BASEMENT, PARTY):');
                   if (tag?.trim()) addTag(game.title, tag.trim());
-                }}
-                  style={{
-                    padding: '0.15rem 0.4rem', background: 'transparent',
-                    border: '1px dashed #374151', borderRadius: '4px',
-                    color: '#6b7280', fontSize: '0.65rem', cursor: 'pointer',
-                  }}>
-                  + tag
-                </button>
+                }} style={{
+                  padding: '0.15rem 0.5rem',
+                  background: 'transparent',
+                  border: '1px dashed var(--rule)',
+                  color: 'var(--ink-soft)',
+                  ...TYPE.mono,
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                }}>+ tag</button>
               </div>
             </div>
           ))}
-
-          <p style={{ color: '#4b5563', fontSize: '0.75rem', margin: '0.5rem 0 0', textAlign: 'center' }}>
-            {games.length} {games.length === 1 ? 'game' : 'games'} in your library
-          </p>
         </div>
       )}
+      {games.length > 0 ? (
+        <p style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.68rem', margin: '0.75rem 0 0', textAlign: 'center', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          {games.length} {games.length === 1 ? 'game' : 'games'}
+        </p>
+      ) : null}
     </div>
   );
 }

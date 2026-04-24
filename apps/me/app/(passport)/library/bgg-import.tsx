@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, Loader2, Check, X } from 'lucide-react';
+import { Download, Check, X } from 'lucide-react';
+import { Button, TYPE, SpinnerInline, inputStyle } from '@/app/components/ui';
 
 interface BGGGame {
   title: string;
@@ -42,7 +43,6 @@ export function BGGImport({ existingGames, onImport }: {
         setLoading(false);
         return;
       }
-
       if (!res.ok) {
         setError(data.error || 'Import failed');
         setLoading(false);
@@ -69,9 +69,7 @@ export function BGGImport({ existingGames, onImport }: {
 
   const confirmImport = () => {
     if (!results || selected.size === 0) return;
-    const toImport = results
-      .filter((g) => selected.has(g.title))
-      .map((g) => ({ title: g.title, bggId: g.bggId }));
+    const toImport = results.filter((g) => selected.has(g.title)).map((g) => ({ title: g.title, bggId: g.bggId }));
     onImport(toImport);
     setResults(null);
     setSelected(new Set());
@@ -79,95 +77,82 @@ export function BGGImport({ existingGames, onImport }: {
   };
 
   return (
-    <div style={{ marginBottom: '1.5rem' }}>
+    <div style={{ marginBottom: '1.25rem' }}>
       {!results ? (
-        <div style={{
-          display: 'flex', gap: '0.5rem', alignItems: 'center',
-          background: '#1f2937', borderRadius: '8px', padding: '0.5rem 0.75rem',
-          border: '1px solid #374151',
-        }}>
-          <Download size={16} style={{ color: '#6b7280', flexShrink: 0 }} />
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleFetch(); }}
-            placeholder="BGG username"
-            style={{
-              flex: 1, background: 'transparent', border: 'none',
-              color: '#e2e8f0', fontSize: '0.9rem', outline: 'none',
-            }}
-          />
-          <button onClick={handleFetch} disabled={!username.trim() || loading}
-            style={{
-              padding: '0.4rem 0.75rem', background: username.trim() ? '#FF8200' : '#374151',
-              border: 'none', borderRadius: '6px', color: '#0a0a0a',
-              fontWeight: 700, fontSize: '0.8rem',
-              cursor: username.trim() && !loading ? 'pointer' : 'not-allowed',
-            }}>
-            {loading ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : 'Import'}
-          </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Download size={14} style={{ position: 'absolute', top: '50%', left: '0.7rem', transform: 'translateY(-50%)', color: 'var(--ink-faint)', pointerEvents: 'none' }} />
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleFetch(); }}
+              placeholder="BGG username"
+              style={inputStyle({ paddingLeft: '2rem' })}
+            />
+          </div>
+          <Button size="sm" onClick={handleFetch} disabled={!username.trim() || loading}>
+            {loading ? <><SpinnerInline size={12} /> Importing</> : 'Import'}
+          </Button>
         </div>
       ) : (
-        <div style={{
-          background: '#1f2937', borderRadius: '12px',
-          border: '2px solid #3b82f6', padding: '1.25rem',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ margin: 0, color: '#3b82f6', fontWeight: 700, fontSize: '1rem' }}>
+        <div style={{ border: '2px solid var(--orange)', padding: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <h3 style={{ ...TYPE.displayMd, margin: 0, color: 'var(--orange)', fontSize: '0.95rem' }}>
               {results.length > 0 ? `${results.length} new game${results.length !== 1 ? 's' : ''} from BGG` : 'No new games found'}
             </h3>
-            <button onClick={() => { setResults(null); setSelected(new Set()); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
-              <X size={16} />
-            </button>
+            <button onClick={() => { setResults(null); setSelected(new Set()); }} style={{
+              background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)',
+            }}><X size={16} /></button>
           </div>
 
           {results.length > 0 ? (
             <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
-                {results.map((game) => (
-                  <button key={game.title} onClick={() => toggleGame(game.title)}
-                    style={{
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: '0.9rem', maxHeight: '300px', overflowY: 'auto' }}>
+                {results.map((game) => {
+                  const on = selected.has(game.title);
+                  return (
+                    <button key={game.title} onClick={() => toggleGame(game.title)} style={{
                       display: 'flex', alignItems: 'center', gap: '0.5rem',
-                      padding: '0.5rem 0.75rem', textAlign: 'left', width: '100%',
-                      background: selected.has(game.title) ? 'rgba(59, 130, 246, 0.06)' : 'transparent',
-                      border: `1px solid ${selected.has(game.title) ? '#3b82f6' : '#374151'}`,
-                      borderRadius: '6px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.85rem',
+                      padding: '0.5rem 0.7rem',
+                      textAlign: 'left',
+                      width: '100%',
+                      background: on ? 'var(--orange-weak)' : 'transparent',
+                      border: `1px solid ${on ? 'var(--orange)' : 'var(--rule)'}`,
+                      color: 'var(--cream)',
+                      cursor: 'pointer',
+                      ...TYPE.body,
+                      fontSize: '0.85rem',
                     }}>
-                    <div style={{
-                      width: '16px', height: '16px', borderRadius: '3px', flexShrink: 0,
-                      border: `2px solid ${selected.has(game.title) ? '#3b82f6' : '#4b5563'}`,
-                      background: selected.has(game.title) ? '#3b82f6' : 'transparent',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {selected.has(game.title) && <Check size={10} style={{ color: '#fff' }} />}
-                    </div>
-                    <span style={{ flex: 1 }}>{game.title}</span>
-                    {game.yearPublished && <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>({game.yearPublished})</span>}
-                  </button>
-                ))}
+                      <div style={{
+                        width: '16px', height: '16px', flexShrink: 0,
+                        border: `2px solid ${on ? 'var(--orange)' : 'var(--ink-faint)'}`,
+                        background: on ? 'var(--orange)' : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {on ? <Check size={10} color="var(--void)" /> : null}
+                      </div>
+                      <span style={{ flex: 1 }}>{game.title}</span>
+                      {game.yearPublished ? (
+                        <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.68rem' }}>({game.yearPublished})</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
-              <button onClick={confirmImport} disabled={selected.size === 0}
-                style={{
-                  width: '100%', padding: '0.6rem',
-                  background: selected.size > 0 ? '#3b82f6' : '#374151',
-                  border: 'none', borderRadius: '6px', color: '#fff',
-                  fontWeight: 700, fontSize: '0.9rem',
-                  cursor: selected.size > 0 ? 'pointer' : 'not-allowed',
-                }}>
+              <Button onClick={confirmImport} disabled={selected.size === 0}>
                 Import {selected.size} game{selected.size !== 1 ? 's' : ''}
-              </button>
+              </Button>
             </>
           ) : (
-            <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: 0 }}>
+            <p style={{ ...TYPE.body, color: 'var(--ink-soft)', fontSize: '0.85rem', margin: 0 }}>
               All games from this BGG collection are already in your library.
             </p>
           )}
         </div>
       )}
 
-      {error && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.5rem 0 0' }}>{error}</p>}
+      {error ? <p style={{ ...TYPE.body, color: 'var(--red)', fontSize: '0.78rem', margin: '0.5rem 0 0' }}>{error}</p> : null}
     </div>
   );
 }

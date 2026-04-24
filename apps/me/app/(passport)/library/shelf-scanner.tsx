@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, Loader2, Check, X, Plus, Star, Users, Clock } from 'lucide-react';
+import { Camera, Check, X, Plus, Star, Users, Clock } from 'lucide-react';
+import { Button, TYPE, SpinnerInline } from '@/app/components/ui';
 
 interface ResolvedGame {
   title: string;
@@ -24,10 +25,15 @@ interface ShelfScannerProps {
   onAdd: (games: Array<{ title: string; slug?: string; bggId?: number }>) => void;
 }
 
-const confidenceColors = {
-  high: '#10b981',
-  medium: '#FF8200',
-  low: '#6b7280',
+const confidenceTone: Record<ResolvedGame['confidence'], string> = {
+  high: 'var(--green)',
+  medium: 'var(--orange)',
+  low: 'var(--ink-soft)',
+};
+const confidenceLabel: Record<ResolvedGame['confidence'], string> = {
+  high: 'exact match',
+  medium: 'likely',
+  low: 'unverified',
 };
 
 export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
@@ -39,31 +45,29 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
   const [scanStats, setScanStats] = useState<{ totalVisible: number; identified: number; unidentified: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const resizeImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new window.Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxDim = 1200;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-            else { width = Math.round(width * maxDim / height); height = maxDim; }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.onerror = reject;
-        img.src = reader.result as string;
+  const resizeImage = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 1200;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,8 +107,7 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
 
   const toggleGame = (title: string) => {
     const next = new Set(selected);
-    if (next.has(title)) next.delete(title);
-    else next.add(title);
+    if (next.has(title)) next.delete(title); else next.add(title);
     setSelected(next);
   };
 
@@ -119,172 +122,149 @@ export function ShelfScanner({ existingGames, onAdd }: ShelfScannerProps) {
   };
 
   return (
-    <div style={{ marginBottom: '1.5rem' }}>
+    <div style={{ marginBottom: '1.25rem' }}>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
 
-      {!results && (
+      {!results ? (
         <button
           onClick={() => fileRef.current?.click()}
           disabled={scanning}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-            width: '100%', padding: '1rem',
-            background: scanning ? '#374151' : 'rgba(255, 130, 0, 0.08)',
-            border: `2px dashed ${scanning ? '#374151' : '#FF8200'}`,
-            borderRadius: '12px',
-            color: scanning ? '#6b7280' : '#FF8200',
-            fontSize: '0.95rem', fontWeight: 700,
+            width: '100%',
+            padding: '0.9rem 1rem',
+            background: scanning ? 'var(--panel)' : 'var(--orange-weak)',
+            border: `2px dashed ${scanning ? 'var(--rule)' : 'var(--orange)'}`,
+            color: scanning ? 'var(--ink-soft)' : 'var(--orange)',
+            ...TYPE.display,
+            fontSize: '0.9rem',
+            letterSpacing: '0.03em',
             cursor: scanning ? 'wait' : 'pointer',
           }}
         >
-          {scanning ? (
-            <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Identifying games...</>
-          ) : (
-            <><Camera size={18} /> Scan your game shelf</>
-          )}
+          {scanning ? <><SpinnerInline size={16} /> Identifying games…</> : <><Camera size={18} /> Scan your game shelf</>}
         </button>
-      )}
+      ) : null}
 
-      {error && <p style={{ color: '#ef4444', fontSize: '0.85rem', margin: '0.5rem 0 0' }}>{error}</p>}
+      {error ? <p style={{ ...TYPE.body, color: 'var(--red)', fontSize: '0.82rem', margin: '0.5rem 0 0' }}>{error}</p> : null}
 
-      {scansRemaining !== null && scansRemaining < 999 && !results && (
-        <p style={{ color: '#4b5563', fontSize: '0.75rem', margin: '0.5rem 0 0', textAlign: 'center' }}>
+      {scansRemaining !== null && scansRemaining < 999 && !results ? (
+        <p style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.68rem', margin: '0.5rem 0 0', textAlign: 'center', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
           {scansRemaining} scan{scansRemaining !== 1 ? 's' : ''} remaining today
         </p>
-      )}
+      ) : null}
 
-      {results && (
-        <div style={{
-          background: '#1f2937', borderRadius: '12px',
-          border: '2px solid #FF8200', padding: '1.25rem',
-        }}>
+      {results ? (
+        <div style={{ border: '2px solid var(--orange)', padding: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <h3 style={{ margin: 0, color: '#FF8200', fontWeight: 700, fontSize: '1rem' }}>
+            <h3 style={{ ...TYPE.displayMd, margin: 0, color: 'var(--orange)', fontSize: '0.95rem' }}>
               {results.length > 0 ? `Found ${results.length} new game${results.length !== 1 ? 's' : ''}` : 'No new games found'}
             </h3>
-            <button onClick={() => { setResults(null); setSelected(new Set()); setScanStats(null); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
-              <X size={16} />
-            </button>
+            <button onClick={() => { setResults(null); setSelected(new Set()); setScanStats(null); }} style={{
+              background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)',
+            }}><X size={16} /></button>
           </div>
 
-          {scanStats && scanStats.totalVisible > 0 && (
-            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0 0 0.75rem' }}>
+          {scanStats && scanStats.totalVisible > 0 ? (
+            <p style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.72rem', margin: '0 0 0.5rem', letterSpacing: '0.04em' }}>
               {scanStats.identified} of {scanStats.totalVisible} visible game{scanStats.totalVisible !== 1 ? 's' : ''} identified
-              {scanStats.unidentified > 0 && ` · ${scanStats.unidentified} could not be read`}
+              {scanStats.unidentified > 0 ? ` · ${scanStats.unidentified} could not be read` : ''}
             </p>
-          )}
+          ) : null}
 
-          <p style={{ color: '#4b5563', fontSize: '0.7rem', margin: '0 0 1rem', fontStyle: 'italic' }}>
-            Results are AI-generated and may contain errors. Please verify each title before adding.
+          <p style={{ ...TYPE.body, color: 'var(--ink-faint)', fontSize: '0.7rem', margin: '0 0 0.85rem', fontStyle: 'italic' }}>
+            Results are AI-generated and may contain errors. Verify each title before adding.
           </p>
 
           {results.length > 0 ? (
             <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                {results.map((game) => (
-                  <button
-                    key={game.title}
-                    onClick={() => toggleGame(game.title)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '0.75rem',
-                      padding: '0.75rem', textAlign: 'left',
-                      background: selected.has(game.title) ? 'rgba(255, 130, 0, 0.06)' : 'transparent',
-                      border: `1px solid ${selected.has(game.title) ? '#FF8200' : '#374151'}`,
-                      borderRadius: '8px', color: '#e2e8f0', cursor: 'pointer',
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.9rem' }}>
+                {results.map((game) => {
+                  const on = selected.has(game.title);
+                  return (
+                    <button key={game.title} onClick={() => toggleGame(game.title)} style={{
+                      display: 'flex', alignItems: 'center', gap: '0.65rem',
+                      padding: '0.6rem 0.7rem',
+                      textAlign: 'left',
                       width: '100%',
-                    }}
-                  >
-                    {/* Checkbox */}
-                    <div style={{
-                      width: '20px', height: '20px', borderRadius: '4px', flexShrink: 0,
-                      border: `2px solid ${selected.has(game.title) ? '#FF8200' : '#4b5563'}`,
-                      background: selected.has(game.title) ? '#FF8200' : 'transparent',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: on ? 'var(--orange-weak)' : 'var(--panel-mute)',
+                      border: `1px solid ${on ? 'var(--orange)' : 'var(--rule)'}`,
+                      color: 'var(--cream)',
+                      cursor: 'pointer',
                     }}>
-                      {selected.has(game.title) && <Check size={12} style={{ color: '#0a0a0a' }} />}
-                    </div>
-
-                    {/* Thumbnail */}
-                    {game.thumbnail && (
-                      <img
-                        src={game.thumbnail}
-                        alt=""
-                        width={40} height={40}
-                        style={{ borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }}
-                      />
-                    )}
-
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{game.title}</span>
-                        {game.yearPublished && (
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>({game.yearPublished})</span>
-                        )}
-                        <span style={{
-                          padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700,
-                          background: `${confidenceColors[game.confidence]}20`,
-                          color: confidenceColors[game.confidence],
-                        }}>
-                          {game.confidence === 'high' ? 'exact match' : game.confidence === 'medium' ? 'likely match' : 'unverified'}
-                        </span>
+                      <div style={{
+                        width: '18px', height: '18px', flexShrink: 0,
+                        border: `2px solid ${on ? 'var(--orange)' : 'var(--ink-faint)'}`,
+                        background: on ? 'var(--orange)' : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {on ? <Check size={11} color="var(--void)" /> : null}
                       </div>
-                      {game.rawGuess !== game.title && (
-                        <div style={{ color: '#4b5563', fontSize: '0.7rem', marginTop: '0.15rem' }}>
-                          Detected: &quot;{game.rawGuess}&quot;
+                      {game.thumbnail ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={game.thumbnail} alt="" width={36} height={36} style={{ objectFit: 'cover', flexShrink: 0 }} />
+                      ) : null}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <span style={{ ...TYPE.displayMd, fontSize: '0.9rem', color: 'var(--cream)' }}>{game.title}</span>
+                          {game.yearPublished ? (
+                            <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.7rem' }}>({game.yearPublished})</span>
+                          ) : null}
+                          <span style={{
+                            padding: '1px 6px',
+                            ...TYPE.mono,
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            background: `color-mix(in oklab, ${confidenceTone[game.confidence]} 12%, transparent)`,
+                            color: confidenceTone[game.confidence],
+                          }}>{confidenceLabel[game.confidence]}</span>
                         </div>
-                      )}
-                      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
-                        {game.minPlayers && game.maxPlayers && (
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                            <Users size={11} /> {game.minPlayers}–{game.maxPlayers}
-                          </span>
-                        )}
-                        {game.playTime && (
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                            <Clock size={11} /> {game.playTime}
-                          </span>
-                        )}
-                        {game.bggRating && (
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                            <Star size={11} /> {game.bggRating}
-                          </span>
-                        )}
-                        {game.complexity && (
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-                            Weight: {game.complexity}/5
-                          </span>
-                        )}
+                        {game.rawGuess !== game.title ? (
+                          <div style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                            Detected: &quot;{game.rawGuess}&quot;
+                          </div>
+                        ) : null}
+                        <div style={{ display: 'flex', gap: '0.65rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                          {game.minPlayers && game.maxPlayers ? (
+                            <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <Users size={11} /> {game.minPlayers}–{game.maxPlayers}
+                            </span>
+                          ) : null}
+                          {game.playTime ? (
+                            <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <Clock size={11} /> {game.playTime}
+                            </span>
+                          ) : null}
+                          {game.bggRating ? (
+                            <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <Star size={11} /> {game.bggRating}
+                            </span>
+                          ) : null}
+                          {game.complexity ? (
+                            <span style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.7rem' }}>
+                              Weight: {game.complexity}/5
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
 
-              <button
-                onClick={confirmAdd}
-                disabled={selected.size === 0}
-                style={{
-                  width: '100%', padding: '0.75rem',
-                  background: selected.size > 0 ? '#FF8200' : '#374151',
-                  border: 'none', borderRadius: '8px',
-                  color: selected.size > 0 ? '#0a0a0a' : '#6b7280',
-                  fontWeight: 700, fontSize: '0.95rem',
-                  cursor: selected.size > 0 ? 'pointer' : 'not-allowed',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                }}
-              >
+              <Button onClick={confirmAdd} disabled={selected.size === 0}>
                 <Plus size={16} /> Add {selected.size} game{selected.size !== 1 ? 's' : ''} to library
-              </button>
+              </Button>
             </>
           ) : (
-            <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: 0 }}>
+            <p style={{ ...TYPE.body, color: 'var(--ink-soft)', fontSize: '0.85rem', margin: 0 }}>
               Try a clearer photo with game spines/covers facing the camera.
             </p>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
+import { TitleBar, SecHero, EmptyState, TYPE } from '@/app/components/ui';
 
 export default async function StoresPage() {
-  // Public page — no auth required. Shows the federated store directory.
   const stores = await prisma.venue.findMany({
     where: {
       status: { not: 'hidden' },
@@ -25,58 +26,49 @@ export default async function StoresPage() {
   });
 
   return (
-    <div>
-      <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#FF8200', marginBottom: '0.5rem' }}>
-        Store Directory
-      </h1>
-      <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
-        Game stores in the Afterroar network. Check in, earn points, find your next game night.
-      </p>
+    <>
+      <TitleBar left="Stores" right={`${stores.length} in directory`} />
+      <SecHero
+        fieldNum="06"
+        fieldType="Waypoints"
+        title="Stores"
+        desc="Game stores in the Afterroar network. Check in, earn points, find your next game night."
+      />
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '0.75rem',
-      }}>
-        {stores.map((store) => (
-          <Link
-            key={store.id}
-            href={`/stores/${store.slug}`}
-            style={{
-              display: 'block',
-              padding: '1.25rem',
-              background: '#1f2937',
-              borderRadius: '8px',
-              border: '1px solid #374151',
-              textDecoration: 'none',
-              transition: 'border-color 0.2s',
-            }}
-          >
-            <h3 style={{ color: '#e2e8f0', margin: '0 0 0.25rem 0', fontSize: '1rem', fontWeight: 700 }}>
-              {store.name}
-            </h3>
-            <p style={{ color: '#9ca3af', margin: '0 0 0.5rem 0', fontSize: '0.8rem' }}>
-              {[store.city, store.state].filter(Boolean).join(', ')}
-            </p>
-            {store.googleRating && (
-              <span style={{ color: '#FF8200', fontSize: '0.8rem', fontWeight: 600 }}>
-                ⭐ {store.googleRating} ({store.reviewCount} reviews)
-              </span>
-            )}
-          </Link>
-        ))}
+      <div style={{ padding: '1rem var(--pad-x) 1.5rem', ...TYPE.body }}>
+        {stores.length === 0 ? (
+          <EmptyState title="No stores yet" desc="The directory is still filling up. Check back soon." />
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: '1px',
+            background: 'var(--rule)',
+            border: '1px solid var(--rule)',
+          }} className="ar-stagger">
+            {stores.map((store) => (
+              <Link key={store.id} href={`/stores/${store.slug}`} className="ar-stripe" style={{
+                display: 'block',
+                padding: '1rem 1.1rem',
+                background: 'var(--panel-mute)',
+                textDecoration: 'none',
+                color: 'inherit',
+              }}>
+                <h3 style={{ ...TYPE.display, color: 'var(--cream)', margin: '0 0 0.25rem', fontSize: '1.05rem' }}>{store.name}</h3>
+                <p style={{ ...TYPE.mono, fontSize: '0.66rem', letterSpacing: '0.08em', color: 'var(--ink-soft)', margin: '0 0 0.5rem' }}>
+                  {[store.city, store.state].filter(Boolean).join(', ')}
+                </p>
+                {store.googleRating ? (
+                  <span style={{ ...TYPE.mono, color: 'var(--yellow)', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <Star size={12} fill="currentColor" strokeWidth={0} />
+                    {store.googleRating} <span style={{ color: 'var(--ink-faint)' }}>({store.reviewCount})</span>
+                  </span>
+                ) : null}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
-
-      {stores.length === 0 && (
-        <div style={{
-          padding: '3rem',
-          background: '#1f2937',
-          borderRadius: '12px',
-          textAlign: 'center',
-        }}>
-          <p style={{ color: '#6b7280' }}>No stores in the directory yet.</p>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

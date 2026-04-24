@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import { TitleBar, SecHero, Panel, EmptyState, TYPE } from '@/app/components/ui';
 
 export default async function PointsPage() {
   const session = await auth();
@@ -8,7 +9,6 @@ export default async function PointsPage() {
 
   const userId = session.user.id;
 
-  // Get per-store balances (latest entry per storeId)
   const balanceRows = await prisma.$queryRaw<Array<{ storeId: string | null; balance: number }>>`
     SELECT DISTINCT ON ("storeId") "storeId", "balance"
     FROM "PointsLedger"
@@ -16,9 +16,9 @@ export default async function PointsPage() {
     ORDER BY "storeId", "createdAt" DESC
   `;
 
-  const totalBalance = balanceRows.reduce((sum, r) => sum + Number(r.balance), 0);
+  const activeBalances = balanceRows.filter((r) => Number(r.balance) > 0);
+  const totalBalance = activeBalances.reduce((sum, r) => sum + Number(r.balance), 0);
 
-  // Recent transactions (last 20)
   const recentTx = await prisma.pointsLedger.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
@@ -34,100 +34,94 @@ export default async function PointsPage() {
   });
 
   return (
-    <div>
-      <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#FF8200', marginBottom: '0.5rem' }}>
-        Loyalty Points
-      </h1>
-      <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
-        Points earned across all stores in the Afterroar network.
-      </p>
+    <>
+      <TitleBar left="Points" right={`${totalBalance.toLocaleString()} pts`} />
+      <SecHero
+        fieldNum="04"
+        fieldType="Ledger"
+        title="Points"
+        count={`${activeBalances.length} ${activeBalances.length === 1 ? 'store' : 'stores'}`}
+        desc="Loyalty points earned across every store in the Afterroar network."
+      />
 
-      {/* Total balance */}
-      <div style={{
-        padding: '2rem',
-        background: 'linear-gradient(135deg, rgba(255, 130, 0, 0.1), rgba(255, 130, 0, 0.05))',
-        borderRadius: '12px',
-        border: '1px solid rgba(255, 130, 0, 0.2)',
-        textAlign: 'center',
-        marginBottom: '2rem',
-      }}>
-        <p style={{ color: '#9ca3af', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Total balance</p>
-        <p style={{ color: '#FF8200', fontSize: '3rem', fontWeight: 900, margin: 0 }}>
-          {totalBalance}
-        </p>
-        <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>
-          across {balanceRows.filter(r => Number(r.balance) > 0).length} store{balanceRows.filter(r => Number(r.balance) > 0).length !== 1 ? 's' : ''}
-        </p>
-      </div>
+      <div style={{ padding: '1.25rem var(--pad-x) 1.5rem', ...TYPE.body, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Total balance highlight */}
+        <Panel style={{
+          background: 'linear-gradient(135deg, rgba(255, 130, 0, 0.1), rgba(255, 130, 0, 0.02))',
+          border: '1px solid rgba(255, 130, 0, 0.25)',
+          padding: '1.5rem',
+          textAlign: 'center',
+        }}>
+          <p style={{ ...TYPE.mono, fontSize: '0.6rem', letterSpacing: '0.3em', color: 'var(--ink-soft)', textTransform: 'uppercase', margin: '0 0 0.5rem', fontWeight: 700 }}>Total Balance</p>
+          <p style={{ ...TYPE.display, fontSize: 'clamp(2.5rem, 8vw, 3.5rem)', color: 'var(--orange)', margin: 0, lineHeight: 1 }}>
+            {totalBalance.toLocaleString()}
+          </p>
+          <p style={{ ...TYPE.mono, fontSize: '0.7rem', color: 'var(--ink-faint)', margin: '0.5rem 0 0', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            across {activeBalances.length} {activeBalances.length === 1 ? 'store' : 'stores'}
+          </p>
+        </Panel>
 
-      {/* Per-store breakdown */}
-      {balanceRows.filter(r => Number(r.balance) > 0).length > 0 && (
-        <section style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.75rem' }}>
-            By store
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {balanceRows.filter(r => Number(r.balance) > 0).map((row, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '0.75rem 1rem',
-                background: '#1f2937',
-                borderRadius: '8px',
-              }}>
-                <span style={{ color: '#e2e8f0' }}>
-                  {row.storeId ? `Store ${row.storeId.slice(0, 8)}...` : 'Afterroar (platform)'}
-                </span>
-                <span style={{ color: '#FF8200', fontWeight: 700 }}>{Number(row.balance)} pts</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Recent transactions */}
-      <section>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.75rem' }}>
-          Recent transactions
-        </h2>
-        {recentTx.length === 0 ? (
-          <div style={{
-            padding: '2rem',
-            background: '#1f2937',
-            borderRadius: '8px',
-            textAlign: 'center',
-          }}>
-            <p style={{ color: '#6b7280', margin: 0 }}>No points transactions yet</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-            {recentTx.map((tx, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.75rem 1rem',
-                background: '#1f2937',
-                borderRadius: '8px',
-              }}>
-                <div>
-                  <p style={{ color: '#e2e8f0', margin: 0, fontSize: '0.9rem' }}>{tx.description}</p>
-                  <p style={{ color: '#6b7280', margin: '0.2rem 0 0 0', fontSize: '0.75rem' }}>
-                    {tx.createdAt.toLocaleDateString()} · {tx.action}
-                  </p>
-                </div>
-                <span style={{
-                  color: tx.amount >= 0 ? '#10b981' : '#ef4444',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
+        {/* Per-store breakdown */}
+        {activeBalances.length > 0 ? (
+          <section>
+            <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.75rem' }}>By Store</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
+              {activeBalances.map((row, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.85rem 1rem',
+                  background: 'var(--panel-mute)',
                 }}>
-                  {tx.amount >= 0 ? '+' : ''}{tx.amount}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+                  <span style={{ ...TYPE.body, color: 'var(--cream)', fontSize: '0.9rem' }}>
+                    {row.storeId ? `Store ${row.storeId.slice(0, 8)}…` : 'Afterroar (platform)'}
+                  </span>
+                  <span style={{ ...TYPE.display, fontSize: '1.1rem', color: 'var(--orange)' }}>
+                    {Number(row.balance).toLocaleString()} pts
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Recent transactions */}
+        <section>
+          <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.75rem' }}>Recent Transactions</h2>
+          {recentTx.length === 0 ? (
+            <EmptyState title="No transactions yet" desc="Earn points by checking in, buying, or playing at Afterroar stores." />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
+              {recentTx.map((tx, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1rem',
+                  background: 'var(--panel-mute)',
+                  gap: '0.75rem',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ ...TYPE.body, color: 'var(--cream)', margin: 0, fontSize: '0.9rem' }}>{tx.description}</p>
+                    <p style={{ ...TYPE.mono, fontSize: '0.66rem', color: 'var(--ink-soft)', letterSpacing: '0.04em', margin: '0.2rem 0 0' }}>
+                      {tx.createdAt.toLocaleDateString()} · {tx.action}
+                    </p>
+                  </div>
+                  <span style={{
+                    ...TYPE.display,
+                    color: tx.amount >= 0 ? 'var(--green)' : 'var(--red)',
+                    fontSize: '1rem',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {tx.amount >= 0 ? '+' : ''}{tx.amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </>
   );
 }

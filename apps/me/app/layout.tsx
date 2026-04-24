@@ -1,4 +1,27 @@
 import type { Metadata } from 'next';
+import { Bricolage_Grotesque, Archivo, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
+
+const display = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['500', '700', '800'],
+});
+
+const body = Archivo({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+});
 
 export const metadata: Metadata = {
   title: 'Afterroar — Your Tabletop Identity',
@@ -7,15 +30,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body style={{
-        margin: 0,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        background: '#0a0a0a',
-        color: '#e2e8f0',
-        minHeight: '100vh',
-        overflowX: 'hidden',
-      }}>
+    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <body style={{ fontFamily: 'var(--font-body), system-ui, sans-serif' }}>
         {children}
       </body>
     </html>

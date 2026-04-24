@@ -1,0 +1,193 @@
+:root {
+  --void: #000;
+  --panel: #0c0c0c;
+  --panel-hi: #151515;
+  --panel-mute: #080808;
+  --rule: #1f1f1f;
+  --rule-soft: #171717;
+
+  --orange: #ff8200;
+  --orange-mute: rgba(255, 130, 0, 0.15);
+  --orange-weak: rgba(255, 130, 0, 0.06);
+  --yellow: #fbdb65;
+  --yellow-mute: rgba(251, 219, 101, 0.15);
+
+  --cream: #f6eedd;
+  --ink: #dcd6c6;
+  --ink-soft: #8a8478;
+  --ink-faint: #4f4a42;
+
+  --red: #c44d4d;
+  --red-mute: rgba(196, 77, 77, 0.12);
+  --green: #7db87d;
+  --green-mute: rgba(125, 184, 125, 0.12);
+  --blue: #6b90c7;
+  --blue-mute: rgba(107, 144, 199, 0.12);
+
+  --frame-w: 2px;
+  --pad-x: 1rem;
+  --pad-y: 1.1rem;
+}
+
+@media (min-width: 640px) {
+  :root { --frame-w: 3px; --pad-x: 1.75rem; --pad-y: 1.75rem; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--void);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+}
+
+input, button, textarea, select { font: inherit; color: inherit; }
+
+/* Card corners --------------------------------------------------------- */
+.ar-corner {
+  display: none;
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  z-index: 2;
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  .ar-corner { display: block; }
+}
+.ar-corner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.ar-corner.tl { top: -1px; left: -1px; }
+.ar-corner.tr { top: -1px; right: -1px; transform: rotate(90deg); }
+.ar-corner.br { bottom: -1px; right: -1px; transform: rotate(180deg); }
+.ar-corner.bl { bottom: -1px; left: -1px; transform: rotate(270deg); }
+
+/* Card inner trim ------------------------------------------------------ */
+.ar-trim {
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(246, 238, 221, 0.06);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Orange top-stripe hover reveal (tile + link rows) -------------------- */
+.ar-stripe {
+  position: relative;
+  overflow: hidden;
+}
+.ar-stripe::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--orange);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+.ar-stripe:hover::before, .ar-stripe:focus-visible::before { transform: scaleX(1); }
+
+/* Left stripe reveal (list rows) -------------------------------------- */
+.ar-lstripe { position: relative; }
+.ar-lstripe::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--orange);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+.ar-lstripe:hover::before, .ar-lstripe:focus-visible::before { transform: scaleY(1); }
+
+/* Focus rings --------------------------------------------------------- */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* Scrollbar ----------------------------------------------------------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--rule); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+/* Horizontal chip scroller ------------------------------------------- */
+.ar-chips {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ar-chips::-webkit-scrollbar { display: none; }
+
+/* Staggered fade-in -------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .ar-stagger > * {
+    animation: ar-stagger-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .ar-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .ar-stagger > *:nth-child(2) { animation-delay: 0.05s; }
+  .ar-stagger > *:nth-child(3) { animation-delay: 0.08s; }
+  .ar-stagger > *:nth-child(4) { animation-delay: 0.11s; }
+  .ar-stagger > *:nth-child(5) { animation-delay: 0.14s; }
+  .ar-stagger > *:nth-child(6) { animation-delay: 0.17s; }
+  .ar-stagger > *:nth-child(7) { animation-delay: 0.20s; }
+  .ar-stagger > *:nth-child(8) { animation-delay: 0.23s; }
+  .ar-stagger > *:nth-child(n+9) { animation-delay: 0.26s; }
+
+  @keyframes ar-stagger-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes ar-card-in {
+    0% { opacity: 0; transform: translateY(18px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .ar-card-in {
+    animation: ar-card-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+@keyframes ar-spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+/* Spinner ------------------------------------------------------------- */
+.ar-spin { animation: ar-spin 1s linear infinite; }
+
+/* View transitions (Next 16 nav) ------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

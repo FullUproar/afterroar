@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { Phone, Mail, Globe, Clock, Star } from 'lucide-react';
+import { TitleBar, SecHero, Panel, TYPE } from '@/app/components/ui';
 
 export default async function StoreDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -26,8 +28,6 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ sl
       venueType: true,
       hours: true,
       amenities: true,
-      logoUrl: true,
-      coverImageUrl: true,
     },
   });
 
@@ -36,100 +36,75 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ sl
   const location = [venue.address, venue.city, venue.state, venue.zip].filter(Boolean).join(', ');
 
   return (
-    <div>
-      <Link href="/stores" style={{ color: '#6b7280', fontSize: '0.85rem', textDecoration: 'none' }}>
-        ← Back to directory
-      </Link>
+    <>
+      <TitleBar left={venue.name} right={venue.city && venue.state ? `${venue.city}, ${venue.state}` : undefined} />
+      <SecHero
+        fieldNum="06"
+        fieldType="Store"
+        title={venue.name}
+        desc={location || undefined}
+        actions={
+          venue.googleRating ? (
+            <span style={{ ...TYPE.mono, color: 'var(--yellow)', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Star size={14} fill="currentColor" strokeWidth={0} />
+              {venue.googleRating} <span style={{ color: 'var(--ink-faint)' }}>· {venue.reviewCount} reviews</span>
+            </span>
+          ) : undefined
+        }
+      />
 
-      <div style={{ marginTop: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#FF8200', marginBottom: '0.25rem' }}>
-          {venue.name}
-        </h1>
-
-        {location && (
-          <p style={{ color: '#9ca3af', marginBottom: '0.5rem' }}>{location}</p>
-        )}
-
-        {venue.googleRating && (
-          <p style={{ color: '#FF8200', fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.5rem' }}>
-            ⭐ {venue.googleRating} ({venue.reviewCount} reviews)
-          </p>
-        )}
-      </div>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '1.5rem',
-        marginTop: '1rem',
-      }}>
-        {/* About */}
-        <div style={{
-          background: '#1f2937',
-          borderRadius: '8px',
-          padding: '1.25rem',
-        }}>
-          <h2 style={{ color: '#e2e8f0', fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-            About
-          </h2>
-          <p style={{ color: '#9ca3af', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
+      <div style={{ padding: '1rem var(--pad-x) 1.5rem', display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+        <Panel>
+          <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.6rem' }}>About</h2>
+          <p style={{ ...TYPE.body, color: 'var(--ink)', margin: 0, fontSize: '0.88rem', lineHeight: 1.5 }}>
             {venue.description || venue.shortDescription || 'No description available.'}
           </p>
-        </div>
+        </Panel>
 
-        {/* Contact */}
-        <div style={{
-          background: '#1f2937',
-          borderRadius: '8px',
-          padding: '1.25rem',
-        }}>
-          <h2 style={{ color: '#e2e8f0', fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-            Contact
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {venue.phone && (
-              <p style={{ color: '#9ca3af', margin: 0, fontSize: '0.875rem' }}>
-                📞 {venue.phone}
+        <Panel>
+          <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.6rem' }}>Contact</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', ...TYPE.body, fontSize: '0.85rem' }}>
+            {venue.phone ? (
+              <p style={{ color: 'var(--ink)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Phone size={14} color="var(--orange)" /> {venue.phone}
               </p>
-            )}
-            {venue.email && (
-              <p style={{ color: '#9ca3af', margin: 0, fontSize: '0.875rem' }}>
-                ✉️ {venue.email}
+            ) : null}
+            {venue.email ? (
+              <p style={{ color: 'var(--ink)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Mail size={14} color="var(--orange)" /> {venue.email}
               </p>
-            )}
-            {venue.website && (
-              <a
-                href={venue.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#FF8200', fontSize: '0.875rem' }}
-              >
-                🌐 {venue.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            ) : null}
+            {venue.website ? (
+              <a href={venue.website} target="_blank" rel="noopener noreferrer" style={{
+                color: 'var(--orange)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                textDecoration: 'none',
+              }}>
+                <Globe size={14} /> {venue.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
               </a>
-            )}
-            {venue.hours && (
-              <p style={{ color: '#9ca3af', margin: 0, fontSize: '0.875rem' }}>
-                🕒 {venue.hours}
+            ) : null}
+            {venue.hours ? (
+              <p style={{ color: 'var(--ink)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock size={14} color="var(--orange)" /> {venue.hours}
               </p>
-            )}
+            ) : null}
           </div>
-        </div>
+        </Panel>
       </div>
 
-      {/* Canonical URL notice */}
-      <div style={{
-        marginTop: '2rem',
-        padding: '1rem',
-        background: 'rgba(255, 130, 0, 0.05)',
-        borderRadius: '8px',
-        border: '1px solid rgba(255, 130, 0, 0.15)',
+      <p style={{
+        margin: '0 var(--pad-x) 1.5rem',
+        ...TYPE.mono,
+        fontSize: '0.66rem',
+        letterSpacing: '0.1em',
+        color: 'var(--ink-faint)',
         textAlign: 'center',
+        fontStyle: 'italic',
       }}>
-        <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: 0 }}>
-          This is the canonical Afterroar page for {venue.name}.
-          Neutral ground — not hosted by any publisher or competitor.
-        </p>
-      </div>
-    </div>
+        The canonical Afterroar page for {venue.name} · <Link href="/stores" style={{ color: 'var(--orange)', textDecoration: 'none' }}>back to directory</Link>
+      </p>
+    </>
   );
 }
