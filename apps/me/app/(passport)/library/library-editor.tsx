@@ -9,6 +9,26 @@ interface GameEntry {
   slug?: string;
   bggId?: number;
   tags?: string[];
+  minPlayers?: number | null;
+  maxPlayers?: number | null;
+  minPlayMinutes?: number | null;
+  maxPlayMinutes?: number | null;
+  complexity?: number | null;
+}
+
+function formatMeta(g: GameEntry): string | null {
+  const parts: string[] = [];
+  if (g.minPlayers != null && g.maxPlayers != null && g.minPlayers > 0 && g.maxPlayers > 0) {
+    parts.push(g.minPlayers === g.maxPlayers ? `${g.minPlayers}p` : `${g.minPlayers}–${g.maxPlayers}p`);
+  }
+  if (g.minPlayMinutes != null && g.maxPlayMinutes != null && g.minPlayMinutes > 0) {
+    const t = g.minPlayMinutes === g.maxPlayMinutes ? `${g.minPlayMinutes} min` : `${g.minPlayMinutes}–${g.maxPlayMinutes} min`;
+    parts.push(t);
+  }
+  if (g.complexity != null && g.complexity > 0) {
+    parts.push(`weight ${g.complexity.toFixed(1)}`);
+  }
+  return parts.length > 0 ? parts.join(' · ') : null;
 }
 
 interface SearchResult {
@@ -226,10 +246,17 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
         <EmptyState title="Your library is empty" desc="Search above to add games you own." />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
-          {games.map((game) => (
+          {games.map((game) => {
+            const meta = formatMeta(game);
+            return (
             <div key={game.title} style={{ padding: '0.85rem 1rem', background: 'var(--panel-mute)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                <span style={{ ...TYPE.displayMd, color: 'var(--cream)', fontSize: '0.95rem' }}>{game.title}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ ...TYPE.displayMd, color: 'var(--cream)', fontSize: '0.95rem' }}>{game.title}</div>
+                  {meta ? (
+                    <div style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.66rem', letterSpacing: '0.06em', marginTop: '0.2rem' }}>{meta}</div>
+                  ) : null}
+                </div>
                 <button onClick={() => removeGame(game.title)} title="Remove from library" style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--ink-faint)',
                 }}><X size={14} /></button>
@@ -270,7 +297,8 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
                 }}>+ tag</button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {games.length > 0 ? (

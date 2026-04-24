@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
+import { upsertCatalogFromBGG } from '@/lib/game-catalog';
 
 /**
  * POST /api/library/import-bgg — Import game collection from BGG username.
@@ -110,6 +111,21 @@ export async function POST(request: NextRequest) {
       ...g,
       alreadyOwned: existingTitles.has(g.title.toLowerCase()),
     }));
+
+    // Backfill shared BoardGameMetadata catalog with what we just pulled from BGG.
+    // Fire-and-forget per game; failures don't block the user's import flow.
+    await Promise.allSettled(
+      games
+        .filter((g) => g.bggId > 0)
+        .map((g) => upsertCatalogFromBGG({
+          bggId: g.bggId,
+          title: g.title,
+          yearPublished: g.yearPublished,
+          minPlayers: g.minPlayers,
+          maxPlayers: g.maxPlayers,
+          bggRating: g.bggRating,
+        }))
+    );
 
     return NextResponse.json({
       username: body.username.trim(),
