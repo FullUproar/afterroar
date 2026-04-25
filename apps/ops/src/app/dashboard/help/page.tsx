@@ -198,7 +198,12 @@ export default function HelpPage() {
   return (
     <div className="mx-auto max-w-3xl flex flex-col h-full gap-4 pb-8 min-w-0">
       <SubNav items={SETTINGS_TABS} />
-      <PageHeader title="Help Center" backHref="/dashboard" />
+      <PageHeader
+        title="Help Center"
+        backHref="/dashboard"
+        crumb="Console · Settings"
+        desc="Search guides, FAQs, and how-tos for your store."
+      />
 
       {/* Search */}
       <div className="relative">

@@ -112,11 +112,14 @@ export default function LabelsPage() {
       <PageHeader
         title="Print Labels"
         backHref="/dashboard/inventory"
+        crumb="Console · Inventory"
+        desc="Generate and print barcode labels for inventory items."
         action={
           <button
             onClick={handlePrint}
             disabled={printing || selected.size === 0}
-            className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
+            className="px-4 py-2 bg-orange hover:opacity-90 disabled:opacity-50 text-void rounded text-sm font-display uppercase tracking-wider font-bold"
+            style={{ minHeight: 48 }}
           >
             {printing ? 'Preparing...' : `Print ${totalLabels} Label${totalLabels !== 1 ? 's' : ''}`}
           </button>
@@ -141,7 +144,7 @@ export default function LabelsPage() {
             type="checkbox"
             checked={includePrice}
             onChange={(e) => setIncludePrice(e.target.checked)}
-            className="rounded border-input-border bg-card-hover text-indigo-600"
+            className="rounded border-input-border bg-card-hover text-orange"
           />
           Include Price
         </label>
@@ -150,7 +153,7 @@ export default function LabelsPage() {
             type="checkbox"
             checked={includeBarcode}
             onChange={(e) => setIncludeBarcode(e.target.checked)}
-            className="rounded border-input-border bg-card-hover text-indigo-600"
+            className="rounded border-input-border bg-card-hover text-orange"
           />
           Include Barcode
         </label>
@@ -168,7 +171,7 @@ export default function LabelsPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleItem(item)}
-                    className="text-red-500 hover:text-red-400 text-xs"
+                    className="text-red-fu hover:opacity-80 text-xs"
                   >
                     X
                   </button>
@@ -219,15 +222,16 @@ export default function LabelsPage() {
                   key={item.id}
                   onClick={() => toggleItem(item)}
                   className={`border-b border-card-border cursor-pointer transition-colors ${
-                    selected.has(item.id) ? 'bg-indigo-900/20' : 'hover:bg-card-hover'
+                    selected.has(item.id) ? '' : 'hover:bg-card-hover'
                   } text-foreground`}
+                  style={selected.has(item.id) ? { background: 'var(--orange-mute)' } : undefined}
                 >
                   <td className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={selected.has(item.id)}
                       onChange={() => toggleItem(item)}
-                      className="rounded border-input-border bg-card-hover text-indigo-600"
+                      className="rounded border-input-border bg-card-hover text-orange"
                     />
                   </td>
                   <td className="px-4 py-3 font-medium">{item.name}</td>

@@ -130,8 +130,10 @@ export default function ConsignmentPage() {
       <SubNav items={INVENTORY_TABS} />
       <PageHeader
         title="Consignment"
+        crumb="Console · Inventory"
+        desc="Showcase items sold on commission for your customers."
         action={
-          <button onClick={() => setShowIntake(true)} className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium">
+          <button onClick={() => setShowIntake(true)} className="px-4 py-2 bg-orange text-void rounded-lg text-sm font-display uppercase tracking-wider font-bold" style={{ minHeight: 48 }}>
             Intake Item
           </button>
         }
@@ -139,17 +141,17 @@ export default function ConsignmentPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-card-border bg-card p-4">
-          <p className="text-xs text-muted">Active Items</p>
-          <p className="text-xl font-bold text-foreground">{items.filter((i) => i.status === "active").length}</p>
+        <div className="rounded-xl border border-rule bg-panel p-4">
+          <p className="text-xs text-ink-soft font-mono uppercase tracking-wider">Active Items</p>
+          <p className="text-xl font-display font-bold text-ink tabular-nums">{items.filter((i) => i.status === "active").length}</p>
         </div>
-        <div className="rounded-xl border border-card-border bg-card p-4">
-          <p className="text-xs text-muted">Showcase Value</p>
-          <p className="text-xl font-bold text-foreground">{formatCents(totalValue)}</p>
+        <div className="rounded-xl border border-rule bg-panel p-4">
+          <p className="text-xs text-ink-soft font-mono uppercase tracking-wider">Showcase Value</p>
+          <p className="text-xl font-mono font-bold text-ink tabular-nums">{formatCents(totalValue)}</p>
         </div>
-        <div className="rounded-xl border border-card-border bg-card p-4">
-          <p className="text-xs text-muted">Commission Earned</p>
-          <p className="text-xl font-bold text-accent">{formatCents(Math.round(totalCommission))}</p>
+        <div className="rounded-xl border border-rule bg-panel p-4">
+          <p className="text-xs text-ink-soft font-mono uppercase tracking-wider">Commission Earned</p>
+          <p className="text-xl font-mono font-bold text-orange tabular-nums">{formatCents(Math.round(totalCommission))}</p>
         </div>
       </div>
 
@@ -203,7 +205,7 @@ export default function ConsignmentPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={handleIntake} disabled={submitting || !itemName || !askingPrice} className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium disabled:opacity-40">
+                <button onClick={handleIntake} disabled={submitting || !itemName || !askingPrice} className="px-4 py-2 bg-orange text-void rounded-lg text-sm font-display uppercase tracking-wider font-bold disabled:opacity-40">
                   {submitting ? "Adding..." : "Add to Showcase"}
                 </button>
                 <button onClick={() => setShowIntake(false)} className="px-4 py-2 border border-card-border text-muted rounded-lg text-sm">Cancel</button>
@@ -243,22 +245,22 @@ export default function ConsignmentPage() {
                   <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCents(item.asking_price_cents)}</td>
                   <td className="px-4 py-3 text-center text-muted">{Number(item.commission_percent)}%</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      item.status === "active" ? "bg-green-900/50 text-green-400" :
-                      item.status === "sold" ? "bg-blue-900/50 text-blue-400" :
-                      "bg-card-hover text-muted"
-                    }`}>{item.status}</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider font-bold" style={
+                      item.status === "active" ? { background: 'var(--teal-mute)', color: 'var(--teal)' } :
+                      item.status === "sold" ? { background: 'var(--orange-mute)', color: 'var(--orange)' } :
+                      { background: 'var(--panel-hi)', color: 'var(--ink-soft)' }
+                    }>{item.status}</span>
                   </td>
-                  <td className="px-4 py-3 text-muted">{new Date(item.listed_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-muted font-mono tabular-nums">{new Date(item.listed_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-center">
                     {item.status === "active" && (
                       <div className="flex gap-1 justify-center">
-                        <button onClick={() => markSold(item.id)} className="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs font-medium hover:bg-blue-900/50" style={{ minHeight: "auto" }}>Sold</button>
-                        <button onClick={() => returnItem(item.id)} className="px-2 py-1 bg-card-hover text-muted rounded text-xs font-medium hover:text-foreground" style={{ minHeight: "auto" }}>Return</button>
+                        <button onClick={() => markSold(item.id)} className="px-2 py-1 rounded text-xs font-mono uppercase tracking-wider font-bold" style={{ background: 'var(--orange-mute)', color: 'var(--orange)', minHeight: "auto" }}>Sold</button>
+                        <button onClick={() => returnItem(item.id)} className="px-2 py-1 bg-card-hover text-muted rounded text-xs font-mono uppercase tracking-wider font-bold hover:text-foreground" style={{ minHeight: "auto" }}>Return</button>
                       </div>
                     )}
                     {item.status === "sold" && item.payout_cents != null && (
-                      <span className="text-xs text-green-400">Paid {formatCents(item.payout_cents)}</span>
+                      <span className="text-xs text-teal font-mono tabular-nums">Paid {formatCents(item.payout_cents)}</span>
                     )}
                   </td>
                 </tr>

@@ -23,28 +23,33 @@ interface EvalItem {
   market_price_cents: number;
 }
 
+function Spinner({ size = 14 }: { size?: number }) {
+  return (
+    <svg className="animate-spin" viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }}>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
 /* ---------- component ---------- */
 
 export default function CardEvaluatorPage() {
   const router = useRouter();
 
-  // Search
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CatalogCard[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Current card being evaluated
   const [currentCard, setCurrentCard] = useState<CatalogCard | null>(null);
   const [condition, setCondition] = useState<Condition>("NM");
   const [isFoil, setIsFoil] = useState(false);
 
-  // Evaluated items list
   const [items, setItems] = useState<EvalItem[]>([]);
   const nextKey = useRef(1);
 
-  // Exporting
   const [exporting, setExporting] = useState(false);
 
   /* ---- card search (debounced 200ms) ---- */
@@ -75,7 +80,6 @@ export default function CardEvaluatorPage() {
     };
   }, [searchQuery]);
 
-  /* ---- select card ---- */
   function selectCard(card: CatalogCard) {
     setCurrentCard(card);
     setCondition("NM");
@@ -85,13 +89,11 @@ export default function CardEvaluatorPage() {
     setSearchResults([]);
   }
 
-  /* ---- get market price in cents ---- */
   function getMarketCents(card: CatalogCard, foil: boolean): number {
     const priceStr = foil ? card.price_usd_foil : card.price_usd;
     return priceStr ? Math.round(parseFloat(priceStr) * 100) : 0;
   }
 
-  /* ---- add card to eval list ---- */
   function addToList() {
     if (!currentCard) return;
 
@@ -118,15 +120,12 @@ export default function CardEvaluatorPage() {
     setTimeout(() => searchRef.current?.focus(), 50);
   }
 
-  /* ---- remove ---- */
   function removeItem(key: number) {
     setItems((prev) => prev.filter((i) => i.key !== key));
   }
 
-  /* ---- totals ---- */
   const totalMarketCents = items.reduce((s, i) => s + i.market_price_cents, 0);
 
-  /* ---- export to CSV ---- */
   function exportCSV() {
     if (items.length === 0) return;
     setExporting(true);
@@ -148,9 +147,7 @@ export default function CardEvaluatorPage() {
     setExporting(false);
   }
 
-  /* ---- start trade-in with these cards ---- */
   function startTradeIn() {
-    // Store eval items in sessionStorage so the trade-in page can pick them up
     const payload = items.map((i) => ({
       name: i.name,
       set_name: i.set_name,
@@ -165,12 +162,10 @@ export default function CardEvaluatorPage() {
     router.push("/dashboard/trade-ins/bulk");
   }
 
-  /* ---- print ---- */
   function printEvaluation() {
     window.print();
   }
 
-  /* ---- keyboard ---- */
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     e.stopPropagation();
     if (e.key === "Enter" && searchResults.length > 0) {
@@ -183,6 +178,8 @@ export default function CardEvaluatorPage() {
     <div className="mx-auto max-w-3xl space-y-4 pb-8">
       <PageHeader
         title="Card Evaluator"
+        crumb="TCG · Evaluator"
+        desc="Quickly value a binder or collection — not a trade-in, just &quot;what's this worth?&quot;"
         backHref="/dashboard/singles"
         action={
           items.length > 0 ? (
@@ -191,7 +188,16 @@ export default function CardEvaluatorPage() {
                 setItems([]);
                 setCurrentCard(null);
               }}
-              className="rounded-lg border border-card-border px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground transition-colors"
+              className="font-mono uppercase font-semibold transition-colors"
+              style={{
+                fontSize: "0.62rem",
+                letterSpacing: "0.16em",
+                padding: "0 0.85rem",
+                minHeight: 44,
+                background: "var(--panel-mute)",
+                border: "1px solid var(--rule-hi)",
+                color: "var(--ink-soft)",
+              }}
             >
               Clear All
             </button>
@@ -199,34 +205,75 @@ export default function CardEvaluatorPage() {
         }
       />
 
-      <p className="text-xs text-muted -mt-2">
-        Quickly evaluate a collection or binder. Not a trade-in -- just "what&apos;s this worth?"
-      </p>
+      {/* Stat strip */}
+      {items.length > 0 && (
+        <div
+          className="grid grid-cols-2"
+          style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}
+        >
+          {[
+            { k: "Cards Evaluated", v: items.length.toLocaleString() },
+            { k: "Total Value", v: formatCents(totalMarketCents), tone: "var(--teal)" },
+          ].map((cell) => (
+            <div key={cell.k} className="px-3 py-2" style={{ background: "var(--panel-mute)" }}>
+              <div
+                className="font-mono uppercase font-semibold text-ink-faint"
+                style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+              >
+                {cell.k}
+              </div>
+              <div
+                className="font-mono font-semibold mt-1 tabular-nums"
+                style={{
+                  fontSize: "1.1rem",
+                  letterSpacing: "0.02em",
+                  color: cell.tone || "var(--ink)",
+                }}
+              >
+                {cell.v}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
         <input
           ref={searchRef}
           type="text"
-          placeholder="Search card name..."
+          placeholder="Search card name…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           autoFocus
-          className="w-full rounded-xl border border-input-border bg-card px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+          className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+          style={{
+            background: "var(--panel)",
+            border: "1px solid var(--rule-hi)",
+            fontSize: "0.95rem",
+            padding: "0 1rem",
+            minHeight: 48,
+          }}
         />
         {searchLoading && (
-          <div className="absolute right-3 top-3.5 flex items-center gap-1.5 text-xs text-muted">
-            <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Searching Scryfall...
+          <div
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 font-mono uppercase text-ink-faint"
+            style={{ fontSize: "0.62rem", letterSpacing: "0.16em" }}
+          >
+            <Spinner />
+            Scryfall
           </div>
         )}
 
         {searchResults.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full max-h-80 overflow-y-auto rounded-xl border border-input-border bg-card shadow-xl scroll-visible">
+          <div
+            className="absolute z-20 mt-1 w-full max-h-80 overflow-y-auto shadow-xl"
+            style={{
+              background: "var(--panel-mute)",
+              border: "1px solid var(--rule-hi)",
+            }}
+          >
             {searchResults.map((card) => {
               const priceUsd = card.price_usd ? `$${card.price_usd}` : null;
               const priceFoil = card.price_usd_foil
@@ -236,31 +283,34 @@ export default function CardEvaluatorPage() {
                 <button
                   key={card.scryfall_id}
                   onClick={() => selectCard(card)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-card-hover transition-colors border-b border-card-border last:border-b-0"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-panel"
+                  style={{ borderBottom: "1px solid var(--rule-faint)", minHeight: 56 }}
                 >
                   {card.small_image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={card.small_image_url}
                       alt=""
-                      className="w-8 h-11 rounded object-cover shrink-0"
+                      className="object-cover shrink-0"
+                      style={{ width: 32, height: 44, border: "1px solid var(--rule-hi)" }}
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-foreground truncate">
+                    <div className="font-display text-ink truncate" style={{ fontSize: "0.92rem", fontWeight: 500 }}>
                       {card.name}
                     </div>
-                    <div className="text-xs text-muted truncate">
-                      {card.set_name} &middot; {card.set_code}
+                    <div className="font-mono text-ink-faint truncate mt-0.5" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
+                      {card.set_name} · {card.set_code}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     {priceUsd && (
-                      <div className="text-xs font-medium text-foreground tabular-nums">
+                      <div className="font-mono font-semibold text-ink tabular-nums" style={{ fontSize: "0.78rem" }}>
                         {priceUsd}
                       </div>
                     )}
                     {priceFoil && (
-                      <div className="text-xs text-muted tabular-nums">
+                      <div className="font-mono tabular-nums" style={{ fontSize: "0.66rem", color: "var(--yellow)" }}>
                         {priceFoil}
                       </div>
                     )}
@@ -274,29 +324,41 @@ export default function CardEvaluatorPage() {
 
       {/* Current card grading */}
       {currentCard && (
-        <div className="rounded-xl border border-accent/40 bg-card p-4 space-y-4">
+        <div
+          className="p-4 space-y-4"
+          style={{
+            background: "var(--panel-mute)",
+            border: "1px solid var(--orange)",
+            boxShadow: "0 0 18px var(--orange-mute)",
+          }}
+        >
           <div className="flex items-start gap-4">
             {currentCard.small_image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={currentCard.small_image_url}
                 alt={currentCard.name}
-                className="w-16 h-22 rounded-lg object-cover shrink-0"
+                className="shrink-0 object-cover"
+                style={{ width: 64, height: 88, border: "1px solid var(--rule-hi)" }}
               />
             )}
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-bold text-foreground leading-tight">
+              <h3
+                className="font-display text-ink"
+                style={{ fontSize: "1.15rem", fontWeight: 600, lineHeight: 1.1, letterSpacing: "0.005em" }}
+              >
                 {currentCard.name}
               </h3>
-              <p className="text-sm text-muted mt-0.5">
-                {currentCard.set_name} &middot; {currentCard.set_code}
+              <p className="font-mono text-ink-faint mt-1" style={{ fontSize: "0.7rem", letterSpacing: "0.04em" }}>
+                {currentCard.set_name} · {currentCard.set_code}
               </p>
-              <p className="text-sm text-foreground/70 mt-1 tabular-nums">
+              <p className="font-mono text-ink-soft mt-2 tabular-nums" style={{ fontSize: "0.78rem" }}>
                 Market:{" "}
-                <span className="font-medium text-foreground">
+                <span className="font-semibold text-ink">
                   {formatCents(getMarketCents(currentCard, isFoil))}
                 </span>
                 {condition !== "NM" && (
-                  <span className="ml-2 text-muted">
+                  <span className="ml-3 text-ink-faint">
                     {condition}: {formatCents(Math.round(getMarketCents(currentCard, isFoil) * CONDITION_PERCENT[condition] / 100))}
                   </span>
                 )}
@@ -305,36 +367,50 @@ export default function CardEvaluatorPage() {
           </div>
 
           <div>
-            <label className="block text-xs text-muted uppercase tracking-wider mb-2">
+            <label
+              className="block font-mono uppercase font-semibold text-ink-faint mb-2"
+              style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+            >
               Condition
             </label>
             <ConditionGrader value={condition} onChange={setCondition} size="large" />
           </div>
 
           <div>
-            <label className="block text-xs text-muted uppercase tracking-wider mb-2">
+            <label
+              className="block font-mono uppercase font-semibold text-ink-faint mb-2"
+              style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+            >
               Foil
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2" style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
               <button
                 type="button"
                 onClick={() => setIsFoil(false)}
-                className={`flex-1 rounded-xl border py-2.5 text-sm font-medium transition-all ${
-                  !isFoil
-                    ? "bg-card-hover border-foreground/30 text-foreground"
-                    : "border-input-border text-muted hover:text-foreground"
-                }`}
+                className="font-mono uppercase font-semibold transition-colors"
+                style={{
+                  minHeight: 48,
+                  fontSize: "0.7rem",
+                  letterSpacing: "0.18em",
+                  background: !isFoil ? "var(--panel)" : "var(--panel-mute)",
+                  color: !isFoil ? "var(--ink)" : "var(--ink-soft)",
+                  borderTop: !isFoil ? "2px solid var(--ink)" : "2px solid transparent",
+                }}
               >
                 No
               </button>
               <button
                 type="button"
                 onClick={() => setIsFoil(true)}
-                className={`flex-1 rounded-xl border py-2.5 text-sm font-medium transition-all ${
-                  isFoil
-                    ? "bg-purple-600/20 border-purple-500/50 text-purple-300"
-                    : "border-input-border text-muted hover:text-foreground"
-                }`}
+                className="font-mono uppercase font-semibold transition-colors"
+                style={{
+                  minHeight: 48,
+                  fontSize: "0.7rem",
+                  letterSpacing: "0.18em",
+                  background: isFoil ? "var(--yellow-mute)" : "var(--panel-mute)",
+                  color: isFoil ? "var(--yellow)" : "var(--ink-soft)",
+                  borderTop: isFoil ? "2px solid var(--yellow)" : "2px solid transparent",
+                }}
               >
                 Foil
               </button>
@@ -343,67 +419,83 @@ export default function CardEvaluatorPage() {
 
           <button
             onClick={addToList}
-            className="w-full rounded-xl bg-accent py-3.5 text-base font-bold text-foreground hover:opacity-90 transition-colors min-h-[52px]"
+            className="w-full font-display uppercase transition-colors"
+            style={{
+              minHeight: 56,
+              background: "var(--orange)",
+              color: "var(--void)",
+              letterSpacing: "0.06em",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              border: "1px solid var(--orange)",
+            }}
           >
-            ADD TO EVALUATION
+            Add to Evaluation
           </button>
-        </div>
-      )}
-
-      {/* Summary Bar */}
-      {items.length > 0 && (
-        <div className="rounded-xl border border-card-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-muted">Cards Evaluated: </span>
-              <span className="text-sm font-semibold text-foreground">
-                {items.length}
-              </span>
-            </div>
-            <div>
-              <span className="text-sm text-muted">Total Value: </span>
-              <span className="text-lg font-bold text-green-400 tabular-nums">
-                {formatCents(totalMarketCents)}
-              </span>
-            </div>
-          </div>
         </div>
       )}
 
       {/* Items List */}
       {items.length > 0 && (
-        <div className="divide-y divide-card-border rounded-xl border border-card-border bg-card overflow-hidden">
-          {items.map((item) => (
-            <div key={item.key} className="flex items-center gap-3 px-4 py-2.5">
-              {item.image_url && (
-                <img
-                  src={item.image_url}
-                  alt=""
-                  className="w-6 h-8 rounded object-cover shrink-0"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-foreground truncate">
-                  {item.name}
-                </div>
-                <div className="text-xs text-muted">
-                  {item.set_code} &middot; {item.condition}
-                  {item.foil && " &middot; Foil"}
-                </div>
-              </div>
-              <div className="text-sm font-medium text-foreground tabular-nums shrink-0">
-                {formatCents(item.market_price_cents)}
-              </div>
-              <button
-                onClick={() => removeItem(item.key)}
-                className="text-muted hover:text-red-400 transition-colors shrink-0 p-1"
-                title="Remove"
+        <section className="ar-zone" style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}>
+          <div className="ar-zone-head">
+            <span>Evaluation · <b style={{ color: "var(--ink)" }}>{items.length} cards</b></span>
+            <span className="text-ink-faint">Newest first</span>
+          </div>
+          <div className="ar-stagger flex flex-col">
+            {items.map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center gap-3 px-3 py-2"
+                style={{ borderBottom: "1px solid var(--rule-faint)", minHeight: 56 }}
               >
-                &times;
-              </button>
-            </div>
-          ))}
-        </div>
+                {item.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.image_url}
+                    alt=""
+                    className="shrink-0 object-cover"
+                    style={{ width: 32, height: 44, border: "1px solid var(--rule-hi)" }}
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-display text-ink truncate" style={{ fontSize: "0.92rem", fontWeight: 500 }}>
+                    {item.name}
+                  </div>
+                  <div className="font-mono text-ink-faint mt-0.5" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
+                    {item.set_code} · {item.condition}
+                    {item.foil && " · Foil"}
+                  </div>
+                </div>
+                <div
+                  className="font-mono font-semibold text-ink tabular-nums shrink-0"
+                  style={{ fontSize: "0.92rem", letterSpacing: "0.02em" }}
+                >
+                  {formatCents(item.market_price_cents)}
+                </div>
+                <button
+                  onClick={() => removeItem(item.key)}
+                  aria-label="Remove"
+                  className="shrink-0 transition-colors hover:text-red-fu"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--ink-faint)",
+                    border: "1px solid var(--rule-hi)",
+                    background: "var(--panel)",
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
+                    <path d="M6 6l12 12M6 18L18 6" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Action Buttons */}
@@ -411,23 +503,46 @@ export default function CardEvaluatorPage() {
         <div className="space-y-2">
           <button
             onClick={startTradeIn}
-            className="w-full rounded-xl bg-green-600 py-3.5 text-sm font-bold text-foreground hover:bg-green-500 transition-colors min-h-[52px]"
+            className="w-full font-display uppercase transition-colors"
+            style={{
+              minHeight: 56,
+              background: "var(--teal)",
+              color: "var(--void)",
+              letterSpacing: "0.06em",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              border: "1px solid var(--teal)",
+            }}
           >
             Start Trade-In with These Cards
           </button>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2" style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
             <button
               onClick={exportCSV}
               disabled={exporting}
-              className="flex-1 rounded-xl border border-card-border bg-card py-2.5 text-sm font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50"
+              className="font-mono uppercase font-semibold transition-colors disabled:opacity-50"
+              style={{
+                minHeight: 48,
+                fontSize: "0.7rem",
+                letterSpacing: "0.18em",
+                background: "var(--panel)",
+                color: "var(--ink-soft)",
+              }}
             >
-              Export to CSV
+              Export CSV
             </button>
             <button
               onClick={printEvaluation}
-              className="flex-1 rounded-xl border border-card-border bg-card py-2.5 text-sm font-medium text-muted hover:text-foreground transition-colors"
+              className="font-mono uppercase font-semibold transition-colors"
+              style={{
+                minHeight: 48,
+                fontSize: "0.7rem",
+                letterSpacing: "0.18em",
+                background: "var(--panel)",
+                color: "var(--ink-soft)",
+              }}
             >
-              Print Evaluation
+              Print
             </button>
           </div>
         </div>

@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { FeatureGate } from "@/components/feature-gate";
 import { SubNav } from "@/components/ui/sub-nav";
+import { CardImage, PriceTag } from "@/components/tcg/shared";
+import { FormatSelector } from "@/components/deck-builder/format-selector";
+import { InventoryCard } from "@/components/deck-builder/inventory-card";
+import { DeckSummary } from "@/components/deck-builder/deck-summary";
+import { AnalysisPanel } from "@/components/deck-builder/analysis-panel";
+import { ColorPips } from "@/components/deck-builder/color-pips";
+import type { DeckAnalysis } from "@/lib/deck-analysis";
+import { Recommendations as RecommendationsPanel } from "@/components/deck-builder/recommendations";
+import { MetaArchetypes } from "@/components/deck-builder/meta-archetypes";
+import { DeckBuilderEmptyState } from "@/components/deck-builder/empty-state";
 
 const INVENTORY_TABS = [
   { href: '/dashboard/inventory', label: 'Inventory' },
@@ -13,16 +23,6 @@ const INVENTORY_TABS = [
   { href: '/dashboard/trade-ins', label: 'Trade-Ins' },
   { href: '/dashboard/consignment', label: 'Consignment' },
 ];
-import { formatCents } from "@/lib/types";
-import { CardImage, StockBadge, PriceTag } from "@/components/tcg/shared";
-import { FormatSelector } from "@/components/deck-builder/format-selector";
-import { InventoryCard } from "@/components/deck-builder/inventory-card";
-import { DeckSummary } from "@/components/deck-builder/deck-summary";
-import { AnalysisPanel } from "@/components/deck-builder/analysis-panel";
-import type { DeckAnalysis } from "@/lib/deck-analysis";
-import { Recommendations as RecommendationsPanel } from "@/components/deck-builder/recommendations";
-import { MetaArchetypes } from "@/components/deck-builder/meta-archetypes";
-import { DeckBuilderEmptyState } from "@/components/deck-builder/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -112,38 +112,6 @@ interface PokemonMetaDeck {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Color identity helpers                                              */
-/* ------------------------------------------------------------------ */
-
-const COLOR_MAP: Record<string, { bg: string; text: string; label: string }> = {
-  W: { bg: "bg-yellow-100", text: "text-yellow-800", label: "W" },
-  U: { bg: "bg-blue-500/30", text: "text-blue-300", label: "U" },
-  B: { bg: "bg-gray-600/50", text: "text-gray-200", label: "B" },
-  R: { bg: "bg-red-500/30", text: "text-red-300", label: "R" },
-  G: { bg: "bg-green-500/30", text: "text-green-300", label: "G" },
-};
-
-function ColorPips({ colors }: { colors: string[] }) {
-  if (!colors || colors.length === 0) return null;
-  return (
-    <span className="inline-flex gap-0.5 ml-1">
-      {colors.map((c) => {
-        const info = COLOR_MAP[c];
-        if (!info) return null;
-        return (
-          <span
-            key={c}
-            className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold ${info.bg} ${info.text}`}
-          >
-            {info.label}
-          </span>
-        );
-      })}
-    </span>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Formats                                                             */
 /* ------------------------------------------------------------------ */
 
@@ -155,6 +123,83 @@ const FORMATS = [
   { key: "pokemon", label: "Pokemon TCG", game: "pokemon" },
   { key: "yugioh", label: "Yu-Gi-Oh!", game: "yugioh" },
 ] as const;
+
+/* ------------------------------------------------------------------ */
+/*  Reusable Operator-Console primitives (local)                        */
+/* ------------------------------------------------------------------ */
+
+const TEXT_INPUT_STYLE: React.CSSProperties = {
+  background: "var(--panel)",
+  border: "1px solid var(--rule-hi)",
+  color: "var(--ink)",
+  fontSize: "0.92rem",
+  padding: "0 0.85rem",
+  minHeight: 48,
+  letterSpacing: "0.005em",
+  outline: "none",
+};
+
+const PRIMARY_BUTTON_STYLE: React.CSSProperties = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "0.66rem",
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  padding: "0 1rem",
+  minHeight: 48,
+  background: "var(--orange)",
+  color: "var(--void)",
+  border: "1px solid var(--orange)",
+};
+
+const SECONDARY_BUTTON_STYLE: React.CSSProperties = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "0.62rem",
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  padding: "0 0.85rem",
+  minHeight: 44,
+  background: "var(--panel-mute)",
+  border: "1px solid var(--rule-hi)",
+  color: "var(--ink-soft)",
+};
+
+function ZoneLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="font-mono uppercase font-semibold text-ink-faint flex items-center gap-2"
+      style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+    >
+      <span
+        aria-hidden
+        style={{
+          display: "inline-block",
+          width: 8,
+          height: 8,
+          background: "currentColor",
+          clipPath:
+            "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
+function Spinner({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      className="animate-spin"
+      viewBox="0 0 24 24"
+      fill="none"
+      style={{ width: size, height: size }}
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                           */
@@ -204,7 +249,6 @@ function DeckBuilderContent() {
   const [deckAnalysis, setDeckAnalysis] = useState<DeckAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  const currentFormat = FORMATS.find((f) => f.key === format);
   const isCommander = format === "commander";
   const isPokemon = format === "pokemon";
   const isYugioh = format === "yugioh";
@@ -420,7 +464,6 @@ function DeckBuilderContent() {
   // Match cards against store inventory
   async function checkInventory(cards: ParsedCard[]) {
     setMatchLoading(true);
-    // Kick off analysis in parallel — independent network call
     void runDeckAnalysis(cards);
     try {
       const res = await fetch("/api/deck-builder", {
@@ -440,7 +483,6 @@ function DeckBuilderContent() {
     }
   }
 
-  // Analyze deck (mana curve, colors, legality) — uses Scryfall batch lookup
   async function runDeckAnalysis(cards: ParsedCard[]) {
     if (cards.length === 0) return;
     setAnalyzing(true);
@@ -456,13 +498,12 @@ function DeckBuilderContent() {
         setDeckAnalysis(data.analysis ?? null);
       }
     } catch {
-      // Analysis is non-critical — inventory match is the main workflow.
+      // Analysis is non-critical
     } finally {
       setAnalyzing(false);
     }
   }
 
-  // Import a decklist from a URL (Moxfield / Archidekt)
   async function handleImportUrl() {
     if (!importUrl.trim()) return;
     setImporting(true);
@@ -489,7 +530,6 @@ function DeckBuilderContent() {
         commanders: ParsedCard[];
       };
 
-      // Flatten mainboard + commanders for the decklist text view
       const allCards = [...deck.commanders, ...deck.cards];
       const text = allCards.map((c) => `${c.quantity} ${c.name}`).join("\n");
       setDecklistText(text);
@@ -500,11 +540,9 @@ function DeckBuilderContent() {
         format: deck.format,
         url: deck.source_url,
       });
-      // If the imported deck specifies a format we support, switch to it.
       if (deck.format && FORMATS.some((f) => f.key === deck.format)) {
         setFormat(deck.format);
       }
-      // Kick off inventory match automatically
       await checkInventory(allCards);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Import failed");
@@ -513,7 +551,6 @@ function DeckBuilderContent() {
     }
   }
 
-  // Add a single card to register cart via localStorage
   function addToCart(match: InventoryMatch) {
     if (!match.inventory_item_id || match.in_stock <= 0) return;
     const qty = Math.min(match.needed, match.in_stock);
@@ -535,7 +572,6 @@ function DeckBuilderContent() {
     localStorage.setItem("deck-builder-cart", JSON.stringify(existing));
   }
 
-  // Add all available to register cart and navigate
   function addAllToCart() {
     const items = inventoryResults
       .filter((m) => m.status !== "unavailable" && m.inventory_item_id)
@@ -563,63 +599,106 @@ function DeckBuilderContent() {
     .filter((m) => m.status !== "unavailable")
     .reduce((s, m) => s + m.price_cents * Math.min(m.needed, m.in_stock), 0);
 
+  const stockPercent = totalCards > 0 ? Math.round((inStockCards / totalCards) * 100) : 0;
+  const fmtLabel = FORMATS.find((f) => f.key === format)?.label ?? format;
+
   return (
     <div className="flex flex-col h-full gap-4">
       <SubNav items={INVENTORY_TABS} />
-      <PageHeader title="Deck Builder" />
+      <PageHeader
+        title="Deck Builder"
+        crumb="TCG · Deck Builder"
+        desc="Match decklists against your store's inventory · suggest substitutes · price out the build."
+      />
+
+      {/* Stat strip */}
+      <div
+        className="grid grid-cols-3 md:grid-cols-6"
+        style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}
+      >
+        {[
+          { k: "Format", v: fmtLabel.replace("MTG — ", "").replace("!", "") },
+          { k: "Cards Needed", v: totalCards > 0 ? totalCards.toLocaleString() : "—" },
+          { k: "In Stock", v: inventoryResults.length > 0 ? inStockCards.toLocaleString() : "—", tone: inStockCards > 0 ? "var(--teal)" : undefined },
+          { k: "Missing", v: inventoryResults.length > 0 ? needToOrder.toLocaleString() : "—", tone: needToOrder > 0 ? "var(--yellow)" : undefined },
+          { k: "Coverage", v: inventoryResults.length > 0 ? `${stockPercent}%` : "—", tone: stockPercent >= 80 ? "var(--teal)" : stockPercent >= 50 ? "var(--yellow)" : stockPercent > 0 ? "var(--red)" : undefined },
+          { k: "Status", v: matchLoading ? "MATCHING" : analyzing ? "ANALYZING" : inventoryResults.length > 0 ? "READY" : "IDLE" },
+        ].map((cell) => (
+          <div key={cell.k} className="px-3 py-2" style={{ background: "var(--panel-mute)" }}>
+            <div
+              className="font-mono uppercase font-semibold text-ink-faint"
+              style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+            >
+              {cell.k}
+            </div>
+            <div
+              className="font-mono font-semibold mt-1"
+              style={{
+                fontSize: "0.95rem",
+                letterSpacing: "0.02em",
+                color: cell.tone || "var(--ink)",
+              }}
+            >
+              {cell.v}
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ---- Left Panel: Deck Building ---- */}
         <div className="space-y-4">
-          {/* Format selector — grouped by game */}
           <FormatSelector value={format} onChange={handleFormatChange} />
 
           {/* ---- Commander Tab ---- */}
           {isCommander && (
             <div className="space-y-3">
-              <label className="block text-sm font-semibold text-muted uppercase tracking-wider">
-                Search Commanders
-              </label>
+              <ZoneLabel>Search Commanders</ZoneLabel>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={commanderQuery}
                   onChange={(e) => setCommanderQuery(e.target.value)}
                   onKeyDown={(e) => {
+                    e.stopPropagation();
                     if (e.key === "Enter") handleCommanderSearch();
                   }}
-                  placeholder="Search for a commander (e.g. Yuriko)..."
-                  className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  style={{ fontSize: 16 }}
+                  placeholder="Search for a commander (e.g. Yuriko)…"
+                  className="flex-1 font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+                  style={TEXT_INPUT_STYLE}
                 />
                 <button
                   onClick={handleCommanderSearch}
                   disabled={commanderSearchLoading || !commanderQuery.trim()}
-                  className="rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  className="disabled:opacity-40 transition-opacity"
+                  style={PRIMARY_BUTTON_STYLE}
                 >
-                  {commanderSearchLoading ? "..." : "Search"}
+                  {commanderSearchLoading ? "…" : "Search"}
                 </button>
               </div>
 
-              {/* Commander search results */}
               {commanderResults.length > 0 && (
-                <div className="max-h-72 overflow-y-auto space-y-1.5 rounded-xl border border-card-border bg-card p-2 scroll-visible">
+                <div
+                  className="max-h-72 overflow-y-auto"
+                  style={{
+                    background: "var(--panel-mute)",
+                    border: "1px solid var(--rule)",
+                  }}
+                >
                   {commanderResults.map((cmdr) => (
                     <button
                       key={cmdr.name}
                       onClick={() => handleSelectCommander(cmdr.name)}
-                      className="w-full flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-card-hover transition-colors text-left"
-                      style={{ minHeight: "auto" }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-panel"
+                      style={{ borderBottom: "1px solid var(--rule-faint)", minHeight: 56 }}
                     >
-                      {cmdr.image_url && (
-                        <CardImage src={cmdr.image_url} size="sm" />
-                      )}
+                      {cmdr.image_url && <CardImage src={cmdr.image_url} size="sm" />}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-foreground truncate">
-                          {cmdr.name}
-                          <ColorPips colors={cmdr.color_identity} />
+                        <div className="font-display text-ink truncate flex items-center gap-2" style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+                          <span className="truncate">{cmdr.name}</span>
+                          <ColorPips colors={cmdr.color_identity} size={14} />
                         </div>
-                        <div className="text-xs text-muted truncate">
+                        <div className="font-mono text-ink-faint truncate mt-0.5" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
                           {cmdr.type_line}
                         </div>
                       </div>
@@ -629,75 +708,86 @@ function DeckBuilderContent() {
               )}
 
               {commanderLoading && (
-                <div className="flex flex-col items-center justify-center h-24 text-muted gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-block h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-                    Loading EDHREC synergy data...
+                <div
+                  className="flex flex-col items-center justify-center h-24 gap-1"
+                  style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}
+                >
+                  <div className="flex items-center gap-2 font-mono uppercase text-ink-soft" style={{ fontSize: "0.7rem", letterSpacing: "0.18em" }}>
+                    <Spinner />
+                    Loading EDHREC synergy
                   </div>
-                  <span className="text-xs opacity-60">This can take 5-10 seconds for popular commanders</span>
+                  <span className="text-ink-faint" style={{ fontSize: "0.66rem" }}>
+                    This can take 5-10 seconds for popular commanders
+                  </span>
                 </div>
               )}
 
-              {/* Commander synergy cards */}
               {commanderData && !commanderLoading && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-card-border bg-card p-3 space-y-1">
-                    <div className="text-base font-bold text-foreground">
-                      {commanderData.commander_name}
-                      <ColorPips colors={commanderData.color_identity} />
+                  <div
+                    className="p-3 space-y-1"
+                    style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+                  >
+                    <div className="font-display text-ink flex items-center gap-2" style={{ fontSize: "1.05rem", fontWeight: 600, letterSpacing: "0.005em" }}>
+                      <span>{commanderData.commander_name}</span>
+                      <ColorPips colors={commanderData.color_identity} size={16} />
                     </div>
-                    <div className="flex gap-4 text-xs text-muted">
+                    <div className="flex gap-3 font-mono text-ink-faint" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
                       <span>{commanderData.num_decks.toLocaleString()} decks on EDHREC</span>
+                      <span style={{ color: "var(--rule-hi)" }}>·</span>
                       <span>Avg ${commanderData.avg_price.toFixed(0)}</span>
                     </div>
                   </div>
 
-                  <label className="block text-sm font-semibold text-muted uppercase tracking-wider">
-                    Top Synergy Cards ({commanderData.synergy_cards.length})
-                  </label>
-                  <div className="max-h-80 overflow-y-auto space-y-1 rounded-xl border border-card-border bg-card p-2 scroll-visible">
+                  <ZoneLabel>Top Synergy Cards ({commanderData.synergy_cards.length})</ZoneLabel>
+                  <div
+                    className="max-h-80 overflow-y-auto"
+                    style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}
+                  >
                     {commanderData.synergy_cards.slice(0, 30).map((card, i) => (
                       <div
                         key={`${card.name}-${i}`}
-                        className="flex items-center gap-3 rounded-lg px-3 py-1.5 hover:bg-card-hover transition-colors"
+                        className="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-panel"
+                        style={{ borderBottom: "1px solid var(--rule-faint)" }}
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-foreground truncate">
+                          <div className="font-display text-ink truncate" style={{ fontSize: "0.88rem", fontWeight: 500 }}>
                             {card.name}
                           </div>
-                          <div className="text-xs text-muted">
+                          <div className="font-mono text-ink-faint mt-0.5" style={{ fontSize: "0.62rem", letterSpacing: "0.04em" }}>
                             {card.category}
                           </div>
                         </div>
-                        <div className="shrink-0 text-xs font-mono">
-                          <span className={card.synergy > 0 ? "text-green-400" : "text-muted"}>
+                        <div className="shrink-0 font-mono tabular-nums" style={{ fontSize: "0.7rem" }}>
+                          <span style={{ color: card.synergy > 0 ? "var(--teal)" : "var(--ink-faint)", fontWeight: 600 }}>
                             {card.synergy > 0 ? "+" : ""}{(card.synergy * 100).toFixed(0)}%
                           </span>
                         </div>
-                        <div className="shrink-0 text-xs text-muted">
-                          {card.num_decks.toLocaleString()} decks
+                        <div className="shrink-0 font-mono text-ink-faint tabular-nums" style={{ fontSize: "0.62rem" }}>
+                          {card.num_decks.toLocaleString()}
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Substitution suggestions */}
                   {commanderData.substitutions.length > 0 && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-muted uppercase tracking-wider">
-                        In-Stock Substitutions
-                      </label>
-                      <div className="space-y-1 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-2">
+                      <ZoneLabel>In-Stock Substitutions</ZoneLabel>
+                      <div
+                        className="space-y-0"
+                        style={{ background: "var(--yellow-mute)", border: "1px solid rgba(251,219,101,0.35)" }}
+                      >
                         {commanderData.substitutions.map((sub, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2 text-sm px-2 py-1"
+                            className="flex items-center gap-2 px-3 py-2 font-mono"
+                            style={{ borderBottom: "1px solid rgba(251,219,101,0.18)", fontSize: "0.78rem" }}
                           >
-                            <span className="text-red-400 line-through truncate flex-1">
+                            <span className="line-through truncate flex-1" style={{ color: "var(--red)" }}>
                               {sub.missing_card}
                             </span>
-                            <span className="text-muted shrink-0">{"->"}</span>
-                            <span className="text-green-400 truncate flex-1">
+                            <span className="text-ink-faint shrink-0">→</span>
+                            <span className="truncate flex-1" style={{ color: "var(--teal)" }}>
                               {sub.substitute}
                             </span>
                           </div>
@@ -713,33 +803,39 @@ function DeckBuilderContent() {
           {/* ---- Pokemon Tab ---- */}
           {isPokemon && (
             <div className="space-y-3">
-              <label className="block text-sm font-semibold text-muted uppercase tracking-wider">
-                Recent Tournament Decks
-              </label>
+              <ZoneLabel>Recent Tournament Decks</ZoneLabel>
               {pokemonLoading && (
-                <div className="flex items-center justify-center h-24 text-muted">
-                  Loading tournament data...
+                <div
+                  className="flex items-center justify-center gap-2 h-24 font-mono uppercase text-ink-soft"
+                  style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)", fontSize: "0.7rem", letterSpacing: "0.18em" }}
+                >
+                  <Spinner />
+                  Loading tournament data…
                 </div>
               )}
               {!pokemonLoading && pokemonDecks.length === 0 && (
-                <div className="text-sm text-muted p-4 text-center rounded-xl border border-card-border bg-card">
+                <div
+                  className="text-center px-4 py-6 font-mono text-ink-soft"
+                  style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)", fontSize: "0.78rem" }}
+                >
                   No tournament data available. Try again later.
                 </div>
               )}
               {pokemonDecks.length > 0 && (
-                <div className="space-y-2 max-h-[28rem] overflow-y-auto scroll-visible">
+                <div className="space-y-2 max-h-[28rem] overflow-y-auto">
                   {pokemonDecks.map((deck, i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-card-border bg-card p-3 space-y-2"
+                      className="p-3 space-y-2"
+                      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-bold text-foreground">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-display text-ink truncate" style={{ fontSize: "0.95rem", fontWeight: 600 }}>
                             {deck.archetype}
                           </div>
-                          <div className="text-xs text-muted">
-                            {deck.tournament_name} — #{deck.placing}
+                          <div className="font-mono text-ink-faint truncate mt-0.5" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
+                            {deck.tournament_name} · #{deck.placing}
                           </div>
                         </div>
                         <button
@@ -751,8 +847,13 @@ function DeckBuilderContent() {
                             setParsedCards(cards);
                             checkInventory(cards);
                           }}
-                          className="rounded-lg bg-accent/20 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/30 transition-colors"
-                          style={{ minHeight: "auto" }}
+                          className="shrink-0 transition-colors"
+                          style={{
+                            ...SECONDARY_BUTTON_STYLE,
+                            background: "var(--orange-mute)",
+                            border: "1px solid var(--orange)",
+                            color: "var(--orange)",
+                          }}
                         >
                           Check Inventory
                         </button>
@@ -764,9 +865,16 @@ function DeckBuilderContent() {
                           .map((c, j) => (
                             <span
                               key={j}
-                              className="rounded border border-card-border bg-card-hover px-2 py-0.5 text-xs text-foreground"
+                              className="font-mono text-ink"
+                              style={{
+                                padding: "1px 6px",
+                                fontSize: "0.62rem",
+                                background: "var(--panel)",
+                                border: "1px solid var(--rule-hi)",
+                                letterSpacing: "0.02em",
+                              }}
                             >
-                              {c.quantity}x {c.name}
+                              {c.quantity}× {c.name}
                             </span>
                           ))}
                       </div>
@@ -776,133 +884,148 @@ function DeckBuilderContent() {
               )}
 
               {/* Still allow pasting a Pokemon decklist */}
-              <div className="pt-2 border-t border-card-border space-y-2">
-                <label className="block text-sm font-semibold text-muted uppercase tracking-wider">
-                  Paste Decklist
-                </label>
+              <div className="pt-2 space-y-2" style={{ borderTop: "1px solid var(--rule-faint)" }}>
+                <ZoneLabel>Paste Decklist</ZoneLabel>
                 <textarea
                   value={decklistText}
                   onChange={(e) => setDecklistText(e.target.value)}
-                  placeholder={`Paste Pokemon decklist here...\n\n4 Charizard ex\n2 Arcanine\n4 Professor's Research`}
+                  placeholder={`Paste Pokemon decklist here…\n\n4 Charizard ex\n2 Arcanine\n4 Professor's Research`}
                   rows={6}
-                  className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono text-sm"
+                  className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none p-3"
+                  style={{
+                    background: "var(--panel)",
+                    border: "1px solid var(--rule-hi)",
+                    fontSize: "0.85rem",
+                    resize: "none",
+                  }}
                 />
                 <button
                   onClick={handleParseDeck}
                   disabled={loading || !decklistText.trim()}
-                  className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  className="w-full disabled:opacity-40 transition-opacity"
+                  style={PRIMARY_BUTTON_STYLE}
                 >
-                  {loading ? "Parsing..." : "Parse & Check Inventory"}
+                  {loading ? "Parsing…" : "Parse & Check Inventory"}
                 </button>
               </div>
             </div>
           )}
 
-          {/* ---- MTG Competitive + Yu-Gi-Oh (search + paste) ---- */}
+          {/* ---- MTG Competitive + Yu-Gi-Oh ---- */}
           {!isCommander && !isPokemon && (
             <>
-              {/* Meta deck suggestions — live data */}
               <MetaArchetypes
                 decks={metaDecks}
                 loading={metaLoading}
                 onSelect={handleFetchDeck}
               />
 
-              {/* Tab: Search vs Paste */}
-              <div className="flex gap-1 bg-card-hover rounded-xl p-1">
-                <button
-                  onClick={() => setActiveTab("search")}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                    activeTab === "search"
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                  style={{ minHeight: "auto" }}
-                >
-                  Search Cards
-                </button>
-                <button
-                  onClick={() => setActiveTab("paste")}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                    activeTab === "paste"
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                  style={{ minHeight: "auto" }}
-                >
-                  Paste Decklist
-                </button>
+              {/* Tab: Search vs Paste — operator console mono */}
+              <div
+                className="flex"
+                style={{ background: "var(--slate)", borderBottom: "1px solid var(--rule)" }}
+              >
+                {[
+                  { id: "search" as const, label: "Search Cards" },
+                  { id: "paste" as const, label: "Paste Decklist" },
+                ].map((t) => {
+                  const isActive = activeTab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className="font-mono uppercase font-semibold transition-colors"
+                      style={{
+                        padding: "0.85rem 1.1rem",
+                        minHeight: 52,
+                        fontSize: "0.7rem",
+                        letterSpacing: "0.22em",
+                        borderBottom: `2px solid ${isActive ? "var(--orange)" : "transparent"}`,
+                        color: isActive ? "var(--orange)" : "var(--ink-soft)",
+                        background: "transparent",
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {activeTab === "search" ? (
                 <div className="space-y-3">
-                  {/* Search input */}
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
+                        e.stopPropagation();
                         if (e.key === "Enter") handleSearch();
                       }}
                       placeholder={
                         isYugioh
-                          ? "Search Yu-Gi-Oh cards..."
-                          : "Search cards (e.g. red creature cmc<=3)..."
+                          ? "Search Yu-Gi-Oh cards…"
+                          : "Search cards (e.g. red creature cmc<=3)…"
                       }
-                      className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                      style={{ fontSize: 16 }}
+                      className="flex-1 font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+                      style={TEXT_INPUT_STYLE}
                     />
                     <button
                       onClick={handleSearch}
                       disabled={loading || !searchQuery.trim()}
-                      className="rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="disabled:opacity-40 transition-opacity"
+                      style={PRIMARY_BUTTON_STYLE}
                     >
-                      {loading ? "..." : "Search"}
+                      {loading ? "…" : "Search"}
                     </button>
                   </div>
 
-                  {/* Search results */}
                   {searchResults.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted">
+                        <span
+                          className="font-mono uppercase font-semibold text-ink-soft"
+                          style={{ fontSize: "0.66rem", letterSpacing: "0.18em" }}
+                        >
                           {searchResults.length} cards found
                         </span>
                         <button
                           onClick={handleCheckSearchResults}
                           disabled={matchLoading}
-                          className="rounded-lg bg-accent/20 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/30 transition-colors"
-                          style={{ minHeight: "auto" }}
+                          className="transition-colors disabled:opacity-50"
+                          style={{
+                            ...SECONDARY_BUTTON_STYLE,
+                            background: "var(--orange-mute)",
+                            border: "1px solid var(--orange)",
+                            color: "var(--orange)",
+                          }}
                         >
-                          {matchLoading ? "Checking..." : "Check Inventory"}
+                          {matchLoading ? "Checking…" : "Check Inventory"}
                         </button>
                       </div>
-                      <div className="max-h-96 overflow-y-auto space-y-1.5 rounded-xl border border-card-border bg-card p-2 scroll-visible">
+                      <div
+                        className="max-h-96 overflow-y-auto"
+                        style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}
+                      >
                         {searchResults.map((card, i) => (
                           <div
                             key={`${card.name}-${i}`}
-                            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-card-hover transition-colors"
+                            className="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-panel"
+                            style={{ borderBottom: "1px solid var(--rule-faint)" }}
                           >
-                            {card.image_url && (
-                              <CardImage src={card.image_url} size="sm" />
-                            )}
+                            {card.image_url && <CardImage src={card.image_url} size="sm" />}
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-foreground truncate">
+                              <div className="font-display text-ink truncate" style={{ fontSize: "0.92rem", fontWeight: 500 }}>
                                 {card.name}
                               </div>
-                              <div className="text-xs text-muted truncate">
+                              <div className="font-mono text-ink-faint truncate mt-0.5" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
                                 {card.type_line}
                                 {card.mana_cost && (
-                                  <span className="ml-2 opacity-70">
-                                    {card.mana_cost}
-                                  </span>
+                                  <span className="ml-2 opacity-70">{card.mana_cost}</span>
                                 )}
                               </div>
                             </div>
-                            {card.price_cents != null && (
-                              <PriceTag cents={card.price_cents} size="sm" />
-                            )}
+                            {card.price_cents != null && <PriceTag cents={card.price_cents} size="sm" />}
                           </div>
                         ))}
                       </div>
@@ -911,13 +1034,17 @@ function DeckBuilderContent() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* URL import — Moxfield / Archidekt */}
-                  <div className="rounded-xl border border-card-border bg-card p-3 space-y-2">
+                  {/* URL import */}
+                  <div
+                    className="p-3 space-y-2"
+                    style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+                  >
                     <div className="flex items-center justify-between gap-2">
-                      <label className="text-[11px] text-muted uppercase tracking-wider">
-                        Import from URL
-                      </label>
-                      <span className="text-[10px] text-muted/70">
+                      <ZoneLabel>Import from URL</ZoneLabel>
+                      <span
+                        className="font-mono uppercase text-ink-faint"
+                        style={{ fontSize: "0.55rem", letterSpacing: "0.18em" }}
+                      >
                         Moxfield · Archidekt
                       </span>
                     </div>
@@ -932,33 +1059,46 @@ function DeckBuilderContent() {
                             handleImportUrl();
                           }
                         }}
-                        placeholder="https://www.moxfield.com/decks/..."
-                        className="flex-1 min-w-0 rounded-lg border border-input-border bg-input-bg px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                        placeholder="https://www.moxfield.com/decks/…"
+                        className="flex-1 min-w-0 font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+                        style={{ ...TEXT_INPUT_STYLE, fontSize: "0.85rem", minHeight: 44 }}
                       />
                       <button
                         onClick={handleImportUrl}
                         disabled={importing || !importUrl.trim()}
-                        className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                        className="shrink-0 disabled:opacity-40 transition-opacity"
+                        style={{ ...PRIMARY_BUTTON_STYLE, minHeight: 44 }}
                       >
-                        {importing ? "Importing..." : "Import"}
+                        {importing ? "Importing…" : "Import"}
                       </button>
                     </div>
                     {importError && (
-                      <div className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-2 py-1">
+                      <div
+                        className="font-mono px-3 py-2"
+                        style={{
+                          fontSize: "0.74rem",
+                          background: "var(--red-mute)",
+                          border: "1px solid var(--red)",
+                          color: "var(--red)",
+                        }}
+                      >
                         {importError}
                       </div>
                     )}
                     {importedDeck && (
-                      <div className="text-[11px] text-muted flex items-center gap-2 flex-wrap">
-                        <span className="text-green-400">✓</span>
-                        <span className="text-foreground font-medium truncate">
+                      <div
+                        className="font-mono flex items-center gap-2 flex-wrap text-ink-soft"
+                        style={{ fontSize: "0.7rem", letterSpacing: "0.02em" }}
+                      >
+                        <span style={{ color: "var(--teal)" }}>✓</span>
+                        <span className="text-ink font-medium truncate">
                           {importedDeck.name ?? "Untitled deck"}
                         </span>
-                        <span className="text-card-border">·</span>
+                        <span className="text-ink-ghost">·</span>
                         <span>from {importedDeck.source}</span>
                         {importedDeck.format && (
                           <>
-                            <span className="text-card-border">·</span>
+                            <span className="text-ink-ghost">·</span>
                             <span className="capitalize">{importedDeck.format}</span>
                           </>
                         )}
@@ -966,7 +1106,8 @@ function DeckBuilderContent() {
                           href={importedDeck.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-accent hover:underline ml-auto"
+                          className="ml-auto hover:underline"
+                          style={{ color: "var(--orange)" }}
                         >
                           view original →
                         </a>
@@ -975,46 +1116,58 @@ function DeckBuilderContent() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-card-border" />
-                    <span className="text-[10px] text-muted uppercase tracking-wider">
+                    <div className="flex-1 h-px" style={{ background: "var(--rule)" }} />
+                    <span
+                      className="font-mono uppercase text-ink-faint"
+                      style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+                    >
                       or paste
                     </span>
-                    <div className="flex-1 h-px bg-card-border" />
+                    <div className="flex-1 h-px" style={{ background: "var(--rule)" }} />
                   </div>
 
-                  {/* Paste decklist */}
                   <textarea
                     value={decklistText}
                     onChange={(e) => setDecklistText(e.target.value)}
                     placeholder={`Paste decklist here:\n\n4 Lightning Bolt\n4 Monastery Swiftspear\n2 Embercleave\n20 Mountain`}
                     rows={12}
-                    className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono text-sm"
+                    className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none p-3"
+                    style={{
+                      background: "var(--panel)",
+                      border: "1px solid var(--rule-hi)",
+                      fontSize: "0.85rem",
+                      resize: "none",
+                    }}
                   />
                   <button
                     onClick={handleParseDeck}
                     disabled={loading || !decklistText.trim()}
-                    className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    className="w-full disabled:opacity-40 transition-opacity"
+                    style={PRIMARY_BUTTON_STYLE}
                   >
-                    {loading ? "Parsing..." : "Parse & Check Inventory"}
+                    {loading ? "Parsing…" : "Parse & Check Inventory"}
                   </button>
 
-                  {/* Parsed cards preview */}
                   {parsedCards.length > 0 && !inventoryResults.length && (
-                    <div className="rounded-xl border border-card-border bg-card p-3">
-                      <div className="text-sm font-semibold text-muted mb-2">
-                        Parsed: {parsedCards.length} unique cards,{" "}
-                        {parsedCards.reduce((s, c) => s + c.quantity, 0)} total
+                    <div
+                      className="p-3"
+                      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+                    >
+                      <div
+                        className="font-mono uppercase font-semibold text-ink-faint mb-2"
+                        style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+                      >
+                        Parsed: {parsedCards.length} unique · {parsedCards.reduce((s, c) => s + c.quantity, 0)} total
                       </div>
-                      <div className="space-y-1 max-h-48 overflow-y-auto scroll-visible">
+                      <div className="space-y-0.5 max-h-48 overflow-y-auto">
                         {parsedCards.map((c, i) => (
                           <div
                             key={i}
-                            className="flex justify-between text-sm text-foreground px-2 py-1"
+                            className="flex justify-between font-mono text-ink px-2 py-1"
+                            style={{ fontSize: "0.78rem" }}
                           >
                             <span>{c.name}</span>
-                            <span className="text-muted font-mono">
-                              x{c.quantity}
-                            </span>
+                            <span className="text-ink-faint tabular-nums">×{c.quantity}</span>
                           </div>
                         ))}
                       </div>
@@ -1029,32 +1182,34 @@ function DeckBuilderContent() {
         {/* ---- Right Panel: Inventory Match Results ---- */}
         <div className="space-y-4">
           {matchLoading && (
-            <div className="flex items-center justify-center h-32 text-muted">
-              Checking store inventory...
+            <div
+              className="flex items-center justify-center gap-2 h-32 font-mono uppercase text-ink-soft"
+              style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)", fontSize: "0.7rem", letterSpacing: "0.18em" }}
+            >
+              <Spinner />
+              Checking store inventory…
             </div>
           )}
 
-          {/* Deck analysis — mana curve, colors, format legality */}
+          {/* Deck analysis */}
           {deckAnalysis && (
             <AnalysisPanel analysis={deckAnalysis} targetFormat={format} />
           )}
           {analyzing && !deckAnalysis && (
-            <div className="rounded-xl border border-card-border bg-card p-4 text-xs text-muted flex items-center gap-2">
-              <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Analyzing deck (colors, curve, legality)...
+            <div
+              className="flex items-center gap-2 p-4 font-mono uppercase text-ink-soft"
+              style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)", fontSize: "0.66rem", letterSpacing: "0.18em" }}
+            >
+              <Spinner size={14} />
+              Analyzing deck (colors · curve · legality)…
             </div>
           )}
 
           {inventoryResults.length > 0 && (
             <>
-              <div className="text-sm font-semibold text-muted uppercase tracking-wider">
-                Inventory Match
-              </div>
+              <ZoneLabel>Inventory Match</ZoneLabel>
 
-              <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-1 scroll-visible">
+              <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-1">
                 {inventoryResults.map((match, i) => (
                   <InventoryCard
                     key={`${match.name}-${i}`}
@@ -1079,23 +1234,46 @@ function DeckBuilderContent() {
               </div>
 
               {/* In Stock Only toggle */}
-              <div className="flex items-center justify-between rounded-xl border border-card-border bg-card px-4 py-2.5">
-                <span className="text-sm text-muted">Show only in-stock cards</span>
+              <div
+                className="flex items-center justify-between px-3 py-2"
+                style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+              >
+                <span
+                  className="font-mono uppercase font-semibold text-ink-soft"
+                  style={{ fontSize: "0.66rem", letterSpacing: "0.18em" }}
+                >
+                  In-Stock Only
+                </span>
                 <button
                   onClick={() => {
                     setInStockOnly(!inStockOnly);
-                    // Re-run inventory match with the new setting
                     if (parsedCards.length > 0) {
                       checkInventory(parsedCards);
                     }
                   }}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${inStockOnly ? "bg-accent" : "bg-card-hover border border-card-border"}`}
+                  className="relative transition-colors"
+                  style={{
+                    width: 44,
+                    height: 24,
+                    background: inStockOnly ? "var(--orange)" : "var(--panel)",
+                    border: `1px solid ${inStockOnly ? "var(--orange)" : "var(--rule-hi)"}`,
+                  }}
+                  aria-pressed={inStockOnly}
                 >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${inStockOnly ? "translate-x-5" : "translate-x-0.5"}`} />
+                  <span
+                    className="absolute transition-transform"
+                    style={{
+                      top: 2,
+                      left: inStockOnly ? 22 : 2,
+                      width: 18,
+                      height: 18,
+                      background: inStockOnly ? "var(--void)" : "var(--ink-soft)",
+                    }}
+                  />
                 </button>
               </div>
 
-              {/* Summary — sticky at bottom */}
+              {/* Sticky summary */}
               <DeckSummary
                 totalCards={totalCards}
                 inStockCards={inStockCards}
@@ -1104,7 +1282,6 @@ function DeckBuilderContent() {
                 onAddAllToCart={addAllToCart}
               />
 
-              {/* Recommendations carousel */}
               <RecommendationsPanel
                 items={recommendations}
                 onAdd={(rec) => {

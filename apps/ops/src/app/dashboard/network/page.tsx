@@ -73,7 +73,11 @@ export default function NetworkPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
-      <PageHeader title="Afterroar Network" />
+      <PageHeader
+        title="Afterroar Network"
+        crumb="Console · Network"
+        desc="Cross-store tournaments, leaderboards, and benchmarks."
+      />
 
       {/* Purple accent bar */}
       <div className="rounded-xl bg-[#7D55C7]/10 border border-[#7D55C7]/30 p-4">
@@ -152,12 +156,12 @@ export default function NetworkPage() {
                       {t.game}{t.format ? ` \u00B7 ${t.format}` : ""} \u00B7 Hosted by {t.host_store.name}
                     </div>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${
-                    t.status === "upcoming" ? "bg-blue-500/20 text-blue-400" :
-                    t.status === "active" ? "bg-green-500/20 text-green-400" :
-                    t.status === "completed" ? "bg-emerald-500/20 text-emerald-400" :
-                    "bg-red-500/20 text-red-400"
-                  }`}>
+                  <span className="text-xs font-mono uppercase tracking-wider font-bold px-2 py-1 rounded" style={
+                    t.status === "upcoming" ? { background: 'var(--orange-mute)', color: 'var(--orange)' } :
+                    t.status === "active" ? { background: 'var(--teal-mute)', color: 'var(--teal)' } :
+                    t.status === "completed" ? { background: 'var(--teal-mute)', color: 'var(--teal)' } :
+                    { background: 'var(--red-mute)', color: 'var(--red)' }
+                  }>
                     {t.status}
                   </span>
                 </div>
@@ -258,7 +262,7 @@ export default function NetworkPage() {
                       className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${b.percentile}%`,
-                        background: b.percentile >= 70 ? "#22c55e" : b.percentile >= 40 ? "#eab308" : "#ef4444",
+                        background: b.percentile >= 70 ? 'var(--teal)' : b.percentile >= 40 ? 'var(--yellow)' : 'var(--red)',
                       }}
                     />
                   </div>

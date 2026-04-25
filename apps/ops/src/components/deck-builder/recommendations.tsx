@@ -3,8 +3,8 @@
 import { formatCents } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
-/*  Recommendations — upsell cards, accessories, upgrades               */
-/*  Horizontal scroll carousel with visual type indicators.             */
+/*  Recommendations — upsell cards, accessories, upgrades.             */
+/*  Operator Console mono labels, orange CTA, no emoji-only signals.   */
 /* ------------------------------------------------------------------ */
 
 interface Recommendation {
@@ -17,11 +17,18 @@ interface Recommendation {
   category?: string;
 }
 
-const TYPE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
-  accessory: { emoji: "\uD83D\uDEE1\uFE0F", color: "text-blue-400", label: "Protect your deck" },
-  upgrade: { emoji: "\u2728", color: "text-amber-400", label: "Premium upgrade" },
-  sideboard: { emoji: "\u2660\uFE0F", color: "text-indigo-400", label: "Sideboard" },
-  also_bought: { emoji: "\uD83D\uDD25", color: "text-orange-400", label: "Popular pick" },
+const TYPE_TONE: Record<string, string> = {
+  accessory: "var(--ink-soft)",
+  upgrade: "var(--yellow)",
+  sideboard: "var(--ink-soft)",
+  also_bought: "var(--orange)",
+};
+
+const TYPE_LABEL: Record<string, string> = {
+  accessory: "Protect Your Deck",
+  upgrade: "Premium Upgrade",
+  sideboard: "Sideboard",
+  also_bought: "Popular Pick",
 };
 
 export function Recommendations({
@@ -35,22 +42,48 @@ export function Recommendations({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-        You might also need
+      <h3
+        className="font-mono uppercase font-semibold text-ink-faint flex items-center gap-2"
+        style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+      >
+        <span
+          aria-hidden
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            background: "currentColor",
+            clipPath:
+              "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+          }}
+        />
+        You Might Also Need
       </h3>
 
       {/* Horizontal scroll on mobile, grid on desktop */}
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible scroll-visible">
+      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
         {items.map((rec, i) => {
-          const config = TYPE_CONFIG[rec.type] || TYPE_CONFIG.also_bought;
+          const tone = TYPE_TONE[rec.type] || TYPE_TONE.also_bought;
+          const label = TYPE_LABEL[rec.type] || TYPE_LABEL.also_bought;
 
           return (
             <div
               key={`${rec.inventory_item_id}-${i}`}
-              className="snap-start shrink-0 w-48 sm:w-auto rounded-xl border border-card-border bg-card p-3 flex flex-col gap-2 hover:border-accent/30 transition-colors"
+              className="snap-start shrink-0 w-48 sm:w-auto flex flex-col gap-2 p-3"
+              style={{
+                background: "var(--panel-mute)",
+                border: "1px solid var(--rule-hi)",
+              }}
             >
-              {/* Image or type icon */}
-              <div className="w-full h-24 rounded-lg overflow-hidden bg-card-hover flex items-center justify-center">
+              {/* Image */}
+              <div
+                className="w-full flex items-center justify-center overflow-hidden"
+                style={{
+                  height: 96,
+                  background: "linear-gradient(180deg,var(--panel-hi),var(--panel))",
+                  border: "1px solid var(--rule-hi)",
+                }}
+              >
                 {rec.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -60,28 +93,58 @@ export function Recommendations({
                     loading="lazy"
                   />
                 ) : (
-                  <span className="text-3xl">{config.emoji}</span>
+                  <span
+                    className="font-mono uppercase font-semibold text-ink-faint"
+                    style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}
+                  >
+                    No Image
+                  </span>
                 )}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-foreground leading-tight line-clamp-2">
+                <div
+                  className="font-display text-ink line-clamp-2"
+                  style={{ fontSize: "0.86rem", lineHeight: 1.15, fontWeight: 500, letterSpacing: "0.005em" }}
+                >
                   {rec.name}
                 </div>
-                <div className={`text-[10px] font-semibold mt-0.5 ${config.color}`}>
+                <div
+                  className="font-mono uppercase font-semibold mt-1"
+                  style={{ color: tone, fontSize: "0.55rem", letterSpacing: "0.18em" }}
+                  title={rec.reason}
+                >
+                  {label}
+                </div>
+                <div
+                  className="font-mono text-ink-faint mt-0.5 truncate"
+                  style={{ fontSize: "0.62rem", letterSpacing: "0.02em" }}
+                >
                   {rec.reason}
                 </div>
               </div>
 
               {/* Price + Add */}
               <div className="flex items-center justify-between mt-auto pt-1">
-                <span className="text-sm font-mono font-bold text-foreground tabular-nums">
+                <span
+                  className="font-mono font-semibold tabular-nums text-ink"
+                  style={{ fontSize: "0.86rem", letterSpacing: "0.02em" }}
+                >
                   {formatCents(rec.price_cents)}
                 </span>
                 <button
                   onClick={() => onAdd(rec)}
-                  className="rounded-lg bg-accent/10 border border-accent/30 px-3 py-1 text-xs font-semibold text-accent hover:bg-accent/20 active:scale-95 transition-all"
+                  className="font-mono uppercase font-semibold transition-colors"
+                  style={{
+                    padding: "0 0.7rem",
+                    minHeight: 36,
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.16em",
+                    background: "var(--orange-mute)",
+                    border: "1px solid var(--orange)",
+                    color: "var(--orange)",
+                  }}
                 >
                   + Add
                 </button>

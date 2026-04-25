@@ -149,10 +149,10 @@ export default function StockCountsPage() {
   }
 
   function getVarianceColor(variance: number | null) {
-    if (variance === null) return 'text-muted';
-    if (variance === 0) return 'text-green-400';
-    if (Math.abs(variance) <= 2) return 'text-yellow-400';
-    return 'text-red-400';
+    if (variance === null) return 'text-ink-soft';
+    if (variance === 0) return 'text-teal';
+    if (Math.abs(variance) <= 2) return 'text-yellow';
+    return 'text-red-fu';
   }
 
   // If viewing an active count
@@ -166,27 +166,28 @@ export default function StockCountsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <PageHeader title="Stock Count" backHref="/dashboard/stock-counts" />
-            <p className="text-sm text-muted mt-1">
+            <PageHeader title="Stock Count" backHref="/dashboard/stock-counts" crumb="Console · Inventory" />
+            <p className="text-sm text-ink-soft mt-1 font-mono tabular-nums">
               Started {new Date(activeCount.started_at).toLocaleString()}
               {activeCount.category_filter && ` | Category: ${activeCount.category_filter}`}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted">
+            <span className="text-sm text-ink-soft font-mono tabular-nums">
               {counted}/{countItems.length} counted | {totalVariances} variances
             </span>
             {activeCount.status === 'in_progress' && (
               <button
                 onClick={handleComplete}
                 disabled={completing || counted === 0}
-                className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-foreground rounded text-sm font-medium"
+                className="px-4 py-2 disabled:opacity-50 rounded text-sm font-display uppercase tracking-wider font-bold"
+                style={{ background: 'var(--teal)', color: 'var(--void)', minHeight: 48 }}
               >
                 {completing ? 'Completing...' : 'Complete Count'}
               </button>
             )}
             {activeCount.status === 'completed' && (
-              <span className="px-3 py-1 bg-green-900 text-green-300 rounded text-sm">Completed</span>
+              <span className="px-3 py-1 rounded text-sm font-mono uppercase tracking-wider font-bold" style={{ background: 'var(--teal-mute)', color: 'var(--teal)' }}>Completed</span>
             )}
           </div>
         </div>
@@ -315,10 +316,13 @@ export default function StockCountsPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Stock Counts"
+        crumb="Console · Inventory"
+        desc="Cycle counts and full inventory audits with variance tracking."
         action={
           <button
             onClick={() => setShowNew(!showNew)}
-            className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+            className="px-4 py-2 bg-orange hover:opacity-90 text-void rounded text-sm font-display uppercase tracking-wider font-bold"
+            style={{ minHeight: 48 }}
           >
             {showNew ? 'Cancel' : 'New Count'}
           </button>
@@ -342,7 +346,8 @@ export default function StockCountsPage() {
           <button
             onClick={handleCreate}
             disabled={creating}
-            className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
+            className="px-4 py-2 bg-orange hover:opacity-90 disabled:opacity-50 text-void rounded text-sm font-display uppercase tracking-wider font-bold"
+            style={{ minHeight: 48 }}
           >
             {creating ? 'Starting...' : 'Start Count'}
           </button>
@@ -365,11 +370,11 @@ export default function StockCountsPage() {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-foreground">{count.category_filter || 'All Categories'}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs ${
+                  <span className="px-2 py-0.5 rounded text-xs font-mono uppercase tracking-wider font-bold" style={
                     count.status === 'completed'
-                      ? 'bg-green-900 text-green-300'
-                      : 'bg-yellow-900 text-yellow-300'
-                  }`}>
+                      ? { background: 'var(--teal-mute)', color: 'var(--teal)' }
+                      : { background: 'var(--yellow-mute)', color: 'var(--yellow)' }
+                  }>
                     {count.status === 'in_progress' ? 'In Progress' : 'Completed'}
                   </span>
                 </div>
@@ -406,7 +411,7 @@ export default function StockCountsPage() {
                     <td className="px-4 py-3 text-foreground/70">{count.category_filter || 'All'}</td>
                     <td className="px-4 py-3 text-center text-foreground/70">{count.total_items}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={count.variances > 0 ? 'text-yellow-400' : 'text-muted'}>
+                      <span className={count.variances > 0 ? 'text-yellow' : 'text-ink-soft'}>
                         {count.variances}
                       </span>
                     </td>

@@ -1,9 +1,8 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  ManaCurve — bar chart of CMC distribution                          */
-/*  Follows Moxfield / Archidekt convention: 0, 1, 2, 3, 4, 5, 6, 7+.  */
-/*  Lands are excluded by the caller (deck-analysis handles that).     */
+/*  ManaCurve — bar chart of CMC distribution, Operator Console style. */
+/*  0, 1, 2, 3, 4, 5, 6, 7+. Lands excluded by caller (deck-analysis). */
 /* ------------------------------------------------------------------ */
 
 import type { ManaCurveBucket } from "@/lib/deck-analysis";
@@ -21,11 +20,19 @@ export function ManaCurve({ buckets, avgCmc, className }: ManaCurveProps) {
   return (
     <div className={`space-y-2 ${className ?? ""}`}>
       <div className="flex items-baseline justify-between">
-        <div className="text-[10px] text-muted uppercase tracking-wider">Mana Curve</div>
-        <div className="text-[11px] text-muted tabular-nums">
-          avg <span className="text-foreground font-semibold">{avgCmc.toFixed(2)}</span>
-          <span className="mx-2 text-card-border">|</span>
-          <span className="text-foreground font-semibold">{total}</span> nonland
+        <div
+          className="font-mono uppercase font-semibold text-ink-faint"
+          style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+        >
+          Mana Curve
+        </div>
+        <div
+          className="font-mono tabular-nums text-ink-faint"
+          style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}
+        >
+          avg <span className="text-ink font-semibold">{avgCmc.toFixed(2)}</span>
+          <span className="mx-2 text-ink-ghost">·</span>
+          <span className="text-ink font-semibold">{total}</span> nonland
         </div>
       </div>
       <div className="flex items-end gap-1.5 h-24">
@@ -35,15 +42,26 @@ export function ManaCurve({ buckets, avgCmc, className }: ManaCurveProps) {
             <div key={b.cmc} className="flex-1 flex flex-col items-center gap-1 min-w-0">
               <div className="w-full flex-1 flex items-end">
                 <div
-                  className="w-full rounded-t-md bg-gradient-to-t from-accent/80 to-accent/40 min-h-[2px] transition-all duration-300"
-                  style={{ height: `${Math.max(2, pct)}%` }}
+                  className="w-full transition-all duration-300"
+                  style={{
+                    height: `${Math.max(2, pct)}%`,
+                    minHeight: 2,
+                    background: "linear-gradient(to top, var(--orange) 0%, rgba(255,122,0,0.4) 100%)",
+                    boxShadow: "0 0 6px rgba(255,122,0,0.18)",
+                  }}
                   title={`CMC ${b.cmc === 7 ? "7+" : b.cmc}: ${b.count}`}
                 />
               </div>
-              <div className="text-[10px] text-muted tabular-nums">
+              <div
+                className="font-mono tabular-nums text-ink-faint"
+                style={{ fontSize: "0.6rem", letterSpacing: "0.04em" }}
+              >
                 {b.cmc === 7 ? "7+" : b.cmc}
               </div>
-              <div className="text-[10px] text-foreground tabular-nums font-medium -mt-1">
+              <div
+                className="font-mono tabular-nums text-ink"
+                style={{ fontSize: "0.66rem", fontWeight: 600, marginTop: "-0.2rem" }}
+              >
                 {b.count > 0 ? b.count : ""}
               </div>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  Deck Builder Empty State — welcoming, game-aware                    */
+/*  Deck Builder Empty State — Operator Console panel, game-aware.     */
 /* ------------------------------------------------------------------ */
 
 export function DeckBuilderEmptyState({
@@ -21,15 +21,49 @@ export function DeckBuilderEmptyState({
         ? "Search for cards or paste a decklist to see what your store has available."
         : "Pick an archetype above, search for cards, or paste a decklist. We'll show what's in stock and suggest substitutes.";
 
-  const emoji = isCommander ? "\u2694\uFE0F" : isPokemon ? "\u26A1" : isYugioh ? "\uD83C\uDFB4" : "\u2660\uFE0F";
+  const subtitle = isCommander
+    ? "Commander · EDHREC synergy"
+    : isPokemon
+      ? "Pokemon TCG · Tournament data"
+      : isYugioh
+        ? "Yu-Gi-Oh! · Search by name"
+        : "MTG · Standard / Modern / Pioneer";
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-      <div className="text-5xl mb-4 opacity-30">{emoji}</div>
-      <h2 className="text-lg font-semibold text-foreground/80 mb-2">
+    <div
+      className="flex flex-col items-center justify-center text-center px-6 py-16"
+      style={{
+        background: "var(--panel-mute)",
+        border: "1px solid var(--rule)",
+      }}
+    >
+      <div
+        aria-hidden
+        style={{
+          width: 32,
+          height: 32,
+          background: "var(--orange-mute)",
+          border: "1px solid var(--orange)",
+          marginBottom: "1rem",
+          clipPath: "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+        }}
+      />
+      <div
+        className="font-mono uppercase font-semibold text-ink-faint"
+        style={{ fontSize: "0.6rem", letterSpacing: "0.28em" }}
+      >
+        {subtitle}
+      </div>
+      <h2
+        className="font-display text-ink mt-2"
+        style={{ fontSize: "1.4rem", fontWeight: 600, letterSpacing: "0.005em" }}
+      >
         Build a deck from your shelves
       </h2>
-      <p className="text-sm text-muted max-w-sm leading-relaxed">
+      <p
+        className="text-ink-soft max-w-sm mt-2"
+        style={{ fontSize: "0.86rem", lineHeight: 1.5 }}
+      >
         {message}
       </p>
     </div>

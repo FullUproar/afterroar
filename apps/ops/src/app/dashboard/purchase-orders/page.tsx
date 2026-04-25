@@ -43,12 +43,12 @@ interface InventorySearchItem {
   cost_cents: number;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-card-hover text-foreground/70',
-  submitted: 'bg-blue-900 text-blue-300',
-  partially_received: 'bg-yellow-900 text-yellow-300',
-  received: 'bg-green-900 text-green-300',
-  cancelled: 'bg-red-900 text-red-300',
+const STATUS_STYLES: Record<string, React.CSSProperties> = {
+  draft: { background: 'var(--panel-hi)', color: 'var(--ink-soft)' },
+  submitted: { background: 'var(--orange-mute)', color: 'var(--orange)' },
+  partially_received: { background: 'var(--yellow-mute)', color: 'var(--yellow)' },
+  received: { background: 'var(--teal-mute)', color: 'var(--teal)' },
+  cancelled: { background: 'var(--red-mute)', color: 'var(--red)' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -236,10 +236,13 @@ export default function PurchaseOrdersPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Purchase Orders"
+        crumb="Console · Inventory"
+        desc="Supplier orders — drafts, submitted POs, and receiving."
         action={
           <button
             onClick={() => setShowForm(!showForm)}
-            className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+            className="px-4 py-2 bg-orange hover:opacity-90 text-void rounded text-sm font-display uppercase tracking-wider font-bold"
+            style={{ minHeight: 48 }}
           >
             {showForm ? 'Cancel' : 'New PO'}
           </button>
@@ -302,7 +305,7 @@ export default function PurchaseOrdersPage() {
                 onClick={() =>
                   setFormItems([...formItems, { name: '', quantity_ordered: 1, cost_cents: 0, cost_display: '' }])
                 }
-                className="text-xs text-indigo-400 hover:text-indigo-300"
+                className="text-xs text-orange hover:opacity-80"
               >
                 + Add Item
               </button>
@@ -388,7 +391,7 @@ export default function PurchaseOrdersPage() {
                       <button
                         type="button"
                         onClick={() => setFormItems(formItems.filter((_, j) => j !== i))}
-                        className="text-red-500 hover:text-red-400 text-xs ml-1"
+                        className="text-red-fu hover:opacity-80 text-xs ml-1"
                       >
                         X
                       </button>
@@ -406,7 +409,7 @@ export default function PurchaseOrdersPage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-foreground rounded text-sm font-medium"
+              className="px-4 py-2 bg-orange hover:opacity-90 disabled:opacity-50 text-void rounded text-sm font-display uppercase tracking-wider font-bold"
             >
               {saving ? 'Creating...' : 'Create PO'}
             </button>
@@ -433,7 +436,7 @@ export default function PurchaseOrdersPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-foreground truncate mr-2">{po.supplier_name}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-card-hover text-foreground/70'}`}>
+                    <span className="px-2 py-0.5 rounded text-xs font-mono uppercase tracking-wider font-bold" style={STATUS_STYLES[po.status] || STATUS_STYLES.draft}>
                       {STATUS_LABELS[po.status] || po.status}
                     </span>
                   </div>
@@ -447,10 +450,10 @@ export default function PurchaseOrdersPage() {
                     <div className="flex gap-2 flex-wrap">
                       {detailPO.status === 'draft' && (
                         <>
-                          <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1.5 bg-blue-700 hover:bg-accent text-foreground rounded text-xs min-h-11">
+                          <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1.5 bg-orange hover:opacity-90 text-void rounded text-xs min-h-11 font-mono uppercase tracking-wider font-bold">
                             Submit Order
                           </button>
-                          <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-foreground rounded text-xs min-h-11">
+                          <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1.5 rounded text-xs min-h-11 font-mono uppercase tracking-wider font-bold" style={{ background: 'var(--red)', color: 'var(--void)' }}>
                             Cancel
                           </button>
                         </>
@@ -463,11 +466,12 @@ export default function PurchaseOrdersPage() {
                           <span className="text-muted whitespace-nowrap">{formatCents(item.cost_cents)}</span>
                         </div>
                         <div className="mt-1 flex items-center justify-between text-xs text-muted">
-                          <span>Ordered: {item.quantity_ordered} / Received: <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-muted'}>{item.quantity_received}</span></span>
+                          <span>Ordered: {item.quantity_ordered} / Received: <span className={item.quantity_received >= item.quantity_ordered ? 'text-teal' : item.quantity_received > 0 ? 'text-yellow' : 'text-ink-soft'}>{item.quantity_received}</span></span>
                           {['submitted', 'partially_received'].includes(detailPO.status) && item.quantity_received < item.quantity_ordered && (
                             <button
                               onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
-                              className="px-2 py-1.5 bg-green-700 hover:bg-green-600 text-foreground rounded text-xs min-h-11 flex items-center"
+                              className="px-2 py-1.5 text-void font-mono uppercase tracking-wider font-bold rounded text-xs min-h-11 flex items-center"
+                              style={{ background: 'var(--teal)' }}
                             >
                               Receive
                             </button>
@@ -512,7 +516,7 @@ export default function PurchaseOrdersPage() {
                         {po.expected_delivery ? new Date(po.expected_delivery).toLocaleDateString() : '--'}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-xs ${STATUS_COLORS[po.status] || 'bg-card-hover text-foreground/70'}`}>
+                        <span className="px-2 py-0.5 rounded text-xs font-mono uppercase tracking-wider font-bold" style={STATUS_STYLES[po.status] || STATUS_STYLES.draft}>
                           {STATUS_LABELS[po.status] || po.status}
                         </span>
                       </td>
@@ -524,16 +528,16 @@ export default function PurchaseOrdersPage() {
                             <div className="flex gap-2 flex-wrap">
                               {detailPO.status === 'draft' && (
                                 <>
-                                  <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1 bg-blue-700 hover:bg-accent text-foreground rounded text-xs">
+                                  <button onClick={() => handleStatusChange(po.id, 'submitted')} className="px-3 py-1 bg-orange hover:opacity-90 text-void rounded text-xs font-mono uppercase tracking-wider font-bold">
                                     Submit Order
                                   </button>
-                                  <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-foreground rounded text-xs">
+                                  <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 rounded text-xs font-mono uppercase tracking-wider font-bold text-void" style={{ background: 'var(--red)' }}>
                                     Cancel
                                   </button>
                                 </>
                               )}
                               {detailPO.status === 'submitted' && (
-                                <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 bg-red-700 hover:bg-red-600 text-foreground rounded text-xs">
+                                <button onClick={() => handleStatusChange(po.id, 'cancelled')} className="px-3 py-1 rounded text-xs font-mono uppercase tracking-wider font-bold text-void" style={{ background: 'var(--red)' }}>
                                   Cancel
                                 </button>
                               )}
@@ -562,7 +566,7 @@ export default function PurchaseOrdersPage() {
                                     <td className="py-2 text-muted">{item.sku || '--'}</td>
                                     <td className="py-2 text-center">{item.quantity_ordered}</td>
                                     <td className="py-2 text-center">
-                                      <span className={item.quantity_received >= item.quantity_ordered ? 'text-green-400' : item.quantity_received > 0 ? 'text-yellow-400' : 'text-muted'}>
+                                      <span className={item.quantity_received >= item.quantity_ordered ? 'text-teal' : item.quantity_received > 0 ? 'text-yellow' : 'text-ink-soft'}>
                                         {item.quantity_received}
                                       </span>
                                     </td>
@@ -573,7 +577,8 @@ export default function PurchaseOrdersPage() {
                                         {item.quantity_received < item.quantity_ordered && (
                                           <button
                                             onClick={(e) => { e.stopPropagation(); setReceiveItem(item); setReceiveQty(String(item.quantity_ordered - item.quantity_received)); }}
-                                            className="px-2 py-1 bg-green-700 hover:bg-green-600 text-foreground rounded text-xs"
+                                            className="px-2 py-1 text-void font-mono uppercase tracking-wider font-bold rounded text-xs"
+                                            style={{ background: 'var(--teal)' }}
                                           >
                                             Receive
                                           </button>
@@ -621,7 +626,7 @@ export default function PurchaseOrdersPage() {
               <button onClick={() => setReceiveItem(null)} className="flex-1 px-3 py-2 bg-card-hover hover:bg-card-hover text-foreground rounded text-sm">
                 Cancel
               </button>
-              <button onClick={handleReceive} disabled={receiving} className="flex-1 px-3 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-foreground rounded text-sm font-medium">
+              <button onClick={handleReceive} disabled={receiving} className="flex-1 px-3 py-2 disabled:opacity-50 text-void font-mono uppercase tracking-wider font-bold rounded text-sm" style={{ background: 'var(--teal)' }}>
                 {receiving ? 'Receiving...' : 'Confirm'}
               </button>
             </div>

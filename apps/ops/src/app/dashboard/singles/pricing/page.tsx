@@ -27,6 +27,15 @@ interface PricingItem {
 type GameFilter = "All" | "MTG" | "Pokemon" | "Lorcana" | "Yu-Gi-Oh";
 const GAME_OPTIONS: GameFilter[] = ["All", "MTG", "Pokemon", "Lorcana", "Yu-Gi-Oh"];
 
+function Spinner({ size = 16 }: { size?: number }) {
+  return (
+    <svg className="animate-spin" viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }}>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
 /* ---------- component ---------- */
 
 export default function BulkPricingPage() {
@@ -42,7 +51,6 @@ export default function BulkPricingPage() {
   const [gameFilter, setGameFilter] = useState<GameFilter>("All");
   const [conditionFilter, setConditionFilter] = useState("All");
 
-  // Fetch items and compute new prices
   const fetchAndCompute = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -61,15 +69,11 @@ export default function BulkPricingPage() {
       if (!res.ok) throw new Error("Failed to load singles");
       const data = await res.json();
 
-      // For items with scryfall IDs, try to get current market prices
-      // We use the cost_cents as a proxy if no market data is available
       const computed: PricingItem[] = data.items.map(
         (item: Record<string, unknown>) => {
           const attrs = (item.attributes ?? {}) as Record<string, unknown>;
           const scryfallId = (attrs.scryfall_id as string) || null;
 
-          // Use item's price as "market" if we don't have real market data yet
-          // In a real scenario, we'd batch-fetch from the price cache
           const marketCents = (item.price_cents as number) || 0;
 
           const condition = ((item.condition as string) || "NM") as Condition;
@@ -109,7 +113,7 @@ export default function BulkPricingPage() {
     }
   }, [gameFilter, conditionFilter, markupPercent]);
 
-  // Fetch market prices from Scryfall for items that have scryfall_id
+  // Fetch market prices from Scryfall
   const [fetchingMarket, setFetchingMarket] = useState(false);
 
   async function fetchMarketPrices() {
@@ -117,7 +121,6 @@ export default function BulkPricingPage() {
     setFetchingMarket(true);
 
     try {
-      // Use the price-drift endpoint to get market prices for our items
       const res = await fetch("/api/inventory/price-drift?threshold=0");
       if (!res.ok) return;
       const data = await res.json();
@@ -128,7 +131,6 @@ export default function BulkPricingPage() {
           marketMap.set(d.id, d.market_price_cents);
         }
 
-        // Update items with real market prices and recalculate
         setItems((prev) =>
           prev.map((item) => {
             const market = marketMap.get(item.id);
@@ -158,7 +160,6 @@ export default function BulkPricingPage() {
     fetchAndCompute();
   }, [fetchAndCompute]);
 
-  // Recalculate when markup changes (client-side)
   useEffect(() => {
     if (items.length === 0) return;
     setItems((prev) =>
@@ -174,7 +175,6 @@ export default function BulkPricingPage() {
     );
   }, [markupPercent]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Items that would actually change
   const changedItems = items.filter(
     (i) => i.new_price_cents !== i.price_cents
   );
@@ -186,7 +186,6 @@ export default function BulkPricingPage() {
     return pctChange > 0.2;
   });
 
-  // Apply all prices
   async function applyAll() {
     if (changedItems.length === 0) return;
     setApplying(true);
@@ -212,7 +211,6 @@ export default function BulkPricingPage() {
       const result = await res.json();
       setApplied({ count: result.updated });
 
-      // Update local state
       setItems((prev) =>
         prev.map((i) => {
           const changed = changedItems.find((c) => c.id === i.id);
@@ -229,7 +227,6 @@ export default function BulkPricingPage() {
     }
   }
 
-  // Export preview
   function exportPreview() {
     if (changedItems.length === 0) return;
     const header = "Card Name,Current Price,Market Price,New Price,Change %";
@@ -253,36 +250,116 @@ export default function BulkPricingPage() {
     URL.revokeObjectURL(url);
   }
 
+  const totalCents = items.reduce((s, i) => s + i.new_price_cents, 0);
+  const currentTotalCents = items.reduce((s, i) => s + i.price_cents, 0);
+  const deltaCents = totalCents - currentTotalCents;
+
   return (
     <div className="mx-auto max-w-4xl space-y-4 pb-8">
-      <PageHeader title="Bulk Pricing Tool" backHref="/dashboard/singles" />
+      <PageHeader
+        title="Bulk Pricing"
+        crumb="TCG · Pricing"
+        desc="Re-price your singles against market mid with a markup multiplier. Preview before apply."
+        backHref="/dashboard/singles"
+      />
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-          {error}
+        <div
+          className="px-4 py-3 font-mono flex items-center gap-3"
+          style={{
+            background: "var(--red-mute)",
+            border: "1px solid var(--red)",
+            color: "var(--red)",
+            fontSize: "0.78rem",
+          }}
+        >
+          <span>{error}</span>
           <button
             onClick={() => setError("")}
-            className="ml-2 text-red-300 hover:text-red-200"
+            className="ml-auto font-mono uppercase text-ink-soft hover:text-ink transition-colors"
+            style={{ fontSize: "0.62rem", letterSpacing: "0.16em" }}
           >
-            dismiss
+            Dismiss
           </button>
         </div>
       )}
 
       {applied && (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-400">
-          {applied.count} item{applied.count !== 1 ? "s" : ""} updated
-          successfully.
+        <div
+          className="px-4 py-3 font-mono"
+          style={{
+            background: "var(--teal-mute)",
+            border: "1px solid var(--teal)",
+            color: "var(--teal)",
+            fontSize: "0.78rem",
+          }}
+        >
+          {applied.count} item{applied.count !== 1 ? "s" : ""} updated successfully.
         </div>
       )}
 
+      {/* Stat strip */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-5"
+        style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}
+      >
+        {[
+          { k: "Items", v: items.length.toLocaleString() },
+          { k: "Will Change", v: changedItems.length.toLocaleString(), tone: changedItems.length > 0 ? "var(--orange)" : undefined },
+          { k: "Big Swings", v: significantChanges.length.toLocaleString(), tone: significantChanges.length > 0 ? "var(--yellow)" : undefined, sub: ">20%" },
+          { k: "Markup", v: `${markupPercent}%` },
+          { k: "Net Change", v: `${deltaCents >= 0 ? "+" : ""}${formatCents(deltaCents)}`, tone: deltaCents > 0 ? "var(--teal)" : deltaCents < 0 ? "var(--red)" : undefined },
+        ].map((cell) => (
+          <div key={cell.k} className="px-3 py-2" style={{ background: "var(--panel-mute)" }}>
+            <div
+              className="font-mono uppercase font-semibold text-ink-faint"
+              style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+            >
+              {cell.k}{cell.sub ? ` · ${cell.sub}` : ""}
+            </div>
+            <div
+              className="font-mono font-semibold mt-1 tabular-nums"
+              style={{
+                fontSize: "0.95rem",
+                letterSpacing: "0.02em",
+                color: cell.tone || "var(--ink)",
+              }}
+            >
+              {cell.v}
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Pricing Strategy */}
-      <div className="rounded-xl border border-card-border bg-card p-4 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">
+      <div
+        className="p-4 space-y-4"
+        style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+      >
+        <div
+          className="font-mono uppercase font-semibold text-ink-faint flex items-center gap-2"
+          style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+        >
+          <span
+            aria-hidden
+            style={{
+              display: "inline-block",
+              width: 8,
+              height: 8,
+              background: "currentColor",
+              clipPath:
+                "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+            }}
+          />
           Pricing Strategy
-        </h2>
+        </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm text-muted">Market Mid x</span>
+          <span
+            className="font-mono uppercase text-ink-soft"
+            style={{ fontSize: "0.66rem", letterSpacing: "0.16em" }}
+          >
+            Market Mid ×
+          </span>
           <div className="relative">
             <input
               type="number"
@@ -296,27 +373,47 @@ export default function BulkPricingPage() {
                 )
               }
               onKeyDown={(e) => e.stopPropagation()}
-              className="w-20 rounded-lg border border-input-border bg-card-hover px-3 py-2 text-sm text-foreground text-center tabular-nums focus:border-accent focus:outline-none"
+              className="font-mono text-ink text-center tabular-nums focus:outline-none"
+              style={{
+                width: 96,
+                background: "var(--panel)",
+                border: "1px solid var(--rule-hi)",
+                fontSize: "0.95rem",
+                padding: "0 1.4rem 0 0.5rem",
+                minHeight: 44,
+              }}
             />
-            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted">
+            <span
+              className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-ink-faint"
+              style={{ fontSize: "0.66rem" }}
+            >
               %
             </span>
           </div>
-          <span className="text-xs text-muted">
-            (sell at {markupPercent}% of market)
+          <span
+            className="font-mono text-ink-faint"
+            style={{ fontSize: "0.7rem", letterSpacing: "0.02em" }}
+          >
+            sell at {markupPercent}% of market
           </span>
           <button
             onClick={fetchMarketPrices}
             disabled={fetchingMarket || items.length === 0}
-            className="ml-auto rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50"
+            className="ml-auto font-mono uppercase font-semibold transition-colors disabled:opacity-50"
+            style={{
+              fontSize: "0.62rem",
+              letterSpacing: "0.16em",
+              padding: "0 0.85rem",
+              minHeight: 44,
+              background: "var(--orange-mute)",
+              border: "1px solid var(--orange)",
+              color: "var(--orange)",
+            }}
           >
             {fetchingMarket ? (
               <span className="flex items-center gap-1.5">
-                <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Refreshing prices...
+                <Spinner size={12} />
+                Refreshing…
               </span>
             ) : "Refresh Market Prices"}
           </button>
@@ -324,11 +421,23 @@ export default function BulkPricingPage() {
 
         {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-xs text-muted">Filter:</label>
+          <label
+            className="font-mono uppercase text-ink-faint"
+            style={{ fontSize: "0.6rem", letterSpacing: "0.18em" }}
+          >
+            Filter
+          </label>
           <select
             value={gameFilter}
             onChange={(e) => setGameFilter(e.target.value as GameFilter)}
-            className="rounded-lg border border-input-border bg-card-hover px-2.5 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none"
+            className="font-mono text-ink focus:outline-none"
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--rule-hi)",
+              fontSize: "0.78rem",
+              padding: "0 0.7rem",
+              minHeight: 40,
+            }}
           >
             {GAME_OPTIONS.map((g) => (
               <option key={g} value={g}>
@@ -339,7 +448,14 @@ export default function BulkPricingPage() {
           <select
             value={conditionFilter}
             onChange={(e) => setConditionFilter(e.target.value)}
-            className="rounded-lg border border-input-border bg-card-hover px-2.5 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none"
+            className="font-mono text-ink focus:outline-none"
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--rule-hi)",
+              fontSize: "0.78rem",
+              padding: "0 0.7rem",
+              minHeight: 40,
+            }}
           >
             <option value="All">All Conditions</option>
             <option value="NM">NM</option>
@@ -353,164 +469,242 @@ export default function BulkPricingPage() {
 
       {/* Preview */}
       {loading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-muted text-sm">
-          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          Loading singles...
+        <div
+          className="flex items-center justify-center gap-2 py-12 font-mono uppercase text-ink-soft"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.18em" }}
+        >
+          <Spinner />
+          Loading singles…
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-12 text-muted text-sm">
+        <div
+          className="text-center py-12 font-mono text-ink-soft"
+          style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)", fontSize: "0.78rem" }}
+        >
           No singles match the current filters.
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted">
-              Preview ({changedItems.length} of {items.length} items will be
-              updated)
+          {/* Listings — operator console rich rows */}
+          <section className="ar-zone" style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}>
+            <div className="ar-zone-head">
+              <span>
+                Preview · <b style={{ color: "var(--ink)" }}>{changedItems.length}</b> of {items.length} will change
+              </span>
               {significantChanges.length > 0 && (
-                <span className="text-amber-400 ml-2">
-                  {significantChanges.length} with {">"}20% change
+                <span style={{ color: "var(--yellow)" }}>
+                  {significantChanges.length} {">"}20% swing
                 </span>
               )}
-            </p>
-          </div>
+            </div>
 
-          {/* Table Header */}
-          <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-4 text-[10px] text-muted uppercase tracking-wider">
-            <div>Card</div>
-            <div className="w-20 text-right">Current</div>
-            <div className="w-20 text-right">Market</div>
-            <div className="w-20 text-right">New Price</div>
-            <div className="w-16 text-right">Change</div>
-          </div>
-
-          <div className="divide-y divide-card-border rounded-xl border border-card-border bg-card overflow-hidden">
-            {items.map((item) => {
-              const pctChange =
-                item.price_cents > 0
-                  ? (
-                      ((item.new_price_cents - item.price_cents) /
-                        item.price_cents) *
-                      100
-                    ).toFixed(1)
-                  : "N/A";
-              const isSignificant =
-                item.price_cents > 0 &&
-                Math.abs(item.new_price_cents - item.price_cents) /
-                  item.price_cents >
-                  0.2;
-              const isChanged = item.new_price_cents !== item.price_cents;
-
-              return (
+            {/* Column header — desktop only */}
+            <div
+              className="hidden md:grid items-center px-4 py-2"
+              style={{
+                gridTemplateColumns: "1fr 90px 90px 90px 80px",
+                gap: "0.85rem",
+                background: "var(--panel-mute)",
+                borderBottom: "1px solid var(--rule)",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              {["Card", "Current", "Market", "New Price", "Change"].map((h, idx) => (
                 <div
-                  key={item.id}
-                  className={`px-4 py-2.5 ${
-                    isSignificant
-                      ? "bg-amber-500/5"
-                      : ""
-                  }`}
+                  key={h}
+                  className="font-mono uppercase font-semibold text-ink-faint"
+                  style={{
+                    fontSize: "0.55rem",
+                    letterSpacing: "0.22em",
+                    textAlign: idx === 0 ? "left" : "right",
+                  }}
                 >
-                  {/* Mobile layout */}
-                  <div className="md:hidden space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground truncate mr-2">
-                        {item.name}
-                      </span>
-                      {isSignificant && (
-                        <span className="text-amber-400 text-xs shrink-0">
-                          !
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs tabular-nums">
-                      <span className="text-muted">
-                        Current: {formatCents(item.price_cents)}
-                      </span>
-                      <span className="text-muted">
-                        Market: {formatCents(item.market_price_cents || 0)}
-                      </span>
-                      <span
-                        className={
-                          isChanged ? "text-accent font-medium" : "text-muted"
-                        }
-                      >
-                        New: {formatCents(item.new_price_cents)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Desktop layout */}
-                  <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 items-center">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {item.name}
-                      </span>
-                      <span className="text-[10px] text-muted shrink-0">
-                        {item.condition}
-                        {item.foil ? " Foil" : ""}
-                      </span>
-                      {isSignificant && (
-                        <span className="text-amber-400 text-xs shrink-0">
-                          !
-                        </span>
-                      )}
-                    </div>
-                    <div className="w-20 text-right text-sm text-muted tabular-nums">
-                      {formatCents(item.price_cents)}
-                    </div>
-                    <div className="w-20 text-right text-sm text-muted tabular-nums">
-                      {formatCents(item.market_price_cents || 0)}
-                    </div>
-                    <div
-                      className={`w-20 text-right text-sm font-medium tabular-nums ${
-                        isChanged ? "text-accent" : "text-muted"
-                      }`}
-                    >
-                      {formatCents(item.new_price_cents)}
-                    </div>
-                    <div
-                      className={`w-16 text-right text-xs tabular-nums ${
-                        isSignificant
-                          ? "text-amber-400"
-                          : isChanged
-                            ? "text-foreground/70"
-                            : "text-muted"
-                      }`}
-                    >
-                      {typeof pctChange === "string" && pctChange !== "N/A"
-                        ? `${parseFloat(pctChange) > 0 ? "+" : ""}${pctChange}%`
-                        : pctChange}
-                    </div>
-                  </div>
+                  {h}
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+
+            <div className="ar-stagger flex flex-col">
+              {items.map((item) => {
+                const pctChange =
+                  item.price_cents > 0
+                    ? (
+                        ((item.new_price_cents - item.price_cents) /
+                          item.price_cents) *
+                        100
+                      ).toFixed(1)
+                    : "N/A";
+                const isSignificant =
+                  item.price_cents > 0 &&
+                  Math.abs(item.new_price_cents - item.price_cents) /
+                    item.price_cents >
+                    0.2;
+                const isChanged = item.new_price_cents !== item.price_cents;
+                const isUp = item.new_price_cents > item.price_cents;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="px-4 py-2.5"
+                    style={{
+                      borderBottom: "1px solid var(--rule-faint)",
+                      background: isSignificant ? "var(--yellow-mute)" : "transparent",
+                    }}
+                  >
+                    {/* Mobile */}
+                    <div className="md:hidden space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-display text-ink truncate" style={{ fontSize: "0.92rem", fontWeight: 500 }}>
+                          {item.name}
+                        </span>
+                        {isSignificant && (
+                          <span
+                            className="font-mono uppercase font-semibold shrink-0"
+                            style={{
+                              padding: "1px 6px",
+                              fontSize: "0.55rem",
+                              letterSpacing: "0.16em",
+                              color: "var(--yellow)",
+                              background: "var(--yellow-mute)",
+                              border: "1px solid rgba(251,219,101,0.4)",
+                            }}
+                          >
+                            Big Swing
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className="flex items-center gap-3 font-mono tabular-nums text-ink-faint flex-wrap"
+                        style={{ fontSize: "0.66rem" }}
+                      >
+                        <span>Now {formatCents(item.price_cents)}</span>
+                        <span>Mkt {formatCents(item.market_price_cents || 0)}</span>
+                        <span style={{ color: isChanged ? "var(--orange)" : "var(--ink-faint)", fontWeight: 600 }}>
+                          New {formatCents(item.new_price_cents)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Desktop */}
+                    <div
+                      className="hidden md:grid items-center"
+                      style={{ gridTemplateColumns: "1fr 90px 90px 90px 80px", gap: "0.85rem" }}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-display text-ink truncate" style={{ fontSize: "0.92rem", fontWeight: 500 }}>
+                          {item.name}
+                        </span>
+                        <span
+                          className="font-mono uppercase shrink-0 text-ink-faint"
+                          style={{
+                            fontSize: "0.55rem",
+                            letterSpacing: "0.16em",
+                            padding: "1px 6px",
+                            background: "var(--panel)",
+                            border: "1px solid var(--rule-hi)",
+                          }}
+                        >
+                          {item.condition}{item.foil ? " · F" : ""}
+                        </span>
+                        {isSignificant && (
+                          <span
+                            aria-label="Big swing"
+                            style={{
+                              display: "inline-block",
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: "var(--yellow)",
+                              boxShadow: "0 0 4px var(--yellow)",
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div
+                        className="text-right font-mono tabular-nums text-ink-faint"
+                        style={{ fontSize: "0.85rem" }}
+                      >
+                        {formatCents(item.price_cents)}
+                      </div>
+                      <div
+                        className="text-right font-mono tabular-nums text-ink-faint"
+                        style={{ fontSize: "0.85rem" }}
+                      >
+                        {formatCents(item.market_price_cents || 0)}
+                      </div>
+                      <div
+                        className="text-right font-mono font-semibold tabular-nums"
+                        style={{
+                          fontSize: "0.92rem",
+                          color: isChanged ? "var(--orange)" : "var(--ink-faint)",
+                        }}
+                      >
+                        {formatCents(item.new_price_cents)}
+                      </div>
+                      <div
+                        className="text-right font-mono tabular-nums"
+                        style={{
+                          fontSize: "0.7rem",
+                          letterSpacing: "0.02em",
+                          fontWeight: 600,
+                          color: isSignificant
+                            ? "var(--yellow)"
+                            : isChanged
+                              ? isUp ? "var(--teal)" : "var(--red)"
+                              : "var(--ink-faint)",
+                        }}
+                      >
+                        {typeof pctChange === "string" && pctChange !== "N/A"
+                          ? `${parseFloat(pctChange) > 0 ? "+" : ""}${pctChange}%`
+                          : pctChange}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
 
           {/* Action Buttons */}
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setShowConfirm(true)}
               disabled={applying || changedItems.length === 0}
-              className="flex-1 md:flex-none rounded-xl bg-accent px-6 py-3 text-sm font-bold text-foreground hover:opacity-90 transition-colors disabled:opacity-50 min-h-12"
+              className="flex-1 md:flex-none font-display uppercase transition-opacity disabled:opacity-40"
+              style={{
+                padding: "0 1.5rem",
+                minHeight: 56,
+                background: "var(--orange)",
+                color: "var(--void)",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+                border: "1px solid var(--orange)",
+              }}
             >
               {applying ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Applying prices...
+                  <Spinner size={16} />
+                  Applying…
                 </span>
               ) : `Apply ${changedItems.length} Price${changedItems.length !== 1 ? "s" : ""}`}
             </button>
             <button
               onClick={exportPreview}
               disabled={changedItems.length === 0}
-              className="rounded-xl border border-card-border bg-card px-4 py-3 text-sm font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50"
+              className="font-mono uppercase font-semibold transition-colors disabled:opacity-40"
+              style={{
+                fontSize: "0.7rem",
+                letterSpacing: "0.18em",
+                padding: "0 1.2rem",
+                minHeight: 56,
+                background: "var(--panel)",
+                border: "1px solid var(--rule-hi)",
+                color: "var(--ink-soft)",
+              }}
             >
               Export Preview
             </button>
@@ -521,85 +715,129 @@ export default function BulkPricingPage() {
       {/* Confirmation Modal */}
       {showConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "var(--overlay-bg)" }}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setShowConfirm(false);
           }}
         >
           <div
-            className="mx-4 w-full max-w-sm rounded-xl border border-card-border bg-card p-6 shadow-2xl space-y-4"
+            className="w-full max-w-sm shadow-2xl"
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--rule-hi)",
+            }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-foreground">
-              Apply Price Changes?
-            </h3>
-            <p className="text-sm text-muted">
-              This will update prices for{" "}
-              <span className="font-medium text-foreground">
-                {changedItems.length} item{changedItems.length !== 1 ? "s" : ""}
-              </span>
-              .
-            </p>
-            {(() => {
-              const totalChange = changedItems.reduce(
-                (sum, i) => sum + (i.new_price_cents - i.price_cents),
-                0
-              );
-              const avgChange =
-                changedItems.length > 0
-                  ? totalChange / changedItems.length
-                  : 0;
-              return (
-                <div className="rounded-lg border border-card-border bg-card-hover p-3 text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-muted">Items changing</span>
-                    <span className="text-foreground font-medium">
-                      {changedItems.length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted">Avg change per item</span>
-                    <span
-                      className={
-                        avgChange > 0
-                          ? "text-green-400 font-medium"
-                          : avgChange < 0
-                            ? "text-red-400 font-medium"
-                            : "text-foreground font-medium"
-                      }
-                    >
-                      {avgChange > 0 ? "+" : ""}
-                      {formatCents(Math.round(avgChange))}
-                    </span>
-                  </div>
+            <div
+              className="flex items-center justify-between px-5"
+              style={{
+                background: "var(--slate)",
+                borderBottom: "1px solid var(--rule)",
+                minHeight: 56,
+              }}
+            >
+              <div>
+                <div
+                  className="font-mono uppercase font-semibold text-ink-faint"
+                  style={{ fontSize: "0.55rem", letterSpacing: "0.28em" }}
+                >
+                  Pricing · Confirm
                 </div>
-              );
-            })()}
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="flex-1 rounded-xl border border-card-border bg-card py-3 text-sm font-medium text-muted hover:text-foreground transition-colors"
+                <div
+                  className="font-display text-ink mt-0.5"
+                  style={{ fontSize: "1.1rem", fontWeight: 600, letterSpacing: "0.005em", lineHeight: 1 }}
+                >
+                  Apply Price Changes?
+                </div>
+              </div>
+            </div>
+            <div className="p-5 space-y-3">
+              <p
+                className="font-mono text-ink-soft"
+                style={{ fontSize: "0.78rem", letterSpacing: "0.02em" }}
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirm(false);
-                  applyAll();
-                }}
-                disabled={applying}
-                className="flex-1 rounded-xl bg-accent py-3 text-sm font-bold text-foreground hover:opacity-90 transition-colors disabled:opacity-50"
-              >
-                {applying ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Applying...
-                  </span>
-                ) : "Apply"}
-              </button>
+                This will update prices for{" "}
+                <span className="font-semibold text-ink">
+                  {changedItems.length} item{changedItems.length !== 1 ? "s" : ""}
+                </span>
+                .
+              </p>
+              {(() => {
+                const totalChange = changedItems.reduce(
+                  (sum, i) => sum + (i.new_price_cents - i.price_cents),
+                  0
+                );
+                const avgChange =
+                  changedItems.length > 0
+                    ? totalChange / changedItems.length
+                    : 0;
+                return (
+                  <div
+                    className="p-3 space-y-1"
+                    style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+                  >
+                    <div className="flex justify-between font-mono" style={{ fontSize: "0.78rem" }}>
+                      <span className="uppercase text-ink-faint" style={{ letterSpacing: "0.16em", fontSize: "0.62rem" }}>Items Changing</span>
+                      <span className="text-ink font-semibold tabular-nums">{changedItems.length}</span>
+                    </div>
+                    <div className="flex justify-between font-mono" style={{ fontSize: "0.78rem" }}>
+                      <span className="uppercase text-ink-faint" style={{ letterSpacing: "0.16em", fontSize: "0.62rem" }}>Avg Change</span>
+                      <span
+                        className="font-semibold tabular-nums"
+                        style={{
+                          color: avgChange > 0
+                            ? "var(--teal)"
+                            : avgChange < 0
+                              ? "var(--red)"
+                              : "var(--ink)",
+                        }}
+                      >
+                        {avgChange > 0 ? "+" : ""}{formatCents(Math.round(avgChange))}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+              <div className="grid grid-cols-2" style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="font-display uppercase transition-colors"
+                  style={{
+                    minHeight: 56,
+                    background: "var(--panel)",
+                    color: "var(--ink-soft)",
+                    letterSpacing: "0.06em",
+                    fontWeight: 500,
+                    fontSize: "0.92rem",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirm(false);
+                    applyAll();
+                  }}
+                  disabled={applying}
+                  className="font-display uppercase transition-colors disabled:opacity-50"
+                  style={{
+                    minHeight: 56,
+                    background: "var(--orange)",
+                    color: "var(--void)",
+                    letterSpacing: "0.06em",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  {applying ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Spinner size={16} />
+                      Applying…
+                    </span>
+                  ) : "Apply"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

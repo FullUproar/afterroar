@@ -236,27 +236,31 @@ export default function GameLibraryPage() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div className="flex items-center justify-between">
-        <PageHeader title="Game Library" />
-        <div className="flex gap-1 rounded-xl border border-card-border bg-card p-1">
+        <PageHeader
+          title="Game Library"
+          crumb="Console · Service"
+          desc="Lendable board games — checkout, return, and overdue tracking."
+        />
+        <div className="flex gap-1 rounded-xl border border-rule-hi bg-panel p-1">
           <button
             onClick={() => setView("available")}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-md px-4 py-1.5 text-sm font-mono uppercase tracking-wider font-semibold transition-colors ${
               view === "available"
-                ? "bg-card-hover text-foreground"
-                : "text-muted hover:text-zinc-200"
+                ? "bg-panel-hi text-orange"
+                : "text-ink-soft hover:text-ink"
             }`}
           >
-            Available Games
+            Available
           </button>
           <button
             onClick={() => setView("active")}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-md px-4 py-1.5 text-sm font-mono uppercase tracking-wider font-semibold transition-colors ${
               view === "active"
-                ? "bg-card-hover text-foreground"
-                : "text-muted hover:text-zinc-200"
+                ? "bg-panel-hi text-orange"
+                : "text-ink-soft hover:text-ink"
             }`}
           >
-            Active Checkouts
+            Active
           </button>
         </div>
       </div>
@@ -281,7 +285,7 @@ export default function GameLibraryPage() {
                   className="rounded-xl border border-card-border bg-card p-4 flex flex-col"
                 >
                   {/* Image placeholder */}
-                  <div className="mb-3 flex h-32 items-center justify-center rounded-md bg-card-hover text-4xl text-zinc-600">
+                  <div className="mb-3 flex h-32 items-center justify-center rounded-md bg-card-hover text-4xl text-ink-faint">
                     {game.image_url ? (
                       <img
                         src={game.image_url}
@@ -300,11 +304,11 @@ export default function GameLibraryPage() {
 
                   {/* Availability badge */}
                   {game.available ? (
-                    <span className="inline-flex items-center self-start rounded-full border px-2.5 py-0.5 text-xs font-medium text-green-400 bg-green-900/30 border-green-800 mb-3">
+                    <span className="inline-flex items-center self-start rounded-full border px-2.5 py-0.5 text-xs font-mono uppercase tracking-wider font-bold mb-3" style={{ color: 'var(--teal)', background: 'var(--teal-mute)', borderColor: 'var(--teal)' }}>
                       Available
                     </span>
                   ) : (
-                    <span className="inline-flex items-center self-start rounded-full border px-2.5 py-0.5 text-xs font-medium text-red-400 bg-red-900/30 border-red-800 mb-3">
+                    <span className="inline-flex items-center self-start rounded-full border px-2.5 py-0.5 text-xs font-mono uppercase tracking-wider font-bold mb-3" style={{ color: 'var(--red)', background: 'var(--red-mute)', borderColor: 'var(--red)' }}>
                       Checked Out
                       {game.checkout?.table_number
                         ? ` \u2014 Table ${game.checkout.table_number}`
@@ -318,7 +322,8 @@ export default function GameLibraryPage() {
                         resetCheckoutForm();
                         setCheckoutModal(game);
                       }}
-                      className="mt-auto rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+                      className="mt-auto rounded-xl bg-orange px-4 py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 transition-colors"
+                      style={{ minHeight: 48 }}
                     >
                       Check Out
                     </button>
@@ -361,7 +366,7 @@ export default function GameLibraryPage() {
                     <th className="px-4 py-3 font-medium text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800">
+                <tbody className="divide-y divide-rule">
                   {checkouts.map((co) => {
                     const isOverdue =
                       co.status === "overdue" ||
@@ -374,11 +379,12 @@ export default function GameLibraryPage() {
                         key={co.id}
                         className={`transition-colors ${
                           co.status === "returned"
-                            ? "bg-background/50 text-muted"
+                            ? "bg-background/50 text-ink-soft"
                             : isOverdue
-                            ? "bg-orange-950/20"
-                            : "bg-background hover:bg-card-hover"
+                            ? ""
+                            : "bg-background hover:bg-panel-hi"
                         }`}
+                        style={isOverdue && co.status !== "returned" ? { background: 'var(--red-mute)' } : undefined}
                       >
                         <td className="px-4 py-3 text-foreground font-medium">
                           {co.inventory_item.name}
@@ -408,18 +414,18 @@ export default function GameLibraryPage() {
                         </td>
                         <td className="px-4 py-3">
                           {co.status === "returned" ? (
-                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium text-muted bg-card-hover border-input-border">
+                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold text-ink-soft bg-panel-hi border-rule-hi">
                               Returned
                               {co.return_condition && co.return_condition !== "Good"
                                 ? ` (${co.return_condition})`
                                 : ""}
                             </span>
                           ) : co.status === "overdue" || isOverdue ? (
-                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium text-orange-400 bg-orange-900/30 border-orange-800">
+                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold" style={{ color: 'var(--red)', background: 'var(--red-mute)', borderColor: 'var(--red)' }}>
                               Overdue
                             </span>
                           ) : (
-                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium text-green-400 bg-green-900/30 border-green-800">
+                            <span className="inline-block rounded-full border px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold" style={{ color: 'var(--teal)', background: 'var(--teal-mute)', borderColor: 'var(--teal)' }}>
                               Out
                             </span>
                           )}
@@ -433,7 +439,7 @@ export default function GameLibraryPage() {
                                   setReturnNotes("");
                                   setReturnModal(co);
                                 }}
-                                className="rounded bg-card-hover px-3 py-1 text-xs text-foreground/70 hover:bg-card-hover hover:text-foreground transition-colors"
+                                className="rounded border border-rule-hi px-3 py-1 text-xs font-mono uppercase tracking-wider font-bold text-ink-soft hover:text-ink hover:border-orange transition-colors"
                               >
                                 Return
                               </button>
@@ -442,7 +448,8 @@ export default function GameLibraryPage() {
                                 new Date(co.expected_return_at) < new Date() && (
                                   <button
                                     onClick={() => handleMarkOverdue(co)}
-                                    className="rounded bg-orange-900/50 px-3 py-1 text-xs text-orange-300 hover:bg-orange-800/50 transition-colors"
+                                    className="rounded px-3 py-1 text-xs font-mono uppercase tracking-wider font-bold transition-colors"
+                                    style={{ background: 'var(--red-mute)', color: 'var(--red)', border: '1px solid var(--red)' }}
                                   >
                                     Mark Overdue
                                   </button>

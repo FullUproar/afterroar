@@ -144,6 +144,8 @@ export default function StaffPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Staff"
+        crumb="Console · People"
+        desc="Invite, manage roles, and set PINs for your team."
         action={
           <ActionButton variant="accent" onClick={() => setShowInvite(true)}>
             Invite Staff
@@ -174,7 +176,7 @@ export default function StaffPage() {
                 <th className="px-4 py-3 font-medium text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-rule">
               {staffList.map((member) => {
                 const isCurrentUser = member.id === currentStaff?.id;
                 return (
@@ -230,7 +232,7 @@ export default function StaffPage() {
                     <td className="px-4 py-3">
                       {member.has_pin ? (
                         <div className="flex items-center gap-2">
-                          <span className="inline-block rounded-full bg-green-900/50 text-green-400 px-2 py-0.5 text-xs font-medium">Set</span>
+                          <span className="inline-block rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold" style={{ background: 'var(--teal-mute)', color: 'var(--teal)' }}>Set</span>
                           {!isCurrentUser && member.role !== "owner" && (
                             <button
                               onClick={() => { setPinModal({ staffId: member.id, staffName: member.name }); setPinValue(""); setPinMessage(null); }}
@@ -303,7 +305,7 @@ export default function StaffPage() {
               className="w-full rounded-xl border border-input-border bg-input-bg px-4 py-3 text-center text-2xl font-mono tracking-[0.3em] text-foreground placeholder:text-muted placeholder:tracking-normal placeholder:text-base focus:border-accent focus:outline-none"
             />
             {pinMessage && (
-              <p className={`mt-2 text-sm text-center ${pinMessage === "PIN set!" ? "text-green-400" : "text-red-400"}`}>
+              <p className={`mt-2 text-sm text-center ${pinMessage === "PIN set!" ? "text-teal" : "text-red-fu"}`}>
                 {pinMessage}
               </p>
             )}
@@ -317,7 +319,7 @@ export default function StaffPage() {
               <button
                 onClick={handleSetPin}
                 disabled={pinSaving || pinValue.length < 4}
-                className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-colors"
+                className="flex-1 rounded-xl bg-orange py-2.5 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 disabled:opacity-40 transition-colors"
               >
                 {pinSaving ? "Setting..." : "Set PIN"}
               </button>
@@ -407,7 +409,7 @@ export default function StaffPage() {
               <button
                 onClick={handleInvite}
                 disabled={inviting || !inviteEmail.trim() || !inviteName.trim()}
-                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-orange py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {inviting ? "Inviting..." : "Invite"}
               </button>

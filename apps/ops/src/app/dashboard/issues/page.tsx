@@ -32,9 +32,9 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  open: "bg-red-500/15 text-red-400 border-red-500/30",
-  resolved: "bg-green-500/15 text-green-400 border-green-500/30",
+const STATUS_STYLES: Record<string, React.CSSProperties> = {
+  open: { background: 'var(--red-mute)', color: 'var(--red)', borderColor: 'var(--red)' },
+  resolved: { background: 'var(--teal-mute)', color: 'var(--teal)', borderColor: 'var(--teal)' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -105,7 +105,12 @@ export default function IssuesPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-8">
-      <PageHeader title="Issues" backHref="/dashboard" />
+      <PageHeader
+        title="Issues"
+        backHref="/dashboard"
+        crumb="Console · Operations"
+        desc="Flagged scanner errors, mispriced items, and other store issues."
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
@@ -159,7 +164,7 @@ export default function IssuesPage() {
                 <div className="px-4 py-3 space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[meta.status] || STATUS_COLORS.open}`}>
+                      <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider" style={STATUS_STYLES[meta.status] || STATUS_STYLES.open}>
                         {meta.status}
                       </span>
                       <span className="text-sm font-medium text-foreground">
@@ -183,7 +188,7 @@ export default function IssuesPage() {
                   </div>
 
                   {meta.resolution_notes && (
-                    <div className="text-xs text-muted italic border-l-2 border-green-500/30 pl-2">
+                    <div className="text-xs text-muted italic border-l-2 pl-2" style={{ borderColor: 'var(--teal)' }}>
                       {meta.resolution_notes}
                     </div>
                   )}
@@ -208,7 +213,8 @@ export default function IssuesPage() {
                         <button
                           onClick={() => resolveIssue(issue.id)}
                           disabled={saving}
-                          className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                          className="rounded-lg px-4 py-1.5 text-xs font-mono uppercase tracking-wider font-bold transition-colors disabled:opacity-50"
+                          style={{ background: 'var(--teal)', color: 'var(--void)' }}
                         >
                           {saving ? "Saving..." : "Resolve"}
                         </button>

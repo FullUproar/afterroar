@@ -226,13 +226,15 @@ export default function CafePage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Cafe"
+        crumb="Console · Service"
+        desc="Open tabs, kitchen orders, and table service."
         action={
           <div className="flex gap-2">
-            <div className="flex rounded-lg border border-card-border overflow-hidden">
-              <button onClick={() => setView("tabs")} className={`px-3 py-2 text-xs font-medium transition-colors ${view === "tabs" ? "bg-card-hover text-foreground" : "text-muted"}`} style={{ minHeight: "auto" }}>Tabs</button>
-              <button onClick={() => { setView("kds"); loadKDS(); }} className={`px-3 py-2 text-xs font-medium transition-colors ${view === "kds" ? "bg-card-hover text-foreground" : "text-muted"}`} style={{ minHeight: "auto" }}>Kitchen</button>
+            <div className="flex rounded-lg border border-rule-hi overflow-hidden">
+              <button onClick={() => setView("tabs")} className={`px-3 py-2 text-xs font-mono uppercase tracking-wider font-semibold transition-colors ${view === "tabs" ? "bg-panel-hi text-orange" : "text-ink-soft"}`} style={{ minHeight: "auto" }}>Tabs</button>
+              <button onClick={() => { setView("kds"); loadKDS(); }} className={`px-3 py-2 text-xs font-mono uppercase tracking-wider font-semibold transition-colors ${view === "kds" ? "bg-panel-hi text-orange" : "text-ink-soft"}`} style={{ minHeight: "auto" }}>Kitchen</button>
             </div>
-            <button onClick={() => setShowNewTab(true)} className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium">Open Tab</button>
+            <button onClick={() => setShowNewTab(true)} className="px-4 py-2 bg-orange text-void rounded-lg text-sm font-display uppercase font-bold tracking-wider" style={{ minHeight: 48 }}>Open Tab</button>
           </div>
         }
       />
@@ -248,20 +250,20 @@ export default function CafePage() {
             placeholder="Table label (optional)"
             className="w-full rounded-lg border border-input-border bg-input-bg px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
           />
-          {tabError && <p className="text-xs text-red-400">{tabError}</p>}
+          {tabError && <p className="text-xs text-red-fu">{tabError}</p>}
           <div className="flex gap-2">
-            <button onClick={openTab} className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium">Open</button>
-            <button onClick={() => { setShowNewTab(false); setTabError(null); }} className="px-4 py-2 border border-card-border text-muted rounded-lg text-sm">Cancel</button>
+            <button onClick={openTab} className="px-4 py-2 bg-orange text-void rounded-lg text-sm font-display uppercase font-bold tracking-wider">Open</button>
+            <button onClick={() => { setShowNewTab(false); setTabError(null); }} className="px-4 py-2 border border-rule-hi text-ink-soft rounded-lg text-sm">Cancel</button>
           </div>
         </div>
       )}
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center">
-          <p className="text-sm text-red-400">{loadError}</p>
+        <div className="rounded-xl border p-4 text-center" style={{ borderColor: 'var(--red)', background: 'var(--red-mute)' }}>
+          <p className="text-sm text-red-fu">{loadError}</p>
           <button
             onClick={() => { setLoadError(null); loadTabs(); }}
-            className="mt-2 text-xs text-red-300 underline hover:text-red-200"
+            className="mt-2 text-xs text-red-fu underline"
           >
             Try again
           </button>
@@ -273,25 +275,25 @@ export default function CafePage() {
       ) : view === "kds" ? (
         /* ---- KDS VIEW ---- */
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Pending Orders</h2>
+          <h2 className="font-mono uppercase font-semibold text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>Pending Orders</h2>
           {kdsItems.length === 0 ? (
-            <div className="rounded-xl border border-card-border bg-card p-8 text-center">
-              <p className="text-muted">No pending items</p>
+            <div className="rounded-xl border border-rule bg-panel p-8 text-center">
+              <p className="text-ink-soft">No pending items</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {kdsItems.map((item) => (
-                <div key={item.id} className={`rounded-xl border p-4 ${item.status === "in_progress" ? "border-amber-500/30 bg-amber-900/10" : "border-card-border bg-card"}`}>
+                <div key={item.id} className={`rounded-xl border p-4 ${item.status === "in_progress" ? "border-yellow bg-yellow-mute" : "border-rule bg-panel"}`} style={item.status === "in_progress" ? { borderColor: 'var(--yellow)', background: 'var(--yellow-mute)' } : undefined}>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{item.name}{item.quantity > 1 ? ` x${item.quantity}` : ""}</p>
-                      <p className="text-xs text-muted">{item.tab?.table_label || "No table"}{item.tab?.customer ? ` — ${item.tab.customer.name}` : ""}</p>
-                      {item.notes && <p className="text-xs text-amber-400 mt-1">{item.notes}</p>}
+                      <p className="font-display font-semibold text-ink">{item.name}{item.quantity > 1 ? ` x${item.quantity}` : ""}</p>
+                      <p className="text-xs text-ink-soft">{item.tab?.table_label || "No table"}{item.tab?.customer ? ` — ${item.tab.customer.name}` : ""}</p>
+                      {item.notes && <p className="text-xs text-yellow mt-1">{item.notes}</p>}
                     </div>
                     <button
                       onClick={() => markServed(item.id)}
-                      className="px-3 py-1.5 bg-green-700 text-white rounded text-xs font-medium shrink-0"
-                      style={{ minHeight: "auto" }}
+                      className="px-3 py-1.5 rounded text-xs font-mono uppercase tracking-wider font-bold shrink-0"
+                      style={{ minHeight: "auto", background: 'var(--teal)', color: 'var(--void)' }}
                     >
                       Served
                     </button>
@@ -306,23 +308,24 @@ export default function CafePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tab list */}
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Open Tabs ({tabs.length})</h2>
+            <h2 className="font-mono uppercase font-semibold text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>Open Tabs ({tabs.length})</h2>
             {tabs.length === 0 ? (
-              <p className="text-sm text-muted py-4">No open tabs</p>
+              <p className="text-sm text-ink-soft py-4">No open tabs</p>
             ) : (
               tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab)}
-                  className={`w-full text-left rounded-xl border p-3 transition-colors ${activeTab?.id === tab.id ? "border-accent bg-accent/5" : "border-card-border bg-card hover:border-accent/30"}`}
+                  className={`w-full text-left rounded-xl border p-3 transition-colors ar-stripe ${activeTab?.id === tab.id ? "" : "border-rule bg-panel hover:border-rule-hi"}`}
+                  style={activeTab?.id === tab.id ? { borderColor: 'var(--orange)', background: 'var(--orange-mute)' } : undefined}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-sm font-medium text-foreground">{tab.table_label || "Walk-up"}</span>
-                      {tab.age_verified && <span className="ml-1.5 rounded bg-amber-500/20 px-1 py-0.5 text-[9px] font-bold text-amber-400">21+</span>}
-                      {tab.customer && <span className="text-xs text-muted ml-2">{tab.customer.name}</span>}
+                      <span className="text-sm font-display font-semibold text-ink">{tab.table_label || "Walk-up"}</span>
+                      {tab.age_verified && <span className="ml-1.5 rounded px-1 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider" style={{ background: 'var(--yellow-mute)', color: 'var(--yellow)' }}>21+</span>}
+                      {tab.customer && <span className="text-xs text-ink-soft ml-2">{tab.customer.name}</span>}
                     </div>
-                    <span className="text-sm font-semibold text-accent tabular-nums">{formatCents(tab.subtotal_cents)}</span>
+                    <span className="text-sm font-mono font-bold text-orange tabular-nums">{formatCents(tab.subtotal_cents)}</span>
                   </div>
                   {(() => {
                     const elapsed = Math.floor((now - new Date(tab.opened_at).getTime()) / 60000);
@@ -330,10 +333,10 @@ export default function CafePage() {
                     const mins = elapsed % 60;
                     const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
                     return (
-                      <p className="text-[10px] text-muted mt-1">
+                      <p className="text-[10px] text-ink-soft mt-1 font-mono tabular-nums">
                         {tab.items.length} item{tab.items.length !== 1 ? "s" : ""} {"\u00B7"} {timeStr}
                         {tab.table_fee_type === "hourly" && tab.table_fee_cents > 0 && (
-                          <span className="text-amber-400 ml-1">
+                          <span className="text-yellow ml-1">
                             {"\u00B7"} {formatCents(Math.round((tab.table_fee_cents / 60) * elapsed))} accrued
                           </span>
                         )}
@@ -350,36 +353,36 @@ export default function CafePage() {
             {activeTab ? (
               <>
                 {/* Tab items */}
-                <div className="rounded-xl border border-card-border bg-card p-4">
+                <div className="rounded-xl border border-rule bg-panel p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-foreground">{activeTab.table_label || "Walk-up"} — Items</h3>
-                    <span className="text-lg font-bold text-accent tabular-nums">{formatCents(activeTab.subtotal_cents)}</span>
+                    <h3 className="text-sm font-display font-semibold text-ink">{activeTab.table_label || "Walk-up"} — Items</h3>
+                    <span className="text-lg font-mono font-bold text-orange tabular-nums">{formatCents(activeTab.subtotal_cents)}</span>
                   </div>
                   {activeTab.items.length === 0 ? (
-                    <p className="text-sm text-muted py-2">No items yet — tap menu items below to add</p>
+                    <p className="text-sm text-ink-soft py-2">No items yet — tap menu items below to add</p>
                   ) : (
                     <div className="space-y-1">
                       {activeTab.items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between py-1.5 text-sm">
                           <div className="flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${item.status === "served" ? "bg-green-400" : item.status === "in_progress" ? "bg-amber-400" : "bg-blue-400"}`} />
-                            <span className="text-foreground">{item.name}{item.quantity > 1 ? ` x${item.quantity}` : ""}</span>
+                            <span className={`h-2 w-2 rounded-full`} style={{ background: item.status === "served" ? 'var(--teal)' : item.status === "in_progress" ? 'var(--yellow)' : 'var(--orange)' }} />
+                            <span className="text-ink">{item.name}{item.quantity > 1 ? ` x${item.quantity}` : ""}</span>
                           </div>
-                          <span className="text-muted tabular-nums">{formatCents(item.price_cents * item.quantity)}</span>
+                          <span className="text-ink-soft tabular-nums font-mono">{formatCents(item.price_cents * item.quantity)}</span>
                         </div>
                       ))}
                     </div>
                   )}
                   {showClosePayment === activeTab.id ? (
                     <div className="mt-4 space-y-2">
-                      <p className="text-xs text-muted text-center">Payment method</p>
+                      <p className="text-xs text-ink-soft text-center font-mono uppercase tracking-wider">Payment method</p>
                       <div className="grid grid-cols-3 gap-2">
                         {["cash", "card", "store_credit"].map((method) => (
                           <button
                             key={method}
                             onClick={() => closeTab(activeTab.id, method)}
                             disabled={closing}
-                            className="rounded-lg border border-card-border bg-card-hover py-2.5 text-sm font-medium text-foreground hover:border-accent/50 disabled:opacity-50 transition-colors capitalize"
+                            className="rounded-lg border border-rule-hi bg-panel-hi py-2.5 text-sm font-display uppercase font-bold tracking-wider text-ink hover:border-orange disabled:opacity-50 transition-colors"
                           >
                             {method === "store_credit" ? "Credit" : method}
                           </button>
@@ -387,7 +390,7 @@ export default function CafePage() {
                       </div>
                       <button
                         onClick={() => setShowClosePayment(null)}
-                        className="w-full text-xs text-muted hover:text-foreground transition-colors py-1"
+                        className="w-full text-xs text-ink-soft hover:text-ink transition-colors py-1"
                       >
                         Cancel
                       </button>
@@ -395,7 +398,8 @@ export default function CafePage() {
                   ) : (
                     <button
                       onClick={() => setShowClosePayment(activeTab.id)}
-                      className="mt-4 w-full rounded-lg bg-green-700 py-2.5 text-sm font-semibold text-white hover:bg-green-600 transition-colors"
+                      className="mt-4 w-full rounded-lg py-2.5 text-sm font-display uppercase font-bold tracking-wider transition-colors"
+                      style={{ background: 'var(--teal)', color: 'var(--void)' }}
                     >
                       Close Tab — {formatCents(activeTab.subtotal_cents)}
                     </button>
@@ -403,11 +407,11 @@ export default function CafePage() {
                 </div>
 
                 {addItemError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center">
-                    <p className="text-sm text-red-400">{addItemError}</p>
+                  <div className="rounded-xl border p-3 text-center" style={{ borderColor: 'var(--red)', background: 'var(--red-mute)' }}>
+                    <p className="text-sm text-red-fu">{addItemError}</p>
                     <button
                       onClick={() => setAddItemError(null)}
-                      className="mt-1 text-xs text-red-300 underline hover:text-red-200"
+                      className="mt-1 text-xs text-red-fu underline"
                     >
                       Dismiss
                     </button>
@@ -415,32 +419,33 @@ export default function CafePage() {
                 )}
 
                 {/* Quick menu */}
-                <div className="rounded-xl border border-card-border bg-card p-4">
-                  <h3 className="text-sm font-semibold text-muted mb-3">Quick Add</h3>
+                <div className="rounded-xl border border-rule bg-panel p-4">
+                  <h3 className="font-mono uppercase font-semibold text-ink-faint mb-3" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>Quick Add</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {MENU_ITEMS.map((item) => (
                       <button
                         key={item.name}
                         onClick={() => handleAddItem(activeTab.id, item)}
-                        className={`rounded-lg border px-3 py-3 text-left transition-colors ${
+                        className={`rounded-lg border px-3 py-3 text-left transition-colors ar-stripe ${
                           item.ageRestricted
-                            ? "border-amber-500/20 bg-amber-950/10 hover:border-amber-500/40"
-                            : "border-card-border bg-card-hover hover:border-accent/30"
+                            ? "hover:border-yellow"
+                            : "border-rule bg-panel-hi hover:border-orange"
                         }`}
+                        style={item.ageRestricted ? { borderColor: 'var(--yellow)', background: 'var(--yellow-mute)' } : undefined}
                       >
-                        <span className="text-sm font-medium text-foreground block">
+                        <span className="text-sm font-display font-semibold text-ink block">
                           {item.name}
-                          {item.ageRestricted && <span className="ml-1.5 text-amber-400 text-[10px]">21+</span>}
+                          {item.ageRestricted && <span className="ml-1.5 text-yellow text-[10px] font-mono uppercase tracking-wider">21+</span>}
                         </span>
-                        <span className="text-xs text-muted">{formatCents(item.price)}</span>
+                        <span className="text-xs text-ink-soft font-mono tabular-nums">{formatCents(item.price)}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </>
             ) : (
-              <div className="rounded-xl border border-card-border bg-card p-8 text-center">
-                <p className="text-muted">Select a tab or open a new one</p>
+              <div className="rounded-xl border border-rule bg-panel p-8 text-center">
+                <p className="text-ink-soft">Select a tab or open a new one</p>
               </div>
             )}
           </div>
@@ -450,29 +455,30 @@ export default function CafePage() {
       {/* Age Verification Modal */}
       {ageVerifyPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg">
-          <div className="w-full max-w-sm rounded-xl border border-amber-500/30 bg-card p-6 shadow-lg mx-4">
+          <div className="w-full max-w-sm rounded-xl border bg-panel p-6 shadow-lg mx-4" style={{ borderColor: 'var(--yellow)' }}>
             <div className="text-center space-y-4">
               <span className="text-4xl block">🪪</span>
-              <h3 className="text-lg font-bold text-foreground">Age Verification Required</h3>
-              <p className="text-sm text-muted">
-                <strong className="text-foreground">{ageVerifyPending.item.name}</strong> requires age verification.
+              <h3 className="text-lg font-display font-bold text-ink">Age Verification Required</h3>
+              <p className="text-sm text-ink-soft">
+                <strong className="text-ink">{ageVerifyPending.item.name}</strong> requires age verification.
                 Confirm the customer is 21 or older before serving alcohol.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setAgeVerifyPending(null)}
-                  className="flex-1 rounded-lg border border-card-border py-2.5 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+                  className="flex-1 rounded-lg border border-rule-hi py-2.5 text-sm font-display uppercase tracking-wider font-bold text-ink-soft hover:bg-panel-hi transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmAgeVerification}
-                  className="flex-1 rounded-lg bg-amber-600 py-2.5 text-sm font-bold text-white hover:bg-amber-500 transition-colors"
+                  className="flex-1 rounded-lg py-2.5 text-sm font-display uppercase tracking-wider font-bold transition-colors"
+                  style={{ background: 'var(--yellow)', color: 'var(--void)' }}
                 >
                   ID Verified — 21+
                 </button>
               </div>
-              <p className="text-[10px] text-muted/60">
+              <p className="text-[10px] text-ink-faint">
                 This marks the tab as age-verified. All future alcohol items on this tab will be allowed.
               </p>
             </div>

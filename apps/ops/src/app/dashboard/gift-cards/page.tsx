@@ -117,10 +117,13 @@ export default function GiftCardsPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Gift Cards"
+        crumb="Console · Customers"
+        desc="Issue, redeem, and track store gift card balances."
         action={
           <button
             onClick={() => setShowCreate(true)}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+            className="rounded-xl bg-orange px-4 py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 transition-colors"
+            style={{ minHeight: 48 }}
           >
             Create Gift Card
           </button>
@@ -167,7 +170,7 @@ export default function GiftCardsPage() {
                   <span className="text-foreground font-mono text-xs">{maskCode(card.code)}</span>
                   <span
                     className={`font-mono font-medium ${
-                      card.balance_cents > 0 ? "text-emerald-400" : "text-muted"
+                      card.balance_cents > 0 ? "text-teal" : "text-muted"
                     }`}
                   >
                     {formatCents(card.balance_cents)}
@@ -185,7 +188,7 @@ export default function GiftCardsPage() {
           <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border scroll-visible">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-card text-left text-muted">
+                <tr className="border-b border-rule bg-card text-left text-muted">
                   <th className="px-4 py-3 font-medium">Code</th>
                   <th className="px-4 py-3 font-medium text-right">Balance</th>
                   <th className="px-4 py-3 font-medium text-right">Original</th>
@@ -194,7 +197,7 @@ export default function GiftCardsPage() {
                   <th className="px-4 py-3 font-medium text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-rule">
                 {cards.map((card) => (
                   <tr key={card.id} className="bg-background hover:bg-card-hover transition-colors">
                     <td className="px-4 py-3 text-foreground font-mono text-xs">
@@ -203,7 +206,7 @@ export default function GiftCardsPage() {
                     <td className="px-4 py-3 text-right font-mono">
                       <span
                         className={
-                          card.balance_cents > 0 ? "text-emerald-400" : "text-muted"
+                          card.balance_cents > 0 ? "text-teal" : "text-muted"
                         }
                       >
                         {formatCents(card.balance_cents)}
@@ -216,7 +219,7 @@ export default function GiftCardsPage() {
                       <span
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                           card.active
-                            ? "border-green-500/30 text-green-600 dark:text-green-400"
+                            ? "text-teal"
                             : "bg-card-hover text-muted"
                         }`}
                       >
@@ -313,7 +316,7 @@ export default function GiftCardsPage() {
               <p className="text-muted">Loading...</p>
             ) : detailError ? (
               <div className="text-center py-4">
-                <p className="text-red-400 text-sm">{detailError}</p>
+                <p className="text-red-fu text-sm">{detailError}</p>
                 <button onClick={() => setDetail(null)} className="mt-2 text-xs text-muted hover:text-foreground">Close</button>
               </div>
             ) : detail ? (
@@ -334,7 +337,7 @@ export default function GiftCardsPage() {
                   </div>
                   <div className="text-sm">
                     <span className="text-muted">Balance: </span>
-                    <span className="text-emerald-400 font-mono font-medium">
+                    <span className="text-teal font-mono font-medium">
                       {formatCents(detail.balance_cents)}
                     </span>
                     <span className="text-muted ml-2">
@@ -343,7 +346,7 @@ export default function GiftCardsPage() {
                   </div>
                   <div className="text-sm">
                     <span className="text-muted">Status: </span>
-                    <span className={detail.active ? "text-green-400" : "text-muted"}>
+                    <span className={detail.active ? "text-teal" : "text-muted"}>
                       {detail.active ? "Active" : "Inactive"}
                     </span>
                   </div>
@@ -367,7 +370,7 @@ export default function GiftCardsPage() {
                         </div>
                         <div
                           className={`font-mono ${
-                            h.amount_cents >= 0 ? "text-emerald-400" : "text-red-400"
+                            h.amount_cents >= 0 ? "text-teal" : "text-red-fu"
                           }`}
                         >
                           {h.amount_cents >= 0 ? "+" : ""}

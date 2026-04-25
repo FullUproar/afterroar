@@ -111,7 +111,11 @@ export default function TimeclockPage() {
 
   return (
     <div className="flex flex-col h-full gap-4 max-w-3xl mx-auto">
-      <PageHeader title="Time Clock" />
+      <PageHeader
+        title="Time Clock"
+        crumb="Console · People"
+        desc="Clock in, clock out, and review your shifts."
+      />
 
       {data && (
         <>
@@ -122,11 +126,11 @@ export default function TimeclockPage() {
                 <div className="text-sm text-muted">Welcome, {data.staff_name}</div>
                 <div className="mt-1">
                   {data.clocked_in ? (
-                    <span className="rounded-full bg-emerald-900/50 px-3 py-1 text-sm font-medium text-emerald-400">
+                    <span className="rounded-full px-3 py-1 text-sm font-mono uppercase tracking-wider font-bold" style={{ background: 'var(--teal-mute)', color: 'var(--teal)' }}>
                       Clocked In
                     </span>
                   ) : (
-                    <span className="rounded-full bg-card-hover px-3 py-1 text-sm font-medium text-muted">
+                    <span className="rounded-full bg-card-hover px-3 py-1 text-sm font-mono uppercase tracking-wider font-bold text-muted">
                       Clocked Out
                     </span>
                   )}
@@ -150,11 +154,8 @@ export default function TimeclockPage() {
                   handleClockAction(data.clocked_in ? "clock_out" : "clock_in")
                 }
                 disabled={processing}
-                className={`w-full max-w-xs mx-auto rounded-xl py-4 text-lg font-bold transition-colors ${
-                  data.clocked_in
-                    ? "bg-red-600 text-foreground hover:bg-red-500"
-                    : "bg-emerald-600 text-foreground hover:bg-emerald-500"
-                } disabled:opacity-50`}
+                className="w-full max-w-xs mx-auto rounded-xl py-4 text-lg font-display uppercase tracking-wider font-bold transition-colors disabled:opacity-50"
+                style={data.clocked_in ? { background: 'var(--red)', color: 'var(--void)' } : { background: 'var(--teal)', color: 'var(--void)' }}
               >
                 {processing
                   ? "Processing..."
@@ -181,7 +182,7 @@ export default function TimeclockPage() {
               <div className="border-b border-card-border px-4 py-3">
                 <h3 className="text-sm font-semibold text-foreground/70">All Staff Status</h3>
               </div>
-              <div className="divide-y divide-zinc-800">
+              <div className="divide-y divide-rule">
                 {allStaff.map((s) => (
                   <div
                     key={s.staff_id}
@@ -191,17 +192,17 @@ export default function TimeclockPage() {
                     <div>
                       {s.clocked_in ? (
                         <div className="text-right">
-                          <span className="rounded-full bg-emerald-900/50 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                          <span className="rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold" style={{ background: 'var(--teal-mute)', color: 'var(--teal)' }}>
                             In
                           </span>
                           {s.clock_in_time && (
-                            <div className="text-xs text-muted mt-0.5">
+                            <div className="text-xs text-muted mt-0.5 font-mono tabular-nums">
                               since {new Date(s.clock_in_time).toLocaleTimeString()}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="rounded-full bg-card-hover px-2 py-0.5 text-xs font-medium text-muted">
+                        <span className="rounded-full bg-card-hover px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold text-muted">
                           Out
                         </span>
                       )}
@@ -222,7 +223,7 @@ export default function TimeclockPage() {
             ) : (
               <>
                 {/* Mobile card view */}
-                <div className="md:hidden divide-y divide-zinc-800">
+                <div className="md:hidden divide-y divide-rule">
                   {data.recent.map((entry) => (
                     <div key={entry.id} className="px-4 py-3 min-h-11">
                       <div className="flex items-center justify-between">
@@ -256,7 +257,7 @@ export default function TimeclockPage() {
                         <th className="px-4 py-2 font-medium text-right">Hours</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-800">
+                    <tbody className="divide-y divide-rule">
                       {data.recent.map((entry) => (
                         <tr key={entry.id} className="text-foreground">
                           <td className="px-4 py-2 text-foreground/70">

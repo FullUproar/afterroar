@@ -48,10 +48,10 @@ const TIME_RANGES: { label: string; hours: number }[] = [
 ];
 
 const SEVERITY_STYLES: Record<string, { dot: string; text: string }> = {
-  info: { dot: "text-muted", text: "text-muted" },
-  warn: { dot: "text-amber-400", text: "text-amber-400" },
-  error: { dot: "text-red-400", text: "text-red-400" },
-  critical: { dot: "text-red-500 font-bold", text: "text-red-500 font-bold" },
+  info: { dot: "text-ink-soft", text: "text-ink-soft" },
+  warn: { dot: "text-yellow", text: "text-yellow" },
+  error: { dot: "text-red-fu", text: "text-red-fu" },
+  critical: { dot: "text-red-fu font-bold", text: "text-red-fu font-bold" },
 };
 
 const SEVERITY_ICONS: Record<string, string> = {
@@ -170,15 +170,18 @@ export default function OpsLogPage() {
     <div className="flex flex-col h-full gap-4 p-4 md:p-6 max-w-4xl">
       <PageHeader
         title="Operational Log"
+        crumb="Console · Operations"
+        desc="System events — auth, payments, terminals, inventory, and more."
         action={
           <button
             onClick={() => setAutoRefresh((v) => !v)}
             className={cn(
-              "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+              "rounded-md border px-3 py-1.5 text-xs font-mono uppercase tracking-wider font-bold transition-colors",
               autoRefresh
-                ? "border-green-500/50 bg-green-500/10 text-green-400"
-                : "border-card-border bg-card text-muted hover:text-foreground"
+                ? "text-teal"
+                : "border-rule-hi bg-panel text-ink-soft hover:text-ink"
             )}
+            style={autoRefresh ? { borderColor: 'var(--teal)', background: 'var(--teal-mute)' } : undefined}
           >
             {autoRefresh ? "Auto-refresh ON" : "Auto-refresh"}
           </button>

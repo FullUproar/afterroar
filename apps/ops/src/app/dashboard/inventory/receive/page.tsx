@@ -251,21 +251,21 @@ export default function ReceivePage() {
   if (success && result) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-8">
-          <h2 className="text-xl font-bold text-green-400">Inventory Received</h2>
-          <div className="mt-4 space-y-1 text-sm text-foreground/70">
-            <p><span className="font-medium text-green-400">{result.totalUnitsReceived}</span> units received</p>
-            <p><span className="font-medium text-blue-400">{result.created}</span> new items created</p>
-            <p><span className="font-medium text-muted">{result.updated}</span> existing items updated</p>
+        <div className="rounded-xl border p-8" style={{ borderColor: 'var(--teal)', background: 'var(--teal-mute)' }}>
+          <h2 className="text-xl font-display font-bold text-teal">Inventory Received</h2>
+          <div className="mt-4 space-y-1 text-sm text-ink-soft">
+            <p><span className="font-mono font-bold text-teal tabular-nums">{result.totalUnitsReceived}</span> units received</p>
+            <p><span className="font-mono font-bold text-orange tabular-nums">{result.created}</span> new items created</p>
+            <p><span className="font-mono font-bold text-ink-soft tabular-nums">{result.updated}</span> existing items updated</p>
           </div>
         </div>
         <div className="flex justify-center gap-3">
-          <Link href="/dashboard/inventory" className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors">
+          <Link href="/dashboard/inventory" className="rounded-xl bg-panel-hi px-4 py-2 text-sm text-ink hover:bg-panel transition-colors border border-rule-hi">
             View Inventory
           </Link>
           <button
             onClick={() => { setSuccess(false); setResult(null); setItems([]); }}
-            className="rounded-xl bg-accent px-4 py-2 text-sm text-foreground hover:opacity-90 transition-colors"
+            className="rounded-xl bg-orange px-4 py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 transition-colors"
           >
             Receive More
           </button>
@@ -280,9 +280,11 @@ export default function ReceivePage() {
       <PageHeader
         title="Receive Inventory"
         backHref="/dashboard/inventory"
+        crumb="Console · Inventory"
+        desc="Scan barcodes, enter manually, or import from invoice."
         action={
           items.length > 0 ? (
-            <div className="text-sm text-muted">
+            <div className="text-sm text-ink-soft font-mono tabular-nums">
               {items.length} items · {totalUnits} units · {formatCents(totalCost)} cost
             </div>
           ) : undefined
@@ -290,7 +292,7 @@ export default function ReceivePage() {
       />
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="rounded-xl border p-3 text-sm text-red-fu" style={{ borderColor: 'var(--red)', background: 'var(--red-mute)' }}>
           {error}
         </div>
       )}
@@ -348,9 +350,9 @@ export default function ReceivePage() {
             <div className="text-sm font-medium text-foreground">Add Item Manually</div>
             <div className="grid grid-cols-2 gap-2">
               <input type="text" placeholder="Name *" value={manualName} onChange={(e) => setManualName(e.target.value)}
-                className="col-span-2 rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
+                className="col-span-2 rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <select value={manualCategory} onChange={(e) => setManualCategory(e.target.value)}
-                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
+                className="rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none">
                 <option value="tcg_single">TCG Single</option>
                 <option value="sealed">Sealed Product</option>
                 <option value="board_game">Board Game</option>
@@ -360,15 +362,15 @@ export default function ReceivePage() {
                 <option value="other">Other</option>
               </select>
               <input type="text" placeholder="Qty" value={manualQty} onChange={(e) => setManualQty(e.target.value)}
-                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
+                className="rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="SKU" value={manualSku} onChange={(e) => setManualSku(e.target.value)}
-                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
+                className="rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="Barcode" value={manualBarcode} onChange={(e) => setManualBarcode(e.target.value)}
-                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
+                className="rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="Retail $" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)}
-                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
+                className="rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
               <input type="text" placeholder="Cost $" value={manualCost} onChange={(e) => setManualCost(e.target.value)}
-                className="rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
+                className="rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none" />
             </div>
             <div className="flex gap-2">
               <button onClick={addManualItem} disabled={!manualName.trim()}
@@ -395,7 +397,7 @@ export default function ReceivePage() {
               onChange={(e) => setInvoiceText(e.target.value)}
               rows={6}
               placeholder="Paste invoice text here..."
-              className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+              className="w-full rounded-xl border border-input-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
             />
             <div className="flex gap-2">
               <button onClick={handleInvoiceImport} disabled={!invoiceText.trim() || processing}
@@ -426,7 +428,7 @@ export default function ReceivePage() {
                   <th className="px-4 py-2 font-medium"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-rule">
                 {items.map((item) => (
                   <tr key={item.key} className="text-foreground">
                     <td className="px-4 py-2">
@@ -454,15 +456,15 @@ export default function ReceivePage() {
                     </td>
                     <td className="px-4 py-2">
                       {item.matched ? (
-                        <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400 border border-green-500/30">
+                        <span className="rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold border" style={{ background: 'var(--teal-mute)', color: 'var(--teal)', borderColor: 'var(--teal)' }}>
                           Existing
                         </span>
                       ) : item.name.startsWith('Unknown') ? (
-                        <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-400 border border-yellow-500/30">
+                        <span className="rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold border" style={{ background: 'var(--yellow-mute)', color: 'var(--yellow)', borderColor: 'var(--yellow)' }}>
                           New — needs details
                         </span>
                       ) : (
-                        <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400 border border-blue-500/30">
+                        <span className="rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold border" style={{ background: 'var(--orange-mute)', color: 'var(--orange)', borderColor: 'var(--orange)' }}>
                           New
                         </span>
                       )}
@@ -470,7 +472,7 @@ export default function ReceivePage() {
                     <td className="px-4 py-2 text-right">
                       <button
                         onClick={() => removeItem(item.key)}
-                        className="text-muted hover:text-red-400 transition-colors"
+                        className="text-muted hover:text-red-fu transition-colors"
                       >
                         ×
                       </button>
@@ -489,7 +491,8 @@ export default function ReceivePage() {
             <button
               onClick={handleSubmit}
               disabled={processing || items.length === 0}
-              className="rounded-xl bg-green-600 px-6 py-3 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors"
+              className="rounded-xl px-6 py-3 text-sm font-display uppercase tracking-wider font-bold disabled:opacity-50 transition-colors"
+              style={{ background: 'var(--teal)', color: 'var(--void)', minHeight: 48 }}
             >
               {processing ? 'Receiving...' : `Receive ${totalUnits} Units`}
             </button>

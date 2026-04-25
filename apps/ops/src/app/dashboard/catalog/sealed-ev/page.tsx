@@ -46,6 +46,15 @@ const EXAMPLE_SETS = [
   { code: "DSK", name: "Duskmourn" },
 ];
 
+function Spinner({ size = 14 }: { size?: number }) {
+  return (
+    <svg className="animate-spin" viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }}>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
 export default function SealedEVPage() {
   const [setCode, setSetCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,16 +93,19 @@ export default function SealedEVPage() {
     <div className="flex flex-col h-full gap-4">
       <SubNav items={INVENTORY_TABS} />
 
-      <div>
-        <PageHeader title="Sealed EV Calculator" backHref="/dashboard/catalog" />
-        <p className="text-sm text-muted mt-1">
-          Estimate the expected value of a Magic booster box by set. MTG only.
-        </p>
-      </div>
+      <PageHeader
+        title="Sealed EV Calculator"
+        crumb="TCG · Sealed EV"
+        desc="Estimate the expected value of a Magic booster box by set. MTG only."
+        backHref="/dashboard/catalog"
+      />
 
       <FeatureGate module="tcg_engine">
         {/* Input */}
-        <div className="rounded-xl border border-card-border bg-card p-4 space-y-3">
+        <div
+          className="p-4 space-y-3"
+          style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)" }}
+        >
           <div className="flex gap-2 items-stretch flex-wrap">
             <input
               type="text"
@@ -105,19 +117,35 @@ export default function SealedEVPage() {
               }}
               placeholder="Set code (e.g., MH3)"
               maxLength={6}
-              className="flex-1 min-w-[140px] rounded-lg border border-input-border bg-card-hover px-3 py-2.5 text-sm font-mono uppercase text-foreground focus:border-accent focus:outline-none"
+              className="flex-1 font-mono uppercase text-ink placeholder:text-ink-faint focus:outline-none"
+              style={{
+                minWidth: 140,
+                background: "var(--panel)",
+                border: "1px solid var(--rule-hi)",
+                fontSize: "0.95rem",
+                padding: "0 0.85rem",
+                minHeight: 48,
+                letterSpacing: "0.04em",
+              }}
             />
             <button
               onClick={() => calculate(setCode)}
               disabled={loading || setCode.trim().length < 2}
-              className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-foreground hover:opacity-90 transition-opacity disabled:opacity-50 min-w-24"
+              className="font-mono uppercase font-semibold transition-opacity disabled:opacity-50"
+              style={{
+                fontSize: "0.7rem",
+                letterSpacing: "0.18em",
+                padding: "0 1.4rem",
+                minHeight: 48,
+                background: "var(--orange)",
+                color: "var(--void)",
+                border: "1px solid var(--orange)",
+                minWidth: 120,
+              }}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-1.5">
-                  <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
+                  <Spinner />
                   Running
                 </span>
               ) : "Calculate"}
@@ -126,7 +154,12 @@ export default function SealedEVPage() {
 
           {/* Quick picks */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] text-muted uppercase tracking-wider">Try:</span>
+            <span
+              className="font-mono uppercase font-semibold text-ink-faint"
+              style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+            >
+              Try
+            </span>
             {EXAMPLE_SETS.map((s) => (
               <button
                 key={s.code}
@@ -135,7 +168,16 @@ export default function SealedEVPage() {
                   calculate(s.code);
                 }}
                 disabled={loading}
-                className="rounded-md border border-card-border bg-card-hover px-2 py-1 text-[11px] font-mono text-muted hover:text-foreground hover:border-accent/40 transition-colors disabled:opacity-50"
+                className="font-mono uppercase font-semibold transition-colors disabled:opacity-50"
+                style={{
+                  fontSize: "0.62rem",
+                  letterSpacing: "0.16em",
+                  padding: "0 0.7rem",
+                  minHeight: 36,
+                  background: "var(--panel)",
+                  border: "1px solid var(--rule-hi)",
+                  color: "var(--ink-soft)",
+                }}
                 title={s.name}
               >
                 {s.code}
@@ -146,20 +188,56 @@ export default function SealedEVPage() {
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
-            <div className="font-medium">Couldn't calculate EV</div>
-            <div className="text-red-300/80 mt-1">{error}</div>
+          <div
+            className="px-4 py-3 font-mono"
+            style={{
+              background: "var(--red-mute)",
+              border: "1px solid var(--red)",
+              color: "var(--red)",
+              fontSize: "0.78rem",
+            }}
+          >
+            <div
+              className="font-semibold uppercase"
+              style={{ letterSpacing: "0.16em", fontSize: "0.66rem" }}
+            >
+              Couldn&apos;t Calculate EV
+            </div>
+            <div className="mt-1 text-ink-soft">{error}</div>
           </div>
         )}
 
-        {/* Empty — nothing searched yet */}
+        {/* Empty */}
         {!loading && !result && !error && (
-          <div className="rounded-xl border border-dashed border-card-border bg-card/40 p-8 text-center">
-            <div className="text-3xl mb-2">📦</div>
-            <p className="text-sm text-muted">
-              Enter a Magic set code to see estimated booster box value.
-            </p>
-            <p className="text-xs text-muted/70 mt-1">
+          <div
+            className="p-8 text-center"
+            style={{
+              background: "var(--panel-mute)",
+              border: "1px dashed var(--rule-hi)",
+            }}
+          >
+            <div
+              aria-hidden
+              style={{
+                width: 28,
+                height: 28,
+                margin: "0 auto 0.75rem",
+                background: "var(--orange-mute)",
+                border: "1px solid var(--orange)",
+                clipPath:
+                  "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+              }}
+            />
+            <div
+              className="font-display text-ink"
+              style={{ fontSize: "1.05rem", fontWeight: 600, letterSpacing: "0.005em" }}
+            >
+              Enter a Magic set code
+            </div>
+            <p
+              className="font-mono text-ink-faint mt-2"
+              style={{ fontSize: "0.7rem", letterSpacing: "0.04em" }}
+            >
               Uses live Scryfall prices and approximate pull rates.
             </p>
           </div>
@@ -168,67 +246,132 @@ export default function SealedEVPage() {
         {/* Result */}
         {result && !loading && (
           <div className="space-y-4">
-            {/* Hero: EV number */}
-            <div className="rounded-xl border border-card-border bg-gradient-to-br from-card to-card-hover p-6 text-center">
-              <div className="text-xs text-muted uppercase tracking-wider mb-1">
-                {result.set_code} — Estimated Box EV
+            {/* Hero EV */}
+            <div
+              className="p-6 text-center"
+              style={{
+                background:
+                  "linear-gradient(180deg,rgba(255,122,0,0.08),var(--panel)) ",
+                border: "1px solid var(--orange)",
+                boxShadow: "0 0 24px var(--orange-mute)",
+              }}
+            >
+              <div
+                className="font-mono uppercase font-semibold text-ink-faint"
+                style={{ fontSize: "0.6rem", letterSpacing: "0.28em" }}
+              >
+                {result.set_code} · Estimated Box EV
               </div>
-              <div className="text-5xl font-bold text-accent tabular-nums tracking-tight">
+              <div
+                className="font-display text-orange tabular-nums mt-2"
+                style={{
+                  fontSize: "3.5rem",
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  letterSpacing: "-0.01em",
+                }}
+              >
                 {result.estimated_ev_display}
               </div>
-              <div className="text-xs text-muted mt-2">
-                Based on {result.breakdown.rares_in_set} rares and{" "}
-                {result.breakdown.mythics_in_set} mythics in set
+              <div
+                className="font-mono text-ink-faint mt-3"
+                style={{ fontSize: "0.7rem", letterSpacing: "0.04em" }}
+              >
+                Based on {result.breakdown.rares_in_set} rares · {result.breakdown.mythics_in_set} mythics in set
               </div>
             </div>
 
-            {/* Breakdown chips */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatChip
-                label="Avg Rare"
-                value={result.breakdown.avg_rare_price}
-                sub={`${result.breakdown.estimated_rares_per_box}/box`}
-              />
-              <StatChip
-                label="Avg Mythic"
-                value={result.breakdown.avg_mythic_price}
-                sub={`${result.breakdown.estimated_mythics_per_box}/box`}
-                accent
-              />
-              <StatChip
-                label="Avg Rare Foil"
-                value={result.breakdown.avg_rare_foil_price}
-              />
-              <StatChip
-                label="Avg Mythic Foil"
-                value={result.breakdown.avg_mythic_foil_price}
-                accent
-              />
+            {/* Breakdown stat strip */}
+            <div
+              className="grid grid-cols-2 md:grid-cols-4"
+              style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}
+            >
+              {[
+                {
+                  k: "Avg Rare",
+                  v: result.breakdown.avg_rare_price,
+                  sub: `${result.breakdown.estimated_rares_per_box}/box`,
+                },
+                {
+                  k: "Avg Mythic",
+                  v: result.breakdown.avg_mythic_price,
+                  sub: `${result.breakdown.estimated_mythics_per_box}/box`,
+                  tone: "var(--orange)",
+                },
+                {
+                  k: "Avg Rare Foil",
+                  v: result.breakdown.avg_rare_foil_price,
+                  tone: "var(--yellow)",
+                },
+                {
+                  k: "Avg Mythic Foil",
+                  v: result.breakdown.avg_mythic_foil_price,
+                  tone: "var(--yellow)",
+                },
+              ].map((cell) => (
+                <div key={cell.k} className="px-3 py-3" style={{ background: "var(--panel-mute)" }}>
+                  <div
+                    className="font-mono uppercase font-semibold text-ink-faint"
+                    style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+                  >
+                    {cell.k}
+                  </div>
+                  <div
+                    className="font-mono font-semibold mt-1 tabular-nums"
+                    style={{
+                      fontSize: "1.1rem",
+                      letterSpacing: "0.02em",
+                      color: cell.tone || "var(--ink)",
+                    }}
+                  >
+                    {cell.v}
+                  </div>
+                  {cell.sub && (
+                    <div
+                      className="font-mono text-ink-faint mt-0.5 tabular-nums"
+                      style={{ fontSize: "0.62rem", letterSpacing: "0.04em" }}
+                    >
+                      {cell.sub}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Chase cards */}
             {result.chase_cards.length > 0 && (
-              <div className="rounded-xl border border-card-border bg-card p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Top chase cards
-                  </h3>
-                  <span className="text-[11px] text-muted">
-                    Sorted by nonfoil market price
-                  </span>
+              <section className="ar-zone" style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}>
+                <div className="ar-zone-head">
+                  <span>Top Chase Cards</span>
+                  <span className="text-ink-faint">By nonfoil market price</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 p-3">
                   {result.chase_cards.map((card, i) => (
                     <ChaseCardTile key={`${card.name}-${i}`} card={card} rank={i + 1} />
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
             {/* Disclaimer */}
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-300/80">
-              <span className="font-medium text-amber-300">Heads up:</span>{" "}
-              {result.disclaimer}
+            <div
+              className="p-3 font-mono"
+              style={{
+                background: "var(--yellow-mute)",
+                border: "1px solid rgba(251,219,101,0.35)",
+                color: "var(--yellow)",
+                fontSize: "0.74rem",
+              }}
+            >
+              <span
+                className="font-semibold uppercase"
+                style={{ letterSpacing: "0.16em", fontSize: "0.62rem" }}
+              >
+                Heads Up
+              </span>
+              <span className="ml-2 text-ink-soft" style={{ letterSpacing: "0.02em" }}>
+                {result.disclaimer}
+              </span>
             </div>
           </div>
         )}
@@ -239,48 +382,22 @@ export default function SealedEVPage() {
 
 /* ---------- helpers ---------- */
 
-function StatChip({
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-lg border p-3 ${
-        accent
-          ? "border-accent/30 bg-accent/5"
-          : "border-card-border bg-card"
-      }`}
-    >
-      <div className="text-[10px] text-muted uppercase tracking-wider">
-        {label}
-      </div>
-      <div
-        className={`text-lg font-semibold tabular-nums mt-0.5 ${
-          accent ? "text-accent" : "text-foreground"
-        }`}
-      >
-        {value}
-      </div>
-      {sub && (
-        <div className="text-[10px] text-muted/80 mt-0.5 tabular-nums">
-          {sub}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function ChaseCardTile({ card, rank }: { card: ChaseCard; rank: number }) {
   return (
-    <div className="rounded-lg border border-card-border bg-card-hover/40 overflow-hidden">
-      <div className="relative aspect-[5/7] bg-card-hover">
+    <div
+      style={{
+        background: "var(--panel-mute)",
+        border: "1px solid var(--rule-hi)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        className="relative"
+        style={{
+          aspectRatio: "5/7",
+          background: "linear-gradient(180deg,var(--panel-hi),var(--panel))",
+        }}
+      >
         {card.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -290,30 +407,66 @@ function ChaseCardTile({ card, rank }: { card: ChaseCard; rank: number }) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted/50 text-xs">
-            No image
+          <div
+            className="w-full h-full flex items-center justify-center font-mono uppercase text-ink-faint"
+            style={{ fontSize: "0.55rem", letterSpacing: "0.18em" }}
+          >
+            No Image
           </div>
         )}
-        <div className="absolute top-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-foreground tabular-nums">
+        <div
+          className="absolute font-mono font-semibold tabular-nums"
+          style={{
+            top: 4,
+            left: 4,
+            padding: "1px 6px",
+            background: "var(--void)",
+            color: "var(--ink)",
+            border: "1px solid var(--rule-hi)",
+            fontSize: "0.62rem",
+            letterSpacing: "0.04em",
+          }}
+        >
           #{rank}
         </div>
         {card.rarity === "mythic" && (
-          <div className="absolute top-1 right-1 rounded bg-orange-600/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white tracking-wider">
+          <div
+            className="absolute font-mono uppercase font-semibold"
+            style={{
+              top: 4,
+              right: 4,
+              padding: "1px 6px",
+              background: "var(--orange)",
+              color: "var(--void)",
+              fontSize: "0.55rem",
+              letterSpacing: "0.18em",
+            }}
+          >
             Mythic
           </div>
         )}
       </div>
-      <div className="p-2 space-y-0.5">
-        <div className="text-xs font-medium text-foreground truncate" title={card.name}>
+      <div className="p-2 space-y-1">
+        <div
+          className="font-display text-ink truncate"
+          style={{ fontSize: "0.78rem", fontWeight: 500, letterSpacing: "0.005em" }}
+          title={card.name}
+        >
           {card.name}
         </div>
         <div className="flex items-baseline justify-between gap-1 tabular-nums">
-          <span className="text-sm font-semibold text-accent">
+          <span
+            className="font-mono font-semibold"
+            style={{ color: "var(--orange)", fontSize: "0.86rem", letterSpacing: "0.02em" }}
+          >
             ${card.price_usd.toFixed(2)}
           </span>
           {card.price_foil_usd > 0 && (
-            <span className="text-[10px] text-muted">
-              foil ${card.price_foil_usd.toFixed(2)}
+            <span
+              className="font-mono"
+              style={{ color: "var(--yellow)", fontSize: "0.62rem", letterSpacing: "0.04em" }}
+            >
+              ✦${card.price_foil_usd.toFixed(2)}
             </span>
           )}
         </div>

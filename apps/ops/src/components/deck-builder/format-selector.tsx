@@ -1,15 +1,16 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  Format Selector — grouped by game with visual game labels           */
-/*  MTG formats grouped under "Magic: The Gathering" header             */
+/*  Format Selector — Operator Console mono pills, grouped by game.     */
+/*  Game is shown via a labeled rule, formats are mono-cap orange-on-   */
+/*  active pills with a square seal icon. Color paired with text +      */
+/*  shape so colorblind users get the active state without color alone. */
 /* ------------------------------------------------------------------ */
 
 const GAME_GROUPS = [
   {
     game: "mtg",
     label: "Magic: The Gathering",
-    color: "#FF8200",
     formats: [
       { key: "standard", label: "Standard", desc: "Last 2 years" },
       { key: "modern", label: "Modern", desc: "2003+" },
@@ -20,13 +21,11 @@ const GAME_GROUPS = [
   {
     game: "pokemon",
     label: "Pokemon TCG",
-    color: "#FFCB05",
     formats: [{ key: "pokemon", label: "Standard", desc: "Tournament" }],
   },
   {
     game: "yugioh",
     label: "Yu-Gi-Oh!",
-    color: "#7B2D8E",
     formats: [{ key: "yugioh", label: "Standard", desc: "Competitive" }],
   },
 ];
@@ -42,31 +41,52 @@ export function FormatSelector({
     <div className="space-y-3">
       {GAME_GROUPS.map((group) => (
         <div key={group.game}>
-          <div className="flex items-center gap-2 mb-1.5">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: group.color }}
+          <div
+            className="flex items-center gap-2 mb-2 font-mono uppercase font-semibold text-ink-faint"
+            style={{ fontSize: "0.6rem", letterSpacing: "0.28em" }}
+          >
+            <span
+              aria-hidden
+              style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                background: "currentColor",
+                clipPath:
+                  "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+              }}
             />
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-              {group.label}
-            </span>
+            <span>{group.label}</span>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             {group.formats.map((f) => {
               const isActive = value === f.key;
               return (
                 <button
                   key={f.key}
                   onClick={() => onChange(f.key)}
-                  className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-accent text-white shadow-md shadow-accent/20"
-                      : "bg-card hover:bg-card-hover text-muted hover:text-foreground border border-card-border"
-                  }`}
+                  className="font-mono uppercase font-semibold inline-flex items-center gap-2 transition-colors"
+                  style={{
+                    fontSize: "0.66rem",
+                    letterSpacing: "0.18em",
+                    padding: "0 0.85rem",
+                    minHeight: 44,
+                    border: `1px solid ${isActive ? "var(--orange)" : "var(--rule-hi)"}`,
+                    background: isActive ? "var(--orange-mute)" : "var(--panel-mute)",
+                    color: isActive ? "var(--orange)" : "var(--ink-soft)",
+                  }}
+                  aria-pressed={isActive}
                 >
-                  {f.label}
+                  <span>{f.label}</span>
                   {!isActive && (
-                    <span className="hidden sm:inline ml-1.5 text-xs opacity-50">
+                    <span
+                      className="hidden sm:inline text-ink-faint normal-case"
+                      style={{
+                        letterSpacing: "0.04em",
+                        fontSize: "0.66rem",
+                        fontWeight: 500,
+                      }}
+                    >
                       {f.desc}
                     </span>
                   )}

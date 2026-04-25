@@ -54,7 +54,12 @@ export default function ScannerSetupPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <PageHeader title="Scanner Setup" backHref="/dashboard/settings" />
+      <PageHeader
+        title="Scanner Setup"
+        backHref="/dashboard/settings"
+        crumb="Console · Settings"
+        desc="USB and Bluetooth scanner pairing instructions."
+      />
 
       <div className="max-w-2xl space-y-6">
         <div className="rounded-xl border border-card-border bg-card p-6">

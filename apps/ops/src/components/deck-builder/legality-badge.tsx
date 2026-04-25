@@ -1,8 +1,8 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  LegalityBadge — compact format-legality indicator                  */
-/*  "Modern — legal" / "Modern — 3 illegal" / "Unknown"                */
+/*  LegalityBadge — Operator Console format-legality indicator.        */
+/*  Status communicated via color + dot shape + text label.            */
 /* ------------------------------------------------------------------ */
 
 import type { LegalityCheck } from "@/lib/deck-analysis";
@@ -25,11 +25,30 @@ const FORMAT_LABELS: Record<string, string> = {
   brawl: "Brawl",
 };
 
+const PILL_BASE: React.CSSProperties = {
+  fontSize: "0.6rem",
+  letterSpacing: "0.16em",
+  padding: "2px 8px",
+  fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.4rem",
+};
+
 export function LegalityBadge({ check, formatLabel, compact }: LegalityBadgeProps) {
   if (!check) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md border border-card-border bg-card-hover px-2 py-0.5 text-[10px] text-muted">
-        No format
+      <span
+        style={{
+          ...PILL_BASE,
+          color: "var(--ink-faint)",
+          background: "var(--panel)",
+          border: "1px solid var(--rule-hi)",
+        }}
+      >
+        No Format
       </span>
     );
   }
@@ -39,32 +58,71 @@ export function LegalityBadge({ check, formatLabel, compact }: LegalityBadgeProp
 
   if (total_checked === 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md border border-card-border bg-card-hover px-2 py-0.5 text-[10px] text-muted">
-        <span className="font-semibold">{label}</span>
-        <span>·</span>
-        <span>no data</span>
+      <span
+        style={{
+          ...PILL_BASE,
+          color: "var(--ink-faint)",
+          background: "var(--panel)",
+          border: "1px solid var(--rule-hi)",
+        }}
+      >
+        <span>{label}</span>
+        <span aria-hidden>·</span>
+        <span style={{ letterSpacing: "0.04em", textTransform: "none" }}>no data</span>
       </span>
     );
   }
 
   if (legal) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md border border-green-500/30 bg-green-500/10 px-2 py-0.5 text-[10px] text-green-400">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-        <span className="font-semibold">{label}</span>
-        {!compact && <span className="text-green-300/70">· legal</span>}
+      <span
+        style={{
+          ...PILL_BASE,
+          color: "var(--teal)",
+          background: "var(--teal-mute)",
+          border: "1px solid rgba(94,176,155,0.4)",
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            display: "inline-block",
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--teal)",
+            boxShadow: "0 0 4px var(--teal)",
+          }}
+        />
+        <span>{label}</span>
+        {!compact && <span style={{ opacity: 0.75, letterSpacing: "0.04em", textTransform: "none" }}>· legal</span>}
       </span>
     );
   }
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] text-red-400"
+      style={{
+        ...PILL_BASE,
+        color: "var(--red)",
+        background: "var(--red-mute)",
+        border: "1px solid rgba(214,90,90,0.4)",
+      }}
       title={illegal_cards.map((c) => `${c.name} (${c.reason})`).join(", ")}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-      <span className="font-semibold">{label}</span>
-      <span className="text-red-300/70">
+      <span
+        aria-hidden
+        style={{
+          display: "inline-block",
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: "var(--red)",
+          boxShadow: "0 0 4px var(--red)",
+        }}
+      />
+      <span>{label}</span>
+      <span style={{ opacity: 0.8, letterSpacing: "0.04em", textTransform: "none" }}>
         · {illegal_cards.length} illegal
       </span>
     </span>

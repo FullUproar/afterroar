@@ -1,8 +1,8 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  Meta Archetypes — clickable deck archetype chips with meta share    */
-/*  Shows what's winning in the current format.                         */
+/*  Meta Archetypes — Operator Console mono pills with meta share.     */
+/*  Tap to build the archetype's reference list.                       */
 /* ------------------------------------------------------------------ */
 
 interface LiveMetaResult {
@@ -23,9 +23,21 @@ export function MetaArchetypes({
 }) {
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted py-3">
-        <span className="inline-block h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-        Loading live meta data...
+      <div
+        className="flex items-center gap-2 font-mono uppercase text-ink-soft py-3"
+        style={{ fontSize: "0.66rem", letterSpacing: "0.18em" }}
+      >
+        <span
+          className="inline-block animate-spin"
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            border: "2px solid var(--orange)",
+            borderTopColor: "transparent",
+          }}
+        />
+        Loading live meta…
       </div>
     );
   }
@@ -34,19 +46,45 @@ export function MetaArchetypes({
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-semibold text-muted uppercase tracking-wider">
+      <div
+        className="font-mono uppercase font-semibold text-ink-faint flex items-center gap-2"
+        style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+      >
+        <span
+          aria-hidden
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            background: "currentColor",
+            clipPath:
+              "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+          }}
+        />
         Popular Archetypes — tap to build
-      </label>
-      <div className="flex flex-wrap gap-2">
+      </div>
+      <div className="flex flex-wrap gap-1.5">
         {decks.slice(0, 12).map((deck) => (
           <button
             key={deck.name}
             onClick={() => onSelect(deck.name)}
-            className="group rounded-xl border border-card-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:border-accent/50 hover:bg-card-hover active:scale-95 transition-all"
+            className="group font-mono uppercase font-semibold inline-flex items-center gap-2 transition-colors"
+            style={{
+              fontSize: "0.66rem",
+              letterSpacing: "0.16em",
+              padding: "0 0.85rem",
+              minHeight: 44,
+              background: "var(--panel-mute)",
+              border: "1px solid var(--rule-hi)",
+              color: "var(--ink-soft)",
+            }}
           >
-            {deck.name}
+            <span>{deck.name}</span>
             {deck.metaShare > 0 && (
-              <span className="ml-1.5 text-xs text-accent font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+              <span
+                className="font-mono tabular-nums opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ color: "var(--orange)", fontSize: "0.6rem", letterSpacing: "0.04em" }}
+              >
                 {deck.metaShare.toFixed(1)}%
               </span>
             )}

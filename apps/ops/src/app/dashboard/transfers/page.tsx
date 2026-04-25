@@ -154,18 +154,18 @@ export default function TransfersPage() {
     }
   }
 
-  const statusColor = (s: string) => {
+  const statusStyle = (s: string): React.CSSProperties => {
     switch (s) {
       case "completed":
-        return "bg-green-900/50 text-green-400";
+        return { background: 'var(--teal-mute)', color: 'var(--teal)' };
       case "pending":
-        return "bg-yellow-900/50 text-yellow-400";
+        return { background: 'var(--yellow-mute)', color: 'var(--yellow)' };
       case "in_transit":
-        return "bg-blue-900/50 text-blue-400";
+        return { background: 'var(--orange-mute)', color: 'var(--orange)' };
       case "cancelled":
-        return "bg-card-hover text-muted";
+        return { background: 'var(--panel-hi)', color: 'var(--ink-soft)' };
       default:
-        return "bg-card-hover text-muted";
+        return { background: 'var(--panel-hi)', color: 'var(--ink-soft)' };
     }
   };
 
@@ -185,11 +185,14 @@ export default function TransfersPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Transfers"
+        crumb="Console · Inventory"
+        desc="Move inventory between locations, warehouses, and display cases."
         action={
           <button
             onClick={() => setShowNew(true)}
             disabled={locations.length < 2}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-xl bg-orange px-4 py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ minHeight: 48 }}
           >
             New Transfer
           </button>
@@ -197,7 +200,7 @@ export default function TransfersPage() {
       />
 
       {locations.length < 2 && (
-        <div className="rounded-xl border border-yellow-800/50 bg-yellow-900/10 p-4 text-sm text-yellow-400">
+        <div className="rounded-xl border p-4 text-sm text-yellow" style={{ borderColor: 'var(--yellow)', background: 'var(--yellow-mute)' }}>
           You need at least 2 locations to create transfers. Add locations in Settings first.
         </div>
       )}
@@ -218,7 +221,8 @@ export default function TransfersPage() {
                     {locationMap[t.from_location_id] || 'Unknown'} &rarr; {locationMap[t.to_location_id] || 'Unknown'}
                   </span>
                   <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(t.status)}`}
+                    className="inline-block rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold"
+                    style={statusStyle(t.status)}
                   >
                     {t.status}
                   </span>
@@ -243,7 +247,7 @@ export default function TransfersPage() {
                   <th className="px-4 py-3 font-medium">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-rule">
                 {transfers.map((t) => (
                   <tr key={t.id} className="bg-background hover:bg-card-hover transition-colors">
                     <td className="px-4 py-3 text-foreground">
@@ -257,7 +261,8 @@ export default function TransfersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(t.status)}`}
+                        className="inline-block rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold"
+                        style={statusStyle(t.status)}
                       >
                         {t.status}
                       </span>
@@ -403,7 +408,7 @@ export default function TransfersPage() {
                             )
                           )
                         }
-                        className="text-muted hover:text-red-400 text-sm"
+                        className="text-ink-soft hover:text-red-fu text-sm"
                       >
                         &times;
                       </button>
@@ -441,7 +446,7 @@ export default function TransfersPage() {
                   !toLocationId ||
                   transferItems.length === 0
                 }
-                className="flex-1 rounded-xl bg-accent py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-orange py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 disabled:opacity-50 transition-colors"
               >
                 {submitting ? "Transferring..." : "Submit Transfer"}
               </button>

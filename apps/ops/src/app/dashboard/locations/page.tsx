@@ -64,16 +64,18 @@ export default function LocationsPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Locations"
+        crumb="Console · Settings"
+        desc="Manage your store locations, warehouses, and display areas."
         action={
           <button onClick={() => setShowCreate(!showCreate)}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors">
+            className="rounded-xl bg-orange px-4 py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 transition-colors"
+            style={{ minHeight: 48 }}>
             {showCreate ? 'Cancel' : 'Add Location'}
           </button>
         }
       />
-      <p className="-mt-4 text-sm text-muted">Manage your store locations, warehouses, and display areas.</p>
 
-      {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>}
+      {error && <div className="rounded-xl border p-3 text-sm text-red-fu" style={{ borderColor: 'var(--red)', background: 'var(--red-mute)' }}>{error}</div>}
 
       {showCreate && (
         <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
@@ -91,7 +93,8 @@ export default function LocationsPage() {
             <option value="online">Online Fulfillment</option>
           </select>
           <button onClick={handleCreate} disabled={!name.trim() || saving}
-            className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors">
+            className="rounded-xl px-6 py-2 text-sm font-display uppercase tracking-wider font-bold disabled:opacity-50 transition-colors"
+            style={{ background: 'var(--teal)', color: 'var(--void)' }}>
             {saving ? 'Creating...' : 'Create Location'}
           </button>
         </div>
@@ -106,21 +109,21 @@ export default function LocationsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {locations.map((loc) => (
-            <div key={loc.id} className="rounded-xl border border-card-border bg-card p-5">
+            <div key={loc.id} className="rounded-xl border border-rule bg-panel p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="font-medium text-foreground">{loc.name}</div>
-                  {loc.code && <div className="text-xs text-muted">{loc.code}</div>}
+                  <div className="font-display font-semibold text-ink">{loc.name}</div>
+                  {loc.code && <div className="text-xs text-ink-soft font-mono uppercase tracking-wider">{loc.code}</div>}
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-xs ${
-                  loc.type === 'store' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                  loc.type === 'warehouse' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                  'bg-zinc-500/20 text-muted border border-zinc-500/30'
-                }`}>
+                <span className="rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold border" style={
+                  loc.type === 'store' ? { background: 'var(--orange-mute)', color: 'var(--orange)', borderColor: 'var(--orange)' } :
+                  loc.type === 'warehouse' ? { background: 'var(--yellow-mute)', color: 'var(--yellow)', borderColor: 'var(--yellow)' } :
+                  { background: 'var(--panel-hi)', color: 'var(--ink-soft)', borderColor: 'var(--rule-hi)' }
+                }>
                   {loc.type}
                 </span>
               </div>
-              {loc.is_default && <div className="mt-2 text-xs text-green-400">Default location</div>}
+              {loc.is_default && <div className="mt-2 text-xs text-teal font-mono uppercase tracking-wider font-bold">Default location</div>}
             </div>
           ))}
         </div>

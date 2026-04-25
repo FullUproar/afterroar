@@ -166,10 +166,13 @@ export default function PromotionsPage() {
     <div className="flex flex-col h-full gap-4">
       <PageHeader
         title="Promotions & Discounts"
+        crumb="Console · Inventory"
+        desc="Sales, coupons, and customer-tag discounts."
         action={
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+            className="rounded-xl bg-orange px-4 py-2 text-sm font-display uppercase tracking-wider font-bold text-void hover:opacity-90 transition-colors"
+            style={{ minHeight: 48 }}
           >
             {showCreate ? 'Cancel' : 'New Promotion'}
           </button>
@@ -177,7 +180,7 @@ export default function PromotionsPage() {
       />
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="rounded-xl border p-3 text-sm text-red-fu" style={{ borderColor: 'var(--red)', background: 'var(--red-mute)' }}>
           {error}
         </div>
       )}
@@ -274,7 +277,8 @@ export default function PromotionsPage() {
           </div>
 
           <button onClick={handleCreate} disabled={!name.trim() || !value || saving}
-            className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors">
+            className="rounded-xl px-6 py-2 text-sm font-display uppercase tracking-wider font-bold disabled:opacity-50 transition-colors"
+            style={{ background: 'var(--teal)', color: 'var(--void)' }}>
             {saving ? 'Creating...' : 'Create Promotion'}
           </button>
         </div>
@@ -306,12 +310,12 @@ export default function PromotionsPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{promo.name}</span>
-                      <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-300 border border-indigo-500/30">
+                      <span className="font-display font-semibold text-ink">{promo.name}</span>
+                      <span className="rounded px-2 py-0.5 text-xs font-mono uppercase tracking-wider font-bold border" style={{ background: 'var(--orange-mute)', color: 'var(--orange)', borderColor: 'var(--orange)' }}>
                         {formatPromoValue(promo)}
                       </span>
                     </div>
-                    <div className="mt-1 text-sm text-muted">
+                    <div className="mt-1 text-sm text-ink-soft">
                       {formatScope(promo)}
                       {promo.starts_at && (
                         <> · Starts {new Date(promo.starts_at).toLocaleDateString()}</>
@@ -320,20 +324,22 @@ export default function PromotionsPage() {
                         <> · Ends {new Date(promo.ends_at).toLocaleDateString()}</>
                       )}
                       {isExpired && (
-                        <span className="ml-2 text-red-400">(expired)</span>
+                        <span className="ml-2 text-red-fu">(expired)</span>
                       )}
                     </div>
                   </div>
                   <button
                     onClick={() => toggleActive(promo.id, !promo.active)}
                     className={`relative h-6 w-11 rounded-full transition-colors ${
-                      promo.active ? 'bg-green-600' : 'bg-card-hover'
+                      promo.active ? '' : 'bg-card-hover'
                     }`}
+                    style={promo.active ? { background: 'var(--teal)' } : undefined}
                   >
                     <span
-                      className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                      className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full transition-transform ${
                         promo.active ? 'translate-x-5' : 'translate-x-0'
                       }`}
+                      style={{ background: promo.active ? 'var(--void)' : 'var(--ink-faint)' }}
                     />
                   </button>
                 </div>

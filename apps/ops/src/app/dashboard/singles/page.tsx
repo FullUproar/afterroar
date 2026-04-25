@@ -64,7 +64,6 @@ interface MarketplaceCard {
   nonfoil: boolean;
   type_line: string;
   mana_cost: string;
-  // Cross-reference
   in_stock_qty?: number;
   inventory_id?: string;
 }
@@ -85,13 +84,20 @@ const CONDITION_MULTIPLIERS: Record<string, number> = {
 };
 const PAGE_SIZE = 10;
 
+const RARITY_TONE: Record<string, string> = {
+  common: "var(--ink-soft)",
+  uncommon: "var(--ink)",
+  rare: "var(--yellow)",
+  mythic: "var(--orange)",
+};
+
 /* ================================================================== */
 /*  Spinner                                                            */
 /* ================================================================== */
 
-function Spinner({ className = "h-5 w-5" }: { className?: string }) {
+function Spinner({ size = 16 }: { size?: number }) {
   return (
-    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none">
+    <svg className="animate-spin" viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }}>
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -107,7 +113,6 @@ export default function SinglesDashboard() {
   const { can } = useStore();
   const [mainTab, setMainTab] = useState<MainTab>("inventory");
 
-  // Toast
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -117,7 +122,6 @@ export default function SinglesDashboard() {
     toastTimerRef.current = setTimeout(() => setToast(null), 3000);
   }
 
-  // Switch to marketplace with a pre-filled search query
   const [marketplacePreSearch, setMarketplacePreSearch] = useState<string | null>(null);
   function switchToMarketplace(query: string) {
     setMarketplacePreSearch(query);
@@ -126,14 +130,17 @@ export default function SinglesDashboard() {
 
   return (
     <div className="mx-auto max-w-6xl flex flex-col h-full gap-4 pb-8 min-w-0">
-      {/* Toast notification */}
+      {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-lg transition-opacity ${
-            toast.type === "error"
-              ? "border border-red-500/30 bg-red-500/10 text-red-400"
-              : "border border-green-500/30 bg-green-500/10 text-green-400"
-          }`}
+          className="fixed top-4 right-4 z-50 px-5 py-3 font-mono uppercase font-semibold shadow-2xl"
+          style={{
+            background: toast.type === "error" ? "var(--red)" : "var(--teal)",
+            color: "var(--void)",
+            fontSize: "0.7rem",
+            letterSpacing: "0.18em",
+            border: `1px solid ${toast.type === "error" ? "var(--red)" : "var(--teal)"}`,
+          }}
         >
           {toast.message}
         </div>
@@ -141,39 +148,57 @@ export default function SinglesDashboard() {
 
       <PageHeader
         title="TCG Singles"
+        crumb="TCG · Singles"
+        desc="Your inventory of singles + a live marketplace search to fill gaps."
         backHref="/dashboard"
         action={
           <Link
             href="/dashboard/catalog"
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
+            className="font-mono uppercase font-semibold transition-opacity hover:opacity-90 inline-flex items-center"
+            style={{
+              fontSize: "0.66rem",
+              letterSpacing: "0.18em",
+              padding: "0 1rem",
+              minHeight: 48,
+              background: "var(--orange)",
+              color: "var(--void)",
+              border: "1px solid var(--orange)",
+            }}
           >
             + Add Cards
           </Link>
         }
       />
 
-      {/* Main Tabs */}
-      <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 w-fit">
-        <button
-          onClick={() => setMainTab("inventory")}
-          className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
-            mainTab === "inventory"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted hover:text-foreground"
-          }`}
-        >
-          My Inventory
-        </button>
-        <button
-          onClick={() => setMainTab("marketplace")}
-          className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
-            mainTab === "marketplace"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted hover:text-foreground"
-          }`}
-        >
-          Marketplace
-        </button>
+      {/* Main Tabs — operator console mono */}
+      <div
+        className="flex"
+        style={{ background: "var(--slate)", borderBottom: "1px solid var(--rule)" }}
+      >
+        {[
+          { id: "inventory" as const, label: "My Inventory" },
+          { id: "marketplace" as const, label: "Marketplace" },
+        ].map((t) => {
+          const isActive = mainTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setMainTab(t.id)}
+              className="font-mono uppercase font-semibold transition-colors"
+              style={{
+                padding: "0.85rem 1.1rem",
+                minHeight: 52,
+                fontSize: "0.7rem",
+                letterSpacing: "0.22em",
+                borderBottom: `2px solid ${isActive ? "var(--orange)" : "transparent"}`,
+                color: isActive ? "var(--orange)" : "var(--ink-soft)",
+                background: "transparent",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {mainTab === "inventory" ? (
@@ -200,7 +225,6 @@ export default function SinglesDashboard() {
 
 function InventoryTab({
   router,
-  showToast,
   switchToMarketplace,
 }: {
   router: ReturnType<typeof useRouter>;
@@ -213,33 +237,28 @@ function InventoryTab({
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
 
-  // Filters
   const [gameFilter, setGameFilter] = useState<GameFilter>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Sort — three-state: click once = asc, again = desc, again = off
   const [sort, setSort] = useState<SortState>({ field: "name", dir: "asc" });
 
-  // Debounce search
   useEffect(() => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setPage(1); // reset page on new search
+      setPage(1);
     }, 300);
     return () => {
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
   }, [searchQuery]);
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(1);
   }, [gameFilter]);
 
-  // Fetch items
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
@@ -252,8 +271,7 @@ function InventoryTab({
       }
       params.set("page", String(page));
       params.set("limit", String(PAGE_SIZE));
-      if (page === 1) params.set("stats", "true");
-      else params.set("stats", "false");
+      params.set("stats", page === 1 ? "true" : "false");
 
       const res = await fetch(`/api/singles?${params}`);
       if (!res.ok) throw new Error("Failed to load");
@@ -263,7 +281,7 @@ function InventoryTab({
       if (data.stats) setStats(data.stats);
       if (typeof data.total === "number") setTotal(data.total);
     } catch {
-      // Silently handle error
+      // Silently handle
     } finally {
       setLoading(false);
     }
@@ -273,16 +291,14 @@ function InventoryTab({
     fetchItems();
   }, [fetchItems]);
 
-  // Sort handler — three-state cycling
   function handleSort(field: SortField) {
     setSort((prev) => {
       if (!prev || prev.field !== field) {
-        // New field: start with asc (except numeric fields which start desc)
         const numericFields: SortField[] = ["price", "cost", "quantity", "margin"];
         return { field, dir: numericFields.includes(field) ? "desc" : "asc" };
       }
       if (prev.dir === "asc") return { field, dir: "desc" };
-      if (prev.dir === "desc") return null; // third click = off
+      if (prev.dir === "desc") return null;
       return { field, dir: "asc" };
     });
     setPage(1);
@@ -291,9 +307,7 @@ function InventoryTab({
   function sortIndicator(field: SortField) {
     if (!sort || sort.field !== field) return null;
     return (
-      <span className="ml-0.5">
-        {sort.dir === "asc" ? "\u25B2" : "\u25BC"}
-      </span>
+      <span className="ml-0.5">{sort.dir === "asc" ? "▲" : "▼"}</span>
     );
   }
 
@@ -301,99 +315,179 @@ function InventoryTab({
 
   return (
     <div className="space-y-4">
-      {/* KPI Cards */}
+      {/* Stat strip */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KPICard label="Total Singles" value={stats.total_singles.toLocaleString()} sub={`${stats.unique_cards} unique`} />
-          <KPICard label="Total Value" value={formatCents(stats.total_retail_cents)} sub={`Cost ${formatCents(stats.total_cost_cents)}`} />
-          <KPICard label="Avg Margin" value={`${stats.avg_margin_percent}%`} sub="across all singles" />
-          <KPICard label="Unique Cards" value={stats.unique_cards.toLocaleString()} sub="distinct items" />
+        <div
+          className="grid grid-cols-2 md:grid-cols-4"
+          style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}
+        >
+          {[
+            { k: "Total Singles", v: stats.total_singles.toLocaleString(), sub: `${stats.unique_cards} unique` },
+            { k: "Total Value", v: formatCents(stats.total_retail_cents), sub: `Cost ${formatCents(stats.total_cost_cents)}`, tone: "var(--teal)" },
+            { k: "Avg Margin", v: `${stats.avg_margin_percent}%`, sub: "across all singles", tone: stats.avg_margin_percent >= 30 ? "var(--teal)" : stats.avg_margin_percent >= 10 ? "var(--yellow)" : "var(--red)" },
+            { k: "Unique Cards", v: stats.unique_cards.toLocaleString(), sub: "distinct items" },
+          ].map((cell) => (
+            <div key={cell.k} className="px-3 py-2" style={{ background: "var(--panel-mute)" }}>
+              <div
+                className="font-mono uppercase font-semibold text-ink-faint"
+                style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+              >
+                {cell.k}
+              </div>
+              <div
+                className="font-mono font-semibold mt-1 tabular-nums"
+                style={{
+                  fontSize: "1rem",
+                  letterSpacing: "0.02em",
+                  color: cell.tone || "var(--ink)",
+                }}
+              >
+                {cell.v}
+              </div>
+              <div
+                className="font-mono text-ink-faint mt-0.5"
+                style={{ fontSize: "0.6rem", letterSpacing: "0.04em" }}
+              >
+                {cell.sub}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Tool Links */}
       <div className="flex flex-wrap gap-2">
-        <Link
-          href="/dashboard/singles/evaluate"
-          className="rounded-lg border border-card-border bg-card px-3 py-2 text-xs font-medium text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
-        >
-          Card Evaluator
-        </Link>
-        <Link
-          href="/dashboard/singles/pricing"
-          className="rounded-lg border border-card-border bg-card px-3 py-2 text-xs font-medium text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
-        >
-          Bulk Pricing
-        </Link>
-        <Link
-          href="/dashboard/singles/ebay"
-          className="rounded-lg border border-card-border bg-card px-3 py-2 text-xs font-medium text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
-        >
-          eBay Listings
-        </Link>
-        <Link
-          href="/dashboard/trade-ins/bulk"
-          className="rounded-lg border border-card-border bg-card px-3 py-2 text-xs font-medium text-muted hover:text-foreground hover:border-foreground/30 transition-colors"
-        >
-          Bulk Buylist
-        </Link>
-      </div>
-
-      {/* Game Filter Tabs */}
-      <div className="overflow-hidden w-full">
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scroll-visible">
-        {GAME_TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setGameFilter(tab)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
-              gameFilter === tab
-                ? "bg-accent text-foreground"
-                : "bg-card-hover text-muted hover:text-foreground"
-            }`}
+        {[
+          { href: "/dashboard/singles/evaluate", label: "Card Evaluator" },
+          { href: "/dashboard/singles/pricing", label: "Bulk Pricing" },
+          { href: "/dashboard/singles/ebay", label: "eBay Listings" },
+          { href: "/dashboard/trade-ins/bulk", label: "Bulk Buylist" },
+        ].map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="font-mono uppercase font-semibold transition-colors hover:text-ink hover:border-ink-faint"
+            style={{
+              fontSize: "0.62rem",
+              letterSpacing: "0.16em",
+              padding: "0 0.85rem",
+              minHeight: 44,
+              background: "var(--panel-mute)",
+              border: "1px solid var(--rule-hi)",
+              color: "var(--ink-soft)",
+              display: "inline-flex",
+              alignItems: "center",
+            }}
           >
-            {tab}
-          </button>
+            {l.label}
+          </Link>
         ))}
       </div>
+
+      {/* Game Filter Pills */}
+      <div className="overflow-hidden w-full">
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {GAME_TABS.map((tab) => {
+            const isActive = gameFilter === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setGameFilter(tab)}
+                className="font-mono uppercase font-semibold whitespace-nowrap transition-colors"
+                style={{
+                  fontSize: "0.66rem",
+                  letterSpacing: "0.18em",
+                  padding: "0 0.85rem",
+                  minHeight: 40,
+                  background: isActive ? "var(--orange-mute)" : "var(--panel-mute)",
+                  border: `1px solid ${isActive ? "var(--orange)" : "var(--rule-hi)"}`,
+                  color: isActive ? "var(--orange)" : "var(--ink-soft)",
+                }}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Search */}
-      <input
-        type="text"
-        placeholder="Search your inventory..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={(e) => e.stopPropagation()}
-        className="w-full rounded-xl border border-input-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-      />
+      <div className="relative">
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none"
+          style={{ width: 16, height: 16 }}
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.5-4.5" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search your inventory…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+          style={{
+            background: "var(--panel)",
+            border: "1px solid var(--rule-hi)",
+            fontSize: "0.92rem",
+            padding: "0 0.85rem 0 2.4rem",
+            minHeight: 48,
+          }}
+        />
+      </div>
 
       {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-muted text-sm">
+        <div
+          className="flex items-center justify-center gap-2 py-12 font-mono uppercase text-ink-soft"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.18em" }}
+        >
           <Spinner />
-          Loading singles...
+          Loading singles…
         </div>
       ) : items.length === 0 && !debouncedSearch && gameFilter === "All" ? (
         <EmptyInventory />
       ) : items.length === 0 ? (
-        <div className="text-center py-12 space-y-3">
-          <p className="text-muted text-sm">No singles found matching your search</p>
+        <div
+          className="text-center py-12 space-y-3 px-6"
+          style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}
+        >
+          <p className="font-mono text-ink-soft" style={{ fontSize: "0.78rem" }}>
+            No singles found matching your search
+          </p>
           <Link
             href="/dashboard/catalog"
-            className="inline-block rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+            className="inline-flex items-center font-mono uppercase font-semibold transition-opacity"
+            style={{
+              fontSize: "0.66rem",
+              letterSpacing: "0.18em",
+              padding: "0 1rem",
+              minHeight: 44,
+              background: "var(--orange)",
+              color: "var(--void)",
+              border: "1px solid var(--orange)",
+            }}
           >
             Add from Catalog
           </Link>
         </div>
       ) : (
         <>
-          {/* Responsive table */}
-          <div className="rounded-xl border border-card-border bg-card overflow-hidden">
-            <div className="overflow-x-auto scroll-visible">
-              <table className="w-full text-sm">
+          <section className="ar-zone" style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}>
+            <div className="ar-zone-head">
+              <span>Inventory · <b style={{ color: "var(--ink)" }}>{items.length}</b> of {total.toLocaleString()}</span>
+              <span className="text-ink-faint">{gameFilter}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b border-card-border bg-card-hover/50">
+                  <tr style={{ background: "var(--panel-mute)", borderBottom: "1px solid var(--rule)" }}>
                     <SortHeader field="name" label="Name" sort={sort} onSort={handleSort} indicator={sortIndicator} />
                     <SortHeader field="set" label="Set" sort={sort} onSort={handleSort} indicator={sortIndicator} className="hidden md:table-cell" />
                     <SortHeader field="condition" label="Cond" sort={sort} onSort={handleSort} indicator={sortIndicator} className="hidden sm:table-cell" />
@@ -401,137 +495,165 @@ function InventoryTab({
                     <SortHeader field="price" label="Price" sort={sort} onSort={handleSort} indicator={sortIndicator} align="right" />
                     <SortHeader field="cost" label="Cost" sort={sort} onSort={handleSort} indicator={sortIndicator} align="right" className="hidden lg:table-cell" />
                     <SortHeader field="margin" label="Margin" sort={sort} onSort={handleSort} indicator={sortIndicator} align="right" className="hidden lg:table-cell" />
-                    <th className="px-3 py-2.5 text-right text-xs font-medium text-muted uppercase tracking-wider w-8">
+                    <th
+                      className="px-3 py-2.5 text-right font-mono uppercase font-semibold text-ink-faint"
+                      style={{ fontSize: "0.55rem", letterSpacing: "0.22em", width: 60 }}
+                    >
                       <span className="sr-only">Actions</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-card-border">
-                  {items.map((item) => (
-                    <tr
-                      key={item.id}
-                      onClick={() => router.push(`/dashboard/inventory/${item.id}`)}
-                      className="hover:bg-card-hover transition-colors cursor-pointer"
-                    >
-                      {/* Name */}
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <CardImage src={item.image_url} alt={item.name} size="xs" game={item.game || undefined} />
-                          <div className="min-w-0">
-                            <div className="font-medium text-foreground truncate max-w-50 sm:max-w-65">
-                              {item.name}
-                            </div>
-                            {/* Set/condition visible on mobile when columns are hidden */}
-                            <div className="flex items-center gap-1.5 mt-0.5 md:hidden">
-                              <span className="text-[10px] text-muted truncate max-w-30">
-                                {item.set_name || item.set_code || ""}
-                              </span>
-                              <ConditionBadge condition={item.condition} size="xs" />
-                              {item.foil && (
-                                <span className="text-[10px] font-medium px-1 py-0 rounded bg-purple-600/20 text-purple-300 border border-purple-500/30">
-                                  F
+                <tbody>
+                  {items.map((item) => {
+                    const marginTone = item.margin_percent != null
+                      ? item.margin_percent >= 30
+                        ? "var(--teal)"
+                        : item.margin_percent >= 10
+                          ? "var(--yellow)"
+                          : "var(--red)"
+                      : "var(--ink-faint)";
+
+                    return (
+                      <tr
+                        key={item.id}
+                        onClick={() => router.push(`/dashboard/inventory/${item.id}`)}
+                        className="transition-colors cursor-pointer hover:bg-panel"
+                        style={{ borderBottom: "1px solid var(--rule-faint)" }}
+                      >
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <CardImage src={item.image_url} alt={item.name} size="xs" game={item.game || undefined} />
+                            <div className="min-w-0">
+                              <div
+                                className="font-display text-ink truncate"
+                                style={{ fontSize: "0.92rem", fontWeight: 500, maxWidth: 240 }}
+                              >
+                                {item.name}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5 md:hidden">
+                                <span
+                                  className="font-mono text-ink-faint truncate"
+                                  style={{ fontSize: "0.6rem", letterSpacing: "0.04em", maxWidth: 120 }}
+                                >
+                                  {item.set_name || item.set_code || ""}
                                 </span>
-                              )}
+                                <ConditionBadge condition={item.condition} size="xs" />
+                                {item.foil && <FoilTag />}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-
-                      {/* Set */}
-                      <td className="px-3 py-2.5 hidden md:table-cell">
-                        <span className="text-muted text-xs truncate block max-w-40">
-                          {item.set_name || item.set_code || "--"}
-                        </span>
-                      </td>
-
-                      {/* Condition */}
-                      <td className="px-3 py-2.5 hidden sm:table-cell">
-                        <div className="flex items-center gap-1.5">
-                          <ConditionBadge condition={item.condition} size="xs" />
-                          {item.foil && (
-                            <span className="text-[10px] font-medium px-1 py-0 rounded bg-purple-600/20 text-purple-300 border border-purple-500/30">
-                              Foil
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Qty */}
-                      <td className="px-3 py-2.5 text-right tabular-nums text-foreground">
-                        {item.quantity}
-                      </td>
-
-                      {/* Price */}
-                      <td className="px-3 py-2.5 text-right tabular-nums font-medium text-foreground">
-                        {formatCents(item.price_cents)}
-                      </td>
-
-                      {/* Cost */}
-                      <td className="px-3 py-2.5 text-right tabular-nums text-muted hidden lg:table-cell">
-                        {formatCents(item.cost_cents)}
-                      </td>
-
-                      {/* Margin */}
-                      <td className="px-3 py-2.5 text-right tabular-nums hidden lg:table-cell">
-                        {item.margin_percent !== null ? (
+                        </td>
+                        <td className="px-3 py-2.5 hidden md:table-cell">
                           <span
-                            className={
-                              item.margin_percent >= 30
-                                ? "text-green-400"
-                                : item.margin_percent >= 10
-                                  ? "text-yellow-400"
-                                  : "text-red-400"
-                            }
+                            className="font-mono text-ink-soft truncate block"
+                            style={{ fontSize: "0.7rem", letterSpacing: "0.04em", maxWidth: 160 }}
                           >
-                            {item.margin_percent}%
+                            {item.set_name || item.set_code || "—"}
                           </span>
-                        ) : (
-                          <span className="text-muted">--</span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-3 py-2.5 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            switchToMarketplace(item.name.replace(/\s*\(Foil\)\s*$/, ""));
-                          }}
-                          className="text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors whitespace-nowrap"
-                          title="Check market price"
+                        </td>
+                        <td className="px-3 py-2.5 hidden sm:table-cell">
+                          <div className="flex items-center gap-1.5">
+                            <ConditionBadge condition={item.condition} size="xs" />
+                            {item.foil && <FoilTag />}
+                          </div>
+                        </td>
+                        <td
+                          className="px-3 py-2.5 text-right font-mono tabular-nums text-ink"
+                          style={{ fontSize: "0.85rem" }}
                         >
-                          Market
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          {item.quantity}
+                        </td>
+                        <td
+                          className="px-3 py-2.5 text-right font-mono font-semibold tabular-nums text-ink"
+                          style={{ fontSize: "0.85rem" }}
+                        >
+                          {formatCents(item.price_cents)}
+                        </td>
+                        <td
+                          className="px-3 py-2.5 text-right font-mono tabular-nums text-ink-soft hidden lg:table-cell"
+                          style={{ fontSize: "0.78rem" }}
+                        >
+                          {formatCents(item.cost_cents)}
+                        </td>
+                        <td
+                          className="px-3 py-2.5 text-right font-mono tabular-nums hidden lg:table-cell"
+                          style={{ fontSize: "0.78rem", color: marginTone, fontWeight: 600 }}
+                        >
+                          {item.margin_percent !== null ? `${item.margin_percent}%` : "—"}
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              switchToMarketplace(item.name.replace(/\s*\(Foil\)\s*$/, ""));
+                            }}
+                            className="font-mono uppercase font-semibold transition-colors whitespace-nowrap hover:underline"
+                            style={{
+                              fontSize: "0.6rem",
+                              letterSpacing: "0.16em",
+                              color: "var(--orange)",
+                              padding: "0 0.5rem",
+                              minHeight: 32,
+                            }}
+                            title="Check market price"
+                          >
+                            Market
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted text-xs">
+          <div className="flex items-center justify-between">
+            <span
+              className="font-mono text-ink-faint tabular-nums"
+              style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}
+            >
               {total > 0
-                ? `${(page - 1) * PAGE_SIZE + 1}--${Math.min(page * PAGE_SIZE, total)} of ${total}`
+                ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}`
                 : ""}
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="rounded-lg border border-card-border bg-card px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="font-mono uppercase font-semibold transition-colors disabled:opacity-40"
+                style={{
+                  fontSize: "0.62rem",
+                  letterSpacing: "0.16em",
+                  padding: "0 0.85rem",
+                  minHeight: 36,
+                  background: "var(--panel)",
+                  border: "1px solid var(--rule-hi)",
+                  color: "var(--ink-soft)",
+                }}
               >
                 Prev
               </button>
-              <span className="px-3 py-1.5 text-xs text-muted tabular-nums">
+              <span
+                className="font-mono text-ink-faint tabular-nums px-3"
+                style={{ fontSize: "0.66rem" }}
+              >
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="rounded-lg border border-card-border bg-card px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="font-mono uppercase font-semibold transition-colors disabled:opacity-40"
+                style={{
+                  fontSize: "0.62rem",
+                  letterSpacing: "0.16em",
+                  padding: "0 0.85rem",
+                  minHeight: 36,
+                  background: "var(--panel)",
+                  border: "1px solid var(--rule-hi)",
+                  color: "var(--ink-soft)",
+                }}
               >
                 Next
               </button>
@@ -566,27 +688,22 @@ function MarketplaceTab({
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Inventory cross-reference
   const [existingIds, setExistingIds] = useState<Map<string, { qty: number; id: string }>>(new Map());
 
-  // Add form
   const [addForm, setAddForm] = useState<AddFormState | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  // Advanced MTG filters
   const [showFilters, setShowFilters] = useState(false);
   const [filterSet, setFilterSet] = useState("");
   const [filterColor, setFilterColor] = useState("");
   const [filterRarity, setFilterRarity] = useState("");
   const [filterFormat, setFilterFormat] = useState("");
 
-  // Handle pre-search from inventory tab
   useEffect(() => {
     if (preSearch) {
       setQuery(preSearch);
       clearPreSearch();
-      // Trigger search after setting query
       const timer = setTimeout(() => {
         doSearch(preSearch);
       }, 50);
@@ -595,7 +712,6 @@ function MarketplaceTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preSearch]);
 
-  // Search function
   const doSearch = useCallback(async (searchQuery?: string) => {
     const q = (searchQuery ?? query).trim();
     if (!q || q.length < 2) return;
@@ -611,7 +727,6 @@ function MarketplaceTab({
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
 
-        // Normalize pokemon/yugioh results to MarketplaceCard
         const cards: MarketplaceCard[] = (data.cards || []).map((card: Record<string, unknown>) => {
           const cardId = String(card.pokemon_id || card.yugioh_id || "");
           const priceCents = (card.price_market as number) || (card.price_tcgplayer as number) || null;
@@ -636,10 +751,8 @@ function MarketplaceTab({
         setResults(cards);
         setTotal(data.total || 0);
 
-        // Cross-reference with inventory
         await crossReferenceInventory(cards);
       } else {
-        // MTG (Scryfall)
         let scryfallQuery = q;
         if (filterSet) scryfallQuery += ` set:${filterSet}`;
         if (filterColor) scryfallQuery += ` c:${filterColor}`;
@@ -670,14 +783,12 @@ function MarketplaceTab({
         setResults(cards);
         setTotal(data.total || 0);
 
-        // Cross-reference with inventory
         if (cards.length > 0) {
           const ids = cards.map((c) => `scryfall:${c.id}`);
           try {
             const invRes = await fetch(`/api/catalog/scryfall/check?ids=${encodeURIComponent(JSON.stringify(ids))}`);
             if (invRes.ok) {
               const existing: string[] = await invRes.json();
-              // Also do a name-based search for non-MTG that may be in inventory
               await crossReferenceByNames(cards, new Set(existing));
             }
           } catch {
@@ -694,10 +805,8 @@ function MarketplaceTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, gameTab, filterSet, filterColor, filterRarity, filterFormat]);
 
-  // Cross-reference: check inventory for matching cards by name
   async function crossReferenceInventory(cards: MarketplaceCard[]) {
     if (cards.length === 0) return;
-    // Search inventory for each unique card name
     const uniqueNames = [...new Set(cards.map((c) => c.name))];
     const map = new Map<string, { qty: number; id: string }>();
 
@@ -720,12 +829,8 @@ function MarketplaceTab({
     setExistingIds(map);
   }
 
-  // Cross-reference MTG cards by external IDs + name fallback
-  async function crossReferenceByNames(cards: MarketplaceCard[], existingExternalIds: Set<string>) {
+  async function crossReferenceByNames(cards: MarketplaceCard[], _existingExternalIds: Set<string>) {
     const map = new Map<string, { qty: number; id: string }>();
-
-    // Mark cards that have matching external_ids
-    // For each card, also search by name for broader matching
     const uniqueNames = [...new Set(cards.map((c) => c.name))];
     for (const name of uniqueNames.slice(0, 10)) {
       try {
@@ -745,7 +850,6 @@ function MarketplaceTab({
         // Non-critical
       }
     }
-
     setExistingIds(map);
   }
 
@@ -754,7 +858,6 @@ function MarketplaceTab({
     return existingIds.get(key) || null;
   }
 
-  // Add to inventory
   function openAddForm(card: MarketplaceCard) {
     const defaultFoil = !card.nonfoil && card.foil;
     const priceStr = defaultFoil ? card.price_usd_foil : card.price_usd;
@@ -829,7 +932,6 @@ function MarketplaceTab({
       const data = await res.json();
       showToast(data.message || `${addForm.card.name} added to inventory`);
 
-      // Update cross-reference
       const key = addForm.card.name.toLowerCase().replace(/\s*\(foil\)\s*$/i, "");
       setExistingIds((prev) => {
         const next = new Map(prev);
@@ -851,28 +953,60 @@ function MarketplaceTab({
 
   return (
     <div className="space-y-4">
-      {/* Game Tabs */}
-      <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 w-fit">
-        {(["mtg", "pokemon", "yugioh"] as MarketplaceGame[]).map((g) => (
-          <button
-            key={g}
-            onClick={() => {
-              setGameTab(g);
-              setResults([]);
-              setSearched(false);
-              setExistingIds(new Map());
-            }}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              gameTab === g ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
-            }`}
-          >
-            {g === "mtg" ? "Magic: The Gathering" : g === "pokemon" ? "Pokemon" : "Yu-Gi-Oh"}
-          </button>
-        ))}
+      {/* Game Pills */}
+      <div className="flex gap-1.5 flex-wrap">
+        {(["mtg", "pokemon", "yugioh"] as MarketplaceGame[]).map((g) => {
+          const isActive = gameTab === g;
+          return (
+            <button
+              key={g}
+              onClick={() => {
+                setGameTab(g);
+                setResults([]);
+                setSearched(false);
+                setExistingIds(new Map());
+              }}
+              className="font-mono uppercase font-semibold inline-flex items-center gap-2 transition-colors"
+              style={{
+                fontSize: "0.66rem",
+                letterSpacing: "0.18em",
+                padding: "0 1rem",
+                minHeight: 44,
+                background: isActive ? "var(--orange-mute)" : "var(--panel-mute)",
+                border: `1px solid ${isActive ? "var(--orange)" : "var(--rule-hi)"}`,
+                color: isActive ? "var(--orange)" : "var(--ink-soft)",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  display: "inline-block",
+                  width: 8,
+                  height: 8,
+                  background: "currentColor",
+                  clipPath: "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+                }}
+              />
+              {g === "mtg" ? "Magic: The Gathering" : g === "pokemon" ? "Pokemon" : "Yu-Gi-Oh"}
+            </button>
+          );
+        })}
       </div>
 
       {/* Search */}
       <div className="relative">
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none"
+          style={{ width: 16, height: 16 }}
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.5-4.5" />
+        </svg>
         <input
           type="text"
           value={query}
@@ -883,20 +1017,36 @@ function MarketplaceTab({
           }}
           placeholder={
             gameTab === "mtg"
-              ? "Search MTG cards on Scryfall..."
+              ? "Search MTG cards on Scryfall…"
               : gameTab === "pokemon"
-                ? "Search Pokemon cards..."
-                : "Search Yu-Gi-Oh cards..."
+                ? "Search Pokemon cards…"
+                : "Search Yu-Gi-Oh cards…"
           }
           autoFocus
-          className="w-full rounded-xl border border-input-border bg-card px-5 py-3 pr-28 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+          className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+          style={{
+            background: "var(--panel)",
+            border: "1px solid var(--rule-hi)",
+            fontSize: "0.95rem",
+            padding: "0 6.5rem 0 2.4rem",
+            minHeight: 48,
+          }}
         />
         <button
           onClick={() => doSearch()}
           disabled={loading || !query.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 font-mono uppercase font-semibold transition-opacity disabled:opacity-50"
+          style={{
+            fontSize: "0.62rem",
+            letterSpacing: "0.16em",
+            padding: "0 0.85rem",
+            minHeight: 36,
+            background: "var(--orange)",
+            color: "var(--void)",
+            border: "1px solid var(--orange)",
+          }}
         >
-          {loading ? "Searching..." : "Search"}
+          {loading ? "…" : "Search"}
         </button>
       </div>
 
@@ -905,80 +1055,108 @@ function MarketplaceTab({
         <div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="text-xs text-muted hover:text-foreground transition-colors"
+            className="font-mono uppercase transition-colors hover:text-ink"
+            style={{ fontSize: "0.62rem", letterSpacing: "0.16em", color: showFilters ? "var(--orange)" : "var(--ink-soft)", minHeight: 36, padding: "0 0.5rem" }}
           >
-            {showFilters ? "Hide filters" : "Advanced filters"}
+            {showFilters ? "Hide Filters ▲" : "Advanced Filters ▼"}
           </button>
           {showFilters && (
-            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
-              <div>
-                <label className="block text-[10px] text-muted mb-0.5">Set Code</label>
-                <input
-                  type="text"
-                  value={filterSet}
-                  onChange={(e) => setFilterSet(e.target.value.toLowerCase())}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  placeholder="e.g. mh3"
-                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-muted mb-0.5">Color</label>
-                <select
-                  value={filterColor}
-                  onChange={(e) => setFilterColor(e.target.value)}
-                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
-                >
-                  <option value="">Any</option>
-                  <option value="w">White</option>
-                  <option value="u">Blue</option>
-                  <option value="b">Black</option>
-                  <option value="r">Red</option>
-                  <option value="g">Green</option>
-                  <option value="c">Colorless</option>
-                  <option value="m">Multicolor</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] text-muted mb-0.5">Rarity</label>
-                <select
-                  value={filterRarity}
-                  onChange={(e) => setFilterRarity(e.target.value)}
-                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
-                >
-                  <option value="">Any</option>
-                  <option value="common">Common</option>
-                  <option value="uncommon">Uncommon</option>
-                  <option value="rare">Rare</option>
-                  <option value="mythic">Mythic</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] text-muted mb-0.5">Format</label>
-                <select
-                  value={filterFormat}
-                  onChange={(e) => setFilterFormat(e.target.value)}
-                  className="w-full rounded-lg border border-input-border bg-card px-2 py-1.5 text-xs text-foreground focus:border-accent focus:outline-none"
-                >
-                  <option value="">Any</option>
-                  <option value="standard">Standard</option>
-                  <option value="pioneer">Pioneer</option>
-                  <option value="modern">Modern</option>
-                  <option value="legacy">Legacy</option>
-                  <option value="commander">Commander</option>
-                  <option value="pauper">Pauper</option>
-                </select>
-              </div>
+            <div
+              className="mt-2 grid grid-cols-2 md:grid-cols-4"
+              style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}
+            >
+              {[
+                {
+                  label: "Set Code",
+                  el: (
+                    <input
+                      type="text"
+                      value={filterSet}
+                      onChange={(e) => setFilterSet(e.target.value.toLowerCase())}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      placeholder="mh3"
+                      className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none bg-transparent"
+                      style={{ fontSize: "0.78rem", padding: "0.4rem 0", border: "none" }}
+                    />
+                  ),
+                },
+                {
+                  label: "Color",
+                  el: (
+                    <select
+                      value={filterColor}
+                      onChange={(e) => setFilterColor(e.target.value)}
+                      className="w-full font-mono text-ink focus:outline-none bg-transparent"
+                      style={{ fontSize: "0.78rem", padding: "0.4rem 0", border: "none" }}
+                    >
+                      <option value="">Any</option>
+                      <option value="w">White</option>
+                      <option value="u">Blue</option>
+                      <option value="b">Black</option>
+                      <option value="r">Red</option>
+                      <option value="g">Green</option>
+                      <option value="c">Colorless</option>
+                      <option value="m">Multicolor</option>
+                    </select>
+                  ),
+                },
+                {
+                  label: "Rarity",
+                  el: (
+                    <select
+                      value={filterRarity}
+                      onChange={(e) => setFilterRarity(e.target.value)}
+                      className="w-full font-mono text-ink focus:outline-none bg-transparent"
+                      style={{ fontSize: "0.78rem", padding: "0.4rem 0", border: "none" }}
+                    >
+                      <option value="">Any</option>
+                      <option value="common">Common</option>
+                      <option value="uncommon">Uncommon</option>
+                      <option value="rare">Rare</option>
+                      <option value="mythic">Mythic</option>
+                    </select>
+                  ),
+                },
+                {
+                  label: "Format",
+                  el: (
+                    <select
+                      value={filterFormat}
+                      onChange={(e) => setFilterFormat(e.target.value)}
+                      className="w-full font-mono text-ink focus:outline-none bg-transparent"
+                      style={{ fontSize: "0.78rem", padding: "0.4rem 0", border: "none" }}
+                    >
+                      <option value="">Any</option>
+                      <option value="standard">Standard</option>
+                      <option value="pioneer">Pioneer</option>
+                      <option value="modern">Modern</option>
+                      <option value="legacy">Legacy</option>
+                      <option value="commander">Commander</option>
+                      <option value="pauper">Pauper</option>
+                    </select>
+                  ),
+                },
+              ].map((f) => (
+                <div key={f.label} className="px-3 py-2" style={{ background: "var(--panel-mute)" }}>
+                  <div
+                    className="font-mono uppercase font-semibold text-ink-faint mb-1"
+                    style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+                  >
+                    {f.label}
+                  </div>
+                  {f.el}
+                </div>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* Condition Multiplier Reference */}
-      <div className="flex items-center gap-3 text-[11px] text-muted">
-        <span className="font-medium">Condition multipliers:</span>
+      {/* Condition multipliers reference */}
+      <div className="flex items-center gap-3 flex-wrap font-mono uppercase text-ink-faint" style={{ fontSize: "0.6rem", letterSpacing: "0.16em" }}>
+        <span className="font-semibold">Condition multipliers</span>
         {CONDITIONS.map((c) => (
-          <span key={c} className="tabular-nums">
+          <span key={c} className="tabular-nums text-ink-soft">
             {c} {Math.round(CONDITION_MULTIPLIERS[c] * 100)}%
           </span>
         ))}
@@ -986,24 +1164,38 @@ function MarketplaceTab({
 
       {/* Error */}
       {error && (
-        <div className="rounded-md bg-red-900/30 border border-red-800 px-4 py-3 text-sm text-red-400">
+        <div
+          className="px-4 py-3 font-mono"
+          style={{
+            background: "var(--red-mute)",
+            border: "1px solid var(--red)",
+            color: "var(--red)",
+            fontSize: "0.78rem",
+          }}
+        >
           {error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center gap-2 text-muted py-12">
+        <div
+          className="flex items-center justify-center gap-2 py-12 font-mono uppercase text-ink-soft"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.18em" }}
+        >
           <Spinner />
-          Searching...
+          Searching…
         </div>
       )}
 
       {/* Results info */}
       {searched && !loading && (
-        <div className="text-sm text-muted">
+        <div
+          className="font-mono uppercase text-ink-soft"
+          style={{ fontSize: "0.66rem", letterSpacing: "0.16em" }}
+        >
           {results.length === 0
-            ? "No cards found. Try a different search."
+            ? "No cards found · try a different search"
             : `Showing ${results.length} of ${total.toLocaleString()} results`}
         </div>
       )}
@@ -1013,14 +1205,20 @@ function MarketplaceTab({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {results.map((card) => {
             const stockInfo = getInStockInfo(card);
+            const rarityTone = card.rarity ? RARITY_TONE[card.rarity.toLowerCase()] || "var(--ink-soft)" : "var(--ink-soft)";
+
             return (
               <div
                 key={`${card.id}-${card.set_code}`}
-                className="rounded-xl border border-card-border bg-card overflow-hidden hover:border-zinc-600 transition-colors"
+                style={{
+                  background: "var(--panel-mute)",
+                  border: "1px solid var(--rule-hi)",
+                  overflow: "hidden",
+                }}
               >
                 {/* Card Image */}
                 {card.image_url ? (
-                  <div className="relative aspect-488/680 bg-background">
+                  <div className="relative" style={{ aspectRatio: "488/680", background: "var(--panel)" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={card.image_url}
@@ -1031,15 +1229,28 @@ function MarketplaceTab({
                     {stockInfo && stockInfo.qty > 0 && (
                       <Link
                         href={`/dashboard/inventory/${stockInfo.id}`}
-                        className="absolute top-2 right-2 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white shadow hover:bg-emerald-500 transition-colors"
+                        className="absolute font-mono uppercase font-semibold transition-colors"
+                        style={{
+                          top: 8,
+                          right: 8,
+                          padding: "2px 8px",
+                          fontSize: "0.6rem",
+                          letterSpacing: "0.16em",
+                          background: "var(--teal)",
+                          color: "var(--void)",
+                          border: "1px solid var(--teal)",
+                        }}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        In Stock: {stockInfo.qty}
+                        In Stock · {stockInfo.qty}
                       </Link>
                     )}
                   </div>
                 ) : (
-                  <div className="aspect-488/680 bg-background flex items-center justify-center text-zinc-600 text-sm">
+                  <div
+                    className="flex items-center justify-center font-mono uppercase text-ink-faint"
+                    style={{ aspectRatio: "488/680", background: "var(--panel)", fontSize: "0.66rem", letterSpacing: "0.18em" }}
+                  >
                     No Image
                   </div>
                 )}
@@ -1047,36 +1258,60 @@ function MarketplaceTab({
                 {/* Card Info */}
                 <div className="p-3 space-y-2">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground leading-tight">
+                    <h3
+                      className="font-display text-ink"
+                      style={{ fontSize: "0.92rem", fontWeight: 600, lineHeight: 1.15, letterSpacing: "0.005em" }}
+                    >
                       {card.name}
                     </h3>
-                    <p className="text-xs text-muted mt-0.5">
+                    <p
+                      className="font-mono text-ink-faint mt-0.5 truncate"
+                      style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}
+                    >
                       {card.set_name}
                       {card.collector_number && (
-                        <span className="text-zinc-600"> #{card.collector_number}</span>
+                        <span className="text-ink-ghost"> · #{card.collector_number}</span>
                       )}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     {card.rarity && (
-                      <span className="inline-block rounded px-1.5 py-0.5 text-xs font-medium capitalize bg-card-hover text-muted">
+                      <span
+                        className="font-mono uppercase font-semibold"
+                        style={{
+                          fontSize: "0.55rem",
+                          letterSpacing: "0.18em",
+                          padding: "1px 6px",
+                          background: "var(--panel)",
+                          border: "1px solid var(--rule-hi)",
+                          color: rarityTone,
+                        }}
+                      >
                         {card.rarity}
                       </span>
                     )}
-                    <div className="text-right">
+                    <div className="text-right font-mono">
                       {card.price_usd && (
-                        <span className="text-sm font-medium text-emerald-400">
+                        <span
+                          className="font-semibold tabular-nums"
+                          style={{ color: "var(--teal)", fontSize: "0.85rem", letterSpacing: "0.02em" }}
+                        >
                           ${card.price_usd}
                         </span>
                       )}
                       {card.price_usd_foil && (
-                        <span className="ml-2 text-xs text-yellow-400">
-                          Foil ${card.price_usd_foil}
+                        <span
+                          className="ml-2 tabular-nums"
+                          style={{ color: "var(--yellow)", fontSize: "0.66rem", letterSpacing: "0.04em" }}
+                        >
+                          ✦${card.price_usd_foil}
                         </span>
                       )}
                       {!card.price_usd && !card.price_usd_foil && (
-                        <span className="text-xs text-muted">No price</span>
+                        <span className="font-mono text-ink-faint" style={{ fontSize: "0.66rem" }}>
+                          No price
+                        </span>
                       )}
                     </div>
                   </div>
@@ -1085,7 +1320,16 @@ function MarketplaceTab({
                   {canFn("inventory.adjust") && (
                     <button
                       onClick={() => openAddForm(card)}
-                      className="w-full rounded-md bg-accent px-3 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
+                      className="w-full font-mono uppercase font-semibold transition-opacity"
+                      style={{
+                        fontSize: "0.66rem",
+                        letterSpacing: "0.18em",
+                        padding: "0 0.85rem",
+                        minHeight: 44,
+                        background: "var(--orange)",
+                        color: "var(--void)",
+                        border: "1px solid var(--orange)",
+                      }}
                     >
                       {stockInfo && stockInfo.qty > 0
                         ? "Add More to Inventory"
@@ -1099,15 +1343,34 @@ function MarketplaceTab({
         </div>
       )}
 
-      {/* Empty state — no search yet */}
+      {/* Empty state */}
       {!loading && !searched && (
-        <div className="text-center py-16">
-          <div className="text-4xl mb-3 opacity-30">&#x2318;</div>
-          <p className="text-muted text-sm">
-            Search external card databases to find market prices and add cards to inventory.
+        <div
+          className="text-center px-6 py-16"
+          style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}
+        >
+          <div
+            aria-hidden
+            style={{
+              width: 28,
+              height: 28,
+              margin: "0 auto 0.75rem",
+              background: "var(--orange-mute)",
+              border: "1px solid var(--orange)",
+              clipPath: "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+            }}
+          />
+          <p
+            className="font-display text-ink"
+            style={{ fontSize: "1.1rem", fontWeight: 600, letterSpacing: "0.005em" }}
+          >
+            Search external card databases
           </p>
-          <p className="text-zinc-600 text-xs mt-1">
-            Powered by Scryfall, Pokemon TCG API, and YGOPRODeck
+          <p className="font-mono text-ink-soft mt-2" style={{ fontSize: "0.78rem" }}>
+            Find market prices and add cards to inventory.
+          </p>
+          <p className="font-mono text-ink-faint mt-1" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
+            Powered by Scryfall · Pokemon TCG · YGOPRODeck
           </p>
         </div>
       )}
@@ -1115,107 +1378,181 @@ function MarketplaceTab({
       {/* Add to Inventory Modal */}
       {addForm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "var(--overlay-bg)" }}
           onClick={() => { setAddForm(null); setAddError(null); }}
           onKeyDown={(e) => {
             if (e.key === "Escape") { setAddForm(null); setAddError(null); }
           }}
         >
           <div
-            className="w-full max-w-lg rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4"
+            className="w-full max-w-lg shadow-2xl"
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--rule-hi)",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Add to Inventory</h2>
+            {/* Modal header */}
+            <div
+              className="flex items-center justify-between px-5"
+              style={{
+                background: "var(--slate)",
+                borderBottom: "1px solid var(--rule)",
+                minHeight: 56,
+              }}
+            >
+              <div>
+                <div
+                  className="font-mono uppercase font-semibold text-ink-faint"
+                  style={{ fontSize: "0.55rem", letterSpacing: "0.28em" }}
+                >
+                  Marketplace · Add
+                </div>
+                <div
+                  className="font-display text-ink mt-0.5"
+                  style={{ fontSize: "1.15rem", fontWeight: 600, letterSpacing: "0.005em", lineHeight: 1 }}
+                >
+                  Add to Inventory
+                </div>
+              </div>
               <button
                 onClick={() => { setAddForm(null); setAddError(null); }}
-                className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg"
+                aria-label="Close"
+                className="flex items-center justify-center text-ink-soft hover:text-orange transition-colors"
+                style={{ width: 44, height: 44, border: "1px solid var(--rule-hi)", background: "var(--panel-mute)" }}
               >
-                &times;
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                  <path d="M6 6l12 12M6 18L18 6" />
+                </svg>
               </button>
             </div>
 
-            <div className="flex gap-4 mb-5">
-              {addForm.card.small_image_url && (
-                <div className="shrink-0 w-28">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={addForm.card.small_image_url} alt={addForm.card.name} className="w-full rounded" />
+            <div className="p-5">
+              <div className="flex gap-4 mb-5">
+                {addForm.card.small_image_url && (
+                  <div className="shrink-0" style={{ width: 96 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={addForm.card.small_image_url}
+                      alt={addForm.card.name}
+                      className="w-full"
+                      style={{ border: "1px solid var(--rule-hi)" }}
+                    />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-display text-ink" style={{ fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.1 }}>
+                    {addForm.card.name}
+                  </h3>
+                  <p className="font-mono text-ink-faint mt-1" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
+                    {addForm.card.set_name}
+                  </p>
+                  {addForm.card.collector_number && (
+                    <p className="font-mono text-ink-faint mt-0.5" style={{ fontSize: "0.66rem", letterSpacing: "0.04em" }}>
+                      #{addForm.card.collector_number}
+                      {addForm.card.rarity && (
+                        <span style={{ color: RARITY_TONE[addForm.card.rarity.toLowerCase()] || "var(--ink-soft)", fontWeight: 600 }}>
+                          {" · "}{addForm.card.rarity}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    {addForm.card.price_usd && (
+                      <span className="font-mono" style={{ color: "var(--teal)", fontSize: "0.72rem" }}>
+                        Market ${addForm.card.price_usd}
+                      </span>
+                    )}
+                    {addForm.card.price_usd_foil && (
+                      <span className="font-mono" style={{ color: "var(--yellow)", fontSize: "0.72rem" }}>
+                        Foil ${addForm.card.price_usd_foil}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {addError && (
+                <div
+                  className="mb-3 px-3 py-2 font-mono"
+                  style={{
+                    background: "var(--red-mute)",
+                    border: "1px solid var(--red)",
+                    color: "var(--red)",
+                    fontSize: "0.74rem",
+                  }}
+                >
+                  {addError}
                 </div>
               )}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-foreground font-semibold text-sm">{addForm.card.name}</h3>
-                <p className="text-xs text-muted mt-0.5">{addForm.card.set_name}</p>
-                {addForm.card.collector_number && (
-                  <p className="text-xs text-muted mt-0.5">
-                    #{addForm.card.collector_number}
-                    {addForm.card.rarity && <> -- <span className="capitalize">{addForm.card.rarity}</span></>}
-                  </p>
-                )}
-                <div className="mt-2 flex gap-3">
-                  {addForm.card.price_usd && (
-                    <span className="text-xs text-emerald-400">Market: ${addForm.card.price_usd}</span>
-                  )}
-                  {addForm.card.price_usd_foil && (
-                    <span className="text-xs text-yellow-400">Foil: ${addForm.card.price_usd_foil}</span>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {addError && <p className="mb-3 text-sm text-red-400">{addError}</p>}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {[
+                  { label: "Quantity", el: (
+                    <input
+                      type="number"
+                      min={1}
+                      value={addForm.quantity}
+                      onChange={(e) => setAddForm({ ...addForm, quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      className="w-full font-mono text-ink focus:outline-none"
+                      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)", padding: "0 0.85rem", minHeight: 44, fontSize: "0.92rem" }}
+                    />
+                  )},
+                  { label: "Cost ($)", el: (
+                    <input
+                      type="text"
+                      value={addForm.cost}
+                      onChange={(e) => setAddForm({ ...addForm, cost: e.target.value })}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      placeholder="What you paid"
+                      className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+                      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)", padding: "0 0.85rem", minHeight: 44, fontSize: "0.92rem" }}
+                    />
+                  )},
+                  { label: "Sell Price ($)", el: (
+                    <input
+                      type="text"
+                      value={addForm.price}
+                      onChange={(e) => setAddForm({ ...addForm, price: e.target.value })}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      placeholder="0.00"
+                      className="w-full font-mono text-ink placeholder:text-ink-faint focus:outline-none"
+                      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)", padding: "0 0.85rem", minHeight: 44, fontSize: "0.92rem" }}
+                    />
+                  )},
+                  { label: "Condition", el: (
+                    <select
+                      value={addForm.condition}
+                      onChange={(e) => setAddForm({ ...addForm, condition: e.target.value })}
+                      className="w-full font-mono text-ink focus:outline-none"
+                      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule-hi)", padding: "0 0.85rem", minHeight: 44, fontSize: "0.92rem" }}
+                    >
+                      {CONDITIONS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  )},
+                ].map((f) => (
+                  <div key={f.label}>
+                    <label
+                      className="block font-mono uppercase font-semibold text-ink-faint mb-1.5"
+                      style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
+                    >
+                      {f.label}
+                    </label>
+                    {f.el}
+                  </div>
+                ))}
+              </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-muted mb-1">Quantity</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={addForm.quantity}
-                  onChange={(e) => setAddForm({ ...addForm, quantity: Math.max(1, parseInt(e.target.value) || 1) })}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted mb-1">Cost ($)</label>
-                <input
-                  type="text"
-                  value={addForm.cost}
-                  onChange={(e) => setAddForm({ ...addForm, cost: e.target.value })}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  placeholder="What you paid"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted mb-1">Sell Price ($)</label>
-                <input
-                  type="text"
-                  value={addForm.price}
-                  onChange={(e) => setAddForm({ ...addForm, price: e.target.value })}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted mb-1">Condition</label>
-                <select
-                  value={addForm.condition}
-                  onChange={(e) => setAddForm({ ...addForm, condition: e.target.value })}
-                  className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none"
+              {/* Foil toggle (MTG only) */}
+              {gameTab === "mtg" && (
+                <label
+                  className="flex items-center gap-2 cursor-pointer mb-5 font-mono uppercase"
+                  style={{ fontSize: "0.66rem", letterSpacing: "0.18em", color: "var(--ink-soft)" }}
                 >
-                  {CONDITIONS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Foil toggle (MTG only) */}
-            {gameTab === "mtg" && (
-              <div className="mb-5">
-                <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
                   <input
                     type="checkbox"
                     checked={addForm.foil}
@@ -1226,35 +1563,53 @@ function MarketplaceTab({
                     }}
                     onKeyDown={(e) => e.stopPropagation()}
                     disabled={addForm.foil ? !addForm.card.nonfoil : !addForm.card.foil}
-                    className="rounded border-input-border bg-background text-indigo-600 focus:ring-indigo-500"
+                    style={{ width: 18, height: 18, accentColor: "var(--orange)" }}
                   />
                   Foil
-                  {addForm.foil && <span className="text-yellow-400 text-xs">(foil pricing applied)</span>}
+                  {addForm.foil && (
+                    <span style={{ color: "var(--yellow)", letterSpacing: "0.04em", fontSize: "0.68rem", textTransform: "none" }}>
+                      · foil pricing applied
+                    </span>
+                  )}
                 </label>
-              </div>
-            )}
+              )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setAddForm(null); setAddError(null); }}
-                className="flex-1 rounded-md border border-input-border px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAdd}
-                disabled={submitting}
-                className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-              >
-                {submitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Spinner className="h-4 w-4" />
-                    Adding...
-                  </span>
-                ) : (
-                  "Add to Inventory"
-                )}
-              </button>
+              <div className="grid grid-cols-2" style={{ gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
+                <button
+                  onClick={() => { setAddForm(null); setAddError(null); }}
+                  className="font-display uppercase transition-colors"
+                  style={{
+                    minHeight: 56,
+                    background: "var(--panel)",
+                    color: "var(--ink-soft)",
+                    letterSpacing: "0.06em",
+                    fontWeight: 500,
+                    fontSize: "0.92rem",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAdd}
+                  disabled={submitting}
+                  className="font-display uppercase transition-colors disabled:opacity-50"
+                  style={{
+                    minHeight: 56,
+                    background: "var(--orange)",
+                    color: "var(--void)",
+                    letterSpacing: "0.06em",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  {submitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Spinner size={16} />
+                      Adding…
+                    </span>
+                  ) : "Add to Inventory"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1287,10 +1642,11 @@ function SortHeader({
   const isActive = sort?.field === field;
   return (
     <th
-      className={`px-3 py-2.5 text-xs font-medium uppercase tracking-wider cursor-pointer select-none transition-colors ${
-        isActive ? "text-foreground" : "text-muted hover:text-foreground"
+      className={`px-3 py-2.5 font-mono uppercase font-semibold cursor-pointer select-none transition-colors ${
+        isActive ? "text-ink" : "text-ink-faint hover:text-ink"
       } ${align === "right" ? "text-right" : "text-left"} ${className}`}
       onClick={() => onSort(field)}
+      style={{ fontSize: "0.55rem", letterSpacing: "0.22em" }}
     >
       {label}
       {indicator(field)}
@@ -1299,24 +1655,24 @@ function SortHeader({
 }
 
 /* ================================================================== */
-/*  KPI Card                                                           */
+/*  Foil Tag                                                           */
 /* ================================================================== */
 
-function KPICard({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-}) {
+function FoilTag() {
   return (
-    <div className="rounded-xl border border-card-border bg-card p-3">
-      <div className="text-[10px] text-muted uppercase tracking-wider">{label}</div>
-      <div className="text-xl font-bold tabular-nums mt-0.5 text-foreground">{value}</div>
-      {sub && <div className="text-[10px] text-muted mt-0.5">{sub}</div>}
-    </div>
+    <span
+      className="font-mono uppercase font-semibold inline-flex items-center"
+      style={{
+        padding: "1px 5px",
+        fontSize: "0.5rem",
+        letterSpacing: "0.16em",
+        color: "var(--yellow)",
+        background: "var(--yellow-mute)",
+        border: "1px solid rgba(251,219,101,0.35)",
+      }}
+    >
+      F
+    </span>
   );
 }
 
@@ -1326,39 +1682,59 @@ function KPICard({
 
 function EmptyInventory() {
   return (
-    <div className="space-y-6 py-8">
+    <div
+      className="space-y-6 py-8 px-6"
+      style={{ background: "var(--panel-mute)", border: "1px solid var(--rule)" }}
+    >
       <div className="text-center space-y-2">
-        <div className="text-4xl opacity-40">&#x1F0CF;</div>
-        <h2 className="text-lg font-semibold text-foreground">No TCG singles in inventory yet</h2>
-        <p className="text-sm text-muted max-w-md mx-auto">
+        <div
+          aria-hidden
+          style={{
+            width: 28,
+            height: 28,
+            margin: "0 auto 0.5rem",
+            background: "var(--orange-mute)",
+            border: "1px solid var(--orange)",
+            clipPath: "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+          }}
+        />
+        <h2 className="font-display text-ink" style={{ fontSize: "1.2rem", fontWeight: 600, letterSpacing: "0.005em" }}>
+          No TCG singles in inventory yet
+        </h2>
+        <p className="font-mono text-ink-soft max-w-md mx-auto" style={{ fontSize: "0.78rem" }}>
           TCG singles are cards from games like Magic: The Gathering, Pokemon, and Yu-Gi-Oh. Add them from the Marketplace tab or scan barcodes.
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto">
-        <Link
-          href="/dashboard/catalog"
-          className="flex flex-col items-center gap-2 rounded-xl border border-card-border bg-card p-5 hover:border-accent/50 hover:bg-card-hover transition-colors"
-        >
-          <span className="text-2xl opacity-60">&#x1F50D;</span>
-          <span className="text-sm font-medium text-foreground">Search Catalog</span>
-          <span className="text-[11px] text-muted text-center">Browse the full catalog</span>
-        </Link>
-        <Link
-          href="/dashboard/import"
-          className="flex flex-col items-center gap-2 rounded-xl border border-card-border bg-card p-5 hover:border-accent/50 hover:bg-card-hover transition-colors"
-        >
-          <span className="text-2xl opacity-60">&#x1F4E6;</span>
-          <span className="text-sm font-medium text-foreground">Bulk Import</span>
-          <span className="text-[11px] text-muted text-center">Upload a CSV or spreadsheet</span>
-        </Link>
-        <Link
-          href="/dashboard/catalog?scan=1"
-          className="flex flex-col items-center gap-2 rounded-xl border border-card-border bg-card p-5 hover:border-accent/50 hover:bg-card-hover transition-colors"
-        >
-          <span className="text-2xl opacity-60">&#x1F4F7;</span>
-          <span className="text-sm font-medium text-foreground">Scan a Card</span>
-          <span className="text-[11px] text-muted text-center">Use your camera or scanner</span>
-        </Link>
+        {[
+          { href: "/dashboard/catalog", title: "Search Catalog", desc: "Browse the full catalog" },
+          { href: "/dashboard/import", title: "Bulk Import", desc: "Upload a CSV or spreadsheet" },
+          { href: "/dashboard/catalog?scan=1", title: "Scan a Card", desc: "Use your camera or scanner" },
+        ].map((c) => (
+          <Link
+            key={c.href}
+            href={c.href}
+            className="ar-stripe flex flex-col items-center text-center gap-2 p-5 transition-colors hover:bg-panel"
+            style={{ background: "var(--panel)", border: "1px solid var(--rule-hi)" }}
+          >
+            <span
+              aria-hidden
+              style={{
+                display: "inline-block",
+                width: 14,
+                height: 14,
+                background: "var(--orange)",
+                clipPath: "polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",
+              }}
+            />
+            <span className="font-display text-ink" style={{ fontSize: "0.92rem", fontWeight: 600 }}>
+              {c.title}
+            </span>
+            <span className="font-mono text-ink-faint" style={{ fontSize: "0.66rem", letterSpacing: "0.02em" }}>
+              {c.desc}
+            </span>
+          </Link>
+        ))}
       </div>
     </div>
   );
