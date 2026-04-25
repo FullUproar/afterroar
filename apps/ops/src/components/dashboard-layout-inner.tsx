@@ -94,8 +94,16 @@ export function DashboardLayoutInner({ children }: { children: React.ReactNode }
     <div className="flex h-full bg-background overflow-hidden max-w-[100vw]">
       <Sidebar />
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden lg:pb-0" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
-        {/* Fixed top nav bar — never scrolls */}
-        <div className="shrink-0 flex items-center gap-1 px-2 h-11 sm:h-12 sm:px-3 lg:px-6 border-b border-card-border/50 bg-background/95 backdrop-blur-sm">
+        {/* Fixed top bar — masthead on mobile/kiosk, status + actions on all */}
+        <div className="shrink-0 flex items-center gap-2 px-3 h-12 sm:h-14 sm:px-4 lg:px-6 border-b border-rule bg-slate">
+          {/* Compact masthead (hidden on desktop where Sidebar shows full one) */}
+          <div className="ar-mast lg:hidden">
+            <span className="ar-lozenge" />
+            <div className="ar-stack">
+              <div className="ar-platform">Afterroar</div>
+              <div className="ar-app">Store Ops</div>
+            </div>
+          </div>
           <div className="flex-1 min-w-0">
             <NetworkStatusBar />
           </div>

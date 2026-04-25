@@ -14,7 +14,6 @@ export default async function DashboardPage() {
   try {
     session = await auth();
   } catch {
-    // Auth failed (transient DB error) — show retry message
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center space-y-3">
@@ -33,7 +32,6 @@ export default async function DashboardPage() {
     );
   }
 
-  // SECURITY: scope to storeId from session JWT for multi-store users
   const sessionStoreId = (session as unknown as Record<string, unknown>).storeId as string | undefined;
   let staff;
   try {
@@ -62,12 +60,9 @@ export default async function DashboardPage() {
   const storeId = staff.store_id;
   const isCashier = staff.role === "cashier";
 
-  // Onboarding is now handled by the floating OnboardingPanel in the layout.
-  // No redirect needed — the panel renders on top of whatever page the user is on.
-
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-  const [todaySales, todayRevenue, upcomingEvents, recentLedger] =
+  const [todaySales, todayRevenue, upcomingEvents, recentLedger, customersServedToday] =
     await Promise.all([
       prisma.posLedgerEntry.count({
         where: { store_id: storeId, type: "sale", created_at: { gte: todayStart } },
@@ -84,213 +79,246 @@ export default async function DashboardPage() {
         orderBy: { created_at: "desc" },
         take: 8,
       }),
+      prisma.posLedgerEntry
+        .findMany({
+          where: { store_id: storeId, type: "sale", created_at: { gte: todayStart }, customer_id: { not: null } },
+          select: { customer_id: true },
+          distinct: ["customer_id"],
+        })
+        .then((rows) => rows.length)
+        .catch(() => 0),
     ]);
 
   const todayRevenueCents = todayRevenue._sum.amount_cents || 0;
+  const avgTicketCents = todaySales > 0 ? Math.round(todayRevenueCents / todaySales) : 0;
   const mobileLedger = recentLedger.slice(0, 5);
 
+  // Greeting based on local hour
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = (staff.name || "").split(" ")[0] || "there";
+  const today = new Date();
+  const dateStr = today.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
   if (isCashier) {
-    // ── SALES DASHBOARD (Cashier View) ──
     return (
       <DashboardModeGuard>
-      <div className="space-y-6">
-        {/* Shift summary */}
-        <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm dark:shadow-none">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">Your Shift</h2>
-          <div className="mt-3 grid grid-cols-2 gap-4">
-            <div>
-              <span className="text-sm text-muted block">Sales today</span>
-              <span className="text-2xl font-bold tabular-nums text-foreground">{todaySales}</span>
-            </div>
-            <div>
-              <span className="text-sm text-muted block">Revenue today</span>
-              <span className="text-2xl font-bold tabular-nums text-foreground">{formatCents(todayRevenueCents)}</span>
-            </div>
+        <div className="space-y-6">
+          {/* Cashier greeting + shift summary */}
+          <section>
+            <p className="text-[0.6rem] tracking-[0.28em] uppercase text-ink-faint font-semibold mb-2 font-mono">
+              Console · Your Shift
+            </p>
+            <h1 className="text-2xl md:text-3xl font-display font-semibold text-ink leading-none">
+              {greeting}, <span className="text-orange font-bold">{firstName}</span>.
+            </h1>
+            <p className="mt-2 text-sm text-ink-soft font-mono tracking-wide">
+              {dateStr}
+            </p>
+          </section>
+
+          {/* KPI strip */}
+          <section className="grid grid-cols-2 gap-px bg-rule border border-rule">
+            <KpiCell k="Revenue Today" v={formatCents(todayRevenueCents)} primary />
+            <KpiCell k="Sales" v={String(todaySales)} />
+          </section>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/dashboard/register"
+              className="flex items-center gap-3 bg-orange text-void px-4 py-5 active:bg-yellow transition-colors"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 700, letterSpacing: "0.04em" }}
+            >
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <rect x="2" y="6" width="20" height="13" /><path d="M2 11h20" />
+              </svg>
+              <div>
+                <span className="text-base uppercase">Open Register</span>
+                <span className="block text-xs opacity-70 normal-case font-mono tracking-wider">Start selling</span>
+              </div>
+            </Link>
+            <Link
+              href="/dashboard/trade-ins"
+              className="flex items-center gap-3 border border-rule-hi bg-panel px-4 py-5 text-ink active:bg-panel-hi transition-colors"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 600, letterSpacing: "0.04em" }}
+            >
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M19 12H5M12 5l-7 7 7 7M5 12h14M12 19l7-7-7-7" />
+              </svg>
+              <div>
+                <span className="text-base uppercase">Trade-Ins</span>
+                <span className="block text-xs text-ink-soft font-mono tracking-wider normal-case">Buy cards & games</span>
+              </div>
+            </Link>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link
-            href="/dashboard/register"
-            className="flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-5 text-white active:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/10"
-          >
-            <span className="text-2xl">{"\u25C8"}</span>
-            <div>
-              <span className="text-base font-bold">Open Register</span>
-              <span className="block text-xs text-emerald-100/70">Start selling</span>
-            </div>
-          </Link>
-          <Link
-            href="/dashboard/trade-ins"
-            className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-5 text-foreground active:bg-card-hover transition-colors shadow-sm dark:shadow-none"
-          >
-            <span className="text-2xl text-accent">{"\u21C4"}</span>
-            <div>
-              <span className="text-base font-semibold">Trade-Ins</span>
-              <span className="block text-xs text-muted">Buy cards & games</span>
-            </div>
-          </Link>
+          <RecentActivity entries={recentLedger} compact />
         </div>
-
-        {/* Recent transactions */}
-        <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Recent Transactions</h3>
-          {recentLedger.length === 0 ? (
-            <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-              <p className="text-muted">No transactions yet. Open the register to make your first sale.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentLedger.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between rounded-xl border border-card-border bg-card px-4 py-3 shadow-sm dark:shadow-none"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full border border-card-border px-2 py-0.5 text-[10px] font-medium text-muted">
-                        {entry.type}
-                      </span>
-                      <span className="text-xs text-muted">
-                        {new Date(entry.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                    {entry.description && (
-                      <div className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
-                        {entry.description}
-                      </div>
-                    )}
-                  </div>
-                  <div className="ml-3 shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                    {formatCents(entry.amount_cents)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
       </DashboardModeGuard>
     );
   }
 
-  // ── STORE DASHBOARD (Owner/Manager View) ──
   return (
     <DashboardModeGuard>
-    <div className="flex flex-col h-full gap-4 md:gap-6">
-      {/* Store Health — submarine-style status dashboard */}
-      <StoreHealth />
+      <div className="flex flex-col gap-5">
+        {/* Greeting hero — operator-console section header */}
+        <section>
+          <p className="text-[0.6rem] tracking-[0.28em] uppercase text-ink-faint font-semibold mb-2 font-mono">
+            Console · Today's Operations
+          </p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-semibold text-ink leading-none">
+            {greeting}, <span className="text-orange font-bold">{firstName}</span>.
+          </h1>
+          <p className="mt-2 text-sm text-ink-soft font-mono tracking-wide">
+            {dateStr} · {today.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </p>
+        </section>
 
-      {/* Intelligence Feed — actionable store alerts */}
-      <IntelligenceFeed compact />
+        {/* KPI strip — operator dashboard read-out */}
+        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px bg-rule border border-rule">
+          <KpiCell k="Revenue Today" v={formatCents(todayRevenueCents)} primary />
+          <KpiCell k="Sales" v={String(todaySales)} />
+          <KpiCell k="Avg Ticket" v={formatCents(avgTicketCents)} />
+          <KpiCell k="Customers" v={String(customersServedToday)} />
+          <KpiCell k="Upcoming Events" v={String(upcomingEvents)} />
+        </section>
 
-      {/* Store Advisor — business co-pilot */}
-      <StoreAdvisor />
+        {/* Existing intelligence components — render in new color tokens */}
+        <StoreHealth />
+        <IntelligenceFeed compact />
+        <StoreAdvisor />
 
-      {/* Today's Summary + Recent Activity side by side on desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Today's Numbers */}
-        <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm dark:shadow-none">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Today</h3>
-          <div className="mt-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Sales</span>
-              <span className="text-lg font-bold tabular-nums text-foreground">{todaySales}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Revenue</span>
-              <span className="text-lg font-bold tabular-nums text-foreground">{formatCents(todayRevenueCents)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Upcoming Events</span>
-              <span className="text-lg font-bold tabular-nums text-foreground">{upcomingEvents}</span>
-            </div>
+        {/* Recent activity + Daily Close */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <p className="mb-2 text-[0.6rem] tracking-[0.28em] uppercase text-ink-faint font-semibold font-mono">
+              Recent Activity
+            </p>
+            <RecentActivity entries={recentLedger} mobile={mobileLedger} />
           </div>
-          <Link
-            href="/dashboard/cash-flow"
-            className="mt-4 block text-center text-xs text-accent hover:underline"
-          >
-            View full cash flow {"\u2192"}
-          </Link>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Recent Activity</h3>
-          {recentLedger.length === 0 ? (
-            <div className="rounded-xl border border-card-border bg-card p-8 text-center shadow-sm dark:shadow-none">
-              <p className="text-muted">No transactions yet. Open the register to make your first sale.</p>
-            </div>
-          ) : (
-            <>
-              {/* Mobile: card list */}
-              <div className="space-y-2 lg:hidden">
-                {mobileLedger.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center justify-between rounded-xl border border-card-border bg-card px-4 py-3 shadow-sm dark:shadow-none"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full border border-card-border px-2 py-0.5 text-[10px] font-medium text-muted">
-                          {entry.type}
-                        </span>
-                        <span className="text-xs text-muted">
-                          {new Date(entry.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {entry.description && (
-                        <div className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
-                          {entry.description}
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-3 shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                      {formatCents(entry.amount_cents)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop: compact table */}
-              <div className="hidden lg:block overflow-x-auto rounded-xl border border-card-border shadow-sm dark:shadow-none scroll-visible">
-                <table className="w-full text-left text-sm">
-                  <thead className="border-b border-card-border bg-card">
-                    <tr>
-                      <th className="px-4 py-2.5 text-muted font-medium text-xs">Date</th>
-                      <th className="px-4 py-2.5 text-muted font-medium text-xs">Type</th>
-                      <th className="px-4 py-2.5 text-muted font-medium text-xs">Description</th>
-                      <th className="px-4 py-2.5 text-right text-muted font-medium text-xs">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-card-border bg-background">
-                    {recentLedger.map((entry) => (
-                      <tr key={entry.id}>
-                        <td className="whitespace-nowrap px-4 py-2 text-xs text-muted">
-                          {new Date(entry.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="rounded-full border border-card-border px-2 py-0.5 text-[10px] text-muted font-medium">
-                            {entry.type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-xs text-muted truncate max-w-xs">{entry.description ?? "\u2014"}</td>
-                        <td className="whitespace-nowrap px-4 py-2 text-right text-sm font-semibold tabular-nums text-foreground">
-                          {formatCents(entry.amount_cents)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+          <div>
+            <DailyClose />
+          </div>
         </div>
       </div>
-      {/* End of Day */}
-      <DailyClose />
-    </div>
     </DashboardModeGuard>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+
+function KpiCell({ k, v, primary }: { k: string; v: string; primary?: boolean }) {
+  return (
+    <div className="bg-panel-mute p-3 md:p-4 min-h-22 flex flex-col justify-between">
+      <div className="font-mono text-[0.55rem] md:text-[0.6rem] tracking-[0.24em] uppercase text-ink-faint font-semibold">
+        {k}
+      </div>
+      <div
+        className={`font-display font-bold leading-none mt-2 ${primary ? "text-orange" : "text-ink"}`}
+        style={{ fontSize: "clamp(1.4rem, 3.5vw, 2rem)", letterSpacing: "-0.01em" }}
+      >
+        {v}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+
+interface LedgerEntry {
+  id: string;
+  type: string;
+  amount_cents: number;
+  description: string | null;
+  created_at: Date;
+}
+
+function RecentActivity({
+  entries,
+  mobile,
+  compact,
+}: {
+  entries: LedgerEntry[];
+  mobile?: LedgerEntry[];
+  compact?: boolean;
+}) {
+  if (entries.length === 0) {
+    return (
+      <div className="bg-panel-mute border border-rule p-8 text-center">
+        <p className="text-ink-soft">No transactions yet. Open the register to make your first sale.</p>
+      </div>
+    );
+  }
+
+  const showMobile = mobile ?? entries.slice(0, 5);
+  const isCompact = !!compact;
+
+  return (
+    <>
+      {/* Mobile / kiosk: row list */}
+      <div className={`${isCompact ? "" : "lg:hidden"} flex flex-col`} style={{ background: "var(--rule)", border: "1px solid var(--rule)", gap: "1px" }}>
+        {showMobile.map((entry) => (
+          <Row key={entry.id} entry={entry} />
+        ))}
+      </div>
+      {/* Desktop: same row list (no need for table — operator-console reads as console log) */}
+      {!isCompact && (
+        <div className="hidden lg:flex flex-col" style={{ background: "var(--rule)", border: "1px solid var(--rule)", gap: "1px" }}>
+          {entries.map((entry) => (
+            <Row key={entry.id} entry={entry} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function Row({ entry }: { entry: LedgerEntry }) {
+  const isSale = entry.type === "sale";
+  const time = new Date(entry.created_at);
+  const timeStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const dateStr = time.toLocaleDateString([], { month: "short", day: "numeric" });
+  const amountColor = isSale ? "var(--teal)" : entry.amount_cents < 0 ? "var(--red)" : "var(--ink)";
+
+  return (
+    <div
+      className="grid items-center gap-3 px-3 py-2.5 bg-panel-mute hover:bg-panel transition-colors"
+      style={{ gridTemplateColumns: "60px 22px 1fr auto", minHeight: 56 }}
+    >
+      <span className="font-mono text-[0.7rem] text-ink-faint tracking-wide">
+        {timeStr}
+        <span className="block text-[0.6rem] text-ink-ghost">{dateStr}</span>
+      </span>
+      <span
+        className="flex items-center justify-center"
+        style={{
+          width: 22,
+          height: 22,
+          border: `1px solid ${isSale ? "rgba(94,176,155,0.35)" : "var(--rule-hi)"}`,
+          background: isSale ? "var(--teal-mute)" : "transparent",
+          color: isSale ? "var(--teal)" : "var(--ink-soft)",
+        }}
+        aria-hidden="true"
+      >
+        {isSale ? (
+          <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+            <path d="M5 12l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M3 12h18" />
+          </svg>
+        )}
+      </span>
+      <div className="min-w-0">
+        <div className="text-sm text-ink truncate font-medium">
+          <span className="font-mono text-[0.62rem] text-orange uppercase tracking-[0.18em] mr-2">{entry.type}</span>
+          {entry.description ?? "—"}
+        </div>
+      </div>
+      <span className="font-mono font-semibold text-sm tabular-nums" style={{ color: amountColor }}>
+        {formatCents(entry.amount_cents)}
+      </span>
+    </div>
   );
 }

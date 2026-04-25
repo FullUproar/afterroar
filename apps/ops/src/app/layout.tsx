@@ -1,20 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Antonio, Geologica, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/* Operator Console typography:
+   - Antonio (display): condensed, instrument-panel labels
+   - Geologica (body): clean, distinctive — not Inter or Geist
+   - JetBrains Mono (mono): numerics, codes, terminal-grade data */
+const display = Antonio({
+  variable: "--font-display",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const body = Geologica({
+  variable: "--font-body",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const mono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Store Ops — Full Uproar",
-  description: "The POS platform built for friendly local game stores.",
+  title: "Store Ops — Afterroar",
+  description: "Operator-grade POS + retail OS for friendly local game stores.",
   manifest: "/manifest.json",
   icons: {
     icon: "/logo-ring-favicon.png",
@@ -28,7 +43,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#09090b",
+  themeColor: "#06080c",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -40,7 +57,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased dark`}
     >
       <head>
         <script

@@ -1,33 +1,108 @@
 @import "tailwindcss";
 
+/* ============================================================
+   OPERATOR CONSOLE — design tokens
+   ----------------------------------------------------------------
+   Color discipline:
+     ORANGE = active · selected · live · primary CTA · brand
+     YELLOW = earned · noteworthy · positive notice (foil, loyalty, alert that's not error)
+     TEAL   = ready · ok · valid · healthy · good outcome
+     RED    = stop · error · destructive · action-required
+   Color is never alone — pair with text + shape/icon for A11Y.
+
+   Token-name compatibility: existing pages use --background, --card,
+   --accent, --muted, etc. via Tailwind utilities. Those names stay;
+   their values shift to the new palette.
+   ============================================================ */
 :root {
-  /* Dark mode defaults */
-  --background: #0a0a0a;
-  --foreground: #e2e8f0;
-  --card: #1a1a2e;
-  --card-border: #2a2a3e;
-  --card-hover: #222240;
-  --muted: #94a3b8;
-  --accent: #FF8200;
-  --accent-light: #451a03;
-  --input-bg: #1a1a2e;
-  --input-border: #2a2a3e;
-  --overlay-bg: rgba(0, 0, 0, 0.7);
+  /* Surfaces (mapped to legacy names for backwards compatibility) */
+  --background: #0c0e12;     /* slate base — was #0a0a0a */
+  --foreground: #e3e6ec;     /* ink — was #e2e8f0 */
+  --card: #161922;           /* panel — was #1a1a2e */
+  --card-border: #23262d;    /* rule — was #2a2a3e */
+  --card-hover: #1d2030;     /* panel-hi — was #222240 */
+  --muted: #a8adb8;          /* ink-soft — was #94a3b8 */
+  --accent: #ff7a00;         /* orange — was #FF8200 */
+  --accent-light: rgba(255, 122, 0, 0.12);
+  --input-bg: #161922;
+  --input-border: #23262d;
+  --overlay-bg: rgba(0, 0, 0, 0.72);
+
+  /* New operator-console tokens */
+  --void: #06080c;
+  --slate: #0c0e12;
+  --panel: #161922;
+  --panel-hi: #1d2030;
+  --panel-mute: #10121a;
+  --rule: #23262d;
+  --rule-hi: #2e3340;
+  --rule-faint: #181a22;
+  --ink: #e3e6ec;
+  --ink-soft: #a8adb8;
+  --ink-faint: #5d6373;
+  --ink-ghost: #353a48;
+  --orange: #ff7a00;
+  --orange-glow: rgba(255, 122, 0, 0.18);
+  --orange-mute: rgba(255, 122, 0, 0.06);
+  --orange-mute-2: rgba(255, 122, 0, 0.12);
+  --yellow: #fbdb65;
+  --yellow-mute: rgba(251, 219, 101, 0.12);
+  --teal: #5eb09b;
+  --teal-mute: rgba(94, 176, 155, 0.12);
+  --red: #d65a5a;
+  --red-mute: rgba(214, 90, 90, 0.12);
+
+  /* MTG mana / color identity (operator-friendly muted) */
+  --m-w: #dcd6c0;
+  --m-w-bg: #26241e;
+  --m-u: #6ea5cf;
+  --m-u-bg: #15212a;
+  --m-b: #8a7a96;
+  --m-b-bg: #1a1620;
+  --m-r: #cf6e60;
+  --m-r-bg: #2a1815;
+  --m-g: #7ec095;
+  --m-g-bg: #162a1a;
+  --m-c: #a8adb8;
+  --m-c-bg: #1a1d22;
 }
 
-/* Light mode overrides */
+/* Light mode overrides — preserved for theme toggle */
 html.light {
-  --background: #fafafa;
-  --foreground: #1a1a1a;
+  --background: #f7f5f1;
+  --foreground: #1a1d22;
   --card: #ffffff;
-  --card-border: #e5e5e5;
-  --card-hover: #f5f5f5;
-  --muted: #6b7280;
-  --accent: #D97706;
-  --accent-light: #fef3c7;
+  --card-border: #e0dcd2;
+  --card-hover: #f0ece2;
+  --muted: #5d6373;
+  --accent: #c25f00;
+  --accent-light: rgba(194, 95, 0, 0.1);
   --input-bg: #ffffff;
-  --input-border: #d4d4d8;
+  --input-border: #d4cfc0;
   --overlay-bg: rgba(0, 0, 0, 0.4);
+
+  --void: #ffffff;
+  --slate: #f7f5f1;
+  --panel: #ffffff;
+  --panel-hi: #f0ece2;
+  --panel-mute: #faf7f0;
+  --rule: #e0dcd2;
+  --rule-hi: #c8c2b3;
+  --rule-faint: #ede9df;
+  --ink: #1a1d22;
+  --ink-soft: #5d6373;
+  --ink-faint: #8a8478;
+  --ink-ghost: #c0bdb3;
+  --orange: #c25f00;
+  --orange-glow: rgba(194, 95, 0, 0.15);
+  --orange-mute: rgba(194, 95, 0, 0.06);
+  --orange-mute-2: rgba(194, 95, 0, 0.1);
+  --yellow: #d4a800;
+  --yellow-mute: rgba(212, 168, 0, 0.1);
+  --teal: #3a8675;
+  --teal-mute: rgba(58, 134, 117, 0.1);
+  --red: #a83838;
+  --red-mute: rgba(168, 56, 56, 0.08);
 }
 
 @theme inline {
@@ -42,8 +117,29 @@ html.light {
   --color-input-bg: var(--input-bg);
   --color-input-border: var(--input-border);
   --color-overlay-bg: var(--overlay-bg);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* New theme color tokens — Tailwind utilities */
+  --color-void: var(--void);
+  --color-slate: var(--slate);
+  --color-panel: var(--panel);
+  --color-panel-hi: var(--panel-hi);
+  --color-panel-mute: var(--panel-mute);
+  --color-rule: var(--rule);
+  --color-rule-hi: var(--rule-hi);
+  --color-rule-faint: var(--rule-faint);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-ghost: var(--ink-ghost);
+  --color-orange: var(--orange);
+  --color-yellow: var(--yellow);
+  --color-teal: var(--teal);
+  --color-red-fu: var(--red);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
 /* ── No-Scrollbar Design ──
@@ -51,15 +147,14 @@ html.light {
    scrollbar track is hidden. This creates a clean, app-like feel.
    Exception: data tables with class .scroll-visible retain scrollbars. */
 * {
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 *::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
 }
-/* Opt-in: add .scroll-visible to any container that NEEDS a scrollbar */
 .scroll-visible {
   scrollbar-width: thin;
-  scrollbar-color: var(--card-border) transparent;
+  scrollbar-color: var(--rule-hi) transparent;
 }
 .scroll-visible::-webkit-scrollbar {
   display: block;
@@ -70,95 +165,84 @@ html.light {
   background: transparent;
 }
 .scroll-visible::-webkit-scrollbar-thumb {
-  background: var(--card-border);
+  background: var(--rule-hi);
   border-radius: 3px;
 }
 .scroll-visible::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: var(--ink-faint);
 }
 
-/* Prevent horizontal overflow on mobile, ensure vertical scroll works */
+/* Page container — never page-scrolls; data regions scroll internally */
 html, body {
   overflow-x: hidden;
   overflow-y: auto;
   max-width: 100vw;
 }
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
-
-/* Main content must not overflow */
 main {
   overflow-x: hidden;
 }
 
+/* ============================================================
+   Animations
+   ============================================================ */
 @keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.25s ease-out;
-}
+.animate-slide-in-right { animation: slide-in-right 0.25s ease-out; }
 
 @keyframes slide-up {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
-
-.animate-slide-up {
-  animation: slide-up 0.25s ease-out;
-}
+.animate-slide-up { animation: slide-up 0.25s ease-out; }
 
 @keyframes slide-down {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
-
-.animate-slide-down {
-  animation: slide-down 0.2s ease-out;
-}
+.animate-slide-down { animation: slide-down 0.2s ease-out; }
 
 @keyframes cart-item-flash {
-  0% {
-    background-color: rgba(34, 197, 94, 0.2);
-  }
-  100% {
-    background-color: transparent;
-  }
+  0%   { background-color: rgba(94, 176, 155, 0.2); }
+  100% { background-color: transparent; }
 }
-
-.animate-cart-flash {
-  animation: cart-item-flash 0.5s ease-out;
-}
-
-.animate-fade-out {
-  animation: fade-out 1.5s ease-out forwards;
-}
+.animate-cart-flash { animation: cart-item-flash 0.5s ease-out; }
 
 @keyframes fade-out {
-  0% { opacity: 1; transform: translateY(0); }
-  70% { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-8px); }
+}
+.animate-fade-out { animation: fade-out 1.5s ease-out forwards; }
+
+@keyframes pulse-led {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50%      { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes foil-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ar-card-in {
+  0%   { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Safe area for bottom nav (iPhone notch / home indicator) */
@@ -171,70 +255,58 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
-/* All interactive elements get active feedback */
+/* ============================================================
+   Active feedback — universal touch response
+   ============================================================ */
 button:active, a:active, [role="button"]:active {
   transform: scale(0.98);
   transition: transform 0.1s;
 }
 
-/* Touch-first: phones AND tablets (below desktop breakpoint) */
+/* ============================================================
+   3-VIEWPORT TREATMENT
+     Mobile  (< 768px)         — single-column, sticky bottom nav
+     Kiosk   (768–1023px)      — touch-first POS, 56px primary tap targets
+     Desktop (>= 1024px)       — full chrome, mouse-friendly
+   ============================================================ */
+
+/* Mobile + Kiosk shared: touch-friendly defaults */
 @media (max-width: 1023px) {
   button, a, [role="button"] {
     min-height: 44px;
   }
-
-  /* Bigger base text on tablet for readability */
-  body {
-    font-size: 16px;
-  }
-
-  /* Prevent zoom on input focus (iOS) */
+  body { font-size: 16px; }
   input, select, textarea {
-    font-size: 16px !important;
-  }
-
-  /* Bigger form inputs on touch devices */
-  input, select, textarea {
+    font-size: 16px !important;  /* Prevent zoom on iOS focus */
     min-height: 48px;
   }
+  html { overscroll-behavior: none; }
 
-  /* Prevent overscroll bounce on mobile */
-  html {
-    overscroll-behavior: none;
-  }
-
-  /* ---- Kiosk-friendly text scaling ----
-     Nothing smaller than 14px on touch screens.
-     text-xs (12px) → 14px, text-sm (14px) → 16px.
-     :where() keeps specificity at 0 so page-level overrides still win. */
+  /* Floor small text at 14px so kiosk-distance reading works */
   :where(.text-xs),
   :where(.text-\[10px\]),
   :where(.text-\[11px\]),
   :where(.text-\[12px\]) {
-    font-size: 0.875rem;  /* 14px */
+    font-size: 0.875rem;
     line-height: 1.4;
   }
-
   :where(.text-sm) {
-    font-size: 1rem;      /* 16px */
+    font-size: 1rem;
     line-height: 1.5;
   }
-
-  /* Badges / pills — floor at 14px */
   :where(.rounded-full) {
     font-size: max(0.875rem, inherit);
   }
 }
 
-/* Tablet: taller bottom nav */
+/* Kiosk-specific (tablet portrait/landscape) */
 @media (min-width: 768px) and (max-width: 1023px) {
   :root {
     --bottom-nav-h: 72px;
   }
-}
-
-/* Register mode — bigger touch targets for POS screens */
-@media (min-width: 768px) {
+  /* Kiosk = primary touch surface — bigger primary actions */
+  button[data-primary="true"],
+  .btn-primary,
   .register-mode button,
   .register-mode a,
   .register-mode [role="button"] {
@@ -242,9 +314,254 @@ button:active, a:active, [role="button"]:active {
   }
 }
 
-/* ---- Thermal receipt print styles (80mm / 3.15in) ---- */
+/* Desktop register mode — bigger touch targets for counter POS */
+@media (min-width: 1024px) {
+  .register-mode button,
+  .register-mode a,
+  .register-mode [role="button"] {
+    min-height: 56px;
+  }
+}
+
+/* ============================================================
+   Operator Console primitives — utility classes shared by
+   AppMasthead, AppSidebar, TitleBar, Zone, etc.
+   ============================================================ */
+
+/* Brand masthead block (Afterroar / Store Ops / Store) */
+.ar-mast {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.ar-mast .ar-lozenge {
+  width: 14px;
+  height: 14px;
+  background: var(--orange);
+  box-shadow: 0 0 14px var(--orange-glow);
+  flex-shrink: 0;
+}
+.ar-mast .ar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  line-height: 1;
+}
+.ar-mast .ar-platform {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.ar-mast .ar-app {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange);
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.ar-mast .ar-app .ar-div {
+  width: 1px;
+  height: 13px;
+  background: var(--rule-hi);
+  align-self: center;
+}
+.ar-mast .ar-app .ar-store {
+  color: var(--ink-soft);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  font-style: italic;
+  text-transform: none;
+}
+@media (max-width: 767px) {
+  .ar-mast .ar-app { font-size: 0.9rem; }
+  .ar-mast .ar-app .ar-store { display: none; }
+  .ar-mast .ar-platform { font-size: 0.5rem; }
+}
+
+/* LED indicators with shape differentiation (A11Y) */
+.ar-led {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.ar-led .ar-led-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 8px var(--teal);
+  position: relative;
+  flex-shrink: 0;
+}
+.ar-led .ar-led-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  opacity: 0.35;
+  animation: pulse-led 2.4s ease-in-out infinite;
+}
+.ar-led.warn .ar-led-dot {
+  background: var(--yellow);
+  box-shadow: 0 0 8px var(--yellow);
+}
+.ar-led.warn .ar-led-dot::after {
+  border-color: var(--yellow);
+}
+.ar-led.err .ar-led-dot {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+.ar-led.err .ar-led-dot::after {
+  border-color: var(--red);
+  animation-duration: 1.2s;
+}
+
+/* Mode chip */
+.ar-chip-mode {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  background: var(--orange-mute);
+}
+
+/* TitleBar — orange top stripe with edition + serial */
+.ar-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.4rem;
+  background: var(--orange);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  gap: 0.5rem;
+}
+.ar-title-bar b {
+  letter-spacing: 0.1em;
+}
+
+/* Zone — section container with rule-label header */
+.ar-zone {
+  position: relative;
+  background: var(--panel-mute);
+  border: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.ar-zone-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  background: var(--slate);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.ar-zone.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--orange);
+  box-shadow: 0 0 14px var(--orange-glow);
+  z-index: 2;
+}
+
+/* Stripe-on-hover (cards / rows that should "light up" when active) */
+.ar-stripe { position: relative; overflow: hidden; }
+.ar-stripe::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--orange);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+.ar-stripe:hover::before, .ar-stripe:focus-visible::before { transform: scaleX(1); }
+
+.ar-lstripe { position: relative; }
+.ar-lstripe::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--orange);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+.ar-lstripe:hover::before, .ar-lstripe:focus-visible::before { transform: scaleY(1); }
+
+/* Card frame (Operator Console "fills viewport" pattern) */
+.ar-card-in {
+  animation: ar-card-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Stagger reveal */
+.ar-stagger > * {
+  animation: row-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ar-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.ar-stagger > *:nth-child(2) { animation-delay: 0.05s; }
+.ar-stagger > *:nth-child(3) { animation-delay: 0.08s; }
+.ar-stagger > *:nth-child(4) { animation-delay: 0.11s; }
+.ar-stagger > *:nth-child(5) { animation-delay: 0.14s; }
+.ar-stagger > *:nth-child(6) { animation-delay: 0.17s; }
+.ar-stagger > *:nth-child(7) { animation-delay: 0.20s; }
+.ar-stagger > *:nth-child(8) { animation-delay: 0.23s; }
+.ar-stagger > *:nth-child(n+9) { animation-delay: 0.26s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   Thermal receipt print (80mm / 3.15in) — preserved
+   ============================================================ */
 @media print {
-  /* Hide everything except printable content */
   body > *:not(.print-receipt):not(.print-barcodes) {
     display: none !important;
   }
@@ -268,61 +585,15 @@ button:active, a:active, [role="button"]:active {
     color: #000;
     background: #fff;
   }
-  .receipt-store-name {
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 2px;
-  }
-  .receipt-header {
-    text-align: center;
-    font-size: 10px;
-    margin-bottom: 4px;
-  }
-  .receipt-date {
-    text-align: center;
-    font-size: 10px;
-    margin-bottom: 2px;
-  }
-  .receipt-customer {
-    text-align: center;
-    font-size: 10px;
-    margin-bottom: 4px;
-  }
-  .receipt-divider {
-    text-align: center;
-    letter-spacing: -1px;
-    margin: 2px 0;
-  }
-  .receipt-line {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-  }
-  .receipt-item-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .receipt-item-detail {
-    flex-shrink: 0;
-    text-align: right;
-    white-space: nowrap;
-  }
-  .receipt-total {
-    font-weight: bold;
-    font-size: 14px;
-  }
-  .receipt-footer {
-    text-align: center;
-    font-size: 10px;
-    margin-top: 8px;
-  }
-  .receipt-barcode {
-    text-align: center;
-    font-size: 18px;
-    letter-spacing: 2px;
-    margin-top: 8px;
-  }
+  .receipt-store-name { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 2px; }
+  .receipt-header { text-align: center; font-size: 10px; margin-bottom: 4px; }
+  .receipt-date { text-align: center; font-size: 10px; margin-bottom: 2px; }
+  .receipt-customer { text-align: center; font-size: 10px; margin-bottom: 4px; }
+  .receipt-divider { text-align: center; letter-spacing: -1px; margin: 2px 0; }
+  .receipt-line { display: flex; justify-content: space-between; font-size: 12px; }
+  .receipt-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .receipt-item-detail { flex-shrink: 0; text-align: right; white-space: nowrap; }
+  .receipt-total { font-weight: bold; font-size: 14px; }
+  .receipt-footer { text-align: center; font-size: 10px; margin-top: 8px; }
+  .receipt-barcode { text-align: center; font-size: 18px; letter-spacing: 2px; margin-top: 8px; }
 }
