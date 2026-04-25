@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { formatCents } from '@/lib/types';
-import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
-import { EmptyState } from '@/components/shared/ui';
 import { useFormDraft } from '@/hooks/use-form-draft';
 import { useUnsavedChangesWarning } from '@/hooks/use-unsaved-changes-warning';
 
@@ -55,65 +53,84 @@ interface SegmentCounts {
   total: number;
 }
 
+/**
+ * Operator-Console segment chip.
+ *  - color discipline: orange = VIP/active, yellow = at-risk, teal = regular/new ok,
+ *    ink-faint = dormant, ink-soft = active default.
+ *  - shape + glyph + label so color is never alone.
+ */
 const SEGMENT_CONFIG: Record<CustomerSegment, {
   label: string;
-  icon: string;
+  glyph: string;
+  /** Foreground color token */
   color: string;
-  bgColor: string;
-  borderColor: string;
+  /** Background tint token */
+  bg: string;
+  /** Border color */
+  border: string;
 }> = {
   vip: {
     label: 'VIP',
-    icon: '\u{1F31F}',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/30',
+    glyph: '★',
+    color: 'var(--orange)',
+    bg: 'var(--orange-mute)',
+    border: 'rgba(255,122,0,0.35)',
   },
   regular: {
     label: 'Regular',
-    icon: '\u{1F504}',
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/30',
+    glyph: '◆',
+    color: 'var(--teal)',
+    bg: 'var(--teal-mute)',
+    border: 'rgba(94,176,155,0.30)',
   },
   new: {
     label: 'New',
-    icon: '\u{1F195}',
-    color: 'text-green-400',
-    bgColor: 'bg-green-500/10',
-    borderColor: 'border-green-500/30',
+    glyph: '+',
+    color: 'var(--teal)',
+    bg: 'var(--teal-mute)',
+    border: 'rgba(94,176,155,0.30)',
   },
   at_risk: {
     label: 'At Risk',
-    icon: '\u26A0\uFE0F',
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-500/10',
-    borderColor: 'border-orange-500/30',
+    glyph: '!',
+    color: 'var(--yellow)',
+    bg: 'var(--yellow-mute)',
+    border: 'rgba(251,219,101,0.35)',
   },
   dormant: {
     label: 'Dormant',
-    icon: '\u{1F4A4}',
-    color: 'text-zinc-400',
-    bgColor: 'bg-zinc-500/10',
-    borderColor: 'border-zinc-500/30',
+    glyph: '·',
+    color: 'var(--ink-faint)',
+    bg: 'var(--panel)',
+    border: 'var(--rule-hi)',
   },
   active: {
     label: 'Active',
-    icon: '\u2713',
-    color: 'text-foreground/70',
-    bgColor: 'bg-card-hover',
-    borderColor: 'border-card-border',
+    glyph: '✓',
+    color: 'var(--ink-soft)',
+    bg: 'var(--panel)',
+    border: 'var(--rule-hi)',
   },
 };
 
 function SegmentBadge({ segment }: { segment: CustomerSegment }) {
-  const config = SEGMENT_CONFIG[segment];
+  const cfg = SEGMENT_CONFIG[segment];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${config.color} ${config.bgColor} ${config.borderColor}`}
+      className="inline-flex items-center gap-1 font-mono"
+      style={{
+        fontSize: '0.6rem',
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        padding: '2px 6px',
+        border: `1px solid ${cfg.border}`,
+        background: cfg.bg,
+        color: cfg.color,
+      }}
     >
-      <span aria-hidden="true">{config.icon}</span>
-      {config.label}
+      <span aria-hidden="true">{cfg.glyph}</span>
+      {cfg.label}
     </span>
   );
 }
@@ -264,6 +281,19 @@ export default function CustomersPage() {
   // Reset page when filters change
   useEffect(() => { setPage(0); }, [search, segmentFilter]);
 
+  /* -------- KPI strip data ------------------------------------- */
+  // Top customer (lifetime spend) + total credit outstanding —
+  // computed locally so we don't add an extra fetch.
+  const kpis = useMemo(() => {
+    const top = customers.reduce<SegmentedCustomer | null>((best, c) => {
+      if (!best) return c;
+      return c.lifetime_spend_cents > best.lifetime_spend_cents ? c : best;
+    }, null);
+    const totalCreditCents = customers.reduce((sum, c) => sum + (c.credit_balance_cents ?? 0), 0);
+    const totalLifetimeCents = customers.reduce((sum, c) => sum + (c.lifetime_spend_cents ?? 0), 0);
+    return { top, totalCreditCents, totalLifetimeCents };
+  }, [customers]);
+
   const segmentButtons: Array<{ key: CustomerSegment | 'all'; label: string; count: number | null; tooltip: string }> = [
     { key: 'all', label: 'All', count: counts?.total ?? null, tooltip: 'All customers' },
     { key: 'vip', label: 'VIP', count: counts?.vip ?? null, tooltip: 'Lifetime spend $500+' },
@@ -274,21 +304,42 @@ export default function CustomersPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4 min-w-0">
       <PageHeader
         title="Customers"
+        crumb="Console · Network"
+        desc="Walk-ins and Connect members. Tagged automatically by spend and recency — find regulars, re-engage at-risk, spot VIPs."
         action={
           <div className="flex gap-2">
             <a
               href={`/api/customers/export${segmentFilter !== 'all' ? `?segment=${segmentFilter}` : ''}`}
               download
-              className="px-3 py-2 border border-card-border bg-card hover:bg-card-hover text-muted rounded-lg text-sm font-medium transition-colors"
+              className="inline-flex items-center font-mono uppercase border px-3 transition-colors"
+              style={{
+                fontSize: '0.7rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                minHeight: 44,
+                color: 'var(--ink-soft)',
+                borderColor: 'var(--rule-hi)',
+                background: 'var(--panel)',
+              }}
             >
               Export CSV
             </a>
             <button
               onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
+              className="inline-flex items-center font-display uppercase transition-colors"
+              style={{
+                fontSize: '0.85rem',
+                letterSpacing: '0.06em',
+                fontWeight: 700,
+                padding: '0 1rem',
+                minHeight: 48,
+                color: showForm ? 'var(--ink)' : 'var(--void)',
+                background: showForm ? 'transparent' : 'var(--orange)',
+                border: showForm ? '1px solid var(--rule-hi)' : '1px solid var(--orange)',
+              }}
             >
               {showForm ? 'Cancel' : 'Add Customer'}
             </button>
@@ -296,221 +347,493 @@ export default function CustomersPage() {
         }
       />
 
+      {/* KPI strip — operator readout (5 cells). */}
+      {counts && (
+        <section
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px"
+          style={{ background: 'var(--rule)', border: '1px solid var(--rule)' }}
+        >
+          <KpiCell k="Total Customers" v={counts.total.toLocaleString()} primary />
+          <KpiCell
+            k="VIP"
+            v={counts.vip.toLocaleString()}
+            sub={counts.total > 0 ? `${Math.round((counts.vip / counts.total) * 100)}%` : '—'}
+          />
+          <KpiCell
+            k="At Risk"
+            v={counts.at_risk.toLocaleString()}
+            sub={counts.at_risk > 0 ? 'Re-engage' : '—'}
+            tone={counts.at_risk > 0 ? 'warn' : undefined}
+          />
+          <KpiCell
+            k="Lifetime Spend"
+            v={formatCents(kpis.totalLifetimeCents)}
+            sub={kpis.top ? `Top: ${kpis.top.name}` : undefined}
+          />
+          <KpiCell
+            k="Store Credit Out"
+            v={formatCents(kpis.totalCreditCents)}
+            sub={kpis.totalCreditCents > 0 ? 'Owed to customers' : '—'}
+          />
+        </section>
+      )}
+
+      {/* Add customer form — operator-console panel, slides in below header. */}
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4 shadow-sm dark:shadow-none">
-          {hasFormDraft && formDirty && (
-            <div className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-accent flex items-center justify-between gap-3">
-              <span>Restored your unsaved draft.</span>
+        <form
+          onSubmit={handleCreate}
+          className="flex flex-col gap-4"
+          style={{
+            background: 'var(--panel-mute)',
+            border: '1px solid var(--rule)',
+            padding: '1.1rem',
+          }}
+        >
+          <div className="flex items-baseline justify-between gap-3">
+            <p
+              className="font-mono uppercase text-ink-soft"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}
+            >
+              New Customer
+            </p>
+            {hasFormDraft && formDirty && (
               <button
                 type="button"
                 onClick={() => { setForm({ name: '', email: '', phone: '' }); clearFormDraft(); }}
-                className="text-xs underline hover:opacity-80"
+                className="font-mono uppercase text-orange hover:text-yellow transition-colors"
+                style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}
               >
                 Discard draft
               </button>
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-muted mb-1">Name</label>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <FieldLabel label="Name" required>
               <input
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
+                className="w-full font-body text-ink focus:outline-none"
+                style={{
+                  background: 'var(--panel)',
+                  border: '1px solid var(--rule-hi)',
+                  fontSize: '0.92rem',
+                  padding: '0.65rem 0.85rem',
+                  minHeight: 44,
+                }}
               />
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Email</label>
+            </FieldLabel>
+            <FieldLabel label="Email">
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
+                className="w-full font-body text-ink focus:outline-none"
+                style={{
+                  background: 'var(--panel)',
+                  border: '1px solid var(--rule-hi)',
+                  fontSize: '0.92rem',
+                  padding: '0.65rem 0.85rem',
+                  minHeight: 44,
+                }}
               />
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Phone</label>
+            </FieldLabel>
+            <FieldLabel label="Phone">
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
+                className="w-full font-body text-ink focus:outline-none"
+                style={{
+                  background: 'var(--panel)',
+                  border: '1px solid var(--rule-hi)',
+                  fontSize: '0.92rem',
+                  padding: '0.65rem 0.85rem',
+                  minHeight: 44,
+                }}
               />
-            </div>
+            </FieldLabel>
           </div>
           {createError && (
-            <p className="text-sm text-red-400">{createError}</p>
+            <p
+              className="font-mono"
+              style={{
+                fontSize: '0.7rem',
+                letterSpacing: '0.06em',
+                color: 'var(--red)',
+                background: 'var(--red-mute)',
+                border: '1px solid rgba(214,90,90,0.35)',
+                padding: '0.55rem 0.75rem',
+              }}
+            >
+              ! {createError}
+            </p>
           )}
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            {saving ? 'Adding...' : 'Add Customer'}
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+              style={{
+                fontSize: '0.85rem',
+                letterSpacing: '0.06em',
+                fontWeight: 700,
+                padding: '0 1.15rem',
+                minHeight: 48,
+                color: 'var(--void)',
+                background: 'var(--orange)',
+                border: '1px solid var(--orange)',
+              }}
+            >
+              {saving ? 'Adding…' : 'Add Customer'}
+            </button>
+          </div>
         </form>
       )}
 
-      {/* Segment Filter Bar */}
+      {/* Segment filter — pill row */}
       {counts && (
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap gap-2">
-            {segmentButtons.map((seg) => (
-              <button
-                key={seg.key}
-                onClick={() => setSegmentFilter(seg.key)}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  segmentFilter === seg.key
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : 'border-card-border bg-card text-muted hover:text-foreground hover:border-input-border'
-                }`}
-              >
-                {seg.label}
-                {seg.count !== null && (
-                  <span className="text-xs opacity-70 tabular-nums">{seg.count}</span>
-                )}
-              </button>
-            ))}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {segmentButtons.map((seg) => {
+              const on = segmentFilter === seg.key;
+              return (
+                <button
+                  key={seg.key}
+                  onClick={() => setSegmentFilter(seg.key)}
+                  className="inline-flex items-center gap-2 font-mono uppercase transition-colors"
+                  style={{
+                    fontSize: '0.66rem',
+                    letterSpacing: '0.18em',
+                    fontWeight: 600,
+                    padding: '0.45rem 0.8rem',
+                    minHeight: 36,
+                    color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                    border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                    background: on ? 'var(--orange-mute)' : 'var(--panel)',
+                  }}
+                >
+                  <span>{seg.label}</span>
+                  {seg.count !== null && (
+                    <span
+                      className="tabular-nums"
+                      style={{
+                        opacity: 0.75,
+                        fontSize: '0.62rem',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {seg.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
           {segmentFilter !== 'all' && (
-            <p className="text-xs text-muted">
+            <p
+              className="font-mono text-ink-faint"
+              style={{ fontSize: '0.66rem', letterSpacing: '0.04em' }}
+            >
               {segmentButtons.find(s => s.key === segmentFilter)?.tooltip}
-              {' '}— auto-tagged based on purchase history
+              {' '}— auto-tagged from purchase history
             </p>
           )}
         </div>
       )}
 
       {/* Search */}
-      <div>
+      <div className="relative max-w-md">
         <input
           type="text"
-          placeholder="Search customers..."
+          placeholder="Search by name, email, or phone…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm placeholder:text-muted focus:border-accent focus:outline-none"
+          className="w-full font-body text-ink placeholder:text-ink-faint focus:outline-none"
+          style={{
+            background: 'var(--panel)',
+            border: '1px solid var(--rule-hi)',
+            fontSize: '0.92rem',
+            padding: '0.6rem 0.9rem',
+            minHeight: 44,
+          }}
         />
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center">
-          <p className="text-sm text-red-400">{loadError}</p>
+        <div
+          className="flex items-center justify-between gap-3"
+          style={{
+            border: '1px solid rgba(214,90,90,0.35)',
+            background: 'var(--red-mute)',
+            padding: '0.75rem 1rem',
+          }}
+        >
+          <p className="font-mono uppercase text-red-fu" style={{ fontSize: '0.7rem', letterSpacing: '0.06em' }}>
+            ! {loadError}
+          </p>
           <button
             onClick={() => { setLoadError(null); loadCustomers(); }}
-            className="mt-2 text-xs text-red-300 underline hover:text-red-200"
+            className="font-mono uppercase text-red-fu hover:text-ink transition-colors"
+            style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}
           >
-            Try again
+            Try again →
           </button>
         </div>
       )}
 
       {loading ? (
-        <p className="text-muted">Loading customers...</p>
+        <p
+          className="font-mono uppercase text-ink-soft"
+          style={{ fontSize: '0.7rem', letterSpacing: '0.18em', padding: '2rem 0', textAlign: 'center' }}
+        >
+          Loading customers…
+        </p>
       ) : filtered.length === 0 && !loadError ? (
-        <EmptyState
-          icon="&#x1F465;"
-          title={search || segmentFilter !== 'all' ? 'No customers match your filters' : 'No customers yet'}
-          action={!search && segmentFilter === 'all' ? { label: "Add Your First Customer", onClick: () => setShowForm(true) } : undefined}
-        />
+        <div className="ar-zone">
+          <div className="p-12 text-center flex flex-col items-center gap-3">
+            <div
+              className="font-mono uppercase text-ink-faint"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}
+            >
+              {search || segmentFilter !== 'all' ? 'No matches' : 'No customers yet'}
+            </div>
+            <p className="font-display text-ink" style={{ fontSize: '1.2rem', letterSpacing: '0.005em' }}>
+              {search || segmentFilter !== 'all' ? 'Try a different search or segment.' : 'Add your first customer to start tracking.'}
+            </p>
+            {!search && segmentFilter === 'all' && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="mt-2 inline-flex items-center font-display uppercase"
+                style={{
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.06em',
+                  fontWeight: 700,
+                  padding: '0.7rem 1.15rem',
+                  minHeight: 48,
+                  color: 'var(--void)',
+                  background: 'var(--orange)',
+                  border: '1px solid var(--orange)',
+                }}
+              >
+                Add Your First Customer
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
         <>
           {/* Result count */}
-          <div className="shrink-0 flex items-center justify-between text-xs text-muted">
-            <span>{filtered.length} customer{filtered.length !== 1 ? 's' : ''}{totalPages > 1 ? ` — page ${page + 1} of ${totalPages}` : ''}</span>
+          <div className="shrink-0 flex items-center justify-between">
+            <span
+              className="font-mono uppercase text-ink-faint"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}
+            >
+              {filtered.length.toLocaleString()} customer{filtered.length !== 1 ? 's' : ''}
+              {totalPages > 1 ? ` · page ${page + 1} of ${totalPages}` : ''}
+            </span>
           </div>
 
-          {/* Scrollable data area — this is the ONLY thing that scrolls */}
-          <div className="flex-1 min-h-0 overflow-y-auto scroll-visible -mx-2 px-2">
-
-          {/* Mobile card view */}
-          <div className="md:hidden space-y-3">
-            {paginated.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/customers/${c.id}`}
-                className="block rounded-xl border border-card-border bg-card p-4 min-h-11 active:bg-card-hover shadow-sm dark:shadow-none transition-colors"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-semibold text-foreground leading-snug truncate">{c.name}</span>
-                    <SegmentBadge segment={c.segment} />
+          {/* Scrollable data area */}
+          <div className="flex-1 min-h-0 overflow-y-auto scroll-visible">
+            {/* Mobile / tablet card view */}
+            <div className="md:hidden flex flex-col" style={{ gap: 1, background: 'var(--rule)', border: '1px solid var(--rule)' }}>
+              {paginated.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/dashboard/customers/${c.id}`}
+                  className="ar-lstripe block"
+                  style={{
+                    background: 'var(--panel-mute)',
+                    padding: '0.85rem 1rem',
+                    minHeight: 64,
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="font-display text-ink truncate" style={{ fontSize: '1rem', fontWeight: 500 }}>
+                        {c.name}
+                      </span>
+                      <SegmentBadge segment={c.segment} />
+                    </div>
+                    <span
+                      className="font-mono tabular-nums shrink-0"
+                      style={{
+                        fontSize: '0.78rem',
+                        color: c.credit_balance_cents > 0 ? 'var(--teal)' : 'var(--ink-faint)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {formatCents(c.credit_balance_cents ?? 0)}
+                    </span>
                   </div>
-                  <StatusBadge variant="success">
-                    {formatCents(c.credit_balance_cents ?? 0)}
-                  </StatusBadge>
-                </div>
-                <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
-                  <span>{c.email || c.phone || 'No contact info'}</span>
-                  {c.lifetime_spend_cents > 0 && (
-                    <span className="tabular-nums">{formatCents(c.lifetime_spend_cents)} lifetime</span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+                  <div
+                    className="mt-1.5 flex items-center gap-3 font-mono"
+                    style={{ fontSize: '0.66rem', letterSpacing: '0.04em', color: 'var(--ink-faint)' }}
+                  >
+                    <span className="truncate">{c.email || c.phone || 'No contact'}</span>
+                    {c.lifetime_spend_cents > 0 && (
+                      <span className="tabular-nums shrink-0" style={{ color: 'var(--ink-soft)' }}>
+                        {formatCents(c.lifetime_spend_cents)} lifetime
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
 
-          {/* Desktop table */}
-          <div className="hidden md:block bg-card border border-card-border rounded-xl shadow-sm dark:shadow-none">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-card-border text-muted text-left">
-                  <th className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors" onClick={() => handleSort('name')}>Name{sortArrow('name')}</th>
-                  <th className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors" onClick={() => handleSort('segment')}>Segment{sortArrow('segment')}</th>
-                  <th className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors" onClick={() => handleSort('email')}>Email{sortArrow('email')}</th>
-                  <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-foreground select-none transition-colors" onClick={() => handleSort('lifetime_spend')}>Lifetime Spend{sortArrow('lifetime_spend')}</th>
-                  <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-foreground select-none transition-colors" onClick={() => handleSort('credit')}>Store Credit{sortArrow('credit')}</th>
-                  <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-foreground select-none transition-colors" onClick={() => handleSort('last_purchase')}>Last Purchase{sortArrow('last_purchase')}</th>
-                </tr>
-              </thead>
-              <tbody>
+            {/* Desktop dense list — operator-grade rows */}
+            <div className="hidden md:flex flex-col">
+              {/* Column headers */}
+              <div
+                className="grid items-center font-mono uppercase text-ink-faint sticky top-0 z-10"
+                style={{
+                  gridTemplateColumns: '1.6fr 110px 1.4fr 130px 130px 130px',
+                  gap: '0.85rem',
+                  padding: '0.55rem 1rem',
+                  background: 'var(--panel-mute)',
+                  borderBottom: '1px solid var(--rule)',
+                  borderTop: '1px solid var(--rule)',
+                  borderLeft: '1px solid var(--rule)',
+                  borderRight: '1px solid var(--rule)',
+                  fontSize: '0.55rem',
+                  letterSpacing: '0.22em',
+                  fontWeight: 600,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleSort('name')}
+                  className="text-left hover:text-ink transition-colors"
+                >
+                  Customer{sortArrow('name')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSort('segment')}
+                  className="text-left hover:text-ink transition-colors"
+                >
+                  Segment{sortArrow('segment')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSort('email')}
+                  className="text-left hover:text-ink transition-colors"
+                >
+                  Contact{sortArrow('email')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSort('lifetime_spend')}
+                  className="text-right hover:text-ink transition-colors"
+                >
+                  Lifetime{sortArrow('lifetime_spend')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSort('credit')}
+                  className="text-right hover:text-ink transition-colors"
+                >
+                  Credit{sortArrow('credit')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSort('last_purchase')}
+                  className="text-right hover:text-ink transition-colors"
+                >
+                  Last Visit{sortArrow('last_purchase')}
+                </button>
+              </div>
+              {/* Rows */}
+              <div
+                className="ar-stagger flex flex-col"
+                style={{
+                  borderLeft: '1px solid var(--rule)',
+                  borderRight: '1px solid var(--rule)',
+                  borderBottom: '1px solid var(--rule)',
+                }}
+              >
                 {paginated.map((c) => (
                   <Link
                     key={c.id}
                     href={`/dashboard/customers/${c.id}`}
-                    className="contents"
+                    className="ar-lstripe grid items-center hover:bg-panel transition-colors"
+                    style={{
+                      gridTemplateColumns: '1.6fr 110px 1.4fr 130px 130px 130px',
+                      gap: '0.85rem',
+                      padding: '0.7rem 1rem',
+                      minHeight: 60,
+                      background: 'var(--panel-mute)',
+                      borderBottom: '1px solid var(--rule-faint)',
+                    }}
                   >
-                    <tr className="border-b border-card-border hover:bg-card-hover cursor-pointer text-foreground">
-                      <td className="px-4 py-3 font-medium">{c.name}</td>
-                      <td className="px-4 py-3">
-                        <SegmentBadge segment={c.segment} />
-                      </td>
-                      <td className="px-4 py-3 text-muted">{c.email || '-'}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
-                        {c.lifetime_spend_cents > 0 ? formatCents(c.lifetime_spend_cents) : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <StatusBadge variant="success">
-                          {formatCents(c.credit_balance_cents ?? 0)}
-                        </StatusBadge>
-                      </td>
-                      <td className="px-4 py-3 text-right text-muted">
-                        {c.last_purchase_date
-                          ? new Date(c.last_purchase_date).toLocaleDateString()
-                          : 'Never'}
-                      </td>
-                    </tr>
+                    <span
+                      className="font-display text-ink truncate"
+                      style={{ fontSize: '0.98rem', fontWeight: 500, letterSpacing: '0.005em' }}
+                    >
+                      {c.name}
+                    </span>
+                    <span>
+                      <SegmentBadge segment={c.segment} />
+                    </span>
+                    <span
+                      className="font-mono truncate"
+                      style={{ fontSize: '0.74rem', color: 'var(--ink-soft)', letterSpacing: '0.02em' }}
+                    >
+                      {c.email || c.phone || '—'}
+                    </span>
+                    <span
+                      className="font-mono tabular-nums text-right"
+                      style={{ fontSize: '0.84rem', color: 'var(--ink)', fontWeight: 600 }}
+                    >
+                      {c.lifetime_spend_cents > 0 ? formatCents(c.lifetime_spend_cents) : '—'}
+                    </span>
+                    <span
+                      className="font-mono tabular-nums text-right"
+                      style={{
+                        fontSize: '0.84rem',
+                        color: c.credit_balance_cents > 0 ? 'var(--teal)' : 'var(--ink-faint)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {formatCents(c.credit_balance_cents ?? 0)}
+                    </span>
+                    <span
+                      className="font-mono tabular-nums text-right"
+                      style={{ fontSize: '0.74rem', color: 'var(--ink-faint)', letterSpacing: '0.02em' }}
+                    >
+                      {c.last_purchase_date
+                        ? new Date(c.last_purchase_date).toLocaleDateString()
+                        : 'Never'}
+                    </span>
                   </Link>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
 
-          </div>{/* end scrollable data area */}
-
-          {/* Pagination — fixed at bottom */}
+          {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-2">
+            <div className="flex items-center justify-center gap-1.5 pt-2">
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="px-3 py-1.5 rounded-lg border border-card-border bg-card text-sm text-muted hover:text-foreground disabled:opacity-30 transition-colors"
+                className="inline-flex items-center font-mono uppercase transition-colors disabled:opacity-30"
+                style={{
+                  fontSize: '0.66rem',
+                  letterSpacing: '0.18em',
+                  fontWeight: 600,
+                  padding: '0 0.85rem',
+                  minHeight: 36,
+                  color: 'var(--ink-soft)',
+                  border: '1px solid var(--rule-hi)',
+                  background: 'var(--panel)',
+                }}
               >
-                Previous
+                ← Prev
               </button>
-              <div className="flex gap-1">
+              <div className="flex items-center gap-px">
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  // Show pages around current page
                   let pageNum: number;
                   if (totalPages <= 7) {
                     pageNum = i;
@@ -521,15 +844,21 @@ export default function CustomersPage() {
                   } else {
                     pageNum = page - 3 + i;
                   }
+                  const on = page === pageNum;
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                        page === pageNum
-                          ? 'bg-accent text-white'
-                          : 'text-muted hover:text-foreground hover:bg-card-hover'
-                      }`}
+                      className="font-mono tabular-nums transition-colors"
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        width: 36,
+                        height: 36,
+                        color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                        background: on ? 'var(--orange-mute)' : 'var(--panel)',
+                        border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                      }}
                     >
                       {pageNum + 1}
                     </button>
@@ -539,14 +868,104 @@ export default function CustomersPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="px-3 py-1.5 rounded-lg border border-card-border bg-card text-sm text-muted hover:text-foreground disabled:opacity-30 transition-colors"
+                className="inline-flex items-center font-mono uppercase transition-colors disabled:opacity-30"
+                style={{
+                  fontSize: '0.66rem',
+                  letterSpacing: '0.18em',
+                  fontWeight: 600,
+                  padding: '0 0.85rem',
+                  minHeight: 36,
+                  color: 'var(--ink-soft)',
+                  border: '1px solid var(--rule-hi)',
+                  background: 'var(--panel)',
+                }}
               >
-                Next
+                Next →
               </button>
             </div>
           )}
         </>
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function KpiCell({
+  k,
+  v,
+  sub,
+  primary,
+  tone,
+}: {
+  k: string;
+  v: string;
+  sub?: string;
+  primary?: boolean;
+  tone?: 'warn' | 'err' | 'ok';
+}) {
+  const toneColor =
+    tone === 'warn' ? 'var(--yellow)' : tone === 'err' ? 'var(--red)' : tone === 'ok' ? 'var(--teal)' : undefined;
+  return (
+    <div
+      className="bg-panel-mute flex flex-col justify-between"
+      style={{ padding: '0.85rem 1.1rem', minHeight: 92 }}
+    >
+      <div
+        className="font-mono uppercase text-ink-faint"
+        style={{ fontSize: '0.55rem', letterSpacing: '0.24em', fontWeight: 600 }}
+      >
+        {k}
+      </div>
+      <div
+        className="font-display leading-none mt-2 truncate"
+        style={{
+          fontWeight: 700,
+          fontSize: 'clamp(1.25rem, 2.5vw, 1.85rem)',
+          letterSpacing: '-0.01em',
+          color: toneColor ?? (primary ? 'var(--orange)' : 'var(--ink)'),
+        }}
+      >
+        {v}
+      </div>
+      {sub && (
+        <div
+          className="font-mono mt-2 truncate"
+          style={{
+            fontSize: '0.62rem',
+            letterSpacing: '0.04em',
+            color: toneColor ?? 'var(--ink-soft)',
+          }}
+        >
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FieldLabel({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span
+        className="font-mono uppercase text-ink-soft"
+        style={{ fontSize: '0.6rem', letterSpacing: '0.22em', fontWeight: 600 }}
+      >
+        {label}
+        {required ? <span className="text-orange ml-1">*</span> : null}
+      </span>
+      {children}
+    </label>
   );
 }

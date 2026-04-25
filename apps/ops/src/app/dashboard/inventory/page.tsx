@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { SearchInput } from "@/components/search-input";
 import { Pagination } from "@/components/ui/pagination";
 import { SubNav } from "@/components/ui/sub-nav";
 
@@ -20,9 +19,7 @@ import {
   formatCents,
   parseDollars,
 } from "@/lib/types";
-import { StatusBadge } from "@/components/mobile-card";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/shared/ui";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 import { PrintLabelsModal } from "@/components/print-labels-modal";
@@ -82,6 +79,32 @@ interface AdjustState {
   reason: string;
   notes: string;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Operator-Console form & control style helpers (inline so this     */
+/*  file stays self-contained — these mirror tokens in globals.css).  */
+/* ------------------------------------------------------------------ */
+const inputStyle: React.CSSProperties = {
+  background: 'var(--panel)',
+  border: '1px solid var(--rule-hi)',
+  color: 'var(--ink)',
+  fontSize: '0.92rem',
+  padding: '0.65rem 0.85rem',
+  minHeight: 44,
+  outline: 'none',
+  width: '100%',
+};
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  backgroundImage:
+    "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8adb8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 0.7rem center',
+  backgroundSize: 14,
+  paddingRight: '2rem',
+};
 
 export default function InventoryPage() {
   const { can } = useStore();
@@ -234,8 +257,8 @@ export default function InventoryPage() {
       setItems((prev) => [newItem, ...prev]);
       setForm({ ...EMPTY_FORM });
       setShowAddForm(false);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create item');
     } finally {
       setSubmitting(false);
     }
@@ -282,8 +305,8 @@ export default function InventoryPage() {
         prev.map((i) => (i.id === updatedItem.id ? updatedItem : i))
       );
       setAdjust(null);
-    } catch (err: any) {
-      setAdjustError(err.message);
+    } catch (err) {
+      setAdjustError(err instanceof Error ? err.message : 'Failed to adjust stock');
     } finally {
       setAdjustSubmitting(false);
     }
@@ -362,10 +385,17 @@ export default function InventoryPage() {
   const getCategoryLabel = (cat: string) =>
     CATEGORIES.find((c) => c.value === cat)?.label ?? cat;
 
-  const getStockColor = (qty: number) => {
-    if (qty === 0) return "text-red-500";
-    if (qty <= 3) return "text-orange-400";
-    return "text-foreground";
+  /**
+   * Returns CSS color for a stock quantity readout.
+   * Operator-console palette:
+   *   0 → red (out)
+   *   1-3 → yellow (low)
+   *   else → ink (ok)
+   */
+  const stockColor = (qty: number): string => {
+    if (qty === 0) return 'var(--red)';
+    if (qty <= 3) return 'var(--yellow)';
+    return 'var(--ink)';
   };
 
   function handleSort(field: SortField) {
@@ -379,7 +409,7 @@ export default function InventoryPage() {
 
   function getSortArrow(field: SortField) {
     if (sortField !== field) return "";
-    return sortDir === "asc" ? " \u25B2" : " \u25BC";
+    return sortDir === "asc" ? " ▲" : " ▼";
   }
 
   async function handleInventoryScan(code: string) {
@@ -395,7 +425,7 @@ export default function InventoryPage() {
         if (match) {
           // Highlight existing item and filter to it
           setSearchQuery(code);
-          setScanMessage(`\u2713 ${match.name} — ${match.quantity} in stock`);
+          setScanMessage(`✓ ${match.name} — ${match.quantity} in stock`);
           setTimeout(() => setScanMessage(null), 5000);
           return;
         }
@@ -422,36 +452,105 @@ export default function InventoryPage() {
     }
   });
 
+  /* -------- KPI strip data ------------------------------------- */
+  const kpis = useMemo(() => {
+    const inStock = items.filter((i) => i.quantity > 0);
+    const outOfStock = items.filter((i) => i.quantity === 0).length;
+    const lowStock = items.filter((i) => i.quantity > 0 && i.quantity <= 3).length;
+    const stockValueCents = items.reduce((sum, i) => sum + i.cost_cents * i.quantity, 0);
+    const sellThruCents = items.reduce((sum, i) => sum + i.price_cents * i.quantity, 0);
+    return {
+      uniqueSkus: items.length,
+      inStockSkus: inStock.length,
+      outOfStock,
+      lowStock,
+      stockValueCents,
+      sellThruCents,
+    };
+  }, [items]);
+
   return (
     <div className="flex flex-col h-full gap-4 min-w-0">
       <SubNav items={INVENTORY_TABS} />
       <PageHeader
-        title={`Inventory${totalItems > 0 ? ` (${totalItems.toLocaleString()})` : ""}`}
+        title="Inventory"
+        crumb="Console · Stock"
+        desc="Every SKU, every shelf — the operator's truth source for what you have, what it costs, and what it sells for."
         action={
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap items-center gap-2 justify-end">
             <button
               onClick={() => setShowShopifySync(!showShopifySync)}
-              className="hidden sm:block rounded-xl border border-blue-500/30 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/10 transition-colors"
+              className="hidden sm:inline-flex items-center font-mono uppercase transition-colors"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                padding: '0 0.85rem',
+                minHeight: 44,
+                color: 'var(--ink-soft)',
+                border: '1px solid var(--rule-hi)',
+                background: 'var(--panel)',
+              }}
             >
               Shopify Sync
             </button>
             <button
               onClick={() => setShowLabels(true)}
-              className="hidden sm:block rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+              className="hidden sm:inline-flex items-center font-mono uppercase transition-colors"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                padding: '0 0.85rem',
+                minHeight: 44,
+                color: 'var(--ink-soft)',
+                border: '1px solid var(--rule-hi)',
+                background: 'var(--panel)',
+              }}
             >
               Print Labels
             </button>
             <button
               onClick={() => setShowScanner(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-card-border px-2.5 sm:px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors shrink-0"
+              className="inline-flex items-center gap-2 font-mono uppercase transition-colors"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                padding: '0 0.85rem',
+                minHeight: 44,
+                color: 'var(--ink-soft)',
+                border: '1px solid var(--rule-hi)',
+                background: 'var(--panel)',
+              }}
+              title="Scanner listening"
             >
-              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Scanner listening" />
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: 'var(--teal)',
+                  boxShadow: '0 0 6px var(--teal)',
+                }}
+              />
               <span className="hidden sm:inline">Scan to Add</span>
               <span className="sm:hidden">Scan</span>
             </button>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="rounded-xl bg-accent px-3 sm:px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors shrink-0"
+              className="inline-flex items-center font-display uppercase transition-colors"
+              style={{
+                fontSize: '0.85rem',
+                letterSpacing: '0.06em',
+                fontWeight: 700,
+                padding: '0 1rem',
+                minHeight: 48,
+                color: showAddForm ? 'var(--ink)' : 'var(--void)',
+                background: showAddForm ? 'transparent' : 'var(--orange)',
+                border: showAddForm ? '1px solid var(--rule-hi)' : '1px solid var(--orange)',
+              }}
             >
               {showAddForm ? "Cancel" : "Add Item"}
             </button>
@@ -459,352 +558,557 @@ export default function InventoryPage() {
         }
       />
 
+      {/* KPI strip */}
+      <section
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px"
+        style={{ background: 'var(--rule)', border: '1px solid var(--rule)' }}
+      >
+        <KpiCell
+          k="Unique SKUs"
+          v={(totalItems > 0 ? totalItems : kpis.uniqueSkus).toLocaleString()}
+          primary
+        />
+        <KpiCell
+          k="In Stock"
+          v={kpis.inStockSkus.toLocaleString()}
+          sub={kpis.uniqueSkus > 0 ? `${Math.round((kpis.inStockSkus / kpis.uniqueSkus) * 100)}% of catalog` : undefined}
+        />
+        <KpiCell
+          k="Out of Stock"
+          v={kpis.outOfStock.toLocaleString()}
+          sub={kpis.outOfStock > 0 ? 'Re-order' : 'All stocked'}
+          tone={kpis.outOfStock > 0 ? 'err' : 'ok'}
+        />
+        <KpiCell
+          k="Low Stock (≤3)"
+          v={kpis.lowStock.toLocaleString()}
+          sub={kpis.lowStock > 0 ? 'Watch list' : '—'}
+          tone={kpis.lowStock > 0 ? 'warn' : undefined}
+        />
+        <KpiCell
+          k="Stock Value"
+          v={formatCents(kpis.stockValueCents)}
+          sub={`Sell-thru ${formatCents(kpis.sellThruCents)}`}
+        />
+      </section>
+
       {/* Shopify Sync Panel */}
       {showShopifySync && (
-        <div className="rounded-xl border border-blue-500/20 bg-blue-950/5 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-blue-400">Shopify Inventory Sync</h3>
-            <button onClick={() => setShowShopifySync(false)} className="text-xs text-muted hover:text-foreground">Close</button>
+        <div
+          className="ar-zone"
+          style={{ borderColor: 'var(--rule)' }}
+        >
+          <div
+            className="ar-zone-head"
+            style={{ background: 'var(--slate)' }}
+          >
+            <span>Shopify Inventory Sync</span>
+            <button
+              onClick={() => setShowShopifySync(false)}
+              className="font-mono uppercase text-ink-faint hover:text-ink transition-colors"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}
+            >
+              Close
+            </button>
           </div>
-          <p className="text-xs text-muted">Manage online allocation for all Shopify-linked items at once.</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { action: "sync_from_shopify", label: "Sync from Shopify", desc: "Set allocations to match current Shopify quantities" },
-              { action: "match_stock", label: "All Stock Online", desc: "Set allocation = full stock for every item" },
-              { action: "zero_all", label: "Take All Offline", desc: "Set all allocations to 0" },
-              { action: "push_all", label: "Push to Shopify", desc: "Push current allocations to Shopify" },
-            ].map((btn) => (
-              <button
-                key={btn.action}
-                onClick={async () => {
-                  setSyncing(true);
-                  setSyncResult(null);
-                  try {
-                    const res = await fetch("/api/inventory/shopify-sync", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ action: btn.action }),
-                    });
-                    const data = await res.json();
-                    setSyncResult(res.ok ? `${btn.label}: ${data.updated ?? 0} items updated` : data.error);
-                  } catch {
-                    setSyncResult("Sync failed");
-                  } finally {
-                    setSyncing(false);
-                  }
+          <div className="p-4 flex flex-col gap-3">
+            <p className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+              Manage online allocation for all Shopify-linked items at once.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { action: "sync_from_shopify", label: "Sync from Shopify", desc: "Set allocations to match current Shopify quantities" },
+                { action: "match_stock", label: "All Stock Online", desc: "Set allocation = full stock for every item" },
+                { action: "zero_all", label: "Take All Offline", desc: "Set all allocations to 0" },
+                { action: "push_all", label: "Push to Shopify", desc: "Push current allocations to Shopify" },
+              ].map((btn) => (
+                <button
+                  key={btn.action}
+                  onClick={async () => {
+                    setSyncing(true);
+                    setSyncResult(null);
+                    try {
+                      const res = await fetch("/api/inventory/shopify-sync", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: btn.action }),
+                      });
+                      const data = await res.json();
+                      setSyncResult(res.ok ? `${btn.label}: ${data.updated ?? 0} items updated` : data.error);
+                    } catch {
+                      setSyncResult("Sync failed");
+                    } finally {
+                      setSyncing(false);
+                    }
+                  }}
+                  disabled={syncing}
+                  title={btn.desc}
+                  className={`inline-flex items-center font-mono uppercase transition-colors disabled:opacity-50 ${syncing ? "animate-pulse" : ""}`}
+                  style={{
+                    fontSize: '0.66rem',
+                    letterSpacing: '0.16em',
+                    fontWeight: 600,
+                    padding: '0 0.9rem',
+                    minHeight: 44,
+                    color: 'var(--ink-soft)',
+                    border: '1px solid var(--rule-hi)',
+                    background: 'var(--panel)',
+                  }}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+            {syncResult && (
+              <p
+                className="font-mono"
+                style={{
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.06em',
+                  color: 'var(--ink-soft)',
+                  background: 'var(--panel)',
+                  border: '1px solid var(--rule-hi)',
+                  padding: '0.55rem 0.75rem',
                 }}
-                disabled={syncing}
-                title={btn.desc}
-                className={`rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2 text-xs font-medium text-blue-300 hover:bg-blue-500/15 disabled:opacity-50 transition-colors ${syncing ? "animate-pulse" : ""}`}
               >
-                {syncing ? (
-                  <span className="flex items-center gap-1.5">
-                    <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Syncing...
-                  </span>
-                ) : btn.label}
-              </button>
-            ))}
+                {syncResult}
+              </p>
+            )}
           </div>
-          {syncResult && <p className="text-xs text-blue-300">{syncResult}</p>}
         </div>
       )}
 
-      <SearchInput
-        value={searchQuery}
-        onChange={setSearchQuery}
-        placeholder="Search by name, barcode, or SKU..."
-      />
+      {/* Search bar */}
+      <div className="relative">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name, barcode, or SKU…"
+          className="w-full font-body text-ink placeholder:text-ink-faint focus:outline-none"
+          style={{
+            background: 'var(--panel)',
+            border: '1px solid var(--rule-hi)',
+            fontSize: '0.92rem',
+            padding: '0.65rem 2.5rem 0.65rem 0.9rem',
+            minHeight: 44,
+          }}
+        />
+        <kbd
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center font-mono"
+          style={{
+            fontSize: '0.6rem',
+            letterSpacing: '0.1em',
+            color: 'var(--ink-faint)',
+            border: '1px solid var(--rule-hi)',
+            padding: '1px 5px',
+          }}
+        >
+          Ctrl+K
+        </kbd>
+      </div>
 
       {scanMessage && (
-        <div className="rounded-xl bg-emerald-500/20 border border-emerald-500/40 px-4 py-2 text-sm text-emerald-300">
-          {scanMessage}
+        <div
+          className="flex items-center gap-2"
+          style={{
+            background: 'var(--teal-mute)',
+            border: '1px solid rgba(94,176,155,0.35)',
+            padding: '0.55rem 0.85rem',
+          }}
+        >
+          <span
+            aria-hidden="true"
+            className="font-mono"
+            style={{ color: 'var(--teal)', fontWeight: 700 }}
+          >
+            ✓
+          </span>
+          <span className="font-mono text-ink" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+            {scanMessage}
+          </span>
         </div>
       )}
 
+      {/* Add Item Form */}
       {showAddForm && (
-        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4 shadow-sm dark:shadow-none">
-          <h2 className="text-lg font-semibold text-foreground">New Item</h2>
-
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Name *
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="Item name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Category
-              </label>
-              <select
-                value={form.category}
-                onChange={(e) =>
-                  setForm({ ...form, category: e.target.value as ItemCategory })
-                }
-                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Price ($)
-              </label>
-              <input
-                type="text"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Cost ($)
-              </label>
-              <input
-                type="text"
-                value={form.cost}
-                onChange={(e) => setForm({ ...form, cost: e.target.value })}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Quantity
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={form.quantity}
-                onChange={(e) =>
-                  setForm({ ...form, quantity: parseInt(e.target.value) || 0 })
-                }
-                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Barcode
-              </label>
-              <input
-                type="text"
-                value={form.barcode}
-                onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="Scan or type barcode"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Condition
-              </label>
-              <select
-                value={form.condition}
-                onChange={(e) =>
-                  setForm({ ...form, condition: e.target.value })
-                }
-                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
-              >
-                {CONDITIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Language
-              </label>
-              <input
-                type="text"
-                value={form.language}
-                onChange={(e) => setForm({ ...form, language: e.target.value })}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="English"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Set Name
-              </label>
-              <input
-                type="text"
-                value={form.set_name}
-                onChange={(e) => setForm({ ...form, set_name: e.target.value })}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="Set or expansion name"
-              />
-            </div>
-
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.foil}
-                  onChange={(e) => setForm({ ...form, foil: e.target.checked })}
-                  className="rounded border-zinc-700 bg-background text-indigo-600 focus:ring-indigo-500"
-                />
-                Foil / Holographic
-              </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
+        <div className="ar-zone">
+          <div className="ar-zone-head">
+            <span>New Item</span>
             <button
               onClick={() => {
                 setShowAddForm(false);
                 setForm({ ...EMPTY_FORM });
                 setError(null);
               }}
-              className="rounded-xl border border-card-border px-4 py-2 text-sm text-muted hover:bg-card-hover transition-colors"
+              className="font-mono uppercase text-ink-faint hover:text-ink transition-colors"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}
             >
-              Cancel
+              Close
             </button>
-            <button
-              onClick={handleCreate}
-              disabled={submitting}
-              className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-            >
-              {submitting ? "Creating..." : "Create Item"}
-            </button>
+          </div>
+          <div className="p-4 flex flex-col gap-4">
+            {error && (
+              <p
+                className="font-mono"
+                style={{
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.06em',
+                  color: 'var(--red)',
+                  background: 'var(--red-mute)',
+                  border: '1px solid rgba(214,90,90,0.35)',
+                  padding: '0.55rem 0.75rem',
+                }}
+              >
+                ! {error}
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <FieldLabel label="Name" required>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Item name"
+                  style={inputStyle}
+                />
+              </FieldLabel>
+
+              <FieldLabel label="Category">
+                <select
+                  value={form.category}
+                  onChange={(e) =>
+                    setForm({ ...form, category: e.target.value as ItemCategory })
+                  }
+                  style={selectStyle}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </FieldLabel>
+
+              <FieldLabel label="Price ($)">
+                <input
+                  type="text"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  placeholder="0.00"
+                  style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }}
+                />
+              </FieldLabel>
+
+              <FieldLabel label="Cost ($)">
+                <input
+                  type="text"
+                  value={form.cost}
+                  onChange={(e) => setForm({ ...form, cost: e.target.value })}
+                  placeholder="0.00"
+                  style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }}
+                />
+              </FieldLabel>
+
+              <FieldLabel label="Quantity">
+                <input
+                  type="number"
+                  min={0}
+                  value={form.quantity}
+                  onChange={(e) =>
+                    setForm({ ...form, quantity: parseInt(e.target.value) || 0 })
+                  }
+                  style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }}
+                />
+              </FieldLabel>
+
+              <FieldLabel label="Barcode">
+                <input
+                  type="text"
+                  value={form.barcode}
+                  onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+                  placeholder="Scan or type barcode"
+                  style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }}
+                />
+              </FieldLabel>
+
+              <FieldLabel label="Condition">
+                <select
+                  value={form.condition}
+                  onChange={(e) => setForm({ ...form, condition: e.target.value })}
+                  style={selectStyle}
+                >
+                  {CONDITIONS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </FieldLabel>
+
+              <FieldLabel label="Language">
+                <input
+                  type="text"
+                  value={form.language}
+                  onChange={(e) => setForm({ ...form, language: e.target.value })}
+                  placeholder="English"
+                  style={inputStyle}
+                />
+              </FieldLabel>
+
+              <FieldLabel label="Set Name">
+                <input
+                  type="text"
+                  value={form.set_name}
+                  onChange={(e) => setForm({ ...form, set_name: e.target.value })}
+                  placeholder="Set or expansion name"
+                  style={inputStyle}
+                />
+              </FieldLabel>
+
+              <div className="flex items-end">
+                <label
+                  className="flex items-center gap-2 cursor-pointer font-mono uppercase"
+                  style={{
+                    fontSize: '0.66rem',
+                    letterSpacing: '0.18em',
+                    fontWeight: 600,
+                    color: form.foil ? 'var(--yellow)' : 'var(--ink-soft)',
+                    padding: '0.55rem 0.85rem',
+                    border: `1px solid ${form.foil ? 'rgba(251,219,101,0.4)' : 'var(--rule-hi)'}`,
+                    background: form.foil ? 'var(--yellow-mute)' : 'var(--panel)',
+                    minHeight: 44,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.foil}
+                    onChange={(e) => setForm({ ...form, foil: e.target.checked })}
+                    className="accent-yellow-500"
+                  />
+                  Foil / Holographic
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowAddForm(false);
+                  setForm({ ...EMPTY_FORM });
+                  setError(null);
+                }}
+                className="inline-flex items-center font-mono uppercase transition-colors"
+                style={{
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.18em',
+                  fontWeight: 600,
+                  padding: '0 1rem',
+                  minHeight: 48,
+                  color: 'var(--ink-soft)',
+                  border: '1px solid var(--rule-hi)',
+                  background: 'transparent',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={submitting}
+                className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                style={{
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.06em',
+                  fontWeight: 700,
+                  padding: '0 1.15rem',
+                  minHeight: 48,
+                  color: 'var(--void)',
+                  background: 'var(--orange)',
+                  border: '1px solid var(--orange)',
+                }}
+              >
+                {submitting ? "Creating…" : "Create Item"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center">
-          <p className="text-sm text-red-400">{loadError}</p>
+        <div
+          className="flex items-center justify-between gap-3"
+          style={{
+            border: '1px solid rgba(214,90,90,0.35)',
+            background: 'var(--red-mute)',
+            padding: '0.75rem 1rem',
+          }}
+        >
+          <p className="font-mono uppercase text-red-fu" style={{ fontSize: '0.7rem', letterSpacing: '0.06em' }}>
+            ! {loadError}
+          </p>
           <button
             onClick={() => { setLoadError(null); loadInventory(); }}
-            className="mt-2 text-xs text-red-300 underline hover:text-red-200"
+            className="font-mono uppercase text-red-fu hover:text-ink transition-colors"
+            style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}
           >
-            Try again
+            Try again →
           </button>
         </div>
       )}
 
       {loading ? (
-        <div className="text-center text-muted py-12">
-          Loading inventory...
-        </div>
+        <p
+          className="font-mono uppercase text-ink-soft"
+          style={{ fontSize: '0.7rem', letterSpacing: '0.18em', padding: '2rem 0', textAlign: 'center' }}
+        >
+          Loading inventory…
+        </p>
       ) : items.length === 0 && !loadError ? (
-        <EmptyState
-          icon="&#x1F4E6;"
-          title={searchQuery ? "No items match your search" : "No inventory items yet"}
-          description={searchQuery ? undefined : "Add your first item to start tracking inventory."}
-          action={!searchQuery ? { label: "Add Your First Item", onClick: () => setShowAddForm(true) } : undefined}
-        />
+        <div className="ar-zone">
+          <div className="p-12 text-center flex flex-col items-center gap-3">
+            <div
+              className="font-mono uppercase text-ink-faint"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}
+            >
+              {searchQuery ? 'No matches' : 'No inventory yet'}
+            </div>
+            <p className="font-display text-ink" style={{ fontSize: '1.2rem', letterSpacing: '0.005em' }}>
+              {searchQuery ? 'Try a different search term.' : 'Add your first item to start tracking.'}
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="mt-2 inline-flex items-center font-display uppercase"
+                style={{
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.06em',
+                  fontWeight: 700,
+                  padding: '0.7rem 1.15rem',
+                  minHeight: 48,
+                  color: 'var(--void)',
+                  background: 'var(--orange)',
+                  border: '1px solid var(--orange)',
+                }}
+              >
+                Add Your First Item
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
         <>
-          {/* Mobile sort controls */}
-          <div className="md:hidden flex gap-2 flex-wrap">
+          {/* Mobile sort pills */}
+          <div className="md:hidden flex gap-1.5 flex-wrap">
             {([
               { field: "name" as SortField, label: "Name" },
               { field: "price" as SortField, label: "Price" },
               { field: "quantity" as SortField, label: "Qty" },
               { field: "category" as SortField, label: "Category" },
-            ]).map((s) => (
-              <button
-                key={s.field}
-                onClick={() => handleSort(s.field)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  sortField === s.field
-                    ? "border-accent bg-accent-light text-accent"
-                    : "border-card-border bg-card text-muted hover:border-accent/50"
-                }`}
-              >
-                {s.label}{getSortArrow(s.field)}
-              </button>
-            ))}
+            ]).map((s) => {
+              const on = sortField === s.field;
+              return (
+                <button
+                  key={s.field}
+                  onClick={() => handleSort(s.field)}
+                  className="inline-flex items-center font-mono uppercase transition-colors"
+                  style={{
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.16em',
+                    fontWeight: 600,
+                    padding: '0 0.75rem',
+                    minHeight: 36,
+                    color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                    border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                    background: on ? 'var(--orange-mute)' : 'var(--panel)',
+                  }}
+                >
+                  {s.label}{getSortArrow(s.field)}
+                </button>
+              );
+            })}
           </div>
 
           {/* Mobile card view */}
-          <div className="md:hidden space-y-3">
-            {sortedItems.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-xl border border-card-border bg-card p-4 shadow-sm dark:shadow-none"
-              >
-                <div className="flex items-center justify-between">
-                  <Link
-                    href={`/dashboard/inventory/${item.id}`}
-                    className="font-semibold text-foreground truncate mr-2 leading-snug hover:text-accent transition-colors"
-                  >
-                    {item.name}
-                    {Boolean((item.attributes as Record<string, unknown>)?.foil) && (
-                      <StatusBadge variant="pending" className="ml-1.5">Foil</StatusBadge>
-                    )}
-                    {item.shared_to_catalog && (
-                      <StatusBadge variant="info" className="ml-1.5">Shared</StatusBadge>
-                    )}
+          <div
+            className="md:hidden flex flex-col"
+            style={{ gap: 1, background: 'var(--rule)', border: '1px solid var(--rule)' }}
+          >
+            {sortedItems.map((item) => {
+              const isFoil = Boolean((item.attributes as Record<string, unknown>)?.foil);
+              return (
+                <div
+                  key={item.id}
+                  className="ar-lstripe"
+                  style={{
+                    background: 'var(--panel-mute)',
+                    padding: '0.85rem 1rem',
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <Link
+                      href={`/dashboard/inventory/${item.id}`}
+                      className="font-display text-ink hover:text-orange transition-colors truncate min-w-0 flex-1"
+                      style={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '0.005em' }}
+                    >
+                      {item.name}
+                    </Link>
+                    <span
+                      className="font-mono tabular-nums shrink-0"
+                      style={{ fontSize: '0.84rem', color: 'var(--ink)', fontWeight: 600 }}
+                    >
+                      {formatCents(item.price_cents)}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 flex-wrap">
+                    <span
+                      className="font-mono"
+                      style={{
+                        fontSize: '0.62rem',
+                        letterSpacing: '0.04em',
+                        color: 'var(--ink-faint)',
+                      }}
+                    >
+                      {getCategoryLabel(item.category)}
+                    </span>
+                    {isFoil && <ItemTag tone="yellow">Foil</ItemTag>}
+                    {item.lendable && <ItemTag tone="teal">Lendable</ItemTag>}
+                    {item.shared_to_catalog && <ItemTag tone="orange">Shared</ItemTag>}
                     {item.catalog_product_id && !item.shared_to_catalog && (
-                      <StatusBadge variant="info" className="ml-1.5">Linked</StatusBadge>
+                      <ItemTag tone="ink">Linked</ItemTag>
                     )}
-                  </Link>
-                  <span className="text-sm font-semibold text-foreground whitespace-nowrap tabular-nums">
-                    {formatCents(item.price_cents)}
-                  </span>
-                </div>
-                <div className="mt-1.5 flex items-center justify-between">
-                  <span className="text-xs text-muted">{getCategoryLabel(item.category)}</span>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-medium ${getStockColor(item.quantity)}`}>
-                      Qty: {item.quantity}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span
+                      className="font-mono tabular-nums"
+                      style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        color: stockColor(item.quantity),
+                      }}
+                    >
+                      Qty {item.quantity}
                     </span>
                     {can("inventory.adjust") && (
                       <div className="flex items-center gap-1">
                         {item.category === "board_game" && (
-                          <button
+                          <RowBtn
+                            on={item.lendable ?? false}
+                            tone="teal"
                             onClick={() => handleToggleLendable(item)}
-                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-h-11 flex items-center ${
-                              item.lendable
-                                ? "bg-green-600/20 text-green-400 hover:bg-green-600/30"
-                                : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
-                            }`}
                           >
                             {item.lendable ? "Lendable" : "Lend"}
-                          </button>
+                          </RowBtn>
                         )}
-                        <button
+                        <RowBtn
+                          on={item.shared_to_catalog ?? false}
+                          tone="orange"
                           onClick={() => handleToggleCatalogShare(item)}
-                          className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-h-11 flex items-center ${
-                            item.shared_to_catalog
-                              ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
-                              : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
-                          }`}
                         >
                           {item.shared_to_catalog ? "Unshare" : "Share"}
-                        </button>
-                        <button
+                        </RowBtn>
+                        <RowBtn
+                          tone="orange"
                           onClick={() =>
                             setAdjust({
                               item,
@@ -814,101 +1118,180 @@ export default function InventoryPage() {
                               notes: "",
                             })
                           }
-                          className="rounded-md bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/30 transition-colors min-h-11 flex items-center"
                         >
                           Adjust
-                        </button>
+                        </RowBtn>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border scroll-visible">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800 bg-card text-left text-muted">
-                  <th
-                    className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors"
-                    onClick={() => handleSort("name")}
-                  >
-                    Name{getSortArrow("name")}
-                  </th>
-                  <th
-                    className="px-4 py-3 font-medium cursor-pointer hover:text-foreground select-none transition-colors"
-                    onClick={() => handleSort("category")}
-                  >
-                    Category{getSortArrow("category")}
-                  </th>
-                  <th
-                    className="px-4 py-3 font-medium text-right cursor-pointer hover:text-foreground select-none transition-colors"
-                    onClick={() => handleSort("price")}
-                  >
-                    Price{getSortArrow("price")}
-                  </th>
-                  <th className="px-4 py-3 font-medium text-right">Cost</th>
-                  <th
-                    className="px-4 py-3 font-medium text-center cursor-pointer hover:text-foreground select-none transition-colors"
-                    onClick={() => handleSort("quantity")}
-                  >
-                    Qty{getSortArrow("quantity")}
-                  </th>
-                  <th className="px-4 py-3 font-medium">Condition</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  {can("inventory.adjust") && (
-                    <th className="px-4 py-3 font-medium text-center">Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {sortedItems.map((item) => (
-                  <tr
+          {/* Desktop dense list — TCG-pro style rows */}
+          <div className="hidden md:block ar-zone">
+            <div className="ar-zone-head">
+              <span>Stock</span>
+              <span style={{ color: 'var(--ink-faint)' }}>
+                {sortedItems.length.toLocaleString()} of {(totalItems > 0 ? totalItems : kpis.uniqueSkus).toLocaleString()}
+              </span>
+            </div>
+            {/* Column headers */}
+            <div
+              className="grid items-center font-mono uppercase text-ink-faint"
+              style={{
+                gridTemplateColumns: '46px 1fr 140px 110px 90px 110px 220px',
+                gap: '0.85rem',
+                padding: '0.55rem 1rem',
+                background: 'var(--panel-mute)',
+                borderBottom: '1px solid var(--rule)',
+                fontSize: '0.55rem',
+                letterSpacing: '0.22em',
+                fontWeight: 600,
+              }}
+            >
+              <span>#</span>
+              <button
+                type="button"
+                onClick={() => handleSort('name')}
+                className="text-left hover:text-ink transition-colors"
+              >
+                Item{getSortArrow('name')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSort('category')}
+                className="text-left hover:text-ink transition-colors"
+              >
+                Category{getSortArrow('category')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSort('price')}
+                className="text-right hover:text-ink transition-colors"
+              >
+                Price{getSortArrow('price')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSort('quantity')}
+                className="text-right hover:text-ink transition-colors"
+              >
+                Qty{getSortArrow('quantity')}
+              </button>
+              <span className="text-left">Status</span>
+              {can("inventory.adjust") ? (
+                <span className="text-right">Actions</span>
+              ) : (
+                <span />
+              )}
+            </div>
+
+            {/* Rows */}
+            <div className="ar-stagger flex flex-col">
+              {sortedItems.map((item, idx) => {
+                const isFoil = Boolean((item.attributes as Record<string, unknown>)?.foil);
+                const cond = String((item.attributes as Record<string, unknown>)?.condition ?? '');
+                return (
+                  <div
                     key={item.id}
-                    className="bg-background hover:bg-card/50 transition-colors"
+                    className="ar-lstripe grid items-center hover:bg-panel transition-colors"
+                    style={{
+                      gridTemplateColumns: '46px 1fr 140px 110px 90px 110px 220px',
+                      gap: '0.85rem',
+                      padding: '0.7rem 1rem',
+                      minHeight: 64,
+                      background: 'var(--panel-mute)',
+                      borderBottom: '1px solid var(--rule-faint)',
+                    }}
                   >
-                    <td className="px-4 py-3 text-foreground font-medium">
-                      <Link
-                        href={`/dashboard/inventory/${item.id}`}
-                        className="hover:text-accent transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                      {Boolean((item.attributes as Record<string, unknown>)?.foil) && (
-                        <span className="ml-2 inline-block rounded bg-yellow-900/50 px-1.5 py-0.5 text-xs text-yellow-400">
-                          Foil
-                        </span>
+                    {/* Index thumbnail */}
+                    <div
+                      className="font-mono tabular-nums"
+                      style={{
+                        width: 46,
+                        height: 46,
+                        background: 'var(--panel)',
+                        border: '1px solid var(--rule-hi)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--ink-faint)',
+                        fontSize: '0.7rem',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {(((page - 1) * pageSize) + idx + 1).toString().padStart(3, '0')}
+                    </div>
+
+                    {/* Name + meta */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          href={`/dashboard/inventory/${item.id}`}
+                          className="font-display text-ink hover:text-orange transition-colors truncate"
+                          style={{ fontSize: '0.98rem', fontWeight: 500, letterSpacing: '0.005em' }}
+                        >
+                          {item.name}
+                        </Link>
+                        {isFoil && <ItemTag tone="yellow">Foil</ItemTag>}
+                        {item.lendable && <ItemTag tone="teal">Lendable</ItemTag>}
+                        {item.shared_to_catalog && <ItemTag tone="orange">Shared</ItemTag>}
+                        {item.catalog_product_id && !item.shared_to_catalog && (
+                          <ItemTag tone="ink">Linked</ItemTag>
+                        )}
+                      </div>
+                      {(item.barcode || cond) && (
+                        <div
+                          className="font-mono mt-1 flex items-center gap-2 flex-wrap"
+                          style={{
+                            fontSize: '0.62rem',
+                            letterSpacing: '0.04em',
+                            color: 'var(--ink-faint)',
+                          }}
+                        >
+                          {item.barcode && <span>{item.barcode}</span>}
+                          {cond && (
+                            <span style={{ color: 'var(--ink-soft)', fontWeight: 600 }}>· {cond}</span>
+                          )}
+                          <span style={{ color: 'var(--ink-soft)' }}>
+                            · cost {formatCents(item.cost_cents)}
+                          </span>
+                        </div>
                       )}
-                      {item.lendable && (
-                        <span className="ml-2 inline-block rounded bg-green-900/50 px-1.5 py-0.5 text-xs text-green-400">
-                          Lendable
-                        </span>
-                      )}
-                      {item.shared_to_catalog && (
-                        <span className="ml-2 inline-block rounded bg-blue-900/50 px-1.5 py-0.5 text-xs text-blue-400">
-                          Shared
-                        </span>
-                      )}
-                      {item.catalog_product_id && !item.shared_to_catalog && (
-                        <span className="ml-2 inline-block rounded bg-zinc-700 px-1.5 py-0.5 text-xs text-muted">
-                          Linked
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-muted">
+                    </div>
+
+                    {/* Category */}
+                    <span
+                      className="font-mono uppercase truncate"
+                      style={{
+                        fontSize: '0.66rem',
+                        letterSpacing: '0.12em',
+                        color: 'var(--ink-soft)',
+                        fontWeight: 600,
+                      }}
+                    >
                       {getCategoryLabel(item.category)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-foreground">
+                    </span>
+
+                    {/* Price */}
+                    <span
+                      className="font-mono tabular-nums text-right"
+                      style={{ fontSize: '0.95rem', color: 'var(--ink)', fontWeight: 600 }}
+                    >
                       {formatCents(item.price_cents)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-muted">
-                      {formatCents(item.cost_cents)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    </span>
+
+                    {/* Qty */}
+                    <div className="text-right">
                       <span
-                        className={`font-medium ${getStockColor(item.quantity)}`}
+                        className="font-mono tabular-nums"
+                        style={{
+                          fontSize: '0.95rem',
+                          color: stockColor(item.quantity),
+                          fontWeight: 700,
+                        }}
                       >
                         {item.quantity}
                       </span>
@@ -930,78 +1313,92 @@ export default function InventoryPage() {
                               setLocationLevels([]);
                             }
                           }}
-                          className="block mx-auto mt-0.5 text-[10px] text-zinc-500 hover:text-blue-400 transition-colors"
+                          className="block ml-auto font-mono uppercase text-ink-faint hover:text-orange transition-colors"
+                          style={{
+                            fontSize: '0.55rem',
+                            letterSpacing: '0.18em',
+                            fontWeight: 600,
+                            marginTop: 2,
+                          }}
                         >
-                          {showLocationBreakdown === item.id ? "hide" : "by location"}
+                          {showLocationBreakdown === item.id ? "hide" : "by loc"}
                         </button>
                       )}
                       {showLocationBreakdown === item.id && locationLevels.length > 0 && (
-                        <div className="mt-1 space-y-0.5">
+                        <div
+                          className="mt-1 font-mono"
+                          style={{ fontSize: '0.6rem', color: 'var(--ink-faint)' }}
+                        >
                           {locationLevels.map((ll) => (
-                            <div key={ll.location_id} className="text-[10px] text-muted">
-                              {ll.location_name}: <span className="text-foreground">{ll.quantity}</span>
+                            <div key={ll.location_id} className="tabular-nums">
+                              {ll.location_name}:{' '}
+                              <span style={{ color: 'var(--ink)' }}>{ll.quantity}</span>
                             </div>
                           ))}
                         </div>
                       )}
                       {showLocationBreakdown === item.id && locationLevels.length === 0 && (
-                        <div className="mt-1 text-[10px] text-zinc-500">No location data</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-muted">
-                      {String((item.attributes as Record<string, unknown>)?.condition ?? "\u2014")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge variant={item.active ? "success" : "info"}>
-                        {item.active ? "Active" : "Inactive"}
-                      </StatusBadge>
-                    </td>
-                    {can("inventory.adjust") && (
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          {item.category === "board_game" && (
-                            <button
-                              onClick={() => handleToggleLendable(item)}
-                              className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
-                                item.lendable
-                                  ? "bg-green-600/20 text-green-400 hover:bg-green-600/30"
-                                  : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
-                              }`}
-                            >
-                              {item.lendable ? "Lendable" : "Lend"}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleToggleCatalogShare(item)}
-                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
-                              item.shared_to_catalog
-                                ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
-                                : "bg-zinc-700/50 text-muted hover:bg-zinc-700"
-                            }`}
-                          >
-                            {item.shared_to_catalog ? "Unshare" : "Share"}
-                          </button>
-                          <button
-                            onClick={() =>
-                              setAdjust({
-                                item,
-                                type: "add",
-                                amount: "",
-                                reason: "",
-                                notes: "",
-                              })
-                            }
-                            className="rounded-md bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/30 transition-colors"
-                          >
-                            Adjust Stock
-                          </button>
+                        <div
+                          className="mt-1 font-mono"
+                          style={{ fontSize: '0.6rem', color: 'var(--ink-ghost)' }}
+                        >
+                          No location data
                         </div>
-                      </td>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <span>
+                      {item.active ? (
+                        <ItemTag tone="teal">Active</ItemTag>
+                      ) : (
+                        <ItemTag tone="ink">Inactive</ItemTag>
+                      )}
+                    </span>
+
+                    {/* Actions */}
+                    {can("inventory.adjust") ? (
+                      <div className="flex items-center justify-end gap-1">
+                        {item.category === "board_game" && (
+                          <RowBtn
+                            on={item.lendable ?? false}
+                            tone="teal"
+                            onClick={() => handleToggleLendable(item)}
+                          >
+                            {item.lendable ? "Lendable" : "Lend"}
+                          </RowBtn>
+                        )}
+                        <RowBtn
+                          on={item.shared_to_catalog ?? false}
+                          tone="orange"
+                          onClick={() => handleToggleCatalogShare(item)}
+                        >
+                          {item.shared_to_catalog ? "Unshare" : "Share"}
+                        </RowBtn>
+                        <RowBtn
+                          tone="orange"
+                          primary
+                          onClick={() =>
+                            setAdjust({
+                              item,
+                              type: "add",
+                              amount: "",
+                              reason: "",
+                              notes: "",
+                            })
+                          }
+                        >
+                          Adjust
+                        </RowBtn>
+                      </div>
+                    ) : (
+                      <span />
                     )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </div>
+                );
+              })}
+            </div>
+
             <Pagination
               page={page}
               pageSize={pageSize}
@@ -1017,7 +1414,8 @@ export default function InventoryPage() {
       {/* Stock Adjustment Modal */}
       {adjust && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg"
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'var(--overlay-bg)' }}
           onClick={() => {
             setAdjust(null);
             setAdjustError(null);
@@ -1041,153 +1439,232 @@ export default function InventoryPage() {
               el.addEventListener("focusin", handler);
               return () => el.removeEventListener("focusin", handler);
             }}
-            className="w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl mx-4 max-h-[90vh] overflow-y-auto scroll-visible"
+            className="w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto scroll-visible"
+            style={{
+              background: 'var(--panel-mute)',
+              border: '1px solid var(--rule)',
+              boxShadow: '0 20px 50px -10px rgba(0,0,0,0.6)',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-lg font-semibold text-foreground">
-                Adjust Stock
-              </h2>
+            <div
+              className="flex items-center justify-between"
+              style={{
+                padding: '0.85rem 1.1rem',
+                background: 'var(--slate)',
+                borderBottom: '1px solid var(--rule)',
+              }}
+            >
+              <div>
+                <p
+                  className="font-mono uppercase text-ink-faint"
+                  style={{ fontSize: '0.55rem', letterSpacing: '0.28em', fontWeight: 600 }}
+                >
+                  Adjust Stock
+                </p>
+                <h2
+                  className="font-display text-ink mt-1 truncate"
+                  style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '0.005em' }}
+                >
+                  {adjust.item.name}
+                </h2>
+              </div>
               <button
                 onClick={() => {
                   setAdjust(null);
                   setAdjustError(null);
                 }}
-                className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg"
+                aria-label="Close"
+                className="font-mono text-ink-faint hover:text-ink transition-colors shrink-0"
+                style={{
+                  fontSize: '1.4rem',
+                  width: 36,
+                  height: 36,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                &times;
-              </button>
-            </div>
-            <p className="text-sm text-muted mb-4">{adjust.item.name}</p>
-
-            {/* Current quantity */}
-            <div className="mb-4 rounded-md bg-background border border-card-border px-4 py-3 flex items-center justify-between">
-              <span className="text-sm text-muted">Current Quantity</span>
-              <span className="text-lg font-bold text-foreground">
-                {adjust.item.quantity}
-              </span>
-            </div>
-
-            {adjustError && (
-              <p className="mb-3 text-sm text-red-400">{adjustError}</p>
-            )}
-
-            {/* Add / Remove toggle */}
-            <div className="mb-4 grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setAdjust({ ...adjust, type: "add" })}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  adjust.type === "add"
-                    ? "bg-emerald-600 text-foreground"
-                    : "bg-zinc-800 text-muted hover:bg-zinc-700"
-                }`}
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setAdjust({ ...adjust, type: "remove" })}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  adjust.type === "remove"
-                    ? "bg-red-600 text-foreground"
-                    : "bg-zinc-800 text-muted hover:bg-zinc-700"
-                }`}
-              >
-                Remove
+                ×
               </button>
             </div>
 
-            {/* Amount */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-muted mb-1">
-                Amount
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={adjust.amount}
-                onChange={(e) =>
-                  setAdjust({ ...adjust, amount: e.target.value })
-                }
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                placeholder="Enter quantity"
-                autoFocus
-              />
-            </div>
-
-            {/* Reason */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-muted mb-1">
-                Reason *
-              </label>
-              <select
-                value={adjust.reason}
-                onChange={(e) =>
-                  setAdjust({ ...adjust, reason: e.target.value })
-                }
-                className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
+            <div className="p-4 flex flex-col gap-4">
+              {/* Current quantity */}
+              <div
+                className="flex items-center justify-between"
+                style={{
+                  background: 'var(--panel)',
+                  border: '1px solid var(--rule-hi)',
+                  padding: '0.85rem 1rem',
+                }}
               >
-                <option value="">Select a reason...</option>
-                {ADJUSTMENT_REASONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Notes */}
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-muted mb-1">
-                Notes (optional)
-              </label>
-              <textarea
-                value={adjust.notes}
-                onChange={(e) =>
-                  setAdjust({ ...adjust, notes: e.target.value })
-                }
-                rows={2}
-                className="w-full rounded-xl border border-input-border bg-input-bg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none resize-none"
-                placeholder="Additional details..."
-              />
-            </div>
-
-            {/* Preview */}
-            {adjust.amount && parseInt(adjust.amount, 10) > 0 && (
-              <div className="mb-4 rounded-md bg-background border border-card-border px-4 py-3 flex items-center justify-between">
-                <span className="text-sm text-muted">New Quantity</span>
-                <span className="text-lg font-bold text-foreground">
-                  {adjust.type === "add"
-                    ? adjust.item.quantity + parseInt(adjust.amount, 10)
-                    : Math.max(
-                        0,
-                        adjust.item.quantity - parseInt(adjust.amount, 10)
-                      )}
+                <span
+                  className="font-mono uppercase text-ink-faint"
+                  style={{ fontSize: '0.6rem', letterSpacing: '0.22em', fontWeight: 600 }}
+                >
+                  Current Quantity
+                </span>
+                <span
+                  className="font-display tabular-nums text-ink"
+                  style={{ fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.01em' }}
+                >
+                  {adjust.item.quantity}
                 </span>
               </div>
-            )}
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setAdjust(null);
-                  setAdjustError(null);
-                }}
-                className="flex-1 rounded-xl border border-card-border px-4 py-2 text-sm text-muted hover:bg-card-hover transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAdjustSubmit}
-                disabled={adjustSubmitting}
-                className={`flex-1 rounded-md px-4 py-2 text-sm font-medium text-foreground transition-colors ${
-                  adjust.type === "add"
-                    ? "bg-emerald-600 hover:bg-emerald-500"
-                    : "bg-red-600 hover:bg-red-500"
-                } disabled:opacity-50`}
-              >
-                {adjustSubmitting ? "Adjusting..." : "Confirm Adjustment"}
-              </button>
+              {adjustError && (
+                <p
+                  className="font-mono"
+                  style={{
+                    fontSize: '0.7rem',
+                    letterSpacing: '0.06em',
+                    color: 'var(--red)',
+                    background: 'var(--red-mute)',
+                    border: '1px solid rgba(214,90,90,0.35)',
+                    padding: '0.55rem 0.75rem',
+                  }}
+                >
+                  ! {adjustError}
+                </p>
+              )}
+
+              {/* Add / Remove segment */}
+              <div className="grid grid-cols-2 gap-px" style={{ background: 'var(--rule-hi)' }}>
+                {(['add', 'remove'] as const).map((t) => {
+                  const on = adjust.type === t;
+                  const tone = t === 'add' ? 'var(--teal)' : 'var(--red)';
+                  const tint = t === 'add' ? 'var(--teal-mute)' : 'var(--red-mute)';
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setAdjust({ ...adjust, type: t })}
+                      className="font-mono uppercase transition-colors"
+                      style={{
+                        fontSize: '0.7rem',
+                        letterSpacing: '0.18em',
+                        fontWeight: 700,
+                        padding: '0 1rem',
+                        minHeight: 48,
+                        color: on ? tone : 'var(--ink-soft)',
+                        background: on ? tint : 'var(--panel-mute)',
+                      }}
+                    >
+                      {t === 'add' ? '+ Add' : '− Remove'}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Amount */}
+              <FieldLabel label="Amount" required>
+                <input
+                  type="number"
+                  min={1}
+                  value={adjust.amount}
+                  onChange={(e) => setAdjust({ ...adjust, amount: e.target.value })}
+                  placeholder="Enter quantity"
+                  autoFocus
+                  style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }}
+                />
+              </FieldLabel>
+
+              {/* Reason */}
+              <FieldLabel label="Reason" required>
+                <select
+                  value={adjust.reason}
+                  onChange={(e) => setAdjust({ ...adjust, reason: e.target.value })}
+                  style={selectStyle}
+                >
+                  <option value="">Select a reason…</option>
+                  {ADJUSTMENT_REASONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </FieldLabel>
+
+              {/* Notes */}
+              <FieldLabel label="Notes (optional)">
+                <textarea
+                  value={adjust.notes}
+                  onChange={(e) => setAdjust({ ...adjust, notes: e.target.value })}
+                  rows={2}
+                  placeholder="Additional details…"
+                  style={{ ...inputStyle, resize: 'none' }}
+                />
+              </FieldLabel>
+
+              {/* Preview */}
+              {adjust.amount && parseInt(adjust.amount, 10) > 0 && (
+                <div
+                  className="flex items-center justify-between"
+                  style={{
+                    background: 'var(--orange-mute)',
+                    border: '1px solid rgba(255,122,0,0.25)',
+                    padding: '0.85rem 1rem',
+                  }}
+                >
+                  <span
+                    className="font-mono uppercase"
+                    style={{
+                      fontSize: '0.6rem',
+                      letterSpacing: '0.22em',
+                      fontWeight: 600,
+                      color: 'var(--orange)',
+                    }}
+                  >
+                    New Quantity
+                  </span>
+                  <span
+                    className="font-display tabular-nums text-ink"
+                    style={{ fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.01em' }}
+                  >
+                    {adjust.type === "add"
+                      ? adjust.item.quantity + parseInt(adjust.amount, 10)
+                      : Math.max(0, adjust.item.quantity - parseInt(adjust.amount, 10))}
+                  </span>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => {
+                    setAdjust(null);
+                    setAdjustError(null);
+                  }}
+                  className="flex-1 inline-flex items-center justify-center font-mono uppercase transition-colors"
+                  style={{
+                    fontSize: '0.7rem',
+                    letterSpacing: '0.18em',
+                    fontWeight: 600,
+                    minHeight: 48,
+                    color: 'var(--ink-soft)',
+                    border: '1px solid var(--rule-hi)',
+                    background: 'transparent',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAdjustSubmit}
+                  disabled={adjustSubmitting}
+                  className="flex-1 inline-flex items-center justify-center font-display uppercase transition-colors disabled:opacity-50"
+                  style={{
+                    fontSize: '0.85rem',
+                    letterSpacing: '0.06em',
+                    fontWeight: 700,
+                    minHeight: 48,
+                    color: 'var(--void)',
+                    background: 'var(--orange)',
+                    border: '1px solid var(--orange)',
+                  }}
+                >
+                  {adjustSubmitting ? "Adjusting…" : "Confirm"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1227,5 +1704,176 @@ export default function InventoryPage() {
         />
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function KpiCell({
+  k,
+  v,
+  sub,
+  primary,
+  tone,
+}: {
+  k: string;
+  v: string;
+  sub?: string;
+  primary?: boolean;
+  tone?: 'warn' | 'err' | 'ok';
+}) {
+  const toneColor =
+    tone === 'warn' ? 'var(--yellow)' : tone === 'err' ? 'var(--red)' : tone === 'ok' ? 'var(--teal)' : undefined;
+  return (
+    <div
+      className="bg-panel-mute flex flex-col justify-between"
+      style={{ padding: '0.85rem 1.1rem', minHeight: 92 }}
+    >
+      <div
+        className="font-mono uppercase text-ink-faint"
+        style={{ fontSize: '0.55rem', letterSpacing: '0.24em', fontWeight: 600 }}
+      >
+        {k}
+      </div>
+      <div
+        className="font-display leading-none mt-2 truncate"
+        style={{
+          fontWeight: 700,
+          fontSize: 'clamp(1.25rem, 2.5vw, 1.85rem)',
+          letterSpacing: '-0.01em',
+          color: toneColor ?? (primary ? 'var(--orange)' : 'var(--ink)'),
+        }}
+      >
+        {v}
+      </div>
+      {sub && (
+        <div
+          className="font-mono mt-2 truncate"
+          style={{
+            fontSize: '0.62rem',
+            letterSpacing: '0.04em',
+            color: toneColor ?? 'var(--ink-soft)',
+          }}
+        >
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FieldLabel({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span
+        className="font-mono uppercase text-ink-soft"
+        style={{ fontSize: '0.6rem', letterSpacing: '0.22em', fontWeight: 600 }}
+      >
+        {label}
+        {required ? <span className="text-orange ml-1">*</span> : null}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+/**
+ * Inline status tag — color is paired with text label so it's never alone.
+ */
+function ItemTag({
+  tone,
+  children,
+}: {
+  tone: 'orange' | 'yellow' | 'teal' | 'red' | 'ink';
+  children: React.ReactNode;
+}) {
+  const map = {
+    orange: { color: 'var(--orange)', bg: 'var(--orange-mute)', border: 'rgba(255,122,0,0.35)' },
+    yellow: { color: 'var(--yellow)', bg: 'var(--yellow-mute)', border: 'rgba(251,219,101,0.35)' },
+    teal: { color: 'var(--teal)', bg: 'var(--teal-mute)', border: 'rgba(94,176,155,0.30)' },
+    red: { color: 'var(--red)', bg: 'var(--red-mute)', border: 'rgba(214,90,90,0.35)' },
+    ink: { color: 'var(--ink-soft)', bg: 'var(--panel)', border: 'var(--rule-hi)' },
+  } as const;
+  const cfg = map[tone];
+  return (
+    <span
+      className="inline-flex items-center font-mono uppercase"
+      style={{
+        fontSize: '0.55rem',
+        letterSpacing: '0.14em',
+        fontWeight: 700,
+        padding: '1px 5px',
+        color: cfg.color,
+        background: cfg.bg,
+        border: `1px solid ${cfg.border}`,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Compact in-row action button. `on` = active toggle state. `primary` = solid orange.
+ */
+function RowBtn({
+  on,
+  tone,
+  primary,
+  children,
+  onClick,
+}: {
+  on?: boolean;
+  tone: 'orange' | 'teal';
+  primary?: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  const tones = {
+    orange: {
+      onColor: 'var(--orange)',
+      onBg: 'var(--orange-mute)',
+      onBorder: 'var(--orange)',
+    },
+    teal: {
+      onColor: 'var(--teal)',
+      onBg: 'var(--teal-mute)',
+      onBorder: 'rgba(94,176,155,0.5)',
+    },
+  } as const;
+  const cfg = tones[tone];
+  const isPrimary = primary;
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
+      className="inline-flex items-center font-mono uppercase transition-colors"
+      style={{
+        fontSize: '0.62rem',
+        letterSpacing: '0.14em',
+        fontWeight: 700,
+        padding: '0 0.6rem',
+        minHeight: 36,
+        color: isPrimary ? 'var(--void)' : on ? cfg.onColor : 'var(--ink-soft)',
+        background: isPrimary ? cfg.onColor : on ? cfg.onBg : 'var(--panel)',
+        border: `1px solid ${isPrimary ? cfg.onColor : on ? cfg.onBorder : 'var(--rule-hi)'}`,
+      }}
+    >
+      {children}
+    </button>
   );
 }
