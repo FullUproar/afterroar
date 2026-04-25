@@ -149,7 +149,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // Permission overrides from store settings
   const roleOverrides = (store?.settings?.role_permissions ?? null) as RolePermissionOverrides | null;
-  const plan = ((store?.settings?.plan as string) || "enterprise") as StorePlan;
+  // Plan defaults — when store hasn't loaded yet (store is null), we have to
+  // pick a side. "enterprise" is fail-OPEN (everyone sees premium features
+  // briefly during load, then API rejects). "free" is fail-CLOSED (everyone
+  // sees upgrade prompts briefly during load, then real plan reveals).
+  // We pick "free" because (a) operator confusion ("why can I click this if
+  // it's gated?") is worse than a brief gate flash, and (b) server-side
+  // requireFeature is fail-OPEN with the same default — so client-side
+  // fail-CLOSED forces the operator to wait for store load before acting,
+  // matching what the server will actually allow.
+  const plan = ((store?.settings?.plan as string) || (store ? "enterprise" : "free")) as StorePlan;
   const addons = ((store?.settings?.addons as string[]) || []) as FeatureModule[];
 
   const can = useCallback(

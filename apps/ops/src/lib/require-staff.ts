@@ -13,6 +13,12 @@ import {
 } from "./permissions";
 import { getActiveStaffFromCookie } from "./active-staff";
 
+/** God-admin email — kept in sync with store-context.tsx GOD_ADMIN_EMAIL.
+ *  This account bypasses both permission and feature-module checks server-side
+ *  so the platform owner can exercise every flow on every store, matching
+ *  the client-side bypass in useStore(). */
+const GOD_ADMIN_EMAIL = "info@fulluproar.com";
+
 /* ------------------------------------------------------------------ */
 /*  requireStaff() — shared auth + tenant scoping helper               */
 /*  Replaces the 16× repeated auth boilerplate in every API route.     */
@@ -130,6 +136,13 @@ export async function requireStaff(): Promise<StaffContext> {
   const plan = ((settings.plan as string) || "enterprise") as StorePlan;
   const addons = ((settings.addons as string[]) || []) as FeatureModule[];
 
+  // God-admin bypass — must match client-side in store-context.tsx so an
+  // operator who can see a UI affordance can also actually invoke its API.
+  // Without this, the client lets info@fulluproar.com click anything but
+  // the server still 403s on feature/permission gates → "why can I even try
+  // this" UX dead-end.
+  const isGodAdmin = session.user?.email === GOD_ADMIN_EMAIL;
+
   return {
     session: session as StaffContext["session"],
     staff,
@@ -137,8 +150,10 @@ export async function requireStaff(): Promise<StaffContext> {
     role,
     db,
     roleOverrides,
-    can: (permission: Permission) => hasPermission(role, permission, roleOverrides),
-    hasModule: (feature: FeatureModule) => hasFeature(plan, addons, feature),
+    can: (permission: Permission) =>
+      isGodAdmin || hasPermission(role, permission, roleOverrides),
+    hasModule: (feature: FeatureModule) =>
+      isGodAdmin || hasFeature(plan, addons, feature),
   };
 }
 
