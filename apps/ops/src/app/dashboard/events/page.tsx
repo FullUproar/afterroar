@@ -6,7 +6,6 @@ import { useStore } from '@/lib/store-context';
 import { GameEvent, EventCheckin, Customer, formatCents, parseDollars } from '@/lib/types';
 import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
-import { EmptyState } from '@/components/shared/ui';
 import { Pagination } from '@/components/ui/pagination';
 import { SubNav } from '@/components/ui/sub-nav';
 import { EVENTS_TABS } from '@/lib/nav-groups';
@@ -62,12 +61,6 @@ interface TournamentMatch {
   table_number: string | null;
 }
 
-const TOURNAMENT_STATUS_COLORS: Record<string, string> = {
-  registration: 'bg-blue-900 text-blue-300',
-  active: 'bg-green-900 text-green-300',
-  completed: 'bg-card-hover text-foreground/70',
-};
-
 const FORMAT_OPTIONS = [
   'standard', 'modern', 'commander', 'draft', 'sealed',
   'pioneer', 'pauper', 'legacy', 'vintage', 'other',
@@ -88,13 +81,76 @@ interface HQGuest {
   reputationScore: number | null;
 }
 
-function trustBadgeClasses(level: 'green' | 'yellow' | 'red') {
+/* ---------- shared styles ---------- */
+const inputStyle: React.CSSProperties = {
+  background: 'var(--panel)',
+  border: '1px solid var(--rule-hi)',
+  color: 'var(--ink)',
+  fontSize: '0.92rem',
+  padding: '0.65rem 0.85rem',
+  minHeight: 44,
+  outline: 'none',
+  width: '100%',
+};
+
+const ghostBtnStyle: React.CSSProperties = {
+  fontSize: '0.66rem',
+  letterSpacing: '0.18em',
+  fontWeight: 600,
+  padding: '0 0.85rem',
+  minHeight: 44,
+  color: 'var(--ink-soft)',
+  border: '1px solid var(--rule-hi)',
+  background: 'var(--panel)',
+};
+
+const primaryBtnStyle: React.CSSProperties = {
+  fontSize: '0.85rem',
+  letterSpacing: '0.06em',
+  fontWeight: 700,
+  padding: '0 1rem',
+  minHeight: 48,
+  color: 'var(--void)',
+  background: 'var(--orange)',
+  border: '1px solid var(--orange)',
+};
+
+const tealBtnStyle: React.CSSProperties = {
+  ...primaryBtnStyle,
+  background: 'var(--teal)',
+  border: '1px solid var(--teal)',
+};
+
+function trustBadgeStyle(level: 'green' | 'yellow' | 'red'): React.CSSProperties {
   const map = {
-    green: 'text-green-400 bg-green-900/30',
-    yellow: 'text-yellow-400 bg-yellow-900/30',
-    red: 'text-red-400 bg-red-900/30',
+    green: { color: 'var(--teal)', background: 'var(--teal-mute)', border: '1px solid var(--teal)' },
+    yellow: { color: 'var(--yellow)', background: 'var(--yellow-mute)', border: '1px solid var(--yellow)' },
+    red: { color: 'var(--red)', background: 'var(--red-mute)', border: '1px solid var(--red)' },
+  } as const;
+  return {
+    ...map[level],
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.6rem',
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase' as const,
+    fontWeight: 700,
+    padding: '2px 6px',
   };
-  return map[level];
+}
+
+function tournamentStatusStyle(status: string): React.CSSProperties {
+  const base: React.CSSProperties = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.6rem',
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    fontWeight: 700,
+    padding: '2px 6px',
+  };
+  if (status === 'registration') return { ...base, color: 'var(--orange)', background: 'var(--orange-mute)', border: '1px solid var(--orange)' };
+  if (status === 'active') return { ...base, color: 'var(--teal)', background: 'var(--teal-mute)', border: '1px solid var(--teal)' };
+  if (status === 'completed') return { ...base, color: 'var(--ink-soft)', background: 'var(--panel)', border: '1px solid var(--rule-hi)' };
+  return { ...base, color: 'var(--ink-soft)', background: 'var(--panel)', border: '1px solid var(--rule-hi)' };
 }
 
 function statusBadge(event: EventWithCount) {
@@ -240,29 +296,67 @@ export default function EventsPage() {
       <div className="space-y-1">
         <PageHeader
           title="Events"
+          crumb="Console · Floor"
+          desc="In-store play, tournaments, leagues, drafts. RSVPs, check-ins, and brackets in one panel."
           action={
-            <div className="flex gap-2">
-              <div className="flex rounded-lg border border-card-border overflow-hidden">
-                <button onClick={() => setViewMode("list")} className={`px-3 py-2 text-xs font-medium transition-colors ${viewMode === "list" ? "bg-card-hover text-foreground" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>List</button>
-                <button onClick={() => setViewMode("calendar")} className={`px-3 py-2 text-xs font-medium transition-colors ${viewMode === "calendar" ? "bg-card-hover text-foreground" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Calendar</button>
+            <div className="flex flex-wrap gap-2 justify-end">
+              <div className="flex overflow-hidden" style={{ border: '1px solid var(--rule-hi)' }}>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className="font-mono uppercase transition-colors"
+                  style={{
+                    fontSize: '0.66rem',
+                    letterSpacing: '0.18em',
+                    fontWeight: 600,
+                    padding: '0 0.85rem',
+                    minHeight: 44,
+                    color: viewMode === "list" ? 'var(--orange)' : 'var(--ink-soft)',
+                    background: viewMode === "list" ? 'var(--orange-mute)' : 'var(--panel)',
+                  }}
+                >
+                  List
+                </button>
+                <button
+                  onClick={() => setViewMode("calendar")}
+                  className="font-mono uppercase transition-colors"
+                  style={{
+                    fontSize: '0.66rem',
+                    letterSpacing: '0.18em',
+                    fontWeight: 600,
+                    padding: '0 0.85rem',
+                    minHeight: 44,
+                    color: viewMode === "calendar" ? 'var(--orange)' : 'var(--ink-soft)',
+                    background: viewMode === "calendar" ? 'var(--orange-mute)' : 'var(--panel)',
+                    borderLeft: '1px solid var(--rule-hi)',
+                  }}
+                >
+                  Calendar
+                </button>
               </div>
               <Link
                 href="/dashboard/deck-builder"
-                className="hidden sm:block px-4 py-2 rounded-lg border border-card-border text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+                className="hidden sm:inline-flex items-center font-mono uppercase transition-colors"
+                style={ghostBtnStyle}
               >
                 Deck Builder
               </Link>
               {isConnected && (
                 <button
                   onClick={() => { setShowForm(true); setCreateAsHQ(true); }}
-                  className="hidden sm:block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="hidden sm:inline-flex items-center font-mono uppercase transition-colors"
+                  style={{
+                    ...ghostBtnStyle,
+                    color: 'var(--orange)',
+                    border: '1px solid var(--orange)',
+                  }}
                 >
                   New Afterroar Event
                 </button>
               )}
               <button
                 onClick={() => { setShowForm(!showForm); setCreateAsHQ(false); }}
-                className="px-3 sm:px-4 py-2 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors shrink-0"
+                className="inline-flex items-center font-display uppercase transition-colors shrink-0"
+                style={primaryBtnStyle}
               >
                 {showForm && !createAsHQ ? 'Cancel' : 'New'}
               </button>
@@ -270,193 +364,258 @@ export default function EventsPage() {
           }
         />
         {isConnected ? (
-          <p className="text-sm text-muted">
+          <p className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="ar-led" style={{ fontSize: '0.6rem' }}>
+                <span className="ar-led-dot" />
+              </span>
               Connected to {venueName || 'Afterroar'}
             </span>
           </p>
         ) : (
-          <p className="text-xs text-muted">
+          <p className="font-mono text-ink-faint" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
             Connect to the Afterroar Network in{' '}
-            <a href="/dashboard/settings" className="text-accent hover:underline">Settings</a>
+            <a href="/dashboard/settings" className="text-orange hover:underline">Settings</a>
             {' '}to enable online RSVPs, player identity linking, and cross-store leaderboards.
           </p>
         )}
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-card border border-card-border rounded-xl p-4 space-y-4 shadow-sm dark:shadow-none">
-          {createAsHQ && (
-            <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 rounded-lg px-3 py-2">
-              <span className="h-2 w-2 rounded-full bg-purple-500" />
-              This event will also appear on your Afterroar store page. Players can RSVP online.
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-muted mb-1">Name</label>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Event Type</label>
-              <select
-                value={form.event_type}
-                onChange={(e) => setForm({ ...form, event_type: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
+        <form onSubmit={handleCreate} className="ar-zone">
+          <div className="ar-zone-head">
+            <span>{createAsHQ ? 'New Afterroar Event' : 'New Event'}</span>
+          </div>
+          <div className="p-5 space-y-4">
+            {createAsHQ && (
+              <div
+                className="flex items-center gap-2 px-3 py-2"
+                style={{ background: 'var(--orange-mute)', border: '1px solid var(--orange)', color: 'var(--orange)' }}
               >
-                <option value="fnm">FNM</option>
-                <option value="prerelease">Prerelease</option>
-                <option value="tournament">Tournament</option>
-                <option value="casual">Casual</option>
-                <option value="draft">Draft</option>
-                <option value="league">League</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Starts At</label>
-              <input
-                required
-                type="datetime-local"
-                value={form.starts_at}
-                onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Ends At</label>
-              <input
-                type="datetime-local"
-                value={form.ends_at}
-                onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Entry Fee ($)</label>
-              <input
-                type="text"
-                placeholder="0.00"
-                value={form.entry_fee}
-                onChange={(e) => setForm({ ...form, entry_fee: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-muted mb-1">Max Players</label>
-              <input
-                type="number"
-                value={form.max_players}
-                onChange={(e) => setForm({ ...form, max_players: e.target.value })}
-                className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-              />
-            </div>
-            {isTournamentType && (
-              <>
-                <div>
-                  <label className="block text-sm text-muted mb-1">Format</label>
-                  <select
-                    value={form.format}
-                    onChange={(e) => setForm({ ...form, format: e.target.value })}
-                    className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-                  >
-                    <option value="">Select format...</option>
-                    {FORMAT_OPTIONS.map((f) => (
-                      <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-muted mb-1">Bracket Type</label>
-                  <div className="flex gap-1 rounded-lg bg-card-hover p-1 border border-input-border">
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, bracket_type: 'swiss' })}
-                      className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${form.bracket_type === 'swiss' ? 'bg-card text-foreground shadow-sm' : 'text-muted'}`}
-                      style={{ minHeight: 'auto' }}
-                    >
-                      Swiss
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, bracket_type: 'single_elimination' })}
-                      className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${form.bracket_type === 'single_elimination' ? 'bg-card text-foreground shadow-sm' : 'text-muted'}`}
-                      style={{ minHeight: 'auto' }}
-                    >
-                      Single Elim
-                    </button>
-                  </div>
-                </div>
-              </>
+                <span className="h-2 w-2 rounded-full" style={{ background: 'var(--orange)' }} />
+                <span className="font-mono uppercase" style={{ fontSize: '0.66rem', letterSpacing: '0.14em', fontWeight: 700 }}>
+                  This event will also appear on your Afterroar store page · Players can RSVP online
+                </span>
+              </div>
             )}
-          </div>
-          <div>
-            <label className="block text-sm text-muted mb-1">Description</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={2}
-              className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
-            />
-          </div>
-          {/* Repeat weekly toggle */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setRepeatWeekly(!repeatWeekly)}
-              className={`relative h-5 w-9 rounded-full transition-colors ${repeatWeekly ? 'bg-accent' : 'bg-card-hover'}`}
-              style={{ minHeight: "auto" }}
-            >
-              <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${repeatWeekly ? 'translate-x-4' : ''}`} />
-            </button>
-            <span className="text-sm text-foreground">Repeat weekly</span>
-            {repeatWeekly && (
-              <span className="flex items-center gap-1 text-sm text-muted">
-                for
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                  Name
+                </label>
+                <input
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                  Event Type
+                </label>
+                <select
+                  value={form.event_type}
+                  onChange={(e) => setForm({ ...form, event_type: e.target.value })}
+                  style={inputStyle}
+                >
+                  <option value="fnm">FNM</option>
+                  <option value="prerelease">Prerelease</option>
+                  <option value="tournament">Tournament</option>
+                  <option value="casual">Casual</option>
+                  <option value="draft">Draft</option>
+                  <option value="league">League</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                  Starts At
+                </label>
+                <input
+                  required
+                  type="datetime-local"
+                  value={form.starts_at}
+                  onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                  Ends At
+                </label>
+                <input
+                  type="datetime-local"
+                  value={form.ends_at}
+                  onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                  Entry Fee ($)
+                </label>
+                <input
+                  type="text"
+                  placeholder="0.00"
+                  value={form.entry_fee}
+                  onChange={(e) => setForm({ ...form, entry_fee: e.target.value })}
+                  className="font-mono tabular-nums"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                  Max Players
+                </label>
                 <input
                   type="number"
-                  min={2}
-                  max={12}
-                  value={repeatWeeks}
-                  onChange={(e) => setRepeatWeeks(Math.min(12, Math.max(2, parseInt(e.target.value) || 4)))}
-                  className="w-12 bg-input-bg border border-input-border rounded px-2 py-0.5 text-foreground text-sm text-center focus:border-accent focus:outline-none"
+                  value={form.max_players}
+                  onChange={(e) => setForm({ ...form, max_players: e.target.value })}
+                  className="font-mono tabular-nums"
+                  style={inputStyle}
                 />
-                weeks
-              </span>
-            )}
-          </div>
+              </div>
+              {isTournamentType && (
+                <>
+                  <div>
+                    <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                      Format
+                    </label>
+                    <select
+                      value={form.format}
+                      onChange={(e) => setForm({ ...form, format: e.target.value })}
+                      style={inputStyle}
+                    >
+                      <option value="">Select format...</option>
+                      {FORMAT_OPTIONS.map((f) => (
+                        <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                      Bracket Type
+                    </label>
+                    <div className="flex" style={{ border: '1px solid var(--rule-hi)' }}>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, bracket_type: 'swiss' })}
+                        className="flex-1 font-mono uppercase transition-colors"
+                        style={{
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.14em',
+                          fontWeight: 700,
+                          padding: '0.55rem 0.5rem',
+                          minHeight: 44,
+                          color: form.bracket_type === 'swiss' ? 'var(--orange)' : 'var(--ink-soft)',
+                          background: form.bracket_type === 'swiss' ? 'var(--orange-mute)' : 'var(--panel)',
+                        }}
+                      >
+                        Swiss
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, bracket_type: 'single_elimination' })}
+                        className="flex-1 font-mono uppercase transition-colors"
+                        style={{
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.14em',
+                          fontWeight: 700,
+                          padding: '0.55rem 0.5rem',
+                          minHeight: 44,
+                          color: form.bracket_type === 'single_elimination' ? 'var(--orange)' : 'var(--ink-soft)',
+                          background: form.bracket_type === 'single_elimination' ? 'var(--orange-mute)' : 'var(--panel)',
+                          borderLeft: '1px solid var(--rule-hi)',
+                        }}
+                      >
+                        Single Elim
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <div>
+              <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                Description
+              </label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                rows={2}
+                style={{ ...inputStyle, minHeight: 60 }}
+              />
+            </div>
+            {/* Repeat weekly toggle */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setRepeatWeekly(!repeatWeekly)}
+                className="relative h-5 w-9 rounded-full transition-colors"
+                style={{
+                  background: repeatWeekly ? 'var(--orange)' : 'var(--rule-hi)',
+                  minHeight: 'auto',
+                }}
+              >
+                <span
+                  className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full transition-transform"
+                  style={{
+                    background: 'var(--ink)',
+                    transform: repeatWeekly ? 'translateX(16px)' : 'translateX(0)',
+                  }}
+                />
+              </button>
+              <span className="text-sm text-ink">Repeat weekly</span>
+              {repeatWeekly && (
+                <span className="flex items-center gap-1 text-sm text-ink-soft">
+                  for
+                  <input
+                    type="number"
+                    min={2}
+                    max={12}
+                    value={repeatWeeks}
+                    onChange={(e) => setRepeatWeeks(Math.min(12, Math.max(2, parseInt(e.target.value) || 4)))}
+                    className="w-12 font-mono tabular-nums text-center"
+                    style={{ ...inputStyle, padding: '0.3rem 0.4rem' }}
+                  />
+                  weeks
+                </span>
+              )}
+            </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className={`px-4 py-2 ${createAsHQ ? 'bg-purple-600 hover:bg-purple-700' : 'bg-accent hover:opacity-90'} disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors`}
-            >
-              {saving ? 'Creating...' : repeatWeekly ? `Create ${repeatWeeks} Events` : createAsHQ ? 'Create Afterroar Event' : 'Create Event'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowForm(false); setCreateAsHQ(false); }}
-              className="px-4 py-2 border border-card-border bg-card hover:bg-card-hover text-foreground rounded-lg text-sm font-medium transition-colors"
-            >
-              Cancel
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                style={primaryBtnStyle}
+              >
+                {saving ? 'Creating...' : repeatWeekly ? `Create ${repeatWeeks} Events` : createAsHQ ? 'Create Afterroar Event' : 'Create Event'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowForm(false); setCreateAsHQ(false); }}
+                className="inline-flex items-center font-mono uppercase transition-colors"
+                style={ghostBtnStyle}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </form>
       )}
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center">
-          <p className="text-sm text-red-400">{loadError}</p>
+        <div
+          className="p-4 text-center"
+          style={{ border: '1px solid var(--red)', background: 'var(--red-mute)' }}
+        >
+          <p className="text-sm text-red-fu">{loadError}</p>
           <button
             onClick={() => { setLoadError(null); loadEvents(); }}
-            className="mt-2 text-xs text-red-300 underline hover:text-red-200"
+            className="mt-2 font-mono uppercase text-red-fu hover:underline"
+            style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 700 }}
           >
             Try again
           </button>
@@ -464,28 +623,47 @@ export default function EventsPage() {
       )}
 
       {loading ? (
-        <p className="text-muted">Loading events...</p>
+        <p className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.06em' }}>Loading events...</p>
       ) : events.length === 0 && !loadError ? (
-        <EmptyState
-          icon="&#x1F3AE;"
-          title="No events yet"
-          description="Create your first event to start tracking attendance and check-ins."
-          action={{ label: "Create Your First Event", onClick: () => { setShowForm(true); setCreateAsHQ(false); } }}
-        />
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Events</span><span>No results</span></div>
+          <div className="p-10 text-center">
+            <p className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>
+              No events yet
+            </p>
+            <p className="font-display text-ink mb-1" style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+              Create your first event
+            </p>
+            <p className="text-ink-soft mb-4 max-w-md mx-auto" style={{ fontSize: '0.85rem' }}>
+              Track attendance, manage check-ins, and run brackets.
+            </p>
+            <button
+              onClick={() => { setShowForm(true); setCreateAsHQ(false); }}
+              className="inline-flex items-center font-display uppercase transition-colors"
+              style={primaryBtnStyle}
+            >
+              Create Your First Event
+            </button>
+          </div>
+        </div>
       ) : viewMode === "calendar" ? (
         <EventCalendar events={events} expandedId={expandedId} onEventClick={(id) => setExpandedId(expandedId === id ? null : id)} />
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-3">
+          <div className="md:hidden space-y-2">
             {events.map((event) => (
               <div key={event.id}>
                 <button
                   onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
-                  className="w-full rounded-xl border border-card-border bg-card p-4 text-left min-h-11 active:bg-card-hover shadow-sm dark:shadow-none transition-colors"
+                  className="ar-stripe ar-lstripe w-full p-4 text-left transition-colors hover:bg-panel"
+                  style={{
+                    background: 'var(--panel-mute)',
+                    border: '1px solid var(--rule)',
+                  }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-foreground truncate mr-2 leading-snug">
+                    <span className="font-display text-ink truncate mr-2 leading-snug" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
                       {event.name}
                       {Boolean(event.afterroar_event_id) && (
                         <StatusBadge variant="special" className="ml-1.5 text-[10px]">AR</StatusBadge>
@@ -493,14 +671,14 @@ export default function EventsPage() {
                     </span>
                     {statusBadge(event)}
                   </div>
-                  <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
+                  <div className="mt-1.5 flex items-center gap-3 font-mono text-ink-soft" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
                     {typeBadge(event.event_type)}
                     <span>{new Date(event.starts_at).toLocaleDateString()}</span>
                     <span>{event.checkin_count} players</span>
                   </div>
                 </button>
                 {expandedId === event.id && (
-                  <div className="bg-card border border-card-border border-t-0 rounded-b-xl px-4 py-3">
+                  <div className="px-4 py-3" style={{ background: 'var(--panel-mute)', borderLeft: '1px solid var(--rule)', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
                     <MobileEventDetail event={event} />
                   </div>
                 )}
@@ -509,16 +687,19 @@ export default function EventsPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-card border border-card-border rounded-xl overflow-hidden shadow-sm dark:shadow-none">
+          <div
+            className="hidden md:block overflow-hidden"
+            style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
+          >
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-card-border text-muted text-left">
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Date/Time</th>
-                  <th className="px-4 py-3 font-medium">Entry Fee</th>
-                  <th className="px-4 py-3 font-medium">Players</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
+              <thead style={{ borderBottom: '1px solid var(--rule)', background: 'var(--slate)' }}>
+                <tr className="font-mono uppercase text-ink-soft text-left" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Date/Time</th>
+                  <th className="px-4 py-3">Entry Fee</th>
+                  <th className="px-4 py-3">Players</th>
+                  <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -552,22 +733,22 @@ function MobileEventDetail({ event }: { event: EventWithCount }) {
   const isTournamentEvent = event.event_type === 'tournament' || event.event_type === 'fnm';
   return (
     <div className="space-y-2 text-sm">
-      <div className="flex items-center justify-between text-muted">
-        <span>Entry Fee: {event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}</span>
+      <div className="flex items-center justify-between font-mono text-ink-soft" style={{ fontSize: '0.74rem' }}>
+        <span>Entry Fee: <span className="tabular-nums text-ink">{event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}</span></span>
         <span>{new Date(event.starts_at).toLocaleString()}</span>
       </div>
-      <div className="flex items-center gap-2 text-muted">
-        <span>Players: {event.checkin_count}</span>
-        {event.rsvp_count !== null && <span className="text-zinc-500 dark:text-zinc-500">({event.rsvp_count} RSVP)</span>}
+      <div className="flex items-center gap-2 font-mono text-ink-soft" style={{ fontSize: '0.74rem' }}>
+        <span>Players: <span className="tabular-nums text-ink">{event.checkin_count}</span></span>
+        {event.rsvp_count !== null && <span className="text-ink-faint">({event.rsvp_count} RSVP)</span>}
       </div>
       {isHQLinked && (
-        <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400">
-          <span className="h-2 w-2 rounded-full bg-purple-500" />
+        <div className="flex items-center gap-1.5 font-mono uppercase text-orange" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+          <span className="h-2 w-2 rounded-full" style={{ background: 'var(--orange)' }} />
           Afterroar linked event
         </div>
       )}
       {event.description && (
-        <p className="text-xs text-muted">{event.description}</p>
+        <p className="text-ink-soft" style={{ fontSize: '0.78rem' }}>{event.description}</p>
       )}
       {isTournamentEvent && (
         <InlineTournamentPanel eventId={event.id} />
@@ -679,9 +860,10 @@ function EventRow({
     <>
       <tr
         onClick={onToggle}
-        className="border-b border-card-border hover:bg-card-hover cursor-pointer text-foreground"
+        className="hover:bg-panel cursor-pointer text-ink"
+        style={{ borderTop: '1px solid var(--rule-faint)' }}
       >
-        <td className="px-4 py-3 font-medium">
+        <td className="px-4 py-3 font-display" style={{ fontWeight: 500 }}>
           <span className="flex items-center gap-2">
             {event.name}
             {isHQLinked && (
@@ -690,61 +872,65 @@ function EventRow({
           </span>
         </td>
         <td className="px-4 py-3">{typeBadge(event.event_type)}</td>
-        <td className="px-4 py-3 text-muted">
+        <td className="px-4 py-3 font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.78rem' }}>
           {new Date(event.starts_at).toLocaleString()}
         </td>
-        <td className="px-4 py-3 text-muted tabular-nums">
+        <td className="px-4 py-3 font-mono text-ink-soft tabular-nums">
           {event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}
         </td>
-        <td className="px-4 py-3 text-muted">
+        <td className="px-4 py-3 font-mono text-ink-soft tabular-nums">
           <span>{event.checkin_count}</span>
           {event.rsvp_count !== null && (
-            <span className="text-zinc-500 dark:text-zinc-500 ml-1">/ {event.rsvp_count} RSVP</span>
+            <span className="text-ink-faint ml-1">/ {event.rsvp_count} RSVP</span>
           )}
         </td>
         <td className="px-4 py-3">{statusBadge(event)}</td>
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={6} className="bg-background px-4 py-4 border-b border-card-border">
+          <td colSpan={6} className="px-4 py-4" style={{ background: 'var(--slate)', borderTop: '1px solid var(--rule)' }}>
             <div className="space-y-4">
               {isHQLinked && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-2">
+                  <h3 className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                     RSVP Guest List
-                    {loadingGuests && <span className="ml-2 text-muted font-normal">Loading...</span>}
+                    {loadingGuests && <span className="ml-2 text-ink-soft normal-case font-normal">Loading...</span>}
                   </h3>
                   {hqGuests.length > 0 ? (
                     <div className="space-y-1">
                       {hqGuests.map((guest) => (
                         <div
                           key={guest.id}
-                          className="flex items-center justify-between bg-card border border-card-border rounded-lg px-3 py-2 text-sm"
+                          className="flex items-center justify-between px-3 py-2 text-sm"
+                          style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
                         >
                           <div className="flex items-center gap-2">
                             {guest.avatarUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={guest.avatarUrl}
                                 alt=""
                                 className="h-6 w-6 rounded-full"
                               />
                             ) : (
-                              <div className="h-6 w-6 rounded-full bg-card-hover flex items-center justify-center text-xs text-muted">
+                              <div className="h-6 w-6 rounded-full flex items-center justify-center font-mono text-xs text-ink-soft" style={{ background: 'var(--panel)' }}>
                                 {guest.name.charAt(0).toUpperCase()}
                               </div>
                             )}
-                            <span className="text-foreground">{guest.name}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${trustBadgeClasses(guest.trustBadge.level)}`}>
+                            <span className="text-ink">{guest.name}</span>
+                            <span style={trustBadgeStyle(guest.trustBadge.level)}>
                               {guest.trustBadge.label}
                             </span>
                             {guest.identityVerified && (
                               <StatusBadge variant="info" className="text-[10px]">Verified</StatusBadge>
                             )}
-                            <span className="text-muted text-xs uppercase">{guest.status}</span>
+                            <span className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.18em' }}>{guest.status}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {guest.checkedIn ? (
-                              <span className="text-green-600 dark:text-green-400 text-xs font-medium">Checked In</span>
+                              <span className="font-mono uppercase text-teal" style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+                                Checked In
+                              </span>
                             ) : (
                               <button
                                 onClick={(e) => {
@@ -752,7 +938,17 @@ function EventRow({
                                   handleQRCheckin(guest.id);
                                 }}
                                 disabled={checkingIn}
-                                className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors"
+                                className="inline-flex items-center font-mono uppercase transition-colors disabled:opacity-50"
+                                style={{
+                                  fontSize: '0.62rem',
+                                  letterSpacing: '0.14em',
+                                  fontWeight: 700,
+                                  padding: '0 0.7rem',
+                                  minHeight: 36,
+                                  color: 'var(--void)',
+                                  background: 'var(--teal)',
+                                  border: '1px solid var(--teal)',
+                                }}
                               >
                                 Check In
                               </button>
@@ -762,13 +958,13 @@ function EventRow({
                       ))}
                     </div>
                   ) : !loadingGuests ? (
-                    <p className="text-sm text-muted">No RSVPs yet.</p>
+                    <p className="font-mono text-ink-soft" style={{ fontSize: '0.78rem' }}>No RSVPs yet.</p>
                   ) : null}
                 </div>
               )}
 
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">
+                <h3 className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                   {isHQLinked ? 'Walk-in Check-In' : 'Check-In Players'}
                 </h3>
                 <div className="relative">
@@ -777,22 +973,27 @@ function EventRow({
                     placeholder="Search customers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full max-w-md bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm placeholder:text-muted focus:border-accent focus:outline-none"
+                    className="max-w-md"
+                    style={inputStyle}
                   />
                   {searching && (
-                    <p className="text-xs text-muted mt-1">Searching...</p>
+                    <p className="font-mono uppercase text-ink-faint mt-1" style={{ fontSize: '0.62rem', letterSpacing: '0.18em' }}>Searching...</p>
                   )}
                   {searchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full max-w-md bg-card border border-card-border rounded-lg shadow-lg">
+                    <div
+                      className="absolute z-10 mt-1 w-full max-w-md shadow-xl"
+                      style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}
+                    >
                       {searchResults.map((c) => (
                         <button
                           key={c.id}
                           onClick={() => handleCheckin(c.id)}
                           disabled={checkingIn}
-                          className="w-full text-left px-3 py-2 hover:bg-card-hover text-sm text-foreground flex justify-between items-center"
+                          className="w-full text-left px-3 py-2 hover:bg-panel-hi text-sm text-ink flex justify-between items-center transition-colors"
+                          style={{ minHeight: 44 }}
                         >
-                          <span>{c.name}</span>
-                          <span className="text-muted text-xs">{c.email}</span>
+                          <span className="font-display">{c.name}</span>
+                          <span className="font-mono text-ink-soft" style={{ fontSize: '0.7rem' }}>{c.email}</span>
                         </button>
                       ))}
                     </div>
@@ -802,23 +1003,24 @@ function EventRow({
 
               {checkins.length > 0 ? (
                 <div className="space-y-1">
-                  <p className="text-xs text-muted uppercase tracking-wide">
+                  <p className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                     Checked In ({checkins.length})
                   </p>
                   {checkins.map((ci) => (
                     <div
                       key={ci.id}
-                      className="flex items-center justify-between bg-card border border-card-border rounded-lg px-3 py-2 text-sm"
+                      className="flex items-center justify-between px-3 py-2 text-sm"
+                      style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
                     >
-                      <span className="text-foreground">{ci.customer_name || ci.customer_id}</span>
-                      <span className="text-muted text-xs">
+                      <span className="text-ink">{ci.customer_name || ci.customer_id}</span>
+                      <span className="font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.7rem' }}>
                         {new Date(ci.checked_in_at).toLocaleTimeString()}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted">No players checked in yet.</p>
+                <p className="font-mono text-ink-soft" style={{ fontSize: '0.78rem' }}>No players checked in yet.</p>
               )}
 
               {/* Inline tournament management for tournament/fnm events */}
@@ -1007,20 +1209,30 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
     return tournament.players.find((p) => p.id === playerId)?.player_name || 'Unknown';
   }
 
-  if (loading) return <p className="text-xs text-muted mt-2">Loading tournament...</p>;
+  if (loading) return <p className="font-mono text-ink-soft mt-2" style={{ fontSize: '0.74rem' }}>Loading tournament...</p>;
 
   // No tournament linked yet - offer to create one
   if (!tournament) {
     return (
-      <div className="mt-3 pt-3 border-t border-card-border">
+      <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--rule)' }}>
         <button
           onClick={handleCreateTournament}
           disabled={creatingTournament}
-          className="px-3 py-1.5 bg-accent hover:opacity-90 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors"
+          className="inline-flex items-center font-mono uppercase transition-colors disabled:opacity-50"
+          style={{
+            fontSize: '0.66rem',
+            letterSpacing: '0.18em',
+            fontWeight: 700,
+            padding: '0 0.85rem',
+            minHeight: 44,
+            color: 'var(--void)',
+            background: 'var(--orange)',
+            border: '1px solid var(--orange)',
+          }}
         >
           {creatingTournament ? 'Creating...' : 'Create Tournament Bracket'}
         </button>
-        <p className="text-xs text-muted mt-1">
+        <p className="font-mono text-ink-faint mt-1" style={{ fontSize: '0.66rem', letterSpacing: '0.04em' }}>
           Add a tournament bracket to manage pairings, rounds, and standings.
         </p>
       </div>
@@ -1047,31 +1259,33 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
     });
 
   return (
-    <div className="mt-3 pt-3 border-t border-card-border space-y-3">
+    <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--rule)' }}>
       {/* Tournament header - collapsible */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-center justify-between w-full text-left"
         style={{ minHeight: 'auto' }}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">Tournament</span>
-          <span className={`px-2 py-0.5 rounded text-xs capitalize ${TOURNAMENT_STATUS_COLORS[tournament.status] || 'bg-card-hover text-foreground/70'}`}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+            Tournament
+          </span>
+          <span style={tournamentStatusStyle(tournament.status)}>
             {tournament.status}
           </span>
           {tournament.format && (
-            <span className="text-xs text-muted">{tournament.format}</span>
+            <span className="font-mono text-ink-soft" style={{ fontSize: '0.7rem' }}>{tournament.format}</span>
           )}
           {tournament.current_round > 0 && (
-            <span className="text-xs text-muted">
+            <span className="font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.7rem' }}>
               Round {tournament.current_round}/{tournament.total_rounds}
             </span>
           )}
-          <span className="text-xs text-muted">
+          <span className="font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.7rem' }}>
             {players.filter((p) => !p.dropped).length} players
           </span>
         </div>
-        <span className="text-xs text-muted">{expanded ? '\u25BE' : '\u25B8'}</span>
+        <span className="font-mono text-ink-faint" style={{ fontSize: '0.7rem' }}>{expanded ? '▾' : '▸'}</span>
       </button>
 
       {expanded && (
@@ -1086,12 +1300,14 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
                   onChange={(e) => setPlayerName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()}
                   placeholder="Player name"
-                  className="flex-1 max-w-xs bg-input-bg border border-input-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-accent focus:outline-none"
+                  className="max-w-xs"
+                  style={{ ...inputStyle, flex: 1 }}
                 />
                 <button
                   onClick={handleAddPlayer}
                   disabled={addingPlayer || !playerName.trim()}
-                  className="px-3 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                  style={primaryBtnStyle}
                 >
                   Add
                 </button>
@@ -1099,9 +1315,17 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
               {players.length > 0 && (
                 <div className="space-y-1">
                   {players.map((p, i) => (
-                    <div key={p.id} className="flex items-center justify-between bg-card-hover rounded-lg px-3 py-2 text-sm text-foreground">
-                      <span>{i + 1}. {p.player_name}</span>
-                      <button onClick={() => handleDropPlayer(p.id)} className="text-red-500 hover:text-red-400 text-xs">
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between px-3 py-2 text-sm text-ink"
+                      style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
+                    >
+                      <span><span className="font-mono text-ink-faint">{i + 1}.</span> {p.player_name}</span>
+                      <button
+                        onClick={() => handleDropPlayer(p.id)}
+                        className="font-mono uppercase text-red-fu hover:underline"
+                        style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}
+                      >
                         Remove
                       </button>
                     </div>
@@ -1111,7 +1335,8 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
               {players.length >= 2 && (
                 <button
                   onClick={handleStart}
-                  className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex items-center font-display uppercase transition-colors"
+                  style={tealBtnStyle}
                 >
                   Start Tournament ({players.length} players)
                 </button>
@@ -1122,11 +1347,11 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
           {/* Active / Completed: Bracket */}
           {(tournament.status === 'active' || tournament.status === 'completed') && roundNumbers.length > 0 && (
             <div>
-              <h4 className="text-xs text-muted uppercase tracking-wide mb-2">Bracket</h4>
+              <h4 className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>Bracket</h4>
               <div className="flex gap-6 overflow-x-auto pb-2 scroll-visible">
                 {roundNumbers.map((round) => (
-                  <div key={round} className="min-w-50">
-                    <h5 className="text-xs text-muted uppercase tracking-wide mb-2">
+                  <div key={round} style={{ minWidth: 200 }}>
+                    <h5 className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                       {round === (tournament.total_rounds || 1) ? 'Finals' : `Round ${round}`}
                     </h5>
                     <div className="space-y-3">
@@ -1135,28 +1360,35 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
                         return (
                           <div
                             key={match.id}
-                            className={`rounded border text-sm ${
-                              match.status === 'completed'
-                                ? 'border-input-border bg-card-hover'
-                                : isActive
-                                ? 'border-indigo-700 bg-card-hover'
-                                : 'border-card-border bg-card'
-                            }`}
+                            className="text-sm"
+                            style={{
+                              background: match.status === 'completed' ? 'var(--panel)' : isActive ? 'var(--orange-mute)' : 'var(--panel-mute)',
+                              border: `1px solid ${match.status === 'completed' ? 'var(--rule-hi)' : isActive ? 'var(--orange)' : 'var(--rule)'}`,
+                            }}
                           >
-                            <div className={`px-2 py-1.5 flex items-center justify-between border-b border-input-border ${
-                              match.winner_id === match.player1_id ? 'text-green-400 font-medium' : 'text-foreground'
-                            }`}>
+                            <div
+                              className="px-2 py-1.5 flex items-center justify-between"
+                              style={{
+                                color: match.winner_id === match.player1_id ? 'var(--teal)' : 'var(--ink)',
+                                fontWeight: match.winner_id === match.player1_id ? 600 : 400,
+                                borderBottom: '1px solid var(--rule)',
+                              }}
+                            >
                               <span className="text-xs">{match.player1_id ? getPlayerName(match.player1_id) : 'TBD'}</span>
-                              {match.status === 'completed' && <span className="text-[10px] text-muted">{match.player1_score}</span>}
+                              {match.status === 'completed' && <span className="font-mono tabular-nums text-ink-soft" style={{ fontSize: '0.65rem' }}>{match.player1_score}</span>}
                             </div>
-                            <div className={`px-2 py-1.5 flex items-center justify-between ${
-                              match.winner_id === match.player2_id ? 'text-green-400 font-medium' : 'text-foreground'
-                            }`}>
+                            <div
+                              className="px-2 py-1.5 flex items-center justify-between"
+                              style={{
+                                color: match.winner_id === match.player2_id ? 'var(--teal)' : 'var(--ink)',
+                                fontWeight: match.winner_id === match.player2_id ? 600 : 400,
+                              }}
+                            >
                               <span className="text-xs">{match.player2_id ? getPlayerName(match.player2_id) : 'TBD'}</span>
-                              {match.status === 'completed' && <span className="text-[10px] text-muted">{match.player2_score}</span>}
+                              {match.status === 'completed' && <span className="font-mono tabular-nums text-ink-soft" style={{ fontSize: '0.65rem' }}>{match.player2_score}</span>}
                             </div>
                             {isActive && tournament.status === 'active' && (
-                              <div className="border-t border-input-border px-2 py-1">
+                              <div className="px-2 py-1" style={{ borderTop: '1px solid var(--rule)' }}>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1165,12 +1397,13 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
                                     setReportP1Score('0');
                                     setReportP2Score('0');
                                   }}
-                                  className="text-xs text-indigo-400 hover:text-indigo-300"
+                                  className="font-mono uppercase text-orange hover:underline"
+                                  style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}
                                 >
                                   Report Result
                                 </button>
                                 {match.table_number && (
-                                  <span className="text-[10px] text-muted ml-2">{match.table_number}</span>
+                                  <span className="font-mono text-ink-faint ml-2" style={{ fontSize: '0.6rem' }}>{match.table_number}</span>
                                 )}
                               </div>
                             )}
@@ -1186,22 +1419,53 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
 
           {/* Round Timer + Next Round (Swiss) */}
           {tournament.status === "active" && tournament.bracket_type === "swiss" && (
-            <div className="flex items-center justify-between bg-card-hover rounded-lg px-3 py-2">
+            <div
+              className="flex items-center justify-between px-3 py-2"
+              style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
+            >
               <div className="flex items-center gap-3">
                 <div className="text-center">
-                  <div className={`text-xl font-mono font-bold tabular-nums ${timerDisplay === "TIME!" ? "text-red-400 animate-pulse" : "text-foreground"}`}>
+                  <div
+                    className={`font-mono tabular-nums ${timerDisplay === "TIME!" ? "animate-pulse" : ""}`}
+                    style={{
+                      fontSize: '1.4rem',
+                      fontWeight: 700,
+                      color: timerDisplay === "TIME!" ? 'var(--red)' : 'var(--ink)',
+                    }}
+                  >
                     {timerDisplay || "--:--"}
                   </div>
-                  <div className="text-[10px] text-muted">Round Timer</div>
+                  <div className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>Round Timer</div>
                 </div>
                 {!roundStartTime && (
-                  <button onClick={() => setRoundStartTime(new Date())} className="px-2 py-1 bg-accent text-white rounded text-xs font-medium" style={{ minHeight: "auto" }}>
+                  <button
+                    onClick={() => setRoundStartTime(new Date())}
+                    className="inline-flex items-center font-mono uppercase transition-colors"
+                    style={{
+                      fontSize: '0.62rem',
+                      letterSpacing: '0.14em',
+                      fontWeight: 700,
+                      padding: '0 0.7rem',
+                      minHeight: 36,
+                      color: 'var(--void)',
+                      background: 'var(--orange)',
+                      border: '1px solid var(--orange)',
+                    }}
+                  >
                     Start Timer
                   </button>
                 )}
                 <div className="flex items-center gap-1">
-                  <input type="number" min={10} max={90} value={roundMinutes} onChange={(e) => setRoundMinutes(parseInt(e.target.value) || 50)} className="w-12 bg-input-bg border border-input-border rounded px-2 py-1 text-foreground text-xs text-center" />
-                  <span className="text-[10px] text-muted">min</span>
+                  <input
+                    type="number"
+                    min={10}
+                    max={90}
+                    value={roundMinutes}
+                    onChange={(e) => setRoundMinutes(parseInt(e.target.value) || 50)}
+                    className="w-12 font-mono tabular-nums text-center"
+                    style={{ ...inputStyle, padding: '0.3rem 0.4rem', fontSize: '0.78rem', minHeight: 36 }}
+                  />
+                  <span className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>min</span>
                 </div>
               </div>
               <div>
@@ -1209,11 +1473,24 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
                   const currentRoundMatches = rounds[tournament.current_round] || [];
                   const allComplete = currentRoundMatches.length > 0 && currentRoundMatches.every((m) => m.status === "completed");
                   return allComplete ? (
-                    <button onClick={handleNextRound} className="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-medium">
+                    <button
+                      onClick={handleNextRound}
+                      className="inline-flex items-center font-display uppercase transition-colors"
+                      style={{
+                        fontSize: '0.7rem',
+                        letterSpacing: '0.06em',
+                        fontWeight: 700,
+                        padding: '0 0.85rem',
+                        minHeight: 36,
+                        color: 'var(--void)',
+                        background: 'var(--teal)',
+                        border: '1px solid var(--teal)',
+                      }}
+                    >
                       {tournament.current_round >= (tournament.total_rounds || 99) ? "Finalize" : `Round ${tournament.current_round + 1}`}
                     </button>
                   ) : (
-                    <span className="text-[10px] text-muted">
+                    <span className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
                       {currentRoundMatches.filter((m) => m.status !== "completed").length} pending
                     </span>
                   );
@@ -1225,34 +1502,51 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
           {/* Standings */}
           {(tournament.status === 'active' || tournament.status === 'completed') && standings.length > 0 && (
             <div>
-              <h4 className="text-xs text-muted uppercase tracking-wide mb-2">
+              <h4 className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                 {tournament.status === 'completed' ? 'Final Standings' : 'Standings'}
               </h4>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-muted text-left">
-                    <th className="pb-1 font-medium text-xs">#</th>
-                    <th className="pb-1 font-medium text-xs">Player</th>
-                    <th className="pb-1 font-medium text-xs text-center">W</th>
-                    <th className="pb-1 font-medium text-xs text-center">L</th>
-                    <th className="pb-1 font-medium text-xs text-center">D</th>
+                  <tr className="font-mono uppercase text-ink-faint text-left" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                    <th className="pb-1">#</th>
+                    <th className="pb-1">Player</th>
+                    <th className="pb-1 text-center">W</th>
+                    <th className="pb-1 text-center">L</th>
+                    <th className="pb-1 text-center">D</th>
                   </tr>
                 </thead>
                 <tbody>
                   {standings.map((p, i) => (
-                    <tr key={p.id} className={`border-t border-card-border ${
-                      p.standing === 1 ? 'text-yellow-400' : 'text-foreground'
-                    }`}>
-                      <td className="py-1 text-xs">{p.standing || i + 1}</td>
-                      <td className="py-1 text-xs font-medium">
+                    <tr
+                      key={p.id}
+                      style={{
+                        borderTop: '1px solid var(--rule)',
+                        color: p.standing === 1 ? 'var(--yellow)' : 'var(--ink)',
+                      }}
+                    >
+                      <td className="py-1 font-mono tabular-nums text-xs">{p.standing || i + 1}</td>
+                      <td className="py-1 text-xs font-display" style={{ fontWeight: 500 }}>
                         {p.player_name}
                         {p.standing === 1 && tournament.status === 'completed' && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-yellow-900 text-yellow-300">Champ</span>
+                          <span
+                            className="ml-1 font-mono uppercase"
+                            style={{
+                              fontSize: '0.6rem',
+                              letterSpacing: '0.18em',
+                              fontWeight: 700,
+                              padding: '2px 6px',
+                              background: 'var(--yellow-mute)',
+                              color: 'var(--yellow)',
+                              border: '1px solid var(--yellow)',
+                            }}
+                          >
+                            Champ
+                          </span>
                         )}
                       </td>
-                      <td className="py-1 text-xs text-center text-green-400">{p.wins}</td>
-                      <td className="py-1 text-xs text-center text-red-400">{p.losses}</td>
-                      <td className="py-1 text-xs text-center text-muted">{p.draws}</td>
+                      <td className="py-1 text-xs text-center font-mono tabular-nums text-teal">{p.wins}</td>
+                      <td className="py-1 text-xs text-center font-mono tabular-nums text-red-fu">{p.losses}</td>
+                      <td className="py-1 text-xs text-center font-mono tabular-nums text-ink-soft">{p.draws}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1262,61 +1556,99 @@ function InlineTournamentPanel({ eventId }: { eventId: string }) {
 
           {/* Report Match Modal */}
           {reportMatch && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg outline-none" onClick={() => setReportMatch(null)} onKeyDown={(e) => { if (e.key === "Escape") setReportMatch(null); }} tabIndex={-1} ref={(el) => el?.focus()}>
-              <div className="w-full max-w-sm bg-card border border-card-border rounded-xl p-6 shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">Report Match Result</h2>
-                  <button onClick={() => setReportMatch(null)} className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-foreground active:bg-card-hover transition-colors text-lg">&times;</button>
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-bg outline-none"
+              onClick={() => setReportMatch(null)}
+              onKeyDown={(e) => { if (e.key === "Escape") setReportMatch(null); }}
+              tabIndex={-1}
+              ref={(el) => el?.focus()}
+            >
+              <div
+                className="w-full max-w-sm shadow-2xl mx-4"
+                style={{ background: 'var(--slate)', border: '1px solid var(--rule)' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="ar-zone-head">
+                  <span>Report Match Result</span>
+                  <button
+                    onClick={() => setReportMatch(null)}
+                    className="text-ink-soft hover:text-ink transition-colors text-lg"
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
                 </div>
-                <div className="space-y-4">
+                <div className="p-5 space-y-4">
                   <div>
-                    <label className="block text-sm text-muted mb-1">Winner</label>
+                    <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                      Winner
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {[reportMatch.player1_id, reportMatch.player2_id].filter(Boolean).map((pid) => (
-                        <button
-                          key={pid}
-                          onClick={() => setReportWinnerId(pid!)}
-                          className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                            reportWinnerId === pid
-                              ? 'bg-green-700 text-foreground'
-                              : 'bg-card-hover text-foreground/70 hover:bg-card-hover'
-                          }`}
-                        >
-                          {getPlayerName(pid!)}
-                        </button>
-                      ))}
+                      {[reportMatch.player1_id, reportMatch.player2_id].filter(Boolean).map((pid) => {
+                        const isWinner = reportWinnerId === pid;
+                        return (
+                          <button
+                            key={pid}
+                            onClick={() => setReportWinnerId(pid!)}
+                            className="inline-flex items-center justify-center font-display uppercase transition-colors"
+                            style={{
+                              fontSize: '0.85rem',
+                              letterSpacing: '0.06em',
+                              fontWeight: 600,
+                              padding: '0.65rem 0.85rem',
+                              minHeight: 44,
+                              color: isWinner ? 'var(--void)' : 'var(--ink-soft)',
+                              background: isWinner ? 'var(--teal)' : 'var(--panel)',
+                              border: `1px solid ${isWinner ? 'var(--teal)' : 'var(--rule-hi)'}`,
+                            }}
+                          >
+                            {getPlayerName(pid!)}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-muted mb-1">{getPlayerName(reportMatch.player1_id)} Score</label>
+                      <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                        {getPlayerName(reportMatch.player1_id)} Score
+                      </label>
                       <input
                         type="number"
                         min={0}
                         value={reportP1Score}
                         onChange={(e) => setReportP1Score(e.target.value)}
-                        className="w-full bg-input-bg border border-input-border rounded px-3 py-2 text-foreground text-sm"
+                        className="font-mono tabular-nums"
+                        style={inputStyle}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-muted mb-1">{getPlayerName(reportMatch.player2_id)} Score</label>
+                      <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                        {getPlayerName(reportMatch.player2_id)} Score
+                      </label>
                       <input
                         type="number"
                         min={0}
                         value={reportP2Score}
                         onChange={(e) => setReportP2Score(e.target.value)}
-                        className="w-full bg-input-bg border border-input-border rounded px-3 py-2 text-foreground text-sm"
+                        className="font-mono tabular-nums"
+                        style={inputStyle}
                       />
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => setReportMatch(null)} className="flex-1 px-3 py-2 bg-card-hover hover:bg-card-hover text-foreground rounded text-sm">
+                    <button
+                      onClick={() => setReportMatch(null)}
+                      className="flex-1 inline-flex items-center justify-center font-mono uppercase transition-colors"
+                      style={ghostBtnStyle}
+                    >
                       Cancel
                     </button>
                     <button
                       onClick={handleReportMatch}
                       disabled={reporting || !reportWinnerId}
-                      className="flex-1 px-3 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded text-sm font-medium"
+                      className="flex-1 inline-flex items-center justify-center font-display uppercase transition-colors disabled:opacity-50"
+                      style={tealBtnStyle}
                     >
                       {reporting ? 'Saving...' : 'Submit'}
                     </button>
@@ -1363,19 +1695,51 @@ function EventCalendar({ events, expandedId, onEventClick }: { events: EventWith
   const today = new Date();
   const isToday = (d: number) => d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
+  function eventChipStyle(evt: EventWithCount, isSelected: boolean): React.CSSProperties {
+    if (isSelected) {
+      return { background: 'var(--orange)', color: 'var(--void)', border: '1px solid var(--orange)' };
+    }
+    if (evt.event_type === 'fnm') {
+      return { background: 'var(--orange-mute)', color: 'var(--orange)', border: '1px solid var(--orange)' };
+    }
+    if (evt.event_type === 'prerelease') {
+      return { background: 'var(--yellow-mute)', color: 'var(--yellow)', border: '1px solid var(--yellow)' };
+    }
+    if (evt.event_type === 'tournament') {
+      return { background: 'var(--red-mute)', color: 'var(--red)', border: '1px solid var(--red)' };
+    }
+    return { background: 'var(--panel)', color: 'var(--ink-soft)', border: '1px solid var(--rule)' };
+  }
+
   return (
-    <div className="rounded-xl border border-card-border bg-card shadow-sm dark:shadow-none overflow-hidden">
+    <div className="overflow-hidden" style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}>
       {/* Month nav */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-card-border">
-        <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} className="text-muted hover:text-foreground text-lg px-2" style={{ minHeight: "auto" }}>{"\u25C0"}</button>
-        <h3 className="text-sm font-semibold text-foreground">{monthName}</h3>
-        <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))} className="text-muted hover:text-foreground text-lg px-2" style={{ minHeight: "auto" }}>{"\u25B6"}</button>
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--slate)' }}>
+        <button
+          onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
+          className="text-ink-soft hover:text-ink text-lg px-2"
+          style={{ minHeight: 'auto' }}
+          aria-label="Previous month"
+        >
+          ◀
+        </button>
+        <h3 className="font-display text-ink" style={{ fontSize: '1rem', fontWeight: 600, letterSpacing: '0.005em' }}>{monthName}</h3>
+        <button
+          onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
+          className="text-ink-soft hover:text-ink text-lg px-2"
+          style={{ minHeight: 'auto' }}
+          aria-label="Next month"
+        >
+          ▶
+        </button>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-card-border">
+      <div className="grid grid-cols-7" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--slate)' }}>
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} className="text-center text-[10px] text-muted font-medium py-1.5">{d}</div>
+          <div key={d} className="text-center font-mono uppercase text-ink-faint py-1.5" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+            {d}
+          </div>
         ))}
       </div>
 
@@ -1384,13 +1748,24 @@ function EventCalendar({ events, expandedId, onEventClick }: { events: EventWith
         {cells.map((cell, i) => (
           <div
             key={i}
-            className={`min-h-20 border-b border-r border-card-border p-1 ${
-              cell.day === null ? "bg-card-hover/30" : isToday(cell.day) ? "bg-accent/5" : ""
-            }`}
+            className="p-1"
+            style={{
+              minHeight: 80,
+              borderBottom: '1px solid var(--rule-faint)',
+              borderRight: '1px solid var(--rule-faint)',
+              background: cell.day === null ? 'var(--panel)' : isToday(cell.day) ? 'var(--orange-mute)' : 'transparent',
+            }}
           >
             {cell.day && (
               <>
-                <div className={`text-xs font-medium mb-0.5 ${isToday(cell.day) ? "text-accent font-bold" : "text-muted"}`}>
+                <div
+                  className="font-mono mb-0.5 tabular-nums"
+                  style={{
+                    fontSize: '0.7rem',
+                    fontWeight: isToday(cell.day) ? 700 : 500,
+                    color: isToday(cell.day) ? 'var(--orange)' : 'var(--ink-soft)',
+                  }}
+                >
                   {cell.day}
                 </div>
                 <div className="space-y-0.5">
@@ -1398,18 +1773,14 @@ function EventCalendar({ events, expandedId, onEventClick }: { events: EventWith
                     <button
                       key={evt.id}
                       onClick={() => onEventClick(evt.id)}
-                      className={`w-full text-left rounded px-1 py-0.5 text-[10px] font-medium truncate transition-colors ${
-                        expandedId === evt.id
-                          ? "bg-accent text-white"
-                          : evt.event_type === "fnm"
-                            ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-900/60"
-                            : evt.event_type === "prerelease"
-                              ? "bg-amber-900/40 text-amber-300 hover:bg-amber-900/60"
-                              : evt.event_type === "tournament"
-                                ? "bg-red-900/40 text-red-300 hover:bg-red-900/60"
-                                : "bg-card-hover text-foreground/70 hover:bg-card-hover"
-                      }`}
-                      style={{ minHeight: "auto" }}
+                      className="w-full text-left px-1 py-0.5 truncate transition-colors font-mono"
+                      style={{
+                        fontSize: '0.6rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.04em',
+                        minHeight: 'auto',
+                        ...eventChipStyle(evt, expandedId === evt.id),
+                      }}
                       title={`${evt.name} — ${new Date(evt.starts_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
                     >
                       {evt.name}

@@ -51,13 +51,14 @@ type StatusFilter = "" | "pending" | "processing" | "shipped" | "delivered" | "c
 
 const CARRIERS = ["USPS", "UPS", "FedEx", "DHL", "Other"] as const;
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-500/20 text-yellow-400",
-  processing: "bg-blue-500/20 text-blue-400",
-  shipped: "bg-purple-500/20 text-purple-400",
-  delivered: "bg-emerald-500/20 text-emerald-400",
-  cancelled: "bg-red-500/20 text-red-400",
-};
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: "", label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "processing", label: "Processing" },
+  { key: "shipped", label: "Shipped" },
+  { key: "delivered", label: "Delivered" },
+  { key: "cancelled", label: "Cancelled" },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -182,65 +183,116 @@ export default function OrdersPage() {
     });
   }
 
+  const inputStyle: React.CSSProperties = {
+    background: 'var(--panel)',
+    border: '1px solid var(--rule-hi)',
+    color: 'var(--ink)',
+    fontSize: '0.92rem',
+    padding: '0.65rem 0.85rem',
+    minHeight: 44,
+    outline: 'none',
+    width: '100%',
+  };
+
   return (
     <div className="mx-auto max-w-5xl flex flex-col h-full gap-4">
       <SubNav items={ORDERS_TABS} />
-      <PageHeader title="Orders" />
+      <PageHeader
+        title="Orders"
+        crumb="Console · Sales"
+        desc="Customer orders end-to-end — pending intake, pick & pack, tracking, delivery."
+      />
 
-      {/* Status filter tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scroll-visible">
-        {(["", "pending", "processing", "shipped", "delivered", "cancelled"] as StatusFilter[]).map(
-          (s) => (
+      {/* Status filter pills */}
+      <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 scroll-visible">
+        {STATUS_FILTERS.map((s) => {
+          const on = statusFilter === s.key;
+          return (
             <button
-              key={s}
-              onClick={() => { setStatusFilter(s); setPage(1); }}
-              className={`rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
-                statusFilter === s
-                  ? "bg-blue-600 text-foreground"
-                  : "bg-card-hover text-muted hover:text-foreground transition-colors"
-              }`}
+              key={s.key}
+              onClick={() => { setStatusFilter(s.key); setPage(1); }}
+              className="inline-flex items-center font-mono uppercase whitespace-nowrap transition-colors"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                padding: '0.45rem 0.8rem',
+                minHeight: 44,
+                color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                background: on ? 'var(--orange-mute)' : 'var(--panel)',
+              }}
             >
-              {s || "All"}
+              {s.label}
             </button>
-          )
-        )}
+          );
+        })}
       </div>
 
       {/* Orders list */}
       {loading ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center text-muted">
-          Loading orders...
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Loading</span></div>
+          <div className="p-8 text-center font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.06em' }}>
+            Loading orders...
+          </div>
         </div>
       ) : orders.length === 0 ? (
-        <EmptyState
-          icon="&#x1F4E6;"
-          title="No orders found"
-          description={statusFilter ? undefined : "Orders will appear here when placed"}
-          action={statusFilter ? { label: "Clear filter to see all orders", onClick: () => setStatusFilter("") } : undefined}
-        />
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Orders</span><span>No results</span></div>
+          <div className="p-10 text-center">
+            <p className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>
+              No orders found
+            </p>
+            <p className="font-display text-ink" style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+              {statusFilter ? `No ${statusFilter} orders` : "Orders will appear here when placed"}
+            </p>
+            {statusFilter && (
+              <button
+                onClick={() => setStatusFilter("")}
+                className="mt-4 inline-flex items-center font-mono uppercase transition-colors"
+                style={{
+                  fontSize: '0.66rem',
+                  letterSpacing: '0.18em',
+                  fontWeight: 600,
+                  padding: '0 0.85rem',
+                  minHeight: 44,
+                  color: 'var(--orange)',
+                  border: '1px solid var(--orange)',
+                  background: 'var(--orange-mute)',
+                }}
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="space-y-2">
           {orders.map((order) => (
             <button
               key={order.id}
               onClick={() => openOrder(order.id)}
-              className="w-full rounded-xl border border-card-border bg-card p-4 text-left hover:bg-card-hover/80 transition-colors"
+              className="ar-stripe ar-lstripe w-full text-left transition-colors hover:bg-panel"
+              style={{
+                background: 'var(--panel-mute)',
+                border: '1px solid var(--rule)',
+                padding: '0.85rem 1.1rem',
+              }}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-foreground text-sm">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-semibold text-ink" style={{ fontSize: '0.85rem', letterSpacing: '0.04em' }}>
                       {order.order_number}
                     </span>
                     <SharedStatusBadge status={order.status} size="xs" />
                   </div>
-                  <div className="text-xs text-muted mt-1">
-                    {order.customer?.name || "Guest"} &middot;{" "}
-                    {order.items.length} item{order.items.length !== 1 ? "s" : ""} &middot;{" "}
-                    {new Date(order.created_at).toLocaleDateString()}
+                  <div className="font-mono text-ink-soft mt-1" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                    {order.customer?.name || "Guest"} · {order.items.length} item{order.items.length !== 1 ? "s" : ""} · {new Date(order.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <div className="text-sm font-semibold text-emerald-400 shrink-0">
+                <div className="font-mono tabular-nums shrink-0 text-teal" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
                   {formatCents(order.total_cents)}
                 </div>
               </div>
@@ -267,46 +319,63 @@ export default function OrdersPage() {
               setShowPackShip(false);
             }}
           />
-          <div className="relative z-50 w-full md:max-w-lg flex flex-col bg-background md:border-l md:border-zinc-800 shadow-2xl md:animate-slide-in-right animate-slide-up">
+          <div
+            className="relative z-50 w-full md:max-w-lg flex flex-col shadow-2xl md:animate-slide-in-right animate-slide-up"
+            style={{ background: 'var(--slate)', borderLeft: '1px solid var(--rule)' }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4 shrink-0">
+            <div
+              className="flex items-center justify-between px-6 py-4 shrink-0"
+              style={{ borderBottom: '1px solid var(--rule)' }}
+            >
               <div>
-                <h2 className="text-lg font-bold text-foreground">
+                <p className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+                  Order
+                </p>
+                <h2 className="font-display text-ink" style={{ fontSize: '1.4rem', fontWeight: 600, letterSpacing: '0.005em' }}>
                   {selectedOrder.order_number}
                 </h2>
-                <SharedStatusBadge status={selectedOrder.status} size="xs" />
+                <div className="mt-1">
+                  <SharedStatusBadge status={selectedOrder.status} size="xs" />
+                </div>
               </div>
               <button
                 onClick={() => {
                   setSelectedOrder(null);
                   setShowPackShip(false);
                 }}
-                className="text-muted hover:text-foreground transition-colors text-xl leading-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="text-ink-soft hover:text-ink transition-colors text-xl leading-none flex items-center justify-center"
+                style={{ minHeight: 44, minWidth: 44 }}
+                aria-label="Close"
               >
                 &times;
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scroll-visible">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 scroll-visible">
               {/* Customer */}
               {selectedOrder.customer && (
-                <div className="rounded-xl border border-card-border bg-card p-4">
-                  <div className="text-xs text-muted mb-1">Customer</div>
-                  <div className="text-sm font-medium text-foreground">
-                    {selectedOrder.customer.name}
+                <div className="ar-zone">
+                  <div className="ar-zone-head"><span>Customer</span></div>
+                  <div className="p-3">
+                    <div className="font-display text-ink" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                      {selectedOrder.customer.name}
+                    </div>
+                    {selectedOrder.customer.email && (
+                      <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                        {selectedOrder.customer.email}
+                      </div>
+                    )}
                   </div>
-                  {selectedOrder.customer.email && (
-                    <div className="text-xs text-muted">{selectedOrder.customer.email}</div>
-                  )}
                 </div>
               )}
 
               {/* Shipping address */}
               {selectedOrder.shipping_address && (
-                <div className="rounded-xl border border-card-border bg-card p-4">
-                  <div className="text-xs text-muted mb-1">Ship To</div>
-                  <div className="text-sm text-foreground/70">
+                <div className="ar-zone">
+                  <div className="ar-zone-head"><span>Ship To</span></div>
+                  <div className="p-3 text-ink-soft" style={{ fontSize: '0.85rem' }}>
                     {Object.values(selectedOrder.shipping_address).filter(Boolean).join(", ")}
                   </div>
                 </div>
@@ -314,153 +383,184 @@ export default function OrdersPage() {
 
               {/* Tracking */}
               {selectedOrder.tracking_number && (
-                <div className="rounded-xl border border-card-border bg-card p-4">
-                  <div className="text-xs text-muted mb-1">Tracking</div>
-                  <div className="text-sm font-mono text-foreground">
-                    {selectedOrder.tracking_number}
+                <div className="ar-zone">
+                  <div className="ar-zone-head"><span>Tracking</span></div>
+                  <div className="p-3">
+                    <div className="font-mono text-ink" style={{ fontSize: '0.88rem', letterSpacing: '0.04em' }}>
+                      {selectedOrder.tracking_number}
+                    </div>
+                    {selectedOrder.shipping_method && (
+                      <div className="font-mono text-ink-soft mt-1" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                        {selectedOrder.shipping_method}
+                      </div>
+                    )}
                   </div>
-                  {selectedOrder.shipping_method && (
-                    <div className="text-xs text-muted">{selectedOrder.shipping_method}</div>
-                  )}
                 </div>
               )}
 
               {/* Items */}
-              <div className="rounded-xl border border-card-border bg-card p-4">
-                <div className="text-xs text-muted mb-2">Items</div>
-                <div className="space-y-2">
+              <div className="ar-zone">
+                <div className="ar-zone-head"><span>Items</span><span>{selectedOrder.items.length}</span></div>
+                <div className="p-3 space-y-2">
                   {selectedOrder.items.map((item) => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between text-sm"
                     >
                       <div className="min-w-0 flex-1 mr-2">
-                        <div className="text-foreground/70 truncate">
+                        <div className="text-ink truncate">
                           {item.name}
                           {item.quantity > 1 && (
-                            <span className="text-muted ml-1">x{item.quantity}</span>
+                            <span className="text-ink-soft ml-1 font-mono">×{item.quantity}</span>
                           )}
                         </div>
                         {item.fulfilled && (
-                          <span className="text-[10px] text-emerald-400">Packed</span>
+                          <span className="font-mono uppercase text-teal" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+                            Packed
+                          </span>
                         )}
                       </div>
-                      <span className="text-foreground font-mono shrink-0">
+                      <span className="text-ink font-mono tabular-nums shrink-0">
                         {formatCents(item.total_cents)}
                       </span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 pt-2 border-t border-zinc-800 space-y-1">
+                <div
+                  className="px-3 py-2 space-y-1"
+                  style={{ borderTop: '1px solid var(--rule)' }}
+                >
                   {selectedOrder.discount_cents > 0 && (
-                    <div className="flex justify-between text-xs text-amber-400">
+                    <div className="flex justify-between text-xs text-yellow font-mono tabular-nums">
                       <span>Discount</span>
                       <span>-{formatCents(selectedOrder.discount_cents)}</span>
                     </div>
                   )}
                   {selectedOrder.shipping_cents > 0 && (
-                    <div className="flex justify-between text-xs text-muted">
+                    <div className="flex justify-between text-xs text-ink-soft font-mono tabular-nums">
                       <span>Shipping</span>
                       <span>{formatCents(selectedOrder.shipping_cents)}</span>
                     </div>
                   )}
                   {selectedOrder.tax_cents > 0 && (
-                    <div className="flex justify-between text-xs text-muted">
+                    <div className="flex justify-between text-xs text-ink-soft font-mono tabular-nums">
                       <span>Tax</span>
                       <span>{formatCents(selectedOrder.tax_cents)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm font-bold text-foreground pt-1">
+                  <div className="flex justify-between font-display text-ink pt-1" style={{ fontSize: '1rem', fontWeight: 700 }}>
                     <span>Total</span>
-                    <span>{formatCents(selectedOrder.total_cents)}</span>
+                    <span className="font-mono tabular-nums">{formatCents(selectedOrder.total_cents)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Notes */}
               {selectedOrder.notes && (
-                <div className="rounded-xl border border-card-border bg-card p-4">
-                  <div className="text-xs text-muted mb-1">Notes</div>
-                  <div className="text-sm text-foreground/70">{selectedOrder.notes}</div>
+                <div className="ar-zone">
+                  <div className="ar-zone-head"><span>Notes</span></div>
+                  <div className="p-3 text-ink-soft" style={{ fontSize: '0.85rem' }}>{selectedOrder.notes}</div>
                 </div>
               )}
 
               {/* Pack & Ship panel */}
               {showPackShip && (
-                <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-foreground">Pack & Ship</h3>
+                <div
+                  className="ar-zone active"
+                  style={{ borderColor: 'var(--orange)' }}
+                >
+                  <div className="ar-zone-head" style={{ background: 'var(--orange-mute)', color: 'var(--orange)' }}>
+                    <span>Pack & Ship</span>
                     <button
                       onClick={() => setShowScanner(true)}
-                      className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-foreground/70 hover:text-foreground transition-colors transition-colors min-h-[44px]"
+                      className="font-mono uppercase transition-colors hover:text-ink"
+                      style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}
                     >
-                      Scan to Verify
+                      Scan to Verify →
                     </button>
                   </div>
-
-                  {/* Packing checklist */}
-                  <div className="space-y-1">
-                    {selectedOrder.items.map((item) => (
-                      <label
-                        key={item.id}
-                        className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-card-hover/50 cursor-pointer min-h-[44px]"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={packedItems.has(item.id)}
-                          onChange={() => togglePacked(item.id)}
-                          className="rounded border-zinc-700 bg-background"
-                        />
-                        <span className={`text-sm ${packedItems.has(item.id) ? "text-muted line-through" : "text-foreground"}`}>
-                          {item.name}
-                          {item.quantity > 1 && (
-                            <span className="text-muted ml-1">x{item.quantity}</span>
-                          )}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-
-                  {/* Carrier */}
-                  <div>
-                    <label className="text-xs text-muted block mb-1">Carrier</label>
-                    <select
-                      value={carrier}
-                      onChange={(e) => setCarrier(e.target.value)}
-                      className="w-full rounded-xl border border-zinc-700 bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
-                    >
-                      {CARRIERS.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                  <div className="p-3 space-y-3">
+                    {/* Packing checklist */}
+                    <div className="space-y-1">
+                      {selectedOrder.items.map((item) => (
+                        <label
+                          key={item.id}
+                          className="flex items-center gap-2 px-2 py-2 cursor-pointer transition-colors hover:bg-panel"
+                          style={{ minHeight: 44 }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={packedItems.has(item.id)}
+                            onChange={() => togglePacked(item.id)}
+                            className="rounded"
+                            style={{ accentColor: 'var(--orange)' }}
+                          />
+                          <span className={`text-sm ${packedItems.has(item.id) ? "text-ink-soft line-through" : "text-ink"}`}>
+                            {item.name}
+                            {item.quantity > 1 && (
+                              <span className="text-ink-soft ml-1 font-mono">×{item.quantity}</span>
+                            )}
+                          </span>
+                        </label>
                       ))}
-                    </select>
-                  </div>
+                    </div>
 
-                  {/* Tracking number */}
-                  <div>
-                    <label className="text-xs text-muted block mb-1">Tracking Number</label>
-                    <input
-                      type="text"
-                      value={trackingNumber}
-                      onChange={(e) => setTrackingNumber(e.target.value)}
-                      placeholder="Enter tracking number"
-                      className="w-full rounded-xl border border-zinc-700 bg-card px-3 py-2 text-sm text-foreground font-mono placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
+                    {/* Carrier */}
+                    <div>
+                      <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                        Carrier
+                      </label>
+                      <select
+                        value={carrier}
+                        onChange={(e) => setCarrier(e.target.value)}
+                        style={inputStyle}
+                      >
+                        {CARRIERS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* Ship button */}
-                  <button
-                    onClick={handleMarkShipped}
-                    disabled={shipping}
-                    className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-purple-500 disabled:opacity-50 transition-colors min-h-[44px]"
-                  >
-                    {shipping ? "Shipping..." : "Mark Shipped"}
-                  </button>
+                    {/* Tracking number */}
+                    <div>
+                      <label className="block font-mono uppercase text-ink-faint mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                        Tracking Number
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingNumber}
+                        onChange={(e) => setTrackingNumber(e.target.value)}
+                        placeholder="Enter tracking number"
+                        className="font-mono"
+                        style={inputStyle}
+                      />
+                    </div>
+
+                    {/* Ship button */}
+                    <button
+                      onClick={handleMarkShipped}
+                      disabled={shipping}
+                      className="w-full inline-flex items-center justify-center font-display uppercase transition-colors disabled:opacity-50"
+                      style={{
+                        fontSize: '0.95rem',
+                        letterSpacing: '0.06em',
+                        fontWeight: 700,
+                        padding: '0 1rem',
+                        minHeight: 48,
+                        color: 'var(--void)',
+                        background: 'var(--orange)',
+                        border: '1px solid var(--orange)',
+                      }}
+                    >
+                      {shipping ? "Shipping..." : "Mark Shipped"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Bottom actions */}
-            <div className="border-t border-zinc-800 px-6 py-4 pb-safe space-y-2 shrink-0">
+            <div className="px-6 py-4 pb-safe space-y-2 shrink-0" style={{ borderTop: '1px solid var(--rule)' }}>
               {selectedOrder.status === "pending" && (
                 <button
                   onClick={() => {
@@ -471,7 +571,16 @@ export default function OrdersPage() {
                     );
                     setPackedItems(alreadyPacked);
                   }}
-                  className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-blue-500 transition-colors min-h-[44px]"
+                  className="w-full inline-flex items-center justify-center font-display uppercase transition-colors"
+                  style={{
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.06em',
+                    fontWeight: 700,
+                    minHeight: 48,
+                    color: 'var(--void)',
+                    background: 'var(--orange)',
+                    border: '1px solid var(--orange)',
+                  }}
                 >
                   Pack & Ship
                 </button>
@@ -485,7 +594,16 @@ export default function OrdersPage() {
                     );
                     setPackedItems(alreadyPacked);
                   }}
-                  className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-purple-500 transition-colors min-h-[44px]"
+                  className="w-full inline-flex items-center justify-center font-display uppercase transition-colors"
+                  style={{
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.06em',
+                    fontWeight: 700,
+                    minHeight: 48,
+                    color: 'var(--void)',
+                    background: 'var(--orange)',
+                    border: '1px solid var(--orange)',
+                  }}
                 >
                   Ship Order
                 </button>
@@ -495,7 +613,16 @@ export default function OrdersPage() {
                   onClick={() =>
                     updateOrder(selectedOrder.id, { status: "delivered" })
                   }
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-foreground hover:bg-emerald-500 transition-colors min-h-[44px]"
+                  className="w-full inline-flex items-center justify-center font-display uppercase transition-colors"
+                  style={{
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.06em',
+                    fontWeight: 700,
+                    minHeight: 48,
+                    color: 'var(--void)',
+                    background: 'var(--teal)',
+                    border: '1px solid var(--teal)',
+                  }}
                 >
                   Mark Delivered
                 </button>
@@ -505,7 +632,16 @@ export default function OrdersPage() {
                   onClick={() =>
                     updateOrder(selectedOrder.id, { status: "cancelled" })
                   }
-                  className="w-full rounded-xl border border-zinc-700 px-4 py-2 text-xs font-medium text-muted hover:text-red-400 hover:border-red-500/30 transition-colors min-h-[44px]"
+                  className="w-full inline-flex items-center justify-center font-mono uppercase transition-colors hover:bg-red-fu/10"
+                  style={{
+                    fontSize: '0.66rem',
+                    letterSpacing: '0.18em',
+                    fontWeight: 600,
+                    minHeight: 44,
+                    color: 'var(--red)',
+                    border: '1px solid var(--red)',
+                    background: 'transparent',
+                  }}
                 >
                   Cancel Order
                 </button>

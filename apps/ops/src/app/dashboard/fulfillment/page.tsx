@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatCents } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
-import { StatusBadge, ActionButton, EmptyState, SectionHeader } from "@/components/shared/ui";
+import { StatusBadge, EmptyState } from "@/components/shared/ui";
 import { SubNav } from "@/components/ui/sub-nav";
 import { ORDERS_TABS } from "@/lib/nav-groups";
 
@@ -95,14 +95,6 @@ type TabFilter = "unfulfilled" | "picking,packed" | "shipped" | "all";
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const FULFILLMENT_COLORS: Record<string, string> = {
-  unfulfilled: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  picking: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  packed: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  shipped: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  delivered: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-};
-
 const SOURCE_LABELS: Record<string, string> = {
   online: "Online",
   shopify: "Shopify",
@@ -111,10 +103,59 @@ const SOURCE_LABELS: Record<string, string> = {
   marketplace: "Marketplace",
 };
 
-const FULFILLMENT_TYPE_ICONS: Record<string, { label: string; color: string }> = {
-  merchant: { label: "Self-Fulfill", color: "text-blue-600 dark:text-blue-400" },
-  pod: { label: "Print-on-Demand", color: "text-orange-600 dark:text-orange-400" },
-  "3pl": { label: "3PL", color: "text-purple-600 dark:text-purple-400" },
+const FULFILLMENT_TYPE_LABEL: Record<string, string> = {
+  merchant: "Self-Fulfill",
+  pod: "Print-on-Demand",
+  "3pl": "3PL",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Shared button styles                                               */
+/* ------------------------------------------------------------------ */
+
+const ghostBtnStyle: React.CSSProperties = {
+  fontSize: '0.66rem',
+  letterSpacing: '0.18em',
+  fontWeight: 600,
+  padding: '0 0.85rem',
+  minHeight: 44,
+  color: 'var(--ink-soft)',
+  border: '1px solid var(--rule-hi)',
+  background: 'var(--panel)',
+  textTransform: 'uppercase',
+  fontFamily: 'var(--font-mono)',
+};
+
+const primaryBtnStyle: React.CSSProperties = {
+  fontSize: '0.78rem',
+  letterSpacing: '0.06em',
+  fontWeight: 700,
+  padding: '0 0.9rem',
+  minHeight: 44,
+  color: 'var(--void)',
+  background: 'var(--orange)',
+  border: '1px solid var(--orange)',
+  textTransform: 'uppercase',
+  fontFamily: 'var(--font-display)',
+};
+
+const tealBtnStyle: React.CSSProperties = {
+  ...primaryBtnStyle,
+  background: 'var(--teal)',
+  border: '1px solid var(--teal)',
+};
+
+const yellowBtnStyle: React.CSSProperties = {
+  ...primaryBtnStyle,
+  background: 'var(--yellow)',
+  border: '1px solid var(--yellow)',
+  color: 'var(--void)',
+};
+
+const redBtnStyle: React.CSSProperties = {
+  ...primaryBtnStyle,
+  background: 'var(--red)',
+  border: '1px solid var(--red)',
 };
 
 /* ------------------------------------------------------------------ */
@@ -415,57 +456,76 @@ ${sections.map((s: typeof sections[number]) => `
   return (
     <div className="flex flex-col h-full gap-4">
       <SubNav items={ORDERS_TABS} />
-      <div className="flex items-center justify-between">
-        <PageHeader title="Fulfillment Queue" />
-        <ActionButton
-          variant="secondary"
-          onClick={printPullSheet}
-          loading={pullSheetLoading}
-        >
-          {!pullSheetLoading && <span>&#x1F5A8;</span>}
-          Print Pull Sheet
-        </ActionButton>
-      </div>
-
-      {/* Tab bar with counts */}
-      <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {tabs.map((t) => (
+      <PageHeader
+        title="Fulfillment Queue"
+        crumb="Console · Sales"
+        desc="Pick, pack, label, ship — the live work queue for what's leaving the building today."
+        action={
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              tab === t.key
-                ? "border-[#FF8200] text-[#FF8200]"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
-            }`}
+            onClick={printPullSheet}
+            disabled={pullSheetLoading}
+            className="inline-flex items-center gap-2 transition-colors disabled:opacity-50"
+            style={ghostBtnStyle}
           >
-            {t.label}
-            {t.count > 0 && (
-              <span className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
-                tab === t.key
-                  ? "bg-[#FF8200]/10 text-[#FF8200]"
-                  : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-              }`}>
-                {t.count}
-              </span>
-            )}
+            {pullSheetLoading ? "Generating..." : "Print Pull Sheet"}
           </button>
-        ))}
+        }
+      />
+
+      {/* Status filter pills */}
+      <div className="flex flex-wrap gap-1.5">
+        {tabs.map((t) => {
+          const on = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className="inline-flex items-center gap-2 font-mono uppercase transition-colors"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                padding: '0.45rem 0.8rem',
+                minHeight: 44,
+                color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                background: on ? 'var(--orange-mute)' : 'var(--panel)',
+              }}
+            >
+              <span>{t.label}</span>
+              {t.count > 0 && (
+                <span
+                  className="tabular-nums"
+                  style={{
+                    opacity: 0.75,
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {t.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Loading state */}
       {loading && (
-        <div className="flex items-center justify-center py-12 text-gray-400">
-          <span className="mr-2 animate-spin inline-block">&#9696;</span>
-          Loading orders...
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Loading</span></div>
+          <div className="p-8 text-center font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.06em' }}>
+            <span className="mr-2 animate-spin inline-block">◐</span>
+            Loading orders...
+          </div>
         </div>
       )}
 
       {/* Empty state */}
       {!loading && orders.length === 0 && (
         <EmptyState
-          icon="&#x2714;"
-          title={tab === "unfulfilled" ? "All caught up!" : "No orders"}
+          icon="✓"
+          title={tab === "unfulfilled" ? "All caught up" : "No orders"}
           description={tab === "unfulfilled"
             ? "No orders waiting to be fulfilled"
             : "No orders match this filter"}
@@ -473,7 +533,7 @@ ${sections.map((s: typeof sections[number]) => `
       )}
 
       {/* Order list */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {orders.map((order) => {
           const isExpanded = expandedOrder === order.id;
           const isShowingRates = rateOrderId === order.id;
@@ -481,56 +541,67 @@ ${sections.map((s: typeof sections[number]) => `
           const podItems = order.items.filter((i) => i.fulfillment_type === "pod");
           const thirdPartyItems = order.items.filter((i) => i.fulfillment_type === "3pl");
           const totalItems = order.items.reduce((sum, i) => sum + i.quantity, 0);
-          const typeInfo = FULFILLMENT_TYPE_ICONS[order.fulfillment_type] || FULFILLMENT_TYPE_ICONS.merchant;
+          const typeLabel = FULFILLMENT_TYPE_LABEL[order.fulfillment_type] || FULFILLMENT_TYPE_LABEL.merchant;
 
           return (
             <div
               key={order.id}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+              className="ar-stripe ar-lstripe overflow-hidden"
+              style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
             >
               {/* Order header — always visible */}
               <button
                 onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                className="w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-panel"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono font-semibold text-sm">
+                    <span className="font-mono text-ink" style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.04em' }}>
                       #{order.order_number}
                     </span>
                     <StatusBadge status={order.fulfillment_status} size="xs" />
-                    <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                    <span
+                      className="font-mono uppercase text-ink-faint"
+                      style={{
+                        fontSize: '0.6rem',
+                        letterSpacing: '0.18em',
+                        fontWeight: 600,
+                        padding: '2px 6px',
+                        border: '1px solid var(--rule-hi)',
+                      }}
+                    >
                       {SOURCE_LABELS[order.source] || order.source}
                     </span>
                     {order.fulfillment_type !== "merchant" && (
-                      <span className={`text-xs font-medium ${typeInfo.color}`}>
-                        {typeInfo.label}
+                      <span
+                        className="font-mono uppercase text-orange"
+                        style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}
+                      >
+                        {typeLabel}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-2 mt-1 font-mono text-ink-soft" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
                     <span>{order.customer?.name || "Guest"}</span>
-                    <span>&middot;</span>
+                    <span>·</span>
                     <span>{totalItems} item{totalItems !== 1 ? "s" : ""}</span>
-                    <span>&middot;</span>
-                    <span>{formatCents(order.total_cents)}</span>
-                    <span>&middot;</span>
+                    <span>·</span>
+                    <span className="tabular-nums">{formatCents(order.total_cents)}</span>
+                    <span>·</span>
                     <span>{timeAgo(order.created_at)}</span>
                   </div>
                 </div>
 
                 {order.tracking_number && (
-                  <div className="text-xs text-green-600 dark:text-green-400 font-mono shrink-0">
-                    <span className="mr-1">&#x1F69A;</span>
+                  <div className="font-mono text-teal shrink-0" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                    <span className="mr-1">🚚</span>
                     {order.tracking_number}
                   </div>
                 )}
 
-                {isExpanded ? (
-                  <span className="text-gray-400 shrink-0">&#x25B2;</span>
-                ) : (
-                  <span className="text-gray-400 shrink-0">&#x25BC;</span>
-                )}
+                <span className="text-ink-faint shrink-0 font-mono">
+                  {isExpanded ? "▲" : "▼"}
+                </span>
               </button>
 
               {/* Expanded order details */}
@@ -539,35 +610,62 @@ ${sections.map((s: typeof sections[number]) => `
                 const showOversellBanner = order.is_oversold || shortItems.length > 0;
                 const oversellOpen = oversellOrderId === order.id;
                 return (
-                <div className="border-t border-gray-100 dark:border-gray-800 p-4 space-y-4">
-                  {/* Oversell banner — shows when ingest flagged the order
-                      OR when on-hand has dropped below ordered since
-                      ingest (POS race window). The cashier picks one of
-                      three resolution paths via the inline picker. */}
+                <div className="p-4 space-y-4" style={{ borderTop: '1px solid var(--rule)' }}>
+                  {/* Oversell banner — yellow=warn semantic */}
                   {showOversellBanner && (
-                    <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 space-y-2">
+                    <div
+                      className="p-3 space-y-2"
+                      style={{
+                        border: '1px solid var(--yellow)',
+                        background: 'var(--yellow-mute)',
+                      }}
+                    >
                       <div className="flex items-start gap-2 text-sm">
-                        <span className="text-amber-600 text-base shrink-0">&#9888;</span>
+                        <span className="text-yellow text-base shrink-0">⚠</span>
                         <div className="flex-1">
-                          <p className="font-semibold text-amber-900 dark:text-amber-200">
-                            This order is short {shortItems.reduce((s, i) => s + i.short_by, 0) || "some"} unit
+                          <p className="font-display text-ink" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                            Short {shortItems.reduce((s, i) => s + i.short_by, 0) || "some"} unit
                             {shortItems.reduce((s, i) => s + i.short_by, 0) === 1 ? "" : "s"}
                             {shortItems.length > 0 && (
-                              <> of {shortItems.map((i) => i.name).join(", ")}</>
+                              <span className="font-mono text-ink-soft" style={{ fontSize: '0.78rem', fontWeight: 400 }}>
+                                {' '}— {shortItems.map((i) => i.name).join(", ")}
+                              </span>
                             )}
-                            . Choose how to proceed:
+                          </p>
+                          <p className="font-mono uppercase text-ink-faint mt-1" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                            Choose how to proceed
                           </p>
                           {!oversellOpen && (
-                            <div className="mt-2 flex flex-wrap gap-2">
+                            <div className="mt-3 flex flex-wrap gap-2">
                               <button
                                 onClick={() => { setOversellOrderId(order.id); setOversellAction("backorder"); }}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-100 dark:bg-amber-800/40 text-amber-900 dark:text-amber-100 hover:bg-amber-200"
+                                className="inline-flex items-center font-mono uppercase transition-colors"
+                                style={{
+                                  fontSize: '0.62rem',
+                                  letterSpacing: '0.14em',
+                                  fontWeight: 700,
+                                  padding: '0 0.7rem',
+                                  minHeight: 36,
+                                  color: 'var(--yellow)',
+                                  border: '1px solid var(--yellow)',
+                                  background: 'transparent',
+                                }}
                               >
                                 Backorder remaining
                               </button>
                               <button
                                 onClick={() => { setOversellOrderId(order.id); setOversellAction("cancel"); }}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-100 dark:bg-amber-800/40 text-amber-900 dark:text-amber-100 hover:bg-amber-200"
+                                className="inline-flex items-center font-mono uppercase transition-colors"
+                                style={{
+                                  fontSize: '0.62rem',
+                                  letterSpacing: '0.14em',
+                                  fontWeight: 700,
+                                  padding: '0 0.7rem',
+                                  minHeight: 36,
+                                  color: 'var(--red)',
+                                  border: '1px solid var(--red)',
+                                  background: 'transparent',
+                                }}
                               >
                                 Cancel + refund
                               </button>
@@ -584,9 +682,19 @@ ${sections.map((s: typeof sections[number]) => `
                                   }
                                   setReconcileQuantities(initial);
                                 }}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-100 dark:bg-amber-800/40 text-amber-900 dark:text-amber-100 hover:bg-amber-200"
+                                className="inline-flex items-center font-mono uppercase transition-colors"
+                                style={{
+                                  fontSize: '0.62rem',
+                                  letterSpacing: '0.14em',
+                                  fontWeight: 700,
+                                  padding: '0 0.7rem',
+                                  minHeight: 36,
+                                  color: 'var(--teal)',
+                                  border: '1px solid var(--teal)',
+                                  background: 'transparent',
+                                }}
                               >
-                                Skip — I have it, count is wrong
+                                Skip — count is wrong
                               </button>
                             </div>
                           )}
@@ -595,54 +703,63 @@ ${sections.map((s: typeof sections[number]) => `
 
                       {/* Confirmation panels for the chosen action */}
                       {oversellOpen && oversellAction === "backorder" && (
-                        <div className="border-t border-amber-300 dark:border-amber-700/50 pt-2 flex items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
+                        <div className="pt-2 flex items-center justify-between gap-3 text-xs text-ink" style={{ borderTop: '1px solid var(--yellow)' }}>
                           <span>Mark order as backordered? Customer should be notified separately.</span>
                           <div className="flex gap-2">
                             <button
                               onClick={() => submitOversellResolution(order, "backorder")}
                               disabled={oversellSubmitting}
-                              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50"
+                              className="inline-flex items-center disabled:opacity-50"
+                              style={yellowBtnStyle}
                             >
-                              {oversellSubmitting ? "..." : "Confirm backorder"}
+                              {oversellSubmitting ? "..." : "Confirm Backorder"}
                             </button>
                             <button
                               onClick={() => { setOversellOrderId(null); setOversellAction(null); }}
-                              className="px-3 py-1.5 rounded-md text-xs font-medium border border-amber-300 dark:border-amber-700"
+                              className="inline-flex items-center"
+                              style={ghostBtnStyle}
                             >
-                              Nevermind
+                              Cancel
                             </button>
                           </div>
                         </div>
                       )}
 
                       {oversellOpen && oversellAction === "cancel" && (
-                        <div className="border-t border-amber-300 dark:border-amber-700/50 pt-2 flex items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
+                        <div className="pt-2 flex items-center justify-between gap-3 text-xs text-ink" style={{ borderTop: '1px solid var(--yellow)' }}>
                           <span>Cancel the order and restore stock for the cancelled lines? (Refund happens upstream on the marketplace.)</span>
                           <div className="flex gap-2">
                             <button
                               onClick={() => submitOversellResolution(order, "cancel")}
                               disabled={oversellSubmitting}
-                              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                              className="inline-flex items-center disabled:opacity-50"
+                              style={redBtnStyle}
                             >
-                              {oversellSubmitting ? "..." : "Confirm cancel"}
+                              {oversellSubmitting ? "..." : "Confirm Cancel"}
                             </button>
                             <button
                               onClick={() => { setOversellOrderId(null); setOversellAction(null); }}
-                              className="px-3 py-1.5 rounded-md text-xs font-medium border border-amber-300 dark:border-amber-700"
+                              className="inline-flex items-center"
+                              style={ghostBtnStyle}
                             >
-                              Nevermind
+                              Back
                             </button>
                           </div>
                         </div>
                       )}
 
                       {oversellOpen && oversellAction === "reconcile" && (
-                        <div className="border-t border-amber-300 dark:border-amber-700/50 pt-2 space-y-2 text-xs text-amber-900 dark:text-amber-200">
-                          <p>Set the actual on-hand for each short item — the system will adjust inventory with reason &ldquo;fulfillment reconciliation&rdquo;.</p>
+                        <div className="pt-2 space-y-2 text-xs text-ink" style={{ borderTop: '1px solid var(--yellow)' }}>
+                          <p className="font-mono uppercase text-ink-soft" style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                            Set actual on-hand · adjustment reason: fulfillment reconciliation
+                          </p>
                           <div className="space-y-1">
                             {shortItems.map((s) => s.inventory_item_id ? (
                               <div key={s.line_id} className="flex items-center gap-2">
-                                <span className="flex-1 truncate">{s.name} (system: {s.on_hand}, ordered: {s.ordered})</span>
+                                <span className="flex-1 truncate text-ink-soft">
+                                  {s.name}{' '}
+                                  <span className="font-mono text-ink-faint">(system: {s.on_hand}, ordered: {s.ordered})</span>
+                                </span>
                                 <input
                                   type="number"
                                   min={0}
@@ -654,7 +771,14 @@ ${sections.map((s: typeof sections[number]) => `
                                       [s.inventory_item_id!]: Number.isNaN(v) ? 0 : v,
                                     }));
                                   }}
-                                  className="w-20 rounded-md border border-amber-300 dark:border-amber-700 bg-white dark:bg-amber-950/40 px-2 py-1 text-xs"
+                                  className="w-20 font-mono tabular-nums"
+                                  style={{
+                                    background: 'var(--panel)',
+                                    border: '1px solid var(--rule-hi)',
+                                    color: 'var(--ink)',
+                                    padding: '0.4rem 0.5rem',
+                                    fontSize: '0.85rem',
+                                  }}
                                 />
                               </div>
                             ) : null)}
@@ -663,13 +787,15 @@ ${sections.map((s: typeof sections[number]) => `
                             <button
                               onClick={() => submitOversellResolution(order, "reconcile")}
                               disabled={oversellSubmitting}
-                              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50"
+                              className="inline-flex items-center disabled:opacity-50"
+                              style={tealBtnStyle}
                             >
-                              {oversellSubmitting ? "..." : "Adjust inventory"}
+                              {oversellSubmitting ? "..." : "Adjust Inventory"}
                             </button>
                             <button
                               onClick={() => { setOversellOrderId(null); setOversellAction(null); setReconcileQuantities({}); }}
-                              className="px-3 py-1.5 rounded-md text-xs font-medium border border-amber-300 dark:border-amber-700"
+                              className="inline-flex items-center"
+                              style={ghostBtnStyle}
                             >
                               Cancel
                             </button>
@@ -681,12 +807,12 @@ ${sections.map((s: typeof sections[number]) => `
 
                   {/* Ship-to address */}
                   <div className="flex items-start gap-3">
-                    <span className="text-gray-400 mt-0.5 shrink-0">&#x1F4E6;</span>
+                    <span className="text-ink-faint mt-0.5 shrink-0">📦</span>
                     <div className="text-sm">
-                      <p className="font-medium">{order.customer?.name || "Guest"}</p>
-                      <p className="text-gray-500">{formatAddress(order.shipping_address)}</p>
+                      <p className="font-display text-ink" style={{ fontWeight: 600 }}>{order.customer?.name || "Guest"}</p>
+                      <p className="text-ink-soft">{formatAddress(order.shipping_address)}</p>
                       {order.customer?.email && (
-                        <p className="text-gray-400 text-xs">{order.customer.email}</p>
+                        <p className="font-mono text-ink-faint" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>{order.customer.email}</p>
                       )}
                     </div>
                   </div>
@@ -694,36 +820,41 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* Pick list — merchant items */}
                   {merchantItems.length > 0 && (
                     <div>
-                      <SectionHeader className="text-xs uppercase tracking-wide mb-2">Pick List</SectionHeader>
-                      <div className="space-y-1.5">
+                      <p className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+                        Pick List
+                      </p>
+                      <div className="space-y-1">
                         {merchantItems.map((item) => (
                           <div
                             key={item.id}
-                            className={`flex items-center gap-3 text-sm p-2 rounded ${
-                              item.fulfilled
-                                ? "bg-green-50 dark:bg-green-900/10 line-through text-gray-400"
-                                : "bg-gray-50 dark:bg-gray-800"
-                            }`}
+                            className="flex items-center gap-3 text-sm p-2"
+                            style={{
+                              background: item.fulfilled ? 'var(--teal-mute)' : 'var(--panel)',
+                              border: `1px solid ${item.fulfilled ? 'var(--teal)' : 'var(--rule)'}`,
+                              opacity: item.fulfilled ? 0.7 : 1,
+                            }}
                           >
                             {item.inventory_item?.image_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={item.inventory_item.image_url}
                                 alt=""
-                                className="w-8 h-8 object-cover rounded"
+                                className="w-8 h-8 object-cover"
+                                style={{ border: '1px solid var(--rule)' }}
                               />
                             ) : (
-                              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">&#x25A1;</span>
+                              <div className="w-8 h-8 flex items-center justify-center" style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}>
+                                <span className="text-ink-faint text-xs">□</span>
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="truncate">{item.name}</p>
+                              <p className={`truncate ${item.fulfilled ? 'line-through text-ink-soft' : 'text-ink'}`}>{item.name}</p>
                               {item.inventory_item?.sku && (
-                                <p className="text-xs text-gray-400">SKU: {item.inventory_item.sku}</p>
+                                <p className="font-mono text-ink-faint" style={{ fontSize: '0.65rem', letterSpacing: '0.04em' }}>SKU: {item.inventory_item.sku}</p>
                               )}
                             </div>
-                            <span className="font-mono text-sm font-semibold">
-                              &times;{item.quantity}
+                            <span className="font-mono text-ink tabular-nums" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                              ×{item.quantity}
                             </span>
                           </div>
                         ))}
@@ -734,21 +865,22 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* POD items */}
                   {podItems.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-2">
+                      <p className="font-mono uppercase text-orange mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                         Print-on-Demand
-                      </h4>
-                      <div className="space-y-1.5">
+                      </p>
+                      <div className="space-y-1">
                         {podItems.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-3 text-sm p-2 rounded bg-orange-50 dark:bg-orange-900/10"
+                            className="flex items-center gap-3 text-sm p-2"
+                            style={{ background: 'var(--orange-mute)', border: '1px solid var(--orange)' }}
                           >
-                            <span className="text-orange-500 text-xs">&#x1F3F7;</span>
-                            <span className="flex-1 truncate">{item.name}</span>
-                            <span className="text-xs text-orange-600">
+                            <span className="text-orange text-xs">🏷</span>
+                            <span className="flex-1 truncate text-ink">{item.name}</span>
+                            <span className="font-mono uppercase text-orange" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}>
                               {item.fulfillment_provider || "POD"}
                             </span>
-                            <span className="font-mono text-sm">&times;{item.quantity}</span>
+                            <span className="font-mono text-ink tabular-nums" style={{ fontSize: '0.85rem' }}>×{item.quantity}</span>
                           </div>
                         ))}
                       </div>
@@ -758,21 +890,22 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* 3PL items */}
                   {thirdPartyItems.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2">
+                      <p className="font-mono uppercase text-teal mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
                         Third-Party Logistics
-                      </h4>
-                      <div className="space-y-1.5">
+                      </p>
+                      <div className="space-y-1">
                         {thirdPartyItems.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-3 text-sm p-2 rounded bg-purple-50 dark:bg-purple-900/10"
+                            className="flex items-center gap-3 text-sm p-2"
+                            style={{ background: 'var(--teal-mute)', border: '1px solid var(--teal)' }}
                           >
-                            <span className="text-purple-500 text-xs">&#x1F69A;</span>
-                            <span className="flex-1 truncate">{item.name}</span>
-                            <span className="text-xs text-purple-600">
+                            <span className="text-teal text-xs">🚚</span>
+                            <span className="flex-1 truncate text-ink">{item.name}</span>
+                            <span className="font-mono uppercase text-teal" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}>
                               {item.fulfillment_provider || "3PL"}
                             </span>
-                            <span className="font-mono text-sm">&times;{item.quantity}</span>
+                            <span className="font-mono text-ink tabular-nums" style={{ fontSize: '0.85rem' }}>×{item.quantity}</span>
                           </div>
                         ))}
                       </div>
@@ -782,25 +915,29 @@ ${sections.map((s: typeof sections[number]) => `
                   {/* Existing labels */}
                   {order.shipping_labels.length > 0 && (
                     <div>
-                      <SectionHeader className="text-xs uppercase tracking-wide mb-2">Shipping Labels</SectionHeader>
+                      <p className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+                        Shipping Labels
+                      </p>
                       {order.shipping_labels.map((label) => (
                         <div
                           key={label.id}
-                          className="flex items-center gap-3 text-sm bg-green-50 dark:bg-green-900/10 p-2 rounded"
+                          className="flex items-center gap-3 text-sm p-2"
+                          style={{ background: 'var(--teal-mute)', border: '1px solid var(--teal)' }}
                         >
-                          <span className="text-green-600 text-xs">&#x2705;</span>
-                          <span className="font-mono">{label.tracking_number}</span>
-                          <span className="text-gray-400">
-                            {label.carrier_code} &middot; {formatCents(label.shipment_cost_cents)}
+                          <span className="text-teal text-xs">✅</span>
+                          <span className="font-mono text-ink" style={{ letterSpacing: '0.04em' }}>{label.tracking_number}</span>
+                          <span className="font-mono text-ink-soft" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                            {label.carrier_code} · <span className="tabular-nums">{formatCents(label.shipment_cost_cents)}</span>
                           </span>
                           <a
                             href={`/api/shipping/labels/${label.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-auto text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                            className="ml-auto font-mono uppercase text-orange hover:underline flex items-center gap-1"
+                            style={{ fontSize: '0.62rem', letterSpacing: '0.18em', fontWeight: 700 }}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            &#x1F5A8; Print
+                            🖨 Print
                           </a>
                         </div>
                       ))}
@@ -809,133 +946,136 @@ ${sections.map((s: typeof sections[number]) => `
 
                   {/* Rate shopping panel */}
                   {isShowingRates && (
-                    <div className="border border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-blue-50/50 dark:bg-blue-900/10">
-                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                        &#x1F69A; Select Shipping Rate
-                      </h4>
-                      {loadingRates ? (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span className="animate-spin inline-block">&#9696;</span> Fetching rates...
-                        </div>
-                      ) : rates.length === 0 ? (
-                        <div className="text-sm text-gray-500 flex items-center gap-2">
-                          &#x26A0; No rates available. Check ShipStation config.
-                        </div>
-                      ) : (
-                        <>
-                          <div className="space-y-1.5 max-h-48 overflow-y-auto scroll-visible">
-                            {rates.map((rate, i) => (
+                    <div className="ar-zone active" style={{ borderColor: 'var(--orange)' }}>
+                      <div className="ar-zone-head" style={{ background: 'var(--orange-mute)', color: 'var(--orange)' }}>
+                        <span>🚚 Select Shipping Rate</span>
+                      </div>
+                      <div className="p-3">
+                        {loadingRates ? (
+                          <div className="flex items-center gap-2 font-mono text-ink-soft" style={{ fontSize: '0.78rem' }}>
+                            <span className="animate-spin inline-block">◐</span> Fetching rates...
+                          </div>
+                        ) : rates.length === 0 ? (
+                          <div className="font-mono text-yellow flex items-center gap-2" style={{ fontSize: '0.78rem' }}>
+                            ⚠ No rates available. Check ShipStation config.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="space-y-1.5 max-h-48 overflow-y-auto scroll-visible">
+                              {rates.map((rate) => {
+                                const isSelected = selectedRate?.code === rate.code && selectedRate?.carrier === rate.carrier;
+                                return (
+                                  <button
+                                    key={`${rate.carrier}-${rate.code}`}
+                                    onClick={() => setSelectedRate(rate)}
+                                    className="w-full flex items-center gap-3 p-2.5 text-sm text-left transition-colors"
+                                    style={{
+                                      background: isSelected ? 'var(--orange-mute)' : 'var(--panel)',
+                                      border: `1px solid ${isSelected ? 'var(--orange)' : 'var(--rule)'}`,
+                                    }}
+                                  >
+                                    <div className="flex-1">
+                                      <p className="font-display text-ink" style={{ fontWeight: 500 }}>{rate.name}</p>
+                                      <p className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.18em' }}>
+                                        {rate.carrier}
+                                      </p>
+                                    </div>
+                                    <span className="font-mono tabular-nums text-ink" style={{ fontWeight: 600 }}>
+                                      {formatCents(rate.totalCents)}
+                                    </span>
+                                    {order.shipping_cents > 0 && rate.totalCents < order.shipping_cents && (
+                                      <span className="font-mono text-teal" style={{ fontSize: '0.65rem', letterSpacing: '0.04em' }}>
+                                        +{formatCents(order.shipping_cents - rate.totalCents)} margin
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="flex gap-2 mt-3">
                               <button
-                                key={`${rate.carrier}-${rate.code}`}
-                                onClick={() => setSelectedRate(rate)}
-                                className={`w-full flex items-center gap-3 p-2.5 rounded text-sm text-left transition-colors ${
-                                  selectedRate?.code === rate.code && selectedRate?.carrier === rate.carrier
-                                    ? "bg-blue-100 dark:bg-blue-800/50 border border-blue-300 dark:border-blue-600"
-                                    : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                                }`}
+                                onClick={() => generateLabel(order.id)}
+                                disabled={!selectedRate || generatingLabel}
+                                className="flex-1 inline-flex items-center justify-center disabled:opacity-50"
+                                style={primaryBtnStyle}
                               >
-                                <div className="flex-1">
-                                  <p className="font-medium">{rate.name}</p>
-                                  <p className="text-xs text-gray-400">{rate.carrier.toUpperCase()}</p>
-                                </div>
-                                <span className="font-semibold">
-                                  {formatCents(rate.totalCents)}
-                                </span>
-                                {order.shipping_cents > 0 && rate.totalCents < order.shipping_cents && (
-                                  <span className="text-xs text-green-600">
-                                    +{formatCents(order.shipping_cents - rate.totalCents)} margin
-                                  </span>
-                                )}
+                                {generatingLabel ? "Creating..." : "🖨 Buy Label"}
                               </button>
-                            ))}
-                          </div>
-                          <div className="flex gap-2 mt-3">
-                            <ActionButton
-                              variant="accent"
-                              onClick={() => generateLabel(order.id)}
-                              disabled={!selectedRate}
-                              loading={generatingLabel}
-                              className="flex-1"
-                            >
-                              {!generatingLabel && <span>&#x1F5A8;</span>}
-                              {generatingLabel ? "Creating..." : "Buy Label"}
-                            </ActionButton>
-                            <ActionButton
-                              variant="secondary"
-                              onClick={() => { setRateOrderId(null); setRates([]); }}
-                            >
-                              Cancel
-                            </ActionButton>
-                          </div>
-                        </>
-                      )}
+                              <button
+                                onClick={() => { setRateOrderId(null); setRates([]); }}
+                                className="inline-flex items-center"
+                                style={ghostBtnStyle}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
 
                   {/* Notes */}
                   {order.notes && (
-                    <p className="text-sm text-gray-500 italic bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded">
+                    <p className="text-sm italic text-ink-soft p-2" style={{ background: 'var(--yellow-mute)', border: '1px solid var(--yellow)' }}>
                       {order.notes}
                     </p>
                   )}
 
                   {/* Action buttons */}
-                  <div className="flex gap-2 flex-wrap pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex gap-2 flex-wrap pt-2" style={{ borderTop: '1px solid var(--rule)' }}>
                     {order.fulfillment_status === "unfulfilled" && (
-                      <ActionButton
-                        variant="primary"
-                        size="sm"
+                      <button
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "picking" })}
-                        loading={actionLoading === order.id}
+                        disabled={actionLoading === order.id}
+                        className="inline-flex items-center gap-2 disabled:opacity-50"
+                        style={primaryBtnStyle}
                       >
-                        {actionLoading !== order.id && <span>&#x1F4E6;</span>}
-                        Start Picking
-                      </ActionButton>
+                        📦 Start Picking
+                      </button>
                     )}
 
                     {(order.fulfillment_status === "picking" || order.fulfillment_status === "unfulfilled") && (
-                      <ActionButton
-                        variant="primary"
-                        size="sm"
+                      <button
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "packed" })}
                         disabled={actionLoading === order.id}
+                        className="inline-flex items-center gap-2 disabled:opacity-50"
+                        style={primaryBtnStyle}
                       >
-                        &#x1F4E6; Mark Packed
-                      </ActionButton>
+                        📦 Mark Packed
+                      </button>
                     )}
 
                     {(order.fulfillment_status === "picking" || order.fulfillment_status === "packed") && !isShowingRates && (
-                      <ActionButton
-                        variant="accent"
-                        size="sm"
+                      <button
                         onClick={() => fetchRates(order)}
+                        className="inline-flex items-center gap-2"
+                        style={primaryBtnStyle}
                       >
-                        &#x1F69A; Buy Shipping Label
-                      </ActionButton>
+                        🚚 Buy Shipping Label
+                      </button>
                     )}
 
                     {(order.fulfillment_status === "packed" || order.shipping_labels.length > 0) && (
-                      <ActionButton
-                        variant="primary"
-                        size="sm"
+                      <button
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "shipped" })}
-                        loading={actionLoading === order.id}
+                        disabled={actionLoading === order.id}
+                        className="inline-flex items-center gap-2 disabled:opacity-50"
+                        style={primaryBtnStyle}
                       >
-                        {actionLoading !== order.id && <span>&#x1F69A;</span>}
-                        Mark Shipped
-                      </ActionButton>
+                        🚚 Mark Shipped
+                      </button>
                     )}
 
                     {order.fulfillment_status === "shipped" && (
-                      <ActionButton
-                        variant="primary"
-                        size="sm"
+                      <button
                         onClick={() => updateFulfillment(order.id, { fulfillment_status: "delivered" })}
-                        loading={actionLoading === order.id}
+                        disabled={actionLoading === order.id}
+                        className="inline-flex items-center gap-2 disabled:opacity-50"
+                        style={tealBtnStyle}
                       >
-                        {actionLoading !== order.id && <span>&#x2705;</span>}
-                        Mark Delivered
-                      </ActionButton>
+                        ✅ Mark Delivered
+                      </button>
                     )}
                   </div>
                 </div>

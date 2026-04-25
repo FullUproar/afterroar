@@ -39,6 +39,40 @@ interface ReturnItem {
   selected: boolean;
 }
 
+/* ---------- shared styles ---------- */
+const inputStyle: React.CSSProperties = {
+  background: 'var(--panel)',
+  border: '1px solid var(--rule-hi)',
+  color: 'var(--ink)',
+  fontSize: '0.92rem',
+  padding: '0.65rem 0.85rem',
+  minHeight: 44,
+  outline: 'none',
+  width: '100%',
+};
+
+const primaryBtnStyle: React.CSSProperties = {
+  fontSize: '0.85rem',
+  letterSpacing: '0.06em',
+  fontWeight: 700,
+  padding: '0 1rem',
+  minHeight: 48,
+  color: 'var(--void)',
+  background: 'var(--orange)',
+  border: '1px solid var(--orange)',
+};
+
+const ghostBtnStyle: React.CSSProperties = {
+  fontSize: '0.66rem',
+  letterSpacing: '0.18em',
+  fontWeight: 600,
+  padding: '0 0.85rem',
+  minHeight: 44,
+  color: 'var(--ink-soft)',
+  border: '1px solid var(--rule-hi)',
+  background: 'var(--panel)',
+};
+
 /* ---------- component ---------- */
 
 export default function NewReturnPage() {
@@ -184,24 +218,38 @@ export default function NewReturnPage() {
   if (success && resultData) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-8">
-          <h2 className="text-xl font-bold text-green-400">Return Processed</h2>
-          <p className="mt-2 text-foreground/70">
-            {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} &middot;{' '}
-            {formatCents(resultData.total_refund_cents)}{' '}
-            {resultData.refund_method === 'store_credit' ? 'store credit' : 'cash refund'}
-          </p>
-          {selectedSale?.customer_name && selectedSale.customer_name !== 'Guest' && (
-            <p className="mt-1 text-sm text-muted">
-              Customer: {selectedSale.customer_name}
+        <div
+          className="ar-zone"
+          style={{ borderColor: 'var(--teal)' }}
+        >
+          <div
+            className="ar-zone-head"
+            style={{ background: 'var(--teal-mute)', color: 'var(--teal)' }}
+          >
+            <span>Return Processed</span>
+          </div>
+          <div className="p-8">
+            <p className="font-display text-teal mb-2" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              Refund issued
             </p>
-          )}
+            <p className="text-ink-soft" style={{ fontSize: '0.95rem' }}>
+              {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} ·{' '}
+              <span className="font-mono tabular-nums text-ink">{formatCents(resultData.total_refund_cents)}</span>{' '}
+              {resultData.refund_method === 'store_credit' ? 'store credit' : 'cash refund'}
+            </p>
+            {selectedSale?.customer_name && selectedSale.customer_name !== 'Guest' && (
+              <p className="font-mono text-ink-faint mt-2" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                Customer: {selectedSale.customer_name}
+              </p>
+            )}
+          </div>
         </div>
         <Link
           href="/dashboard/returns"
-          className="inline-block rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors"
+          className="inline-flex items-center font-mono uppercase transition-colors"
+          style={ghostBtnStyle}
         >
-          Back to Returns
+          ← Back to Returns
         </Link>
       </div>
     );
@@ -209,364 +257,425 @@ export default function NewReturnPage() {
 
   /* ---- render ---- */
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="New Return" backHref="/dashboard/returns" />
+    <div className="mx-auto max-w-3xl space-y-5">
+      <PageHeader
+        title="New Return"
+        crumb="Console · Sales"
+        desc="Find the original sale, pick items to return, choose refund method."
+        backHref="/dashboard/returns"
+      />
 
-      {/* progress */}
-      <div className="flex gap-2 text-sm">
-        {[1, 2, 3].map((s) => (
-          <div
-            key={s}
-            className={`flex-1 rounded-full py-1 text-center font-medium transition-colors ${
-              s === step
-                ? 'bg-accent text-foreground'
-                : s < step
-                  ? 'bg-accent/30 text-indigo-300'
-                  : 'bg-card-hover text-muted'
-            }`}
-          >
-            Step {s}
-          </div>
-        ))}
+      {/* progress indicator — operator-grade */}
+      <div className="flex gap-1.5">
+        {[1, 2, 3].map((s) => {
+          const on = s === step;
+          const done = s < step;
+          return (
+            <div
+              key={s}
+              className="flex-1 inline-flex items-center justify-center font-mono uppercase"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 700,
+                padding: '0.55rem 0.5rem',
+                minHeight: 36,
+                color: on ? 'var(--orange)' : done ? 'var(--teal)' : 'var(--ink-faint)',
+                border: `1px solid ${on ? 'var(--orange)' : done ? 'var(--teal)' : 'var(--rule-hi)'}`,
+                background: on ? 'var(--orange-mute)' : done ? 'var(--teal-mute)' : 'var(--panel)',
+              }}
+            >
+              Step {s}
+              {done && <span className="ml-1.5">✓</span>}
+            </div>
+          );
+        })}
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-          {error}
+        <div
+          className="p-3"
+          style={{
+            border: '1px solid var(--red)',
+            background: 'var(--red-mute)',
+            color: 'var(--red)',
+          }}
+        >
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
       {/* ============ STEP 1: FIND SALE ============ */}
       {step === 1 && (
-        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">Find Original Sale</h2>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Step 1 · Find Original Sale</span></div>
+          <div className="p-5 space-y-4">
+            <input
+              type="text"
+              placeholder="Search by customer name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              style={inputStyle}
+            />
 
-          <input
-            type="text"
-            placeholder="Search by customer name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            autoFocus
-            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-          />
+            {salesLoading && (
+              <p className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.18em' }}>
+                Searching...
+              </p>
+            )}
 
-          {salesLoading && <div className="text-sm text-muted">Searching...</div>}
-
-          {sales.length > 0 && (
-            <div className="space-y-2">
-              {sales.map((sale) => {
-                const hasReturnableItems = sale.items.some((i) => i.max_returnable > 0);
-                return (
-                  <button
-                    key={sale.id}
-                    onClick={() => hasReturnableItems && selectSale(sale)}
-                    disabled={!hasReturnableItems}
-                    className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                      hasReturnableItems
-                        ? 'border-input-border bg-card-hover hover:border-indigo-500/50 hover:bg-zinc-750'
-                        : 'border-card-border bg-card opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium text-foreground">{sale.customer_name}</span>
-                        <span className="ml-3 text-sm text-muted">
-                          {new Date(sale.created_at).toLocaleDateString()}{' '}
-                          {new Date(sale.created_at).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+            {sales.length > 0 && (
+              <div className="space-y-2">
+                {sales.map((sale) => {
+                  const hasReturnableItems = sale.items.some((i) => i.max_returnable > 0);
+                  return (
+                    <button
+                      key={sale.id}
+                      onClick={() => hasReturnableItems && selectSale(sale)}
+                      disabled={!hasReturnableItems}
+                      className={`ar-stripe ar-lstripe w-full p-4 text-left transition-colors ${hasReturnableItems ? 'hover:bg-panel' : 'cursor-not-allowed opacity-50'}`}
+                      style={{
+                        background: 'var(--panel-mute)',
+                        border: '1px solid var(--rule)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-display text-ink" style={{ fontSize: '1rem', fontWeight: 600 }}>
+                            {sale.customer_name}
+                          </span>
+                          <span className="ml-3 font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                            {new Date(sale.created_at).toLocaleDateString()}{' '}
+                            {new Date(sale.created_at).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                        <span className="font-mono tabular-nums text-ink" style={{ fontWeight: 600 }}>
+                          {formatCents(sale.amount_cents)}
                         </span>
                       </div>
-                      <span className="font-medium tabular-nums text-foreground">
-                        {formatCents(sale.amount_cents)}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-sm text-muted">
-                      {sale.items.map((i) => i.name).join(', ')}
-                    </div>
-                    {!hasReturnableItems && (
-                      <div className="mt-1 text-xs text-red-400">All items already returned</div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                      <div className="mt-1 text-ink-soft" style={{ fontSize: '0.85rem' }}>
+                        {sale.items.map((i) => i.name).join(', ')}
+                      </div>
+                      {!hasReturnableItems && (
+                        <div className="mt-1 font-mono uppercase text-red-fu" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+                          All items already returned
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* ============ STEP 2: SELECT ITEMS ============ */}
       {step === 2 && selectedSale && (
-        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">Select Items to Return</h2>
-          <div className="text-sm text-muted">
-            Sale to {selectedSale.customer_name} on{' '}
-            {new Date(selectedSale.created_at).toLocaleDateString()} &middot;{' '}
-            {formatCents(selectedSale.amount_cents)}
-          </div>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Step 2 · Select Items to Return</span></div>
+          <div className="p-5 space-y-4">
+            <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+              Sale to <span className="text-ink">{selectedSale.customer_name}</span> on{' '}
+              <span className="text-ink">{new Date(selectedSale.created_at).toLocaleDateString()}</span> ·{' '}
+              <span className="font-mono tabular-nums text-ink">{formatCents(selectedSale.amount_cents)}</span>
+            </div>
 
-          {/* items */}
-          <div className="space-y-3">
-            {returnItems.map((item, idx) => (
-              <div
-                key={item.inventory_item_id}
-                className={`rounded-xl border p-4 transition-colors ${
-                  item.selected
-                    ? 'border-indigo-500/50 bg-card-hover'
-                    : 'border-input-border bg-card-hover'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={item.selected}
-                    onChange={() => toggleItem(idx)}
-                    className="mt-1 h-4 w-4 rounded border-zinc-600 bg-card text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium text-foreground">{item.name}</div>
-                      <div className="text-sm tabular-nums text-foreground/70">
-                        {formatCents(item.price_cents)} ea
-                      </div>
-                    </div>
-                    {item.category && (
-                      <div className="text-xs text-muted">{item.category}</div>
-                    )}
-                    <div className="text-xs text-muted">
-                      Max returnable: {item.max_returnable}
-                    </div>
-
-                    {item.selected && (
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                        <label className="flex items-center gap-1.5 text-muted">
-                          Qty
-                          <input
-                            type="number"
-                            min="1"
-                            max={item.max_returnable}
-                            value={item.quantity}
-                            onChange={(e) =>
-                              updateItem(idx, {
-                                quantity: Math.min(
-                                  Math.max(1, Number(e.target.value)),
-                                  item.max_returnable
-                                ),
-                              })
-                            }
-                            className="w-16 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
-                          />
-                        </label>
-
-                        <label className="flex items-center gap-1.5 text-muted">
-                          <input
-                            type="checkbox"
-                            checked={item.restock}
-                            onChange={(e) =>
-                              updateItem(idx, { restock: e.target.checked })
-                            }
-                            className="h-3.5 w-3.5 rounded border-zinc-600 bg-card text-indigo-600 focus:ring-indigo-500"
-                          />
-                          Restock
-                        </label>
-
-                        <div className="ml-auto font-medium text-foreground tabular-nums">
-                          {formatCents(item.price_cents * item.quantity)}
+            {/* items */}
+            <div className="space-y-2">
+              {returnItems.map((item, idx) => (
+                <div
+                  key={item.inventory_item_id}
+                  className="p-4 transition-colors"
+                  style={{
+                    background: item.selected ? 'var(--orange-mute)' : 'var(--panel-mute)',
+                    border: `1px solid ${item.selected ? 'var(--orange)' : 'var(--rule)'}`,
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={item.selected}
+                      onChange={() => toggleItem(idx)}
+                      className="mt-1 h-4 w-4"
+                      style={{ accentColor: 'var(--orange)' }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-display text-ink" style={{ fontSize: '0.95rem', fontWeight: 600 }}>{item.name}</div>
+                        <div className="font-mono tabular-nums text-ink-soft" style={{ fontSize: '0.85rem' }}>
+                          {formatCents(item.price_cents)} ea
                         </div>
                       </div>
-                    )}
+                      {item.category && (
+                        <div className="font-mono text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.04em' }}>{item.category}</div>
+                      )}
+                      <div className="font-mono text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.04em' }}>
+                        Max returnable: {item.max_returnable}
+                      </div>
+
+                      {item.selected && (
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                          <label className="flex items-center gap-1.5 text-ink-soft">
+                            Qty
+                            <input
+                              type="number"
+                              min="1"
+                              max={item.max_returnable}
+                              value={item.quantity}
+                              onChange={(e) =>
+                                updateItem(idx, {
+                                  quantity: Math.min(
+                                    Math.max(1, Number(e.target.value)),
+                                    item.max_returnable
+                                  ),
+                                })
+                              }
+                              className="w-16 font-mono tabular-nums"
+                              style={{ ...inputStyle, padding: '0.4rem 0.5rem' }}
+                            />
+                          </label>
+
+                          <label className="flex items-center gap-1.5 text-ink-soft">
+                            <input
+                              type="checkbox"
+                              checked={item.restock}
+                              onChange={(e) =>
+                                updateItem(idx, { restock: e.target.checked })
+                              }
+                              className="h-3.5 w-3.5"
+                              style={{ accentColor: 'var(--orange)' }}
+                            />
+                            Restock
+                          </label>
+
+                          <div className="ml-auto font-mono tabular-nums text-ink" style={{ fontWeight: 600 }}>
+                            {formatCents(item.price_cents * item.quantity)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* reason */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground/70">Reason *</label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value as ReturnReason)}
-              className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground focus:border-accent focus:outline-none"
-            >
-              {RETURN_REASONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
               ))}
-            </select>
-          </div>
+            </div>
 
-          <textarea
-            placeholder="Additional notes (optional)"
-            value={reasonNotes}
-            onChange={(e) => setReasonNotes(e.target.value)}
-            rows={2}
-            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-          />
+            {/* reason */}
+            <div className="space-y-2">
+              <label className="block font-mono uppercase text-ink-faint" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                Reason *
+              </label>
+              <select
+                value={reason}
+                onChange={(e) => setReason(e.target.value as ReturnReason)}
+                style={inputStyle}
+              >
+                {RETURN_REASONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* running total */}
-          <div className="flex items-center justify-between border-t border-input-border pt-4">
-            <span className="text-muted">
-              Return Subtotal ({selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''})
-            </span>
-            <span className="text-lg font-semibold text-foreground tabular-nums">
-              {formatCents(subtotalCents)}
-            </span>
-          </div>
+            <textarea
+              placeholder="Additional notes (optional)"
+              value={reasonNotes}
+              onChange={(e) => setReasonNotes(e.target.value)}
+              rows={2}
+              style={{ ...inputStyle, minHeight: 60 }}
+            />
 
-          <div className="flex justify-between">
-            <button
-              onClick={() => setStep(1)}
-              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => setStep(3)}
-              disabled={selectedItems.length === 0}
-              className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-            >
-              Next: Refund Method
-            </button>
+            {/* running total */}
+            <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+              <span className="font-mono uppercase text-ink-soft" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                Return Subtotal ({selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''})
+              </span>
+              <span className="font-mono tabular-nums text-ink" style={{ fontSize: '1.3rem', fontWeight: 700 }}>
+                {formatCents(subtotalCents)}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => setStep(1)}
+                className="inline-flex items-center font-mono uppercase transition-colors"
+                style={ghostBtnStyle}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                disabled={selectedItems.length === 0}
+                className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                style={primaryBtnStyle}
+              >
+                Next: Refund Method →
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* ============ STEP 3: REFUND METHOD ============ */}
       {step === 3 && (
-        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">Refund Method</h2>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Step 3 · Refund Method</span></div>
+          <div className="p-5 space-y-4">
+            {/* toggle */}
+            <div className="flex gap-1.5">
+              {(['cash', 'store_credit'] as const).map((m) => {
+                const on = refundMethod === m;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => setRefundMethod(m)}
+                    className="flex-1 inline-flex items-center justify-center font-mono uppercase transition-colors"
+                    style={{
+                      fontSize: '0.7rem',
+                      letterSpacing: '0.18em',
+                      fontWeight: 700,
+                      minHeight: 48,
+                      color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                      border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                      background: on ? 'var(--orange-mute)' : 'var(--panel)',
+                    }}
+                  >
+                    {m === 'store_credit' ? 'Store Credit' : 'Cash'}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* toggle */}
-          <div className="flex gap-2">
-            {(['cash', 'store_credit'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setRefundMethod(m)}
-                className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${
-                  refundMethod === m
-                    ? 'bg-accent text-foreground'
-                    : 'bg-card-hover text-muted hover:bg-card-hover'
-                }`}
-              >
-                {m === 'store_credit' ? 'Store Credit' : 'Cash'}
-              </button>
-            ))}
-          </div>
+            {refundMethod === 'store_credit' && (
+              <div className="p-4" style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}>
+                <label className="flex items-center gap-2 text-sm text-ink-soft">
+                  Credit Bonus %
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={creditBonus}
+                    onChange={(e) => setCreditBonus(Math.max(0, Number(e.target.value)))}
+                    className="w-20 font-mono tabular-nums"
+                    style={{ ...inputStyle, padding: '0.4rem 0.5rem', width: 80 }}
+                  />
+                </label>
+              </div>
+            )}
 
-          {refundMethod === 'store_credit' && (
-            <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2">
-              <label className="flex items-center gap-2 text-sm text-foreground/70">
-                Credit Bonus %
+            {/* restocking fee */}
+            <div className="p-4" style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}>
+              <label className="flex items-center gap-2 text-sm text-ink-soft">
+                Restocking Fee %
                 <input
                   type="number"
                   min="0"
                   max="100"
-                  value={creditBonus}
-                  onChange={(e) => setCreditBonus(Math.max(0, Number(e.target.value)))}
-                  className="w-20 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
+                  value={restockingFee}
+                  onChange={(e) => setRestockingFee(Math.max(0, Number(e.target.value)))}
+                  className="w-20 font-mono tabular-nums"
+                  style={{ ...inputStyle, padding: '0.4rem 0.5rem', width: 80 }}
                 />
               </label>
             </div>
-          )}
 
-          {/* restocking fee */}
-          <div className="rounded-xl border border-input-border bg-card-hover p-4">
-            <label className="flex items-center gap-2 text-sm text-foreground/70">
-              Restocking Fee %
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={restockingFee}
-                onChange={(e) => setRestockingFee(Math.max(0, Number(e.target.value)))}
-                className="w-20 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
-              />
-            </label>
-          </div>
-
-          {/* summary */}
-          <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2 text-sm">
-            <h3 className="font-medium text-foreground">Summary</h3>
-            <div className="text-muted">
-              Customer: <span className="text-foreground">{selectedSale?.customer_name ?? 'Guest'}</span>
-            </div>
-            <div className="text-muted">
-              Original Sale:{' '}
-              <span className="text-foreground">
-                {selectedSale && new Date(selectedSale.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="text-muted">
-              Reason:{' '}
-              <span className="text-foreground">
-                {RETURN_REASONS.find((r) => r.value === reason)?.label}
-              </span>
-            </div>
-
-            <ul className="space-y-1 border-t border-input-border pt-2">
-              {selectedItems.map((item) => (
-                <li key={item.inventory_item_id} className="flex justify-between text-foreground/70">
-                  <span>
-                    {item.name} &times;{item.quantity}
-                    {!item.restock && (
-                      <span className="ml-1 text-xs text-yellow-500">(no restock)</span>
-                    )}
+            {/* summary */}
+            <div className="ar-zone">
+              <div className="ar-zone-head"><span>Summary</span></div>
+              <div className="p-4 space-y-2 text-sm">
+                <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                  Customer: <span className="text-ink">{selectedSale?.customer_name ?? 'Guest'}</span>
+                </div>
+                <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                  Original Sale:{' '}
+                  <span className="text-ink">
+                    {selectedSale && new Date(selectedSale.created_at).toLocaleDateString()}
                   </span>
-                  <span className="tabular-nums">
-                    {formatCents(item.price_cents * item.quantity)}
+                </div>
+                <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                  Reason:{' '}
+                  <span className="text-ink">
+                    {RETURN_REASONS.find((r) => r.value === reason)?.label}
                   </span>
-                </li>
-              ))}
-            </ul>
+                </div>
 
-            <div className="flex justify-between border-t border-input-border pt-2 text-foreground/70">
-              <span>Subtotal</span>
-              <span className="tabular-nums">{formatCents(subtotalCents)}</span>
+                <ul className="space-y-1 pt-2" style={{ borderTop: '1px solid var(--rule)' }}>
+                  {selectedItems.map((item) => (
+                    <li key={item.inventory_item_id} className="flex justify-between text-ink-soft">
+                      <span>
+                        {item.name} ×{item.quantity}
+                        {!item.restock && (
+                          <span className="ml-1 font-mono uppercase text-yellow" style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+                            (no restock)
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-mono tabular-nums">
+                        {formatCents(item.price_cents * item.quantity)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex justify-between pt-2 text-ink-soft" style={{ borderTop: '1px solid var(--rule)' }}>
+                  <span>Subtotal</span>
+                  <span className="font-mono tabular-nums">{formatCents(subtotalCents)}</span>
+                </div>
+
+                {restockingFeeCents > 0 && (
+                  <div className="flex justify-between text-ink-soft">
+                    <span>Restocking Fee ({restockingFee}%)</span>
+                    <span className="font-mono tabular-nums">-{formatCents(restockingFeeCents)}</span>
+                  </div>
+                )}
+
+                {refundMethod === 'store_credit' && creditBonus > 0 && (
+                  <div className="flex justify-between text-teal">
+                    <span>Credit Bonus (+{creditBonus}%)</span>
+                    <span className="font-mono tabular-nums">
+                      +{formatCents(totalRefundCents - refundAmountCents)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-2" style={{ fontWeight: 700, fontSize: '1.05rem', borderTop: '1px solid var(--rule)' }}>
+                  <span className="font-display">
+                    Total Refund ({refundMethod === 'store_credit' ? 'Store Credit' : 'Cash'})
+                  </span>
+                  <span className="font-mono tabular-nums text-red-fu">
+                    {formatCents(totalRefundCents)}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {restockingFeeCents > 0 && (
-              <div className="flex justify-between text-muted">
-                <span>Restocking Fee ({restockingFee}%)</span>
-                <span className="tabular-nums">-{formatCents(restockingFeeCents)}</span>
-              </div>
-            )}
-
-            {refundMethod === 'store_credit' && creditBonus > 0 && (
-              <div className="flex justify-between text-muted">
-                <span>Credit Bonus (+{creditBonus}%)</span>
-                <span className="tabular-nums text-green-400">
-                  +{formatCents(totalRefundCents - refundAmountCents)}
-                </span>
-              </div>
-            )}
-
-            <div className="flex justify-between font-semibold text-foreground">
-              <span>
-                Total Refund ({refundMethod === 'store_credit' ? 'Store Credit' : 'Cash'})
-              </span>
-              <span className="tabular-nums text-red-400">
-                {formatCents(totalRefundCents)}
-              </span>
+            <div className="flex justify-between">
+              <button
+                onClick={() => setStep(2)}
+                className="inline-flex items-center font-mono uppercase transition-colors"
+                style={ghostBtnStyle}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting || selectedItems.length === 0}
+                className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                style={{
+                  ...primaryBtnStyle,
+                  background: 'var(--teal)',
+                  border: '1px solid var(--teal)',
+                  color: 'var(--void)',
+                }}
+              >
+                {submitting ? 'Processing...' : 'Process Return'}
+              </button>
             </div>
-          </div>
-
-          <div className="flex justify-between">
-            <button
-              onClick={() => setStep(2)}
-              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || selectedItems.length === 0}
-              className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors"
-            >
-              {submitting ? 'Processing...' : 'Process Return'}
-            </button>
           </div>
         </div>
       )}

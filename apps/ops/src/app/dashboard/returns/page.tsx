@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCents, RETURN_REASONS } from '@/lib/types';
-import { EmptyState } from '@/components/shared/ui';
 import { PageHeader } from '@/components/page-header';
 import { SubNav } from '@/components/ui/sub-nav';
 import { ORDERS_TABS } from '@/lib/nav-groups';
@@ -43,10 +42,22 @@ export default function ReturnsPage() {
       <SubNav items={ORDERS_TABS} />
       <PageHeader
         title="Returns"
+        crumb="Console · Sales"
+        desc="Refund processing — items back, stock restored, credit issued."
         action={
           <Link
             href="/dashboard/returns/new"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
+            className="inline-flex items-center font-display uppercase transition-colors"
+            style={{
+              fontSize: '0.85rem',
+              letterSpacing: '0.06em',
+              fontWeight: 700,
+              padding: '0 1rem',
+              minHeight: 48,
+              color: 'var(--void)',
+              background: 'var(--orange)',
+              border: '1px solid var(--orange)',
+            }}
           >
             New Return
           </Link>
@@ -54,65 +65,123 @@ export default function ReturnsPage() {
       />
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-red-600 dark:text-red-400">
-          {error}
+        <div
+          className="p-4"
+          style={{
+            border: '1px solid var(--red)',
+            background: 'var(--red-mute)',
+            color: 'var(--red)',
+          }}
+        >
+          <p className="font-mono uppercase mb-1" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+            Error
+          </p>
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="text-muted">Loading returns...</div>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Loading</span></div>
+          <div className="p-8 text-center font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.06em' }}>
+            Loading returns...
+          </div>
+        </div>
       ) : returns.length === 0 ? (
-        <EmptyState
-          icon="&#x21A9;"
-          title="No returns yet"
-          description="Process returns and exchanges. Stock is automatically restored and credit applied."
-          action={{ label: "Process a Return", href: "/dashboard/returns/new" }}
-        />
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Returns</span><span>No results</span></div>
+          <div className="p-10 text-center">
+            <p className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>
+              No returns yet
+            </p>
+            <p className="font-display text-ink mb-1" style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+              Process your first return
+            </p>
+            <p className="text-ink-soft mb-4 max-w-md mx-auto" style={{ fontSize: '0.85rem' }}>
+              Stock is automatically restored and credit applied.
+            </p>
+            <Link
+              href="/dashboard/returns/new"
+              className="inline-flex items-center font-display uppercase transition-colors"
+              style={{
+                fontSize: '0.85rem',
+                letterSpacing: '0.06em',
+                fontWeight: 700,
+                padding: '0 1rem',
+                minHeight: 48,
+                color: 'var(--void)',
+                background: 'var(--orange)',
+                border: '1px solid var(--orange)',
+              }}
+            >
+              Process a Return
+            </Link>
+          </div>
+        </div>
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-3">
+          <div className="md:hidden space-y-2">
             {returns.map((r) => (
-              <div key={r.id} className="rounded-xl border border-card-border bg-card p-4 min-h-11 shadow-sm dark:shadow-none">
+              <div
+                key={r.id}
+                className="ar-lstripe"
+                style={{
+                  background: 'var(--panel-mute)',
+                  border: '1px solid var(--rule)',
+                  padding: '0.85rem 1.1rem',
+                }}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground leading-snug">{r.customer_name}</span>
-                  <span className="text-sm text-red-600 dark:text-red-400 font-semibold tabular-nums">-{formatCents(r.total_refund_cents)}</span>
+                  <span className="font-display text-ink leading-snug" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                    {r.customer_name}
+                  </span>
+                  <span className="font-mono tabular-nums text-red-fu" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                    -{formatCents(r.total_refund_cents)}
+                  </span>
                 </div>
-                <div className="mt-1 text-xs text-muted">
-                  {r.item_count} items &middot; {r.refund_method === 'store_credit' ? 'Store Credit' : 'Cash'} &middot; {reasonLabel(r.reason)}
+                <div className="mt-1 font-mono text-ink-soft" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                  {r.item_count} items · {r.refund_method === 'store_credit' ? 'Store Credit' : 'Cash'} · {reasonLabel(r.reason)}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-hidden rounded-xl border border-card-border bg-card shadow-sm dark:shadow-none">
+          <div
+            className="hidden md:block overflow-hidden"
+            style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
+          >
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-card-border text-muted">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">Customer</th>
-                  <th className="px-4 py-3 font-medium text-right">Items</th>
-                  <th className="px-4 py-3 font-medium text-right">Refund</th>
-                  <th className="px-4 py-3 font-medium">Method</th>
-                  <th className="px-4 py-3 font-medium">Reason</th>
+              <thead style={{ borderBottom: '1px solid var(--rule)', background: 'var(--slate)' }}>
+                <tr className="font-mono uppercase text-ink-soft" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3 text-right">Items</th>
+                  <th className="px-4 py-3 text-right">Refund</th>
+                  <th className="px-4 py-3">Method</th>
+                  <th className="px-4 py-3">Reason</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-card-border">
+              <tbody>
                 {returns.map((r) => (
-                  <tr key={r.id} className="text-foreground hover:bg-card-hover transition-colors">
-                    <td className="px-4 py-3 text-muted">
+                  <tr
+                    key={r.id}
+                    className="text-ink hover:bg-panel transition-colors"
+                    style={{ borderTop: '1px solid var(--rule-faint)' }}
+                  >
+                    <td className="px-4 py-3 font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.78rem' }}>
                       {new Date(r.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 font-medium">{r.customer_name}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{r.item_count}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-red-600 dark:text-red-400 font-semibold">
+                    <td className="px-4 py-3 font-display" style={{ fontWeight: 500 }}>{r.customer_name}</td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">{r.item_count}</td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-red-fu" style={{ fontWeight: 600 }}>
                       -{formatCents(r.total_refund_cents)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-ink-soft">
                       {r.refund_method === 'store_credit' ? 'Store Credit' : 'Cash'}
                     </td>
-                    <td className="px-4 py-3 text-muted">{reasonLabel(r.reason)}</td>
+                    <td className="px-4 py-3 text-ink-soft">{reasonLabel(r.reason)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -141,14 +141,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
+/**
+ * Category color tokens — operator-console palette.
+ * Stays consistent with brand discipline: orange for primary, teal for healthy
+ * categories, yellow for noteworthy, plus muted MTG color identities for the rest.
+ */
 const CATEGORY_COLORS: Record<string, string> = {
-  tcg_single: 'bg-violet-500',
-  sealed: 'bg-blue-500',
-  board_game: 'bg-emerald-500',
-  miniature: 'bg-amber-500',
-  accessory: 'bg-rose-500',
-  food_drink: 'bg-cyan-500',
-  other: 'bg-zinc-500',
+  tcg_single: 'bg-orange',
+  sealed: 'bg-teal',
+  board_game: 'bg-yellow',
+  miniature: 'bg-[var(--m-r)]',
+  accessory: 'bg-[var(--m-b)]',
+  food_drink: 'bg-[var(--m-u)]',
+  other: 'bg-ink-faint',
 };
 
 type Period = 'today' | 'this_week' | 'this_month' | 'all_time';
@@ -165,19 +170,19 @@ function catLabel(cat: string) {
 }
 
 function catColor(cat: string) {
-  return CATEGORY_COLORS[cat] ?? 'bg-zinc-500';
+  return CATEGORY_COLORS[cat] ?? 'bg-ink-faint';
 }
 
 function trendArrow(change: number) {
-  if (change > 0) return '\u2191';
-  if (change < 0) return '\u2193';
-  return '\u2192';
+  if (change > 0) return '↑';
+  if (change < 0) return '↓';
+  return '→';
 }
 
 function trendColor(change: number, positiveIsGood = true) {
-  if (change === 0) return 'text-muted';
+  if (change === 0) return 'text-ink-soft';
   const isPositive = change > 0;
-  return (isPositive === positiveIsGood) ? 'text-green-400' : 'text-red-400';
+  return (isPositive === positiveIsGood) ? 'text-teal' : 'text-red-fu';
 }
 
 function formatShortDate(dateStr: string) {
@@ -190,36 +195,94 @@ function formatDayLabel(dateStr: string) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-/* ---------- Collapsible Section ---------- */
+/* ---------- KPI Cell (operator console) ---------- */
+
+function KpiCell({
+  k,
+  v,
+  sub,
+  primary,
+  accent,
+}: {
+  k: string;
+  v: string;
+  sub?: string;
+  primary?: boolean;
+  accent?: 'teal' | 'red' | 'yellow';
+}) {
+  const accentClass =
+    accent === 'teal'
+      ? 'text-teal'
+      : accent === 'red'
+        ? 'text-red-fu'
+        : accent === 'yellow'
+          ? 'text-yellow'
+          : primary
+            ? 'text-orange'
+            : 'text-ink';
+  return (
+    <div className="bg-panel-mute p-3 md:p-4 min-h-22 flex flex-col justify-between">
+      <div
+        className="font-mono uppercase text-ink-faint font-semibold"
+        style={{ fontSize: '0.6rem', letterSpacing: '0.24em' }}
+      >
+        {k}
+      </div>
+      <div>
+        <div
+          className={`font-display font-bold leading-none mt-2 ${accentClass}`}
+          style={{ fontSize: 'clamp(1.4rem, 3.5vw, 2rem)', letterSpacing: '-0.01em' }}
+        >
+          {v}
+        </div>
+        {sub ? (
+          <div
+            className="font-mono text-ink-faint mt-1.5"
+            style={{ fontSize: '0.62rem', letterSpacing: '0.04em' }}
+          >
+            {sub}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Collapsible Section (operator zone style) ---------- */
 
 function CollapsibleSection({
   title,
   subtitle,
   defaultOpen = false,
   children,
-  borderAccent,
 }: {
   title: string;
   subtitle?: string;
   defaultOpen?: boolean;
   children: React.ReactNode;
-  borderAccent?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className={`rounded-xl border ${borderAccent ?? 'border-card-border'} bg-card/80 shadow-lg backdrop-blur-sm overflow-hidden`}>
+    <div className="ar-zone">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-card-hover/30"
+        className="ar-zone-head flex w-full items-center justify-between hover:bg-panel transition-colors"
         type="button"
+        style={{ minHeight: 48 }}
       >
-        <div>
-          <h2 className="text-base font-semibold text-foreground">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
+        <div className="flex flex-col gap-0.5 text-left">
+          <span className="font-mono uppercase font-semibold text-ink-soft" style={{ fontSize: '0.62rem', letterSpacing: '0.28em' }}>
+            {title}
+          </span>
+          {subtitle && (
+            <span className="font-mono text-ink-faint normal-case" style={{ fontSize: '0.62rem', letterSpacing: '0.04em' }}>
+              {subtitle}
+            </span>
+          )}
         </div>
         <svg
-          className={`h-5 w-5 shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`h-5 w-5 shrink-0 text-ink-soft transition-transform ${open ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -228,7 +291,7 @@ function CollapsibleSection({
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && <div className="border-t border-card-border px-5 pb-5 pt-4">{children}</div>}
+      {open && <div className="px-5 pb-5 pt-4 bg-panel-mute">{children}</div>}
     </div>
   );
 }
@@ -243,23 +306,23 @@ function StatRow({
 }: {
   label: string;
   value: string;
-  accent?: 'green' | 'red' | 'yellow' | 'muted';
+  accent?: 'teal' | 'red' | 'yellow' | 'muted';
   sub?: string;
 }) {
   const colorMap = {
-    green: 'text-green-400',
-    red: 'text-red-400',
-    yellow: 'text-yellow-400',
-    muted: 'text-muted',
+    teal: 'text-teal',
+    red: 'text-red-fu',
+    yellow: 'text-yellow',
+    muted: 'text-ink-soft',
   };
   return (
     <div className="flex items-baseline justify-between py-1.5">
-      <span className="text-sm text-muted">{label}</span>
+      <span className="text-sm text-ink-soft">{label}</span>
       <div className="text-right">
-        <span className={`text-sm font-medium tabular-nums ${colorMap[accent ?? 'muted'] || 'text-foreground'}`}>
+        <span className={`text-sm font-mono font-medium tabular-nums ${colorMap[accent ?? 'muted'] || 'text-ink'}`}>
           {value}
         </span>
-        {sub && <span className="ml-2 text-xs text-muted">{sub}</span>}
+        {sub && <span className="ml-2 text-xs text-ink-faint font-mono">{sub}</span>}
       </div>
     </div>
   );
@@ -280,17 +343,17 @@ function RevenueChart({ data }: { data: DailyRevenueRow[] }) {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-foreground">Revenue Flow</h3>
-          <p className="text-xs text-muted">Last 30 days -- daily revenue vs payouts</p>
+          <h3 className="font-display font-semibold text-ink">Revenue Flow</h3>
+          <p className="text-xs text-ink-soft font-mono">Last 30 days · daily revenue vs payouts</p>
         </div>
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex items-center gap-4 text-xs font-mono">
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-indigo-500" />
-            <span className="text-muted">Revenue</span>
+            <div className="h-2.5 w-2.5 bg-orange" />
+            <span className="text-ink-soft uppercase tracking-wider" style={{ fontSize: '0.62rem' }}>Revenue</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-rose-500/60" />
-            <span className="text-muted">Payouts</span>
+            <div className="h-2.5 w-2.5 bg-red-fu opacity-70" />
+            <span className="text-ink-soft uppercase tracking-wider" style={{ fontSize: '0.62rem' }}>Payouts</span>
           </div>
         </div>
       </div>
@@ -298,14 +361,14 @@ function RevenueChart({ data }: { data: DailyRevenueRow[] }) {
       {/* Hovered day tooltip */}
       <div className="h-8 mb-3">
         {hoveredIdx !== null && data[hoveredIdx] && (
-          <div className="rounded-xl bg-card-hover/80 px-3 py-2 text-xs">
-            <span className="font-medium text-foreground">{formatDayLabel(data[hoveredIdx].date)}</span>
-            <span className="mx-2 text-zinc-600">|</span>
-            <span className="text-indigo-400">Revenue: {formatCents(data[hoveredIdx].revenue_cents)}</span>
-            <span className="mx-2 text-zinc-600">|</span>
-            <span className="text-rose-400">Payouts: {formatCents(data[hoveredIdx].payout_cents)}</span>
-            <span className="mx-2 text-zinc-600">|</span>
-            <span className={data[hoveredIdx].net_cents >= 0 ? 'text-green-400' : 'text-red-400'}>
+          <div className="bg-panel-hi border border-rule px-3 py-2 text-xs font-mono">
+            <span className="font-medium text-ink">{formatDayLabel(data[hoveredIdx].date)}</span>
+            <span className="mx-2 text-ink-ghost">|</span>
+            <span className="text-orange">Revenue: {formatCents(data[hoveredIdx].revenue_cents)}</span>
+            <span className="mx-2 text-ink-ghost">|</span>
+            <span className="text-red-fu">Payouts: {formatCents(data[hoveredIdx].payout_cents)}</span>
+            <span className="mx-2 text-ink-ghost">|</span>
+            <span className={data[hoveredIdx].net_cents >= 0 ? 'text-teal' : 'text-red-fu'}>
               Net: {formatCents(data[hoveredIdx].net_cents)}
             </span>
           </div>
@@ -334,25 +397,25 @@ function RevenueChart({ data }: { data: DailyRevenueRow[] }) {
             >
               <div className="flex w-full items-end justify-center gap-px" style={{ height: barArea }}>
                 <div
-                  className={`flex-1 rounded-t transition-all ${
+                  className={`flex-1 transition-all ${
                     isHovered
-                      ? 'bg-indigo-400'
+                      ? 'bg-orange'
                       : isWeekend
-                        ? 'bg-indigo-500/50'
-                        : 'bg-indigo-500/80'
+                        ? 'bg-orange opacity-60'
+                        : 'bg-orange opacity-85'
                   }`}
                   style={{ height: Math.max(revenueH, 1) }}
                 />
                 <div
-                  className={`flex-1 rounded-t transition-all ${
-                    isHovered ? 'bg-rose-400' : 'bg-rose-500/50'
+                  className={`flex-1 transition-all ${
+                    isHovered ? 'bg-red-fu' : 'bg-red-fu opacity-60'
                   }`}
                   style={{ height: Math.max(payoutH, 1) }}
                 />
               </div>
               <div className="h-4 flex items-center justify-center">
                 {showLabel && (
-                  <span className="text-[9px] text-zinc-500 tabular-nums whitespace-nowrap">
+                  <span className="text-[9px] text-ink-faint font-mono tabular-nums whitespace-nowrap">
                     {formatShortDate(day.date)}
                   </span>
                 )}
@@ -376,17 +439,22 @@ function CategoryBars({ categories, totalCost }: { categories: CategoryRow[]; to
           <div key={cat.category}>
             <div className="mb-1 flex items-center justify-between gap-2 text-sm">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-medium text-zinc-200 truncate">{catLabel(cat.category)}</span>
-                <span className="shrink-0 text-[10px] text-muted/50 cursor-default" title={`${cat.item_count.toLocaleString()} SKUs -- ${formatCents(cat.cost_basis_cents)} at cost`}>{"\u24D8"}</span>
+                <span className="font-medium text-ink truncate">{catLabel(cat.category)}</span>
+                <span
+                  className="shrink-0 text-[10px] text-ink-faint cursor-default"
+                  title={`${cat.item_count.toLocaleString()} SKUs -- ${formatCents(cat.cost_basis_cents)} at cost`}
+                >
+                  {"ⓘ"}
+                </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-medium text-foreground tabular-nums">{formatCents(cat.cost_basis_cents)}</span>
-                <span className="w-10 text-right text-xs text-muted tabular-nums">{pct.toFixed(0)}%</span>
+                <span className="font-mono font-medium text-ink tabular-nums">{formatCents(cat.cost_basis_cents)}</span>
+                <span className="w-10 text-right text-xs font-mono text-ink-soft tabular-nums">{pct.toFixed(0)}%</span>
               </div>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-card-hover">
+            <div className="h-2 w-full overflow-hidden bg-panel-hi border border-rule-faint">
               <div
-                className={`h-full rounded-full transition-all ${catColor(cat.category)}`}
+                className={`h-full transition-all ${catColor(cat.category)}`}
                 style={{ width: `${Math.max(pct, 0.5)}%` }}
               />
             </div>
@@ -400,13 +468,13 @@ function CategoryBars({ categories, totalCost }: { categories: CategoryRow[]; to
 /* ---------- Cash Flow AI Recommendations ---------- */
 
 function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; totalDeadStockValue: number }) {
-  const recommendations: Array<{ icon: string; text: string; borderColor: string }> = [];
+  const recommendations: Array<{ icon: string; text: string; tone: 'warn' | 'err' | 'info' | 'ok' }> = [];
 
   if (data.dead_stock.length > 0 && totalDeadStockValue > 0) {
     recommendations.push({
       icon: '\u{1F4E6}',
       text: `You have ${formatCents(totalDeadStockValue)} trapped in ${data.dead_stock.length} slow-moving items. A 15-20% markdown or a "clearance bin" promotion could free up to ${formatCents(Math.round(totalDeadStockValue * 0.85))} in cash to reinvest in what actually sells.`,
-      borderColor: 'border-l-amber-500',
+      tone: 'warn',
     });
   }
 
@@ -416,7 +484,7 @@ function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; t
     recommendations.push({
       icon: '\u{1F6A8}',
       text: `Your top seller "${top.name}" has only ${top.days_of_stock} days of stock left at current velocity (${top.sales_per_week}/week). Reorder now to avoid losing sales.${urgentMovers.length > 1 ? ` ${urgentMovers.length - 1} more fast-movers are also running low.` : ''}`,
-      borderColor: 'border-l-red-500',
+      tone: 'err',
     });
   }
 
@@ -424,7 +492,7 @@ function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; t
     recommendations.push({
       icon: '\u{1F4B0}',
       text: `${formatCents(data.outstanding_credit.total_cents)} in store credit across ${data.outstanding_credit.customer_count} customers is a liability on your books. Run a "use your credit" event or bonus weekend to convert these into sales.`,
-      borderColor: 'border-l-amber-500',
+      tone: 'warn',
     });
   }
 
@@ -436,7 +504,7 @@ function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; t
       recommendations.push({
         icon: '\u{1F4CA}',
         text: `Your ${catLabel(lowest.category)} margin is only ${lowest.margin_percent}%, while ${catLabel(highest.category)} earns ${highest.margin_percent}%. Consider adjusting pricing or shifting inventory dollars toward higher-margin categories.`,
-        borderColor: 'border-l-indigo-500',
+        tone: 'info',
       });
     }
   }
@@ -456,7 +524,7 @@ function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; t
       recommendations.push({
         icon: '\u{1F4B5}',
         text: `${catLabel(topCat.category)} holds ${topCatPct}% of your inventory capital but only generates ${topCatSalesPct}% of revenue. Your money might work harder in a different category.`,
-        borderColor: 'border-l-indigo-500',
+        tone: 'info',
       });
     }
   }
@@ -466,40 +534,58 @@ function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; t
       recommendations.push({
         icon: '\u{1F3C6}',
         text: `Your trade-in program is generating ${data.trade_in_roi.roi_percent}% ROI. Trade-ins are one of the best ways to acquire inventory cheaply. Keep pushing credit-based payouts for even better margins.`,
-        borderColor: 'border-l-green-500',
+        tone: 'ok',
       });
     } else if (data.trade_in_roi.roi_percent < 0) {
       recommendations.push({
-        icon: '\u26A0\uFE0F',
+        icon: '⚠️',
         text: `Your trade-in program is currently at ${data.trade_in_roi.roi_percent}% ROI. Review your offer prices -- you may be paying too much for items that aren't selling through.`,
-        borderColor: 'border-l-red-500',
+        tone: 'err',
       });
     }
   }
 
   if (recommendations.length === 0) {
     recommendations.push({
-      icon: '\u2728',
+      icon: '✨',
       text: 'Your cash flow looks healthy. Keep monitoring velocity and margins to stay ahead.',
-      borderColor: 'border-l-green-500',
+      tone: 'ok',
     });
   }
 
+  /**
+   * Border accent uses operator-console palette: orange = info/insight,
+   * yellow = warn-positive (action needed), red = error, teal = healthy.
+   */
+  function toneBorder(tone: 'warn' | 'err' | 'info' | 'ok'): string {
+    return tone === 'warn'
+      ? 'border-l-yellow'
+      : tone === 'err'
+        ? 'border-l-red-fu'
+        : tone === 'info'
+          ? 'border-l-orange'
+          : 'border-l-teal';
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Sentence-based recommendations */}
-      <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
-        <h2 className="text-base font-semibold text-foreground">Smart Recommendations</h2>
-        <p className="mt-0.5 text-xs text-muted">Actionable advice based on your data</p>
-        <div className="mt-4 space-y-3">
+      <div className="ar-zone">
+        <div className="ar-zone-head">
+          <span>Smart Recommendations</span>
+          <span className="font-mono text-ink-faint normal-case" style={{ fontSize: '0.62rem', letterSpacing: '0.18em' }}>
+            {recommendations.length} {recommendations.length === 1 ? 'tip' : 'tips'}
+          </span>
+        </div>
+        <div className="p-4 bg-panel-mute space-y-3">
           {recommendations.map((rec, i) => (
             <div
               key={i}
-              className={`rounded-xl border border-card-border border-l-4 ${rec.borderColor} bg-background/50 p-4`}
+              className={`border border-rule border-l-4 ${toneBorder(rec.tone)} bg-slate p-4`}
             >
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 text-lg shrink-0">{rec.icon}</span>
-                <p className="text-sm text-foreground/90 leading-relaxed">{rec.text}</p>
+                <span className="mt-0.5 text-lg shrink-0" aria-hidden="true">{rec.icon}</span>
+                <p className="text-sm text-ink leading-relaxed">{rec.text}</p>
               </div>
             </div>
           ))}
@@ -507,10 +593,14 @@ function CashFlowInsights({ data, totalDeadStockValue }: { data: CashFlowData; t
       </div>
 
       {/* Full Intelligence Feed */}
-      <div className="rounded-xl border border-card-border bg-card/80 p-5 shadow-lg backdrop-blur-sm">
-        <h2 className="text-base font-semibold text-foreground">Store Intelligence</h2>
-        <p className="mt-0.5 text-xs text-muted">All actionable insights across your store</p>
-        <div className="mt-4">
+      <div className="ar-zone">
+        <div className="ar-zone-head">
+          <span>Store Intelligence</span>
+          <span className="font-mono text-ink-faint normal-case" style={{ fontSize: '0.62rem', letterSpacing: '0.18em' }}>
+            All actionable insights
+          </span>
+        </div>
+        <div className="p-4 bg-panel-mute">
           <IntelligenceFeed />
         </div>
       </div>
@@ -541,7 +631,7 @@ export default function CashFlowPage() {
   if (!can('cash_flow')) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-muted">You don&apos;t have permission to view cash flow data.</p>
+        <p className="text-ink-soft">You don&apos;t have permission to view cash flow data.</p>
       </div>
     );
   }
@@ -550,8 +640,10 @@ export default function CashFlowPage() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-          <p className="text-muted">Loading store intelligence...</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-orange border-t-transparent" />
+          <p className="text-ink-soft font-mono uppercase tracking-wider" style={{ fontSize: '0.7rem' }}>
+            Loading store intelligence...
+          </p>
         </div>
       </div>
     );
@@ -559,7 +651,7 @@ export default function CashFlowPage() {
 
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">
+      <div className="border border-red-fu/40 bg-[var(--red-mute)] p-6 text-red-fu">
         {error || 'Failed to load data'}
       </div>
     );
@@ -571,104 +663,106 @@ export default function CashFlowPage() {
   return (
     <div className="flex flex-col h-full gap-4 pb-12">
       {/* ---- HEADER + PERIOD SELECTOR ---- */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <PageHeader title="Store Intelligence" />
-          <p className="mt-1 text-sm text-muted">Cash flow, inventory health, and actionable insights.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          title="Store Intelligence"
+          crumb="Console · Cash Flow"
+          desc="Cash flow, inventory health, and actionable insights."
+        />
+        <div
+          className="flex shrink-0 self-start"
+          style={{ border: '1px solid var(--rule)', background: 'var(--panel-mute)' }}
+          role="tablist"
+          aria-label="Period"
+        >
+          {(['today', 'this_week', 'this_month', 'all_time'] as const).map((p) => {
+            const active = period === p;
+            return (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                role="tab"
+                aria-selected={active}
+                className="font-mono uppercase font-semibold transition-colors"
+                style={{
+                  fontSize: '0.65rem',
+                  letterSpacing: '0.22em',
+                  padding: '0.7rem 0.9rem',
+                  minHeight: 44,
+                  color: active ? 'var(--orange)' : 'var(--ink-soft)',
+                  background: active ? 'var(--orange-mute)' : 'transparent',
+                  borderRight: '1px solid var(--rule)',
+                  borderBottom: active ? '2px solid var(--orange)' : '2px solid transparent',
+                }}
+              >
+                {PERIOD_LABELS[p]}
+              </button>
+            );
+          })}
         </div>
-        <div className="flex gap-1 rounded-xl bg-card-hover/80 p-1 shadow-inner">
-          {(['today', 'this_week', 'this_month', 'all_time'] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`rounded-xl px-3 py-1.5 text-sm font-medium transition-all ${
-                period === p
-                  ? 'bg-accent text-foreground shadow-md'
-                  : 'text-muted hover:text-foreground hover:bg-card-hover/50'
-              }`}
+      </div>
+
+      {/* ==== KPI STRIP — period summary at-a-glance ==== */}
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px bg-rule border border-rule">
+        <KpiCell
+          k="Revenue"
+          v={formatCents(agg.gross_revenue_cents)}
+          primary
+          sub={agg.event_fees_cents > 0 ? `events ${formatCents(agg.event_fees_cents)}` : undefined}
+        />
+        <KpiCell
+          k="Payouts"
+          v={`-${formatCents(agg.total_payouts_cents)}`}
+          accent="red"
+          sub={agg.refunds_cents > 0 ? `refunds ${formatCents(agg.refunds_cents)}` : undefined}
+        />
+        <KpiCell
+          k="Net Cash Flow"
+          v={formatCents(agg.net_cash_flow_cents)}
+          accent={agg.net_cash_flow_cents >= 0 ? 'teal' : 'red'}
+        />
+        <KpiCell
+          k="Credit Issued"
+          v={formatCents(agg.credit_issued_cents)}
+          accent="yellow"
+          sub={`${formatCents(agg.credit_redeemed_cents)} redeemed`}
+        />
+        <KpiCell
+          k="Inventory Capital"
+          v={formatCents(data.inventory.cost_basis_cents)}
+          sub={`${data.inventory.total_skus} SKUs`}
+        />
+      </section>
+
+      {/* Month-trend strip */}
+      {data.month_trend.revenue_change_percent !== null && (
+        <div
+          className="border border-rule bg-panel-mute px-4 py-2.5"
+        >
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm font-mono">
+            <span
+              className="text-ink-soft uppercase font-semibold"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.22em' }}
             >
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ==== SECTION 1: CASH FLOW (always expanded, not collapsible) ==== */}
-      <div className="rounded-xl border border-card-border bg-card/80 shadow-lg backdrop-blur-sm">
-        <div className="px-5 py-4">
-          <h2 className="text-base font-semibold text-foreground">Cash Flow</h2>
-          <p className="mt-0.5 text-xs text-muted">{PERIOD_LABELS[period]} summary</p>
-        </div>
-        <div className="border-t border-card-border px-5 pb-5 pt-4">
-          {/* Primary metrics as dense rows */}
-          <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
-            <div>
-              <StatRow
-                label="Revenue"
-                value={formatCents(agg.gross_revenue_cents)}
-                accent="green"
-                sub={agg.event_fees_cents > 0 ? `(events: ${formatCents(agg.event_fees_cents)})` : undefined}
-              />
-              <StatRow
-                label="Payouts"
-                value={`-${formatCents(agg.total_payouts_cents)}`}
-                accent="red"
-                sub={agg.refunds_cents > 0 ? `(refunds: ${formatCents(agg.refunds_cents)})` : undefined}
-              />
-              <div className="border-t border-card-border mt-1 pt-1">
-                <StatRow
-                  label="Net Cash Flow"
-                  value={formatCents(agg.net_cash_flow_cents)}
-                  accent={agg.net_cash_flow_cents >= 0 ? 'green' : 'red'}
-                />
-              </div>
-            </div>
-            <div>
-              <StatRow
-                label="Credit Issued"
-                value={formatCents(agg.credit_issued_cents)}
-                accent="yellow"
-              />
-              <StatRow
-                label="Credit Redeemed"
-                value={formatCents(agg.credit_redeemed_cents)}
-                accent="muted"
-              />
-              {data.inventory.cost_basis_cents > 0 && (
-                <div className="border-t border-card-border mt-1 pt-1">
-                  <StatRow
-                    label="Capital in Inventory"
-                    value={formatCents(data.inventory.cost_basis_cents)}
-                    accent="muted"
-                    sub={`${data.inventory.total_skus} SKUs`}
-                  />
-                </div>
-              )}
-            </div>
+              Month-over-month
+            </span>
+            <span className={trendColor(data.month_trend.revenue_change_cents)}>
+              {trendArrow(data.month_trend.revenue_change_cents)} Revenue{' '}
+              {data.month_trend.revenue_change_percent > 0 ? '+' : ''}
+              {data.month_trend.revenue_change_percent}%
+              <span className="ml-1 text-xs text-ink-faint">
+                ({formatCents(Math.abs(data.month_trend.revenue_change_cents))})
+              </span>
+            </span>
+            <span className={trendColor(data.month_trend.payout_change_cents, false)}>
+              {trendArrow(data.month_trend.payout_change_cents)} Payouts{' '}
+              <span className="text-xs text-ink-faint">{formatCents(Math.abs(data.month_trend.payout_change_cents))}</span>
+            </span>
           </div>
-
-          {/* Month trend inline */}
-          {data.month_trend.revenue_change_percent !== null && (
-            <div className="mt-4 rounded-xl bg-card-hover/50 px-4 py-2.5">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
-                <span className="text-muted font-medium">Month-over-month</span>
-                <span className={trendColor(data.month_trend.revenue_change_cents)}>
-                  {trendArrow(data.month_trend.revenue_change_cents)} Revenue{' '}
-                  {data.month_trend.revenue_change_percent > 0 ? '+' : ''}
-                  {data.month_trend.revenue_change_percent}%
-                  <span className="ml-1 text-xs opacity-70">({formatCents(Math.abs(data.month_trend.revenue_change_cents))})</span>
-                </span>
-                <span className={trendColor(data.month_trend.payout_change_cents, false)}>
-                  {trendArrow(data.month_trend.payout_change_cents)} Payouts{' '}
-                  <span className="text-xs opacity-70">{formatCents(Math.abs(data.month_trend.payout_change_cents))}</span>
-                </span>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* ==== SECTION 2: REVENUE BREAKDOWN (collapsible, default open) ==== */}
+      {/* ==== SECTION 1: REVENUE BREAKDOWN (collapsible, default open) ==== */}
       <CollapsibleSection
         title="Revenue Breakdown"
         subtitle="Revenue chart and margin analysis"
@@ -680,43 +774,54 @@ export default function CashFlowPage() {
         {/* Margin Analysis Table */}
         {data.margin_analysis.length > 0 && (
           <div className="mt-6">
-            <h3 className="mb-3 text-sm font-semibold text-foreground">Margin Analysis by Category</h3>
-            <div className="overflow-x-auto rounded-xl scroll-visible">
+            <h3 className="mb-3 text-sm font-display font-semibold text-ink">Margin Analysis by Category</h3>
+            <div className="overflow-x-auto scroll-visible border border-rule">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-card-border text-muted">
-                  <tr>
-                    <th className="px-3 py-2.5 font-medium">Category</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Units</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Revenue</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Cost</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Profit</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Margin</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Avg Days</th>
+                <thead>
+                  <tr
+                    className="font-mono uppercase text-ink-faint"
+                    style={{ fontSize: '0.6rem', letterSpacing: '0.22em' }}
+                  >
+                    <th className="px-3 py-2.5 font-semibold border-b border-rule">Category</th>
+                    <th className="px-3 py-2.5 font-semibold text-right border-b border-rule">Units</th>
+                    <th className="px-3 py-2.5 font-semibold text-right border-b border-rule">Revenue</th>
+                    <th className="px-3 py-2.5 font-semibold text-right border-b border-rule">Cost</th>
+                    <th className="px-3 py-2.5 font-semibold text-right border-b border-rule">Profit</th>
+                    <th className="px-3 py-2.5 font-semibold text-right border-b border-rule">Margin</th>
+                    <th className="px-3 py-2.5 font-semibold text-right border-b border-rule">Avg Days</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800/50">
+                <tbody>
                   {data.margin_analysis.map((row) => (
-                    <tr key={row.category} className="text-foreground transition-colors hover:bg-card-hover/30">
+                    <tr
+                      key={row.category}
+                      className="ar-lstripe text-ink hover:bg-panel transition-colors"
+                      style={{ borderBottom: '1px solid var(--rule-faint)' }}
+                    >
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-2">
-                          <div className={`h-2.5 w-2.5 rounded-full ${catColor(row.category)}`} />
+                          <div className={`h-2.5 w-2.5 ${catColor(row.category)}`} />
                           <span className="font-medium">{catLabel(row.category)}</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-foreground/70">{row.units_sold}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{formatCents(row.revenue_cents)}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-muted">{formatCents(row.cost_cents)}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-green-400">{formatCents(row.profit_cents)}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">
-                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
-                          row.margin_percent >= 40 ? 'bg-green-500/10 text-green-400' :
-                          row.margin_percent >= 20 ? 'bg-yellow-500/10 text-yellow-400' :
-                          'bg-red-500/10 text-red-400'
-                        }`}>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink-soft">{row.units_sold}</td>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">{formatCents(row.revenue_cents)}</td>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink-soft">{formatCents(row.cost_cents)}</td>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-teal">{formatCents(row.profit_cents)}</td>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold ${
+                            row.margin_percent >= 40
+                              ? 'bg-[var(--teal-mute)] text-teal border border-teal/30'
+                              : row.margin_percent >= 20
+                                ? 'bg-[var(--yellow-mute)] text-yellow border border-yellow/30'
+                                : 'bg-[var(--red-mute)] text-red-fu border border-red-fu/30'
+                          }`}
+                        >
                           {row.margin_percent}%
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-muted">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink-faint">
                         {data.avg_days_to_sell[row.category] !== null && data.avg_days_to_sell[row.category] !== undefined
                           ? `${data.avg_days_to_sell[row.category]}d`
                           : '--'}
@@ -730,7 +835,7 @@ export default function CashFlowPage() {
         )}
       </CollapsibleSection>
 
-      {/* ==== SECTION 3: INVENTORY CAPITAL (collapsible) ==== */}
+      {/* ==== SECTION 2: INVENTORY CAPITAL (collapsible) ==== */}
       <CollapsibleSection
         title="Inventory Capital"
         subtitle={`${formatCents(data.inventory.cost_basis_cents)} locked across ${data.inventory.total_skus} SKUs`}
@@ -738,12 +843,12 @@ export default function CashFlowPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Left: Category breakdown with bars */}
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-foreground">By Category</h3>
+            <h3 className="mb-3 text-sm font-display font-semibold text-ink">By Category</h3>
             <CategoryBars categories={data.category_breakdown} totalCost={data.inventory.cost_basis_cents} />
-            <div className="mt-4 space-y-0.5 border-t border-card-border pt-3">
+            <div className="mt-4 space-y-0.5 border-t border-rule pt-3">
               <StatRow label="Total cost basis" value={formatCents(data.inventory.cost_basis_cents)} />
               <StatRow label="Total retail value" value={formatCents(data.inventory.retail_value_cents)} />
-              <StatRow label="Potential margin" value={formatCents(data.inventory.potential_margin_cents)} accent="green" />
+              <StatRow label="Potential margin" value={formatCents(data.inventory.potential_margin_cents)} accent="teal" />
               <StatRow
                 label="Out of stock"
                 value={`${data.inventory.zero_stock_count}`}
@@ -757,17 +862,17 @@ export default function CashFlowPage() {
           <div className="space-y-5">
             {/* Dead Stock */}
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-foreground">Dead Stock</h3>
+              <h3 className="mb-2 text-sm font-display font-semibold text-ink">Dead Stock</h3>
               {data.dead_stock.length === 0 ? (
-                <p className="text-sm text-muted">No dead stock detected. Everything is moving.</p>
+                <p className="text-sm text-ink-soft">No dead stock detected. Everything is moving.</p>
               ) : (
                 <>
-                  <div className="mb-3 flex flex-wrap gap-2 text-xs">
-                    <div className="rounded-lg bg-yellow-500/10 px-2.5 py-1.5 text-yellow-400">
+                  <div className="mb-3 flex flex-wrap gap-2 text-xs font-mono">
+                    <div className="bg-[var(--yellow-mute)] border border-yellow/30 px-2.5 py-1.5 text-yellow">
                       {data.dead_stock_summary.count_30d} items / {formatCents(data.dead_stock_summary.value_30d)} stuck 30d+
                     </div>
                     {data.dead_stock_summary.count_90d > 0 && (
-                      <div className="rounded-lg bg-red-500/10 px-2.5 py-1.5 text-red-400">
+                      <div className="bg-[var(--red-mute)] border border-red-fu/30 px-2.5 py-1.5 text-red-fu">
                         {data.dead_stock_summary.count_90d} items / {formatCents(data.dead_stock_summary.value_90d)} stuck 90d+
                       </div>
                     )}
@@ -775,18 +880,21 @@ export default function CashFlowPage() {
                   <div className="space-y-2">
                     {data.dead_stock.slice(0, 5).map((item, i) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-500/10 text-xs font-bold text-yellow-400">
+                        <span
+                          className="flex h-6 w-6 items-center justify-center bg-[var(--yellow-mute)] border border-yellow/30 font-mono text-xs font-bold text-yellow"
+                          aria-hidden="true"
+                        >
                           {i + 1}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-zinc-200">{item.name}</p>
-                          <p className="text-xs text-muted">
+                          <p className="truncate text-sm font-medium text-ink">{item.name}</p>
+                          <p className="text-xs text-ink-soft font-mono">
                             {catLabel(item.category)} &middot; qty {item.quantity}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-yellow-400 tabular-nums">{formatCents(item.cost_trapped_cents)}</p>
-                          <p className="text-xs text-muted tabular-nums">
+                          <p className="text-sm font-mono font-medium text-yellow tabular-nums">{formatCents(item.cost_trapped_cents)}</p>
+                          <p className="text-xs text-ink-faint font-mono tabular-nums">
                             {item.days_since_sale !== null
                               ? `${item.days_since_sale}d ago`
                               : 'Never sold'}
@@ -796,7 +904,7 @@ export default function CashFlowPage() {
                     ))}
                   </div>
                   {totalDeadStockValue > 0 && (
-                    <div className="mt-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-3 py-2 text-xs text-yellow-300">
+                    <div className="mt-3 border border-yellow/30 bg-[var(--yellow-mute)] px-3 py-2 text-xs text-yellow">
                       Top {data.dead_stock.length} dead items = {formatCents(totalDeadStockValue)} trapped capital.
                     </div>
                   )}
@@ -806,26 +914,29 @@ export default function CashFlowPage() {
 
             {/* Fast Movers */}
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-foreground">Fast Movers</h3>
+              <h3 className="mb-2 text-sm font-display font-semibold text-ink">Fast Movers</h3>
               {data.fast_movers.length === 0 ? (
-                <p className="text-sm text-muted">No sales data yet for velocity analysis.</p>
+                <p className="text-sm text-ink-soft">No sales data yet for velocity analysis.</p>
               ) : (
                 <div className="space-y-2">
                   {data.fast_movers.slice(0, 5).map((item, i) => (
                     <div key={item.id} className="flex items-center gap-3">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500/10 text-xs font-bold text-green-400">
+                      <span
+                        className="flex h-6 w-6 items-center justify-center bg-[var(--teal-mute)] border border-teal/30 font-mono text-xs font-bold text-teal"
+                        aria-hidden="true"
+                      >
                         {i + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-zinc-200">{item.name}</p>
-                        <p className="text-xs text-muted">{catLabel(item.category)}</p>
+                        <p className="truncate text-sm font-medium text-ink">{item.name}</p>
+                        <p className="text-xs text-ink-soft font-mono">{catLabel(item.category)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-green-400 tabular-nums">{item.sales_per_week}/wk</p>
-                        <p className="text-xs text-muted tabular-nums">
+                        <p className="text-sm font-mono font-medium text-teal tabular-nums">{item.sales_per_week}/wk</p>
+                        <p className="text-xs text-ink-faint font-mono tabular-nums">
                           {item.current_stock} left
                           {item.days_of_stock !== null && item.days_of_stock <= 14 && (
-                            <span className="ml-1 text-yellow-400">({item.days_of_stock}d)</span>
+                            <span className="ml-1 text-yellow">({item.days_of_stock}d)</span>
                           )}
                         </p>
                       </div>
@@ -838,7 +949,7 @@ export default function CashFlowPage() {
         </div>
       </CollapsibleSection>
 
-      {/* ==== SECTION 4: CUSTOMER HEALTH (collapsible) ==== */}
+      {/* ==== SECTION 3: CUSTOMER HEALTH (collapsible) ==== */}
       <CollapsibleSection
         title="Customer Health"
         subtitle={`${data.total_customers} total customers`}
@@ -865,14 +976,14 @@ export default function CashFlowPage() {
               <StatRow
                 label="Restocking Fees"
                 value={formatCents(data.returns.restocking_fees_collected_cents)}
-                accent="green"
+                accent="teal"
               />
             )}
           </div>
         </div>
       </CollapsibleSection>
 
-      {/* ==== SECTION 5: TRADE-INS (collapsible) ==== */}
+      {/* ==== SECTION 4: TRADE-INS (collapsible) ==== */}
       <CollapsibleSection
         title="Trade-Ins"
         subtitle={`ROI: ${data.trade_in_roi.roi_percent > 0 ? '+' : ''}${data.trade_in_roi.roi_percent}% all-time`}
@@ -880,26 +991,28 @@ export default function CashFlowPage() {
         <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
           {/* All-time ROI */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-foreground">All-Time ROI</h3>
+            <h3 className="mb-2 text-sm font-display font-semibold text-ink">All-Time ROI</h3>
             <StatRow label="Spent on trade-ins" value={formatCents(data.trade_in_roi.total_cost_cents)} accent="red" />
-            <StatRow label="Sold from trade-ins" value={formatCents(data.trade_in_roi.estimated_revenue_cents)} accent="green" />
+            <StatRow label="Sold from trade-ins" value={formatCents(data.trade_in_roi.estimated_revenue_cents)} accent="teal" />
             <StatRow label="Outstanding inventory" value={formatCents(data.trade_in_roi.outstanding_value_cents)} accent="yellow" />
-            <div className="border-t border-card-border mt-1 pt-1">
+            <div className="border-t border-rule mt-1 pt-1">
               <div className="flex items-baseline justify-between py-1.5">
-                <span className="text-sm font-medium text-foreground/70">ROI</span>
-                <span className={`text-lg font-bold tabular-nums ${
-                  data.trade_in_roi.roi_percent >= 0 ? 'text-green-400' : 'text-red-400'
-                }`}>
+                <span className="text-sm font-medium text-ink-soft">ROI</span>
+                <span
+                  className={`font-display text-lg font-bold tabular-nums ${
+                    data.trade_in_roi.roi_percent >= 0 ? 'text-teal' : 'text-red-fu'
+                  }`}
+                >
                   {data.trade_in_roi.roi_percent > 0 ? '+' : ''}{data.trade_in_roi.roi_percent}%
                 </span>
               </div>
-              <p className="text-xs text-muted">{data.trade_in_roi.total_items_received} items received all-time</p>
+              <p className="text-xs text-ink-faint font-mono">{data.trade_in_roi.total_items_received} items received all-time</p>
             </div>
           </div>
 
           {/* This month */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-foreground">This Month</h3>
+            <h3 className="mb-2 text-sm font-display font-semibold text-ink">This Month</h3>
             <StatRow label="Count" value={`${data.trade_ins.count}`} />
             <StatRow label="Total Offer Value" value={formatCents(data.trade_ins.total_offer_cents)} />
             <StatRow label="Total Paid Out" value={formatCents(data.trade_ins.total_payout_cents)} accent="red" />

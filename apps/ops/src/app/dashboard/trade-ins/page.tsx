@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { formatCents } from '@/lib/types';
-import { EmptyState } from '@/components/shared/ui';
 import { StatusBadge } from '@/components/mobile-card';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/ui/pagination';
@@ -67,17 +66,39 @@ export default function TradeInsPage() {
       <SubNav items={INVENTORY_TABS} />
       <PageHeader
         title="Trade-Ins"
+        crumb="Console · Stock"
+        desc="Customer buylist intake — cards, games, accessories. Credit pushes straight to the customer's account."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-end">
             <Link
               href="/dashboard/trade-ins/bulk"
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 transition-colors"
+              className="inline-flex items-center font-mono uppercase transition-colors"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 600,
+                padding: '0 0.85rem',
+                minHeight: 44,
+                color: 'var(--ink-soft)',
+                border: '1px solid var(--rule-hi)',
+                background: 'var(--panel)',
+              }}
             >
               Bulk Buylist
             </Link>
             <Link
               href="/dashboard/trade-ins/new"
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-colors"
+              className="inline-flex items-center font-display uppercase transition-colors"
+              style={{
+                fontSize: '0.85rem',
+                letterSpacing: '0.06em',
+                fontWeight: 700,
+                padding: '0 1rem',
+                minHeight: 48,
+                color: 'var(--void)',
+                background: 'var(--orange)',
+                border: '1px solid var(--orange)',
+              }}
             >
               New Trade-In
             </Link>
@@ -86,65 +107,121 @@ export default function TradeInsPage() {
       />
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-red-600 dark:text-red-400">
-          {error}
+        <div
+          className="p-4"
+          style={{
+            border: '1px solid var(--red)',
+            background: 'var(--red-mute)',
+            color: 'var(--red)',
+          }}
+        >
+          <p className="font-mono uppercase mb-1" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+            Error
+          </p>
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="text-muted">Loading trade-ins...</div>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Loading</span></div>
+          <div className="p-8 text-center font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.06em' }}>
+            Loading trade-ins...
+          </div>
+        </div>
       ) : tradeIns.length === 0 ? (
-        <EmptyState
-          icon="&#x21C4;"
-          title="No trade-ins yet"
-          description="Accept trade-ins for cards, games, and accessories. Credit goes straight to the customer's account."
-          action={{ label: "Start Your First Trade-In", href: "/dashboard/trade-ins/new" }}
-        />
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Trade-Ins</span><span>No results</span></div>
+          <div className="p-10 text-center">
+            <p className="font-mono uppercase text-ink-faint mb-2" style={{ fontSize: '0.66rem', letterSpacing: '0.28em' }}>
+              No trade-ins yet
+            </p>
+            <p className="font-display text-ink mb-1" style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+              Start your first trade-in
+            </p>
+            <p className="text-ink-soft mb-4 max-w-md mx-auto" style={{ fontSize: '0.85rem' }}>
+              Accept trade-ins for cards, games, and accessories. Credit goes straight to the customer's account.
+            </p>
+            <Link
+              href="/dashboard/trade-ins/new"
+              className="inline-flex items-center font-display uppercase transition-colors"
+              style={{
+                fontSize: '0.85rem',
+                letterSpacing: '0.06em',
+                fontWeight: 700,
+                padding: '0 1rem',
+                minHeight: 48,
+                color: 'var(--void)',
+                background: 'var(--orange)',
+                border: '1px solid var(--orange)',
+              }}
+            >
+              Start Your First Trade-In
+            </Link>
+          </div>
+        </div>
       ) : (
         <>
           {/* Mobile card view */}
-          <div className="md:hidden space-y-3">
+          <div className="md:hidden space-y-2">
             {tradeIns.map((ti) => (
-              <div key={ti.id} className="rounded-xl border border-card-border bg-card p-4 min-h-11 shadow-sm dark:shadow-none">
+              <div
+                key={ti.id}
+                className="ar-lstripe"
+                style={{
+                  background: 'var(--panel-mute)',
+                  border: '1px solid var(--rule)',
+                  padding: '0.85rem 1.1rem',
+                }}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground leading-snug">{ti.customer_name}</span>
+                  <span className="font-display text-ink leading-snug" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                    {ti.customer_name}
+                  </span>
                   <StatusBadge variant={statusVariants[ti.status] ?? 'info'} className="capitalize">
                     {ti.status}
                   </StatusBadge>
                 </div>
-                <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
-                  <span>{ti.item_count} items &middot; {ti.payout_type}</span>
-                  <span className="text-foreground font-semibold tabular-nums">{formatCents(ti.total_offer_cents)}</span>
+                <div className="mt-1 flex items-center justify-between font-mono text-ink-soft" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                  <span>{ti.item_count} items · {ti.payout_type}</span>
+                  <span className="text-ink tabular-nums" style={{ fontWeight: 600 }}>{formatCents(ti.total_offer_cents)}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block overflow-hidden rounded-xl border border-card-border bg-card shadow-sm dark:shadow-none">
+          <div
+            className="hidden md:block overflow-hidden"
+            style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
+          >
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-card-border text-muted">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">Customer</th>
-                  <th className="px-4 py-3 font-medium text-right">Items</th>
-                  <th className="px-4 py-3 font-medium text-right">Total Offer</th>
-                  <th className="px-4 py-3 font-medium">Payout</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
+              <thead style={{ borderBottom: '1px solid var(--rule)', background: 'var(--slate)' }}>
+                <tr className="font-mono uppercase text-ink-soft" style={{ fontSize: '0.62rem', letterSpacing: '0.28em', fontWeight: 600 }}>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3 text-right">Items</th>
+                  <th className="px-4 py-3 text-right">Total Offer</th>
+                  <th className="px-4 py-3">Payout</th>
+                  <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-card-border">
+              <tbody>
                 {tradeIns.map((ti) => (
-                  <tr key={ti.id} className="text-foreground hover:bg-card-hover transition-colors">
-                    <td className="px-4 py-3 text-muted">
+                  <tr
+                    key={ti.id}
+                    className="text-ink hover:bg-panel transition-colors"
+                    style={{ borderTop: '1px solid var(--rule-faint)' }}
+                  >
+                    <td className="px-4 py-3 font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.78rem' }}>
                       {new Date(ti.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 font-medium">{ti.customer_name}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{ti.item_count}</td>
-                    <td className="px-4 py-3 text-right tabular-nums font-semibold">
+                    <td className="px-4 py-3 font-display" style={{ fontWeight: 500 }}>{ti.customer_name}</td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">{ti.item_count}</td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums" style={{ fontWeight: 600 }}>
                       {formatCents(ti.total_offer_cents)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-ink-soft">
                       <span className="capitalize">{ti.payout_type}</span>
                     </td>
                     <td className="px-4 py-3">

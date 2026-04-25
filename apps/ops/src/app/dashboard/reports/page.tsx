@@ -2,6 +2,16 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
+import { SubNav } from "@/components/ui/sub-nav";
+
+const REPORTS_TABS = [
+  { href: "/dashboard/reports", label: "Event ROI" },
+  { href: "/dashboard/reports/sales", label: "Sales" },
+  { href: "/dashboard/reports/margins", label: "Margins" },
+  { href: "/dashboard/reports/inventory-health", label: "Inventory Health" },
+  { href: "/dashboard/reports/channels", label: "Channels" },
+  { href: "/dashboard/reports/staff", label: "Staff" },
+];
 
 export default async function ReportsPage() {
   const session = await auth();
@@ -46,78 +56,194 @@ export default async function ReportsPage() {
     };
   });
 
+  /* ---- KPI roll-ups ---- */
+  const totalRevenue = results.reduce((s, r) => s + r.total_revenue, 0);
+  const totalEntryFees = results.reduce((s, r) => s + r.entry_fees, 0);
+  const totalTaggedSales = results.reduce((s, r) => s + r.tagged_sales, 0);
+  const totalPlayers = results.reduce((s, r) => s + r.checkin_count, 0);
+  const eventCount = results.length;
+
   return (
     <div className="flex flex-col h-full gap-4">
-      <PageHeader title="Event ROI" />
+      <PageHeader
+        title="Reports"
+        crumb="Console · Reports"
+        desc="Operator analytics across events, sales, margins, inventory, channels, and staff."
+      />
+
+      <SubNav items={REPORTS_TABS} />
+
+      <div>
+        <p
+          className="font-mono uppercase font-semibold text-ink-faint mb-3"
+          style={{ fontSize: "0.6rem", letterSpacing: "0.28em" }}
+        >
+          Event ROI · All-time
+        </p>
+
+        {/* KPI strip */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-px bg-rule border border-rule">
+          <KpiCell k="Events" v={String(eventCount)} primary />
+          <KpiCell k="Total Revenue" v={formatCents(totalRevenue)} />
+          <KpiCell k="Entry Fees" v={formatCents(totalEntryFees)} />
+          <KpiCell k="Players" v={String(totalPlayers)} sub={`${formatCents(totalTaggedSales)} tagged sales`} />
+        </section>
+      </div>
 
       {results.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card p-8 text-center">
-          <p className="text-muted">No events yet.</p>
+        <div className="bg-panel-mute border border-rule p-8 text-center">
+          <p className="text-ink-soft">No events yet.</p>
         </div>
       ) : (
         <>
-          {/* Mobile card view */}
-          <div className="md:hidden space-y-2">
+          {/* Mobile / kiosk: row list */}
+          <div className="md:hidden flex flex-col" style={{ background: "var(--rule)", border: "1px solid var(--rule)", gap: "1px" }}>
             {results.map((event) => (
-              <div key={event.id} className="rounded-xl border border-card-border bg-card p-3 min-h-11">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground truncate mr-2">{event.name}</span>
-                  <span className="text-sm font-medium text-foreground whitespace-nowrap">{formatCents(event.total_revenue)}</span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-muted">
-                  <span>
-                    <span className="rounded bg-card-hover px-1.5 py-0.5 text-xs text-foreground/70">{event.event_type}</span>
-                    <span className="ml-2">{event.checkin_count} players</span>
+              <div
+                key={event.id}
+                className="ar-lstripe bg-panel-mute hover:bg-panel transition-colors px-3 py-3"
+                style={{ minHeight: 56 }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-medium text-ink truncate">{event.name}</span>
+                  <span className="font-mono font-semibold text-sm tabular-nums text-ink whitespace-nowrap">
+                    {formatCents(event.total_revenue)}
                   </span>
-                  <span>{new Date(event.starts_at).toLocaleDateString()}</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-ink-soft">
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="font-mono uppercase"
+                      style={{
+                        fontSize: "0.55rem",
+                        letterSpacing: "0.18em",
+                        padding: "1px 6px",
+                        border: "1px solid var(--rule-hi)",
+                        color: "var(--ink-soft)",
+                      }}
+                    >
+                      {event.event_type}
+                    </span>
+                    <span className="font-mono tabular-nums">{event.checkin_count} players</span>
+                  </span>
+                  <span className="font-mono tabular-nums text-ink-faint">
+                    {new Date(event.starts_at).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto rounded-xl border border-card-border scroll-visible">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-card-border bg-card">
-                <tr>
-                  <th className="px-4 py-3 text-muted">Event</th>
-                  <th className="px-4 py-3 text-muted">Date</th>
-                  <th className="px-4 py-3 text-muted">Type</th>
-                  <th className="px-4 py-3 text-right text-muted">Entry Fees</th>
-                  <th className="px-4 py-3 text-right text-muted">Tagged Sales</th>
-                  <th className="px-4 py-3 text-right text-muted">Total</th>
-                  <th className="px-4 py-3 text-right text-muted">Players</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800 bg-background">
-                {results.map((event) => (
-                  <tr key={event.id}>
-                    <td className="px-4 py-3 font-medium text-foreground">{event.name}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-foreground/70">
-                      {new Date(event.starts_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded bg-card-hover px-2 py-0.5 text-xs text-foreground/70">
-                        {event.event_type}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right text-foreground">
-                      {formatCents(event.entry_fees)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right text-foreground">
-                      {formatCents(event.tagged_sales)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right font-medium text-foreground">
-                      {formatCents(event.total_revenue)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-foreground/70">{event.checkin_count}</td>
+          {/* Desktop: operator-grade row table */}
+          <div className="hidden md:block ar-zone">
+            <div className="ar-zone-head">
+              <span>Events · ROI · {eventCount}</span>
+              <span className="font-mono text-ink-faint" style={{ fontSize: "0.62rem", letterSpacing: "0.18em" }}>
+                Total · <span className="text-ink">{formatCents(totalRevenue)}</span>
+              </span>
+            </div>
+            <div className="overflow-x-auto scroll-visible">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr
+                    className="font-mono uppercase text-ink-faint"
+                    style={{ fontSize: "0.6rem", letterSpacing: "0.22em" }}
+                  >
+                    <th className="px-4 py-3 font-semibold border-b border-rule">Event</th>
+                    <th className="px-4 py-3 font-semibold border-b border-rule">Date</th>
+                    <th className="px-4 py-3 font-semibold border-b border-rule">Type</th>
+                    <th className="px-4 py-3 font-semibold text-right border-b border-rule">Entry Fees</th>
+                    <th className="px-4 py-3 font-semibold text-right border-b border-rule">Tagged Sales</th>
+                    <th className="px-4 py-3 font-semibold text-right border-b border-rule">Total</th>
+                    <th className="px-4 py-3 font-semibold text-right border-b border-rule">Players</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {results.map((event) => (
+                    <tr
+                      key={event.id}
+                      className="ar-lstripe hover:bg-panel transition-colors"
+                      style={{ borderBottom: "1px solid var(--rule-faint)" }}
+                    >
+                      <td className="px-4 py-3 font-display font-medium text-ink">{event.name}</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono tabular-nums text-ink-soft">
+                        {new Date(event.starts_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="font-mono uppercase inline-block"
+                          style={{
+                            fontSize: "0.55rem",
+                            letterSpacing: "0.18em",
+                            padding: "1px 6px",
+                            border: "1px solid var(--rule-hi)",
+                            color: "var(--ink-soft)",
+                          }}
+                        >
+                          {event.event_type}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-mono tabular-nums text-ink">
+                        {formatCents(event.entry_fees)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-mono tabular-nums text-ink">
+                        {formatCents(event.tagged_sales)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-mono font-semibold tabular-nums text-teal">
+                        {formatCents(event.total_revenue)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-ink-soft">
+                        {event.checkin_count}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+
+function KpiCell({
+  k,
+  v,
+  sub,
+  primary,
+}: {
+  k: string;
+  v: string;
+  sub?: string;
+  primary?: boolean;
+}) {
+  return (
+    <div className="bg-panel-mute p-3 md:p-4 min-h-22 flex flex-col justify-between">
+      <div
+        className="font-mono uppercase text-ink-faint font-semibold"
+        style={{ fontSize: "0.6rem", letterSpacing: "0.24em" }}
+      >
+        {k}
+      </div>
+      <div>
+        <div
+          className={`font-display font-bold leading-none mt-2 ${primary ? "text-orange" : "text-ink"}`}
+          style={{ fontSize: "clamp(1.4rem, 3.5vw, 2rem)", letterSpacing: "-0.01em" }}
+        >
+          {v}
+        </div>
+        {sub ? (
+          <div
+            className="font-mono text-ink-faint mt-1.5"
+            style={{ fontSize: "0.62rem", letterSpacing: "0.04em" }}
+          >
+            {sub}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

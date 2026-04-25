@@ -7,7 +7,7 @@ import { useStoreSettings } from '@/lib/store-settings';
 import { BarcodeScanner } from '@/components/barcode-scanner';
 import { PageHeader } from '@/components/page-header';
 import { HelpTooltip } from '@/components/help-tooltip';
-import { calculateOffer, type Condition, DEFAULT_CONDITION_MULTIPLIERS } from '@/lib/tcg-pricing';
+import { calculateOffer, type Condition } from '@/lib/tcg-pricing';
 
 /* ---------- types ---------- */
 
@@ -36,13 +36,49 @@ interface TradeItem {
 
 const CONDITIONS: Condition[] = ['NM', 'LP', 'MP', 'HP', 'DMG'];
 
-/* Condition button color classes (matches ConditionBadge from shared.tsx) */
-const CONDITION_COLORS: Record<Condition, { base: string; active: string }> = {
-  NM:  { base: 'border-green-500/30 text-green-400 hover:bg-green-500/20', active: 'bg-green-500/30 border-green-500 text-green-300 ring-1 ring-green-500/50' },
-  LP:  { base: 'border-blue-500/30 text-blue-400 hover:bg-blue-500/20', active: 'bg-blue-500/30 border-blue-500 text-blue-300 ring-1 ring-blue-500/50' },
-  MP:  { base: 'border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20', active: 'bg-yellow-500/30 border-yellow-500 text-yellow-300 ring-1 ring-yellow-500/50' },
-  HP:  { base: 'border-orange-500/30 text-orange-400 hover:bg-orange-500/20', active: 'bg-orange-500/30 border-orange-500 text-orange-300 ring-1 ring-orange-500/50' },
-  DMG: { base: 'border-red-500/30 text-red-400 hover:bg-red-500/20', active: 'bg-red-500/30 border-red-500 text-red-300 ring-1 ring-red-500/50' },
+/* Condition pill colors — operator console palette
+   NM/LP/MP = teal/orange/yellow tonal grade,
+   HP/DMG = red-tinted to signal "rough card" */
+const CONDITION_COLORS: Record<Condition, { fg: string; bg: string; activeBg: string; border: string }> = {
+  NM:  { fg: 'var(--teal)',   bg: 'transparent', activeBg: 'var(--teal-mute)',   border: 'var(--teal)' },
+  LP:  { fg: 'var(--orange)', bg: 'transparent', activeBg: 'var(--orange-mute)', border: 'var(--orange)' },
+  MP:  { fg: 'var(--yellow)', bg: 'transparent', activeBg: 'var(--yellow-mute)', border: 'var(--yellow)' },
+  HP:  { fg: 'var(--red)',    bg: 'transparent', activeBg: 'var(--red-mute)',    border: 'var(--red)' },
+  DMG: { fg: 'var(--red)',    bg: 'transparent', activeBg: 'var(--red-mute)',    border: 'var(--red)' },
+};
+
+/* ---------- shared styles ---------- */
+const inputStyle: React.CSSProperties = {
+  background: 'var(--panel)',
+  border: '1px solid var(--rule-hi)',
+  color: 'var(--ink)',
+  fontSize: '0.92rem',
+  padding: '0.65rem 0.85rem',
+  minHeight: 44,
+  outline: 'none',
+  width: '100%',
+};
+
+const primaryBtnStyle: React.CSSProperties = {
+  fontSize: '0.85rem',
+  letterSpacing: '0.06em',
+  fontWeight: 700,
+  padding: '0 1rem',
+  minHeight: 48,
+  color: 'var(--void)',
+  background: 'var(--orange)',
+  border: '1px solid var(--orange)',
+};
+
+const ghostBtnStyle: React.CSSProperties = {
+  fontSize: '0.66rem',
+  letterSpacing: '0.18em',
+  fontWeight: 600,
+  padding: '0 0.85rem',
+  minHeight: 44,
+  color: 'var(--ink-soft)',
+  border: '1px solid var(--rule-hi)',
+  background: 'var(--panel)',
 };
 
 /* ---------- component ---------- */
@@ -272,8 +308,8 @@ export default function NewTradeInPage() {
       setSelectedCustomer(customer);
       setShowCreate(false);
       setStep(2);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create customer');
     } finally {
       setCustomerLoading(false);
     }
@@ -308,8 +344,8 @@ export default function NewTradeInPage() {
         throw new Error(data.error || 'Failed to create trade-in');
       }
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create trade-in');
     } finally {
       setSubmitting(false);
     }
@@ -327,18 +363,27 @@ export default function NewTradeInPage() {
   if (success) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-8">
-          <h2 className="text-xl font-bold text-green-400">Trade-In Complete</h2>
-          <p className="mt-2 text-foreground/70">
-            {items.length} item{items.length !== 1 ? 's' : ''} &middot;{' '}
-            {formatCents(totalPayoutCents)} {payoutType === 'credit' ? 'store credit' : 'cash'}
-          </p>
+        <div className="ar-zone" style={{ borderColor: 'var(--teal)' }}>
+          <div className="ar-zone-head" style={{ background: 'var(--teal-mute)', color: 'var(--teal)' }}>
+            <span>Trade-In Complete</span>
+          </div>
+          <div className="p-8">
+            <p className="font-display text-teal mb-2" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              Payout issued
+            </p>
+            <p className="text-ink-soft" style={{ fontSize: '0.95rem' }}>
+              {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
+              <span className="font-mono tabular-nums text-ink">{formatCents(totalPayoutCents)}</span>{' '}
+              {payoutType === 'credit' ? 'store credit' : 'cash'}
+            </p>
+          </div>
         </div>
         <Link
           href="/dashboard/trade-ins"
-          className="inline-block rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors"
+          className="inline-flex items-center font-mono uppercase transition-colors"
+          style={ghostBtnStyle}
         >
-          Back to Trade-Ins
+          ← Back to Trade-Ins
         </Link>
       </div>
     );
@@ -346,494 +391,588 @@ export default function NewTradeInPage() {
 
   /* ---- render ---- */
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="New Trade-In" backHref="/dashboard/trade-ins" />
+    <div className="mx-auto max-w-3xl space-y-5">
+      <PageHeader
+        title="New Trade-In"
+        crumb="Console · Stock"
+        desc="Pick a customer, scan / search items, choose payout method."
+        backHref="/dashboard/trade-ins"
+      />
 
       {/* progress */}
-      <div className="flex gap-2 text-sm">
-        {[1, 2, 3].map((s) => (
-          <div
-            key={s}
-            className={`flex-1 rounded-full py-1 text-center font-medium transition-colors ${
-              s === step
-                ? 'bg-accent text-foreground'
-                : s < step
-                  ? 'bg-accent/30 text-indigo-300'
-                  : 'bg-card-hover text-muted'
-            }`}
-          >
-            Step {s}
-          </div>
-        ))}
+      <div className="flex gap-1.5">
+        {[1, 2, 3].map((s) => {
+          const on = s === step;
+          const done = s < step;
+          return (
+            <div
+              key={s}
+              className="flex-1 inline-flex items-center justify-center font-mono uppercase"
+              style={{
+                fontSize: '0.66rem',
+                letterSpacing: '0.18em',
+                fontWeight: 700,
+                padding: '0.55rem 0.5rem',
+                minHeight: 36,
+                color: on ? 'var(--orange)' : done ? 'var(--teal)' : 'var(--ink-faint)',
+                border: `1px solid ${on ? 'var(--orange)' : done ? 'var(--teal)' : 'var(--rule-hi)'}`,
+                background: on ? 'var(--orange-mute)' : done ? 'var(--teal-mute)' : 'var(--panel)',
+              }}
+            >
+              Step {s}
+              {done && <span className="ml-1.5">✓</span>}
+            </div>
+          );
+        })}
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-          {error}
+        <div className="p-3" style={{ border: '1px solid var(--red)', background: 'var(--red-mute)', color: 'var(--red)' }}>
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
       {/* ============ STEP 1: CUSTOMER ============ */}
       {step === 1 && (
-        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">Select Customer</h2>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Step 1 · Select Customer</span></div>
+          <div className="p-5 space-y-4">
 
-          {selectedCustomer ? (
-            <div className="flex items-center justify-between rounded-xl border border-input-border bg-card-hover p-4">
-              <div>
-                <div className="font-medium text-foreground">{selectedCustomer.name}</div>
-                {selectedCustomer.email && (
-                  <div className="text-sm text-muted">{selectedCustomer.email}</div>
-                )}
+            {selectedCustomer ? (
+              <div className="flex items-center justify-between p-4" style={{ background: 'var(--orange-mute)', border: '1px solid var(--orange)' }}>
+                <div>
+                  <div className="font-display text-ink" style={{ fontWeight: 600 }}>{selectedCustomer.name}</div>
+                  {selectedCustomer.email && (
+                    <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>{selectedCustomer.email}</div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedCustomer(null)}
+                  className="font-mono uppercase text-ink-soft hover:text-ink transition-colors"
+                  style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 600, minHeight: 44, padding: '0 0.6rem' }}
+                >
+                  Change
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedCustomer(null)}
-                className="text-sm text-muted hover:text-foreground"
-              >
-                Change
-              </button>
-            </div>
-          ) : (
-            <>
-              <input
-                type="text"
-                placeholder="Search customers by name..."
-                value={customerQuery}
-                onChange={(e) => setCustomerQuery(e.target.value)}
-                autoFocus
-                className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-              />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Search customers by name..."
+                  value={customerQuery}
+                  onChange={(e) => setCustomerQuery(e.target.value)}
+                  autoFocus
+                  style={inputStyle}
+                />
 
-              {customerLoading && <div className="text-sm text-muted">Searching...</div>}
+                {customerLoading && (
+                  <p className="font-mono uppercase text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.18em' }}>
+                    Searching...
+                  </p>
+                )}
 
-              {customerResults.length > 0 && (
-                <div className="space-y-1 rounded-xl border border-input-border bg-card-hover p-2">
-                  {customerResults.map((c) => (
+                {customerResults.length > 0 && (
+                  <div className="space-y-1 p-2" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
+                    {customerResults.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          setSelectedCustomer(c);
+                          setCustomerQuery('');
+                          setCustomerResults([]);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-ink hover:bg-panel-hi transition-colors"
+                        style={{ minHeight: 44 }}
+                      >
+                        <span className="font-display" style={{ fontWeight: 500 }}>{c.name}</span>
+                        {c.email && <span className="ml-2 font-mono text-ink-soft" style={{ fontSize: '0.74rem' }}>{c.email}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowCreate((v) => !v)}
+                  className="font-mono uppercase text-orange hover:underline transition-colors"
+                  style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 700, minHeight: 36, padding: '0 0.4rem' }}
+                >
+                  {showCreate ? '× Cancel' : '+ Create New Customer'}
+                </button>
+
+                {showCreate && (
+                  <div className="space-y-3 p-4" style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}>
+                    <input
+                      type="text"
+                      placeholder="Name *"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      style={inputStyle}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      style={inputStyle}
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Phone"
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      style={inputStyle}
+                    />
                     <button
-                      key={c.id}
-                      onClick={() => {
-                        setSelectedCustomer(c);
-                        setCustomerQuery('');
-                        setCustomerResults([]);
-                      }}
-                      className="w-full rounded px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors"
+                      onClick={createCustomer}
+                      disabled={!newName.trim() || customerLoading}
+                      className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                      style={primaryBtnStyle}
                     >
-                      <span className="font-medium">{c.name}</span>
-                      {c.email && <span className="ml-2 text-muted">{c.email}</span>}
+                      Create & Select
                     </button>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
+              </>
+            )}
 
-              <button
-                onClick={() => setShowCreate((v) => !v)}
-                className="text-sm text-indigo-400 hover:text-indigo-300"
-              >
-                {showCreate ? 'Cancel' : '+ Create New Customer'}
-              </button>
-
-              {showCreate && (
-                <div className="space-y-3 rounded-xl border border-input-border bg-card-hover p-4">
-                  <input
-                    type="text"
-                    placeholder="Name *"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone"
-                    value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-600 bg-card px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                  />
-                  <button
-                    onClick={createCustomer}
-                    disabled={!newName.trim() || customerLoading}
-                    className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-                  >
-                    Create & Select
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {selectedCustomer && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => setStep(2)}
-                className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-colors"
-              >
-                Next: Add Items
-              </button>
-            </div>
-          )}
+            {selectedCustomer && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setStep(2)}
+                  className="inline-flex items-center font-display uppercase transition-colors"
+                  style={primaryBtnStyle}
+                >
+                  Next: Add Items →
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* ============ STEP 2: ITEMS ============ */}
       {step === 2 && (
-        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">Add Items</h2>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Step 2 · Add Items</span></div>
+          <div className="p-5 space-y-4">
 
-          {/* Cash position indicator */}
-          {cashIndicator && cashIndicator.level !== "healthy" && (
-            <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${
-              cashIndicator.level === "critical"
-                ? "bg-red-900/20 border border-red-500/30 text-red-300"
-                : "bg-amber-900/20 border border-amber-500/30 text-amber-300"
-            }`}>
-              <span className={`h-2 w-2 rounded-full shrink-0 ${cashIndicator.level === "critical" ? "bg-red-400 animate-pulse" : "bg-amber-400"}`} />
-              {cashIndicator.message}
-            </div>
-          )}
-
-          {/* search */}
-          <div className="relative">
-            <div className="flex gap-2">
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder="Search inventory to add item..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                autoFocus
-                className="flex-1 rounded-xl border border-input-border bg-card-hover px-4 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-              />
-              <button
-                onClick={() => setShowBarcodeScanner(true)}
-                className="rounded-xl bg-card-hover px-3 py-2 text-xs font-medium text-muted hover:text-foreground border border-input-border transition-colors min-h-11"
-                title="Scan barcode"
+            {/* Cash position indicator */}
+            {cashIndicator && cashIndicator.level !== "healthy" && (
+              <div
+                className="px-3 py-2 text-xs flex items-center gap-2"
+                style={{
+                  background: cashIndicator.level === "critical" ? 'var(--red-mute)' : 'var(--yellow-mute)',
+                  border: `1px solid ${cashIndicator.level === "critical" ? 'var(--red)' : 'var(--yellow)'}`,
+                  color: cashIndicator.level === "critical" ? 'var(--red)' : 'var(--yellow)',
+                }}
               >
-                Scan
-              </button>
+                <span
+                  className={`h-2 w-2 rounded-full shrink-0 ${cashIndicator.level === "critical" ? "animate-pulse" : ""}`}
+                  style={{ background: cashIndicator.level === "critical" ? 'var(--red)' : 'var(--yellow)' }}
+                />
+                <span className="font-mono uppercase" style={{ fontSize: '0.66rem', letterSpacing: '0.14em', fontWeight: 700 }}>
+                  {cashIndicator.message}
+                </span>
+              </div>
+            )}
+
+            {/* search */}
+            <div className="relative">
+              <div className="flex gap-2">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search inventory to add item..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  autoFocus
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  onClick={() => setShowBarcodeScanner(true)}
+                  className="inline-flex items-center font-mono uppercase transition-colors"
+                  style={ghostBtnStyle}
+                  title="Scan barcode"
+                >
+                  Scan
+                </button>
+              </div>
+              {searchResults.length > 0 && (
+                <div
+                  className="absolute z-10 mt-1 w-full shadow-xl"
+                  style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}
+                >
+                  {searchResults.map((inv) => (
+                    <button
+                      key={inv.id}
+                      onClick={() => addItemFromSearch(inv)}
+                      className="w-full px-4 py-2 text-left text-sm text-ink hover:bg-panel-hi transition-colors"
+                      style={{ minHeight: 44 }}
+                    >
+                      <span className="font-display" style={{ fontWeight: 500 }}>{inv.name}</span>
+                      <span className="ml-2 font-mono text-ink-soft" style={{ fontSize: '0.7rem' }}>{inv.category}</span>
+                      <span className="ml-2 font-mono tabular-nums text-ink-soft" style={{ fontSize: '0.7rem' }}>{formatCents(inv.price_cents)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            {searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-input-border bg-card-hover shadow-xl">
-                {searchResults.map((inv) => (
-                  <button
-                    key={inv.id}
-                    onClick={() => addItemFromSearch(inv)}
-                    className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors first:rounded-t-lg last:rounded-b-lg"
+
+            <button
+              onClick={() => setShowManual((v) => !v)}
+              className="font-mono uppercase text-orange hover:underline transition-colors"
+              style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 700, minHeight: 36, padding: '0 0.4rem' }}
+            >
+              {showManual ? '× Cancel Manual Entry' : '+ Manual Entry'}
+            </button>
+
+            {showManual && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Item name"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addManualItem()}
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <input
+                  type="text"
+                  placeholder="Category"
+                  value={manualCategory}
+                  onChange={(e) => setManualCategory(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addManualItem()}
+                  style={{ ...inputStyle, width: 144 }}
+                />
+                <button
+                  onClick={addManualItem}
+                  disabled={!manualName.trim()}
+                  className="inline-flex items-center disabled:opacity-50"
+                  style={ghostBtnStyle}
+                >
+                  Add
+                </button>
+              </div>
+            )}
+
+            {/* items list */}
+            {items.length > 0 && (
+              <div className="space-y-2">
+                {items.map((item) => (
+                  <div
+                    key={item.key}
+                    className="p-4 space-y-3"
+                    style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}
                   >
-                    <span className="font-medium">{inv.name}</span>
-                    <span className="ml-2 text-muted">{inv.category}</span>
-                    <span className="ml-2 text-muted">{formatCents(inv.price_cents)}</span>
-                  </button>
+                    {/* Row 1: Item info left, remove button right */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex gap-3 min-w-0">
+                        {/* Card image */}
+                        {item.image_url && item.category === "tcg_single" && (
+                          <div
+                            className="shrink-0 w-14 overflow-hidden"
+                            style={{ height: 78, background: 'var(--slate)', border: '1px solid var(--rule)' }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="font-display text-ink truncate" style={{ fontWeight: 600 }}>{item.name}</div>
+                          {item.category && (
+                            <div className="font-mono text-ink-faint" style={{ fontSize: '0.66rem', letterSpacing: '0.04em' }}>{item.category}</div>
+                          )}
+                          {item.market_price_cents > 0 && (
+                            <div className="font-mono text-ink-soft" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                              Market: <span className="tabular-nums">{formatCents(item.market_price_cents)}</span>
+                            </div>
+                          )}
+                          {item.current_stock !== undefined && item.category === "tcg_single" && (
+                            <div className="font-mono mt-0.5" style={{ fontSize: '0.66rem', letterSpacing: '0.04em' }}>
+                              {item.current_stock <= 1 ? (
+                                <span className="text-red-fu">🔥 Low stock — offer more to secure</span>
+                              ) : item.current_stock >= 5 ? (
+                                <span className="text-teal">Well stocked ({item.current_stock}) — standard offer</span>
+                              ) : (
+                                <span className="text-ink-soft">{item.current_stock} in stock</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeItem(item.key)}
+                        className="text-ink-faint hover:text-red-fu transition-colors text-lg leading-none flex items-center justify-center"
+                        style={{ minHeight: 44, minWidth: 44 }}
+                        title="Remove item"
+                        aria-label="Remove item"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    {/* Row 2: Condition pill row */}
+                    <div className="flex gap-1.5">
+                      {CONDITIONS.map((c) => {
+                        const isActive = item.condition === c;
+                        const colors = CONDITION_COLORS[c];
+                        return (
+                          <button
+                            key={c}
+                            onClick={() => updateItem(item.key, { condition: c })}
+                            className="flex-1 inline-flex items-center justify-center font-mono uppercase transition-colors"
+                            style={{
+                              fontSize: '0.78rem',
+                              letterSpacing: '0.14em',
+                              fontWeight: 700,
+                              minHeight: 44,
+                              color: colors.fg,
+                              border: `1px solid ${isActive ? colors.border : 'var(--rule-hi)'}`,
+                              background: isActive ? colors.activeBg : colors.bg,
+                            }}
+                          >
+                            {c}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Row 3: Offer + Qty + Line total */}
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <label className="flex items-center gap-1.5 text-ink-soft">
+                        <span className="font-mono uppercase" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 600 }}>Offer $</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={(item.offer_price_cents / 100).toFixed(2)}
+                          onChange={(e) =>
+                            updateItem(item.key, {
+                              offer_price_cents: parseDollars(e.target.value),
+                            })
+                          }
+                          className="w-24 font-mono tabular-nums transition-all"
+                          style={{
+                            ...inputStyle,
+                            padding: '0.4rem 0.5rem',
+                            ...(flashingKeys.has(item.key)
+                              ? { borderColor: 'var(--orange)', background: 'var(--orange-mute)' }
+                              : {}),
+                          }}
+                        />
+                        {item.manualOffer && (
+                          <button
+                            onClick={() => {
+                              const recalc = computeOffer(item, item.condition);
+                              setItems((prev) => prev.map((i) =>
+                                i.key === item.key ? { ...i, offer_price_cents: recalc, manualOffer: false } : i
+                              ));
+                              triggerFlash(item.key);
+                            }}
+                            className="font-mono uppercase text-orange hover:underline"
+                            style={{ fontSize: '0.6rem', letterSpacing: '0.18em', fontWeight: 700 }}
+                            title="Reset to auto-calculated offer"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </label>
+
+                      <label className="flex items-center gap-1.5 text-ink-soft">
+                        <span className="font-mono uppercase" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 600 }}>Qty</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateItem(item.key, { quantity: Math.max(1, Number(e.target.value)) })
+                          }
+                          className="w-16 font-mono tabular-nums"
+                          style={{ ...inputStyle, padding: '0.4rem 0.5rem' }}
+                        />
+                      </label>
+
+                      <div className="ml-auto font-mono tabular-nums text-ink" style={{ fontSize: '1.05rem', fontWeight: 700 }}>
+                        {formatCents(item.offer_price_cents * item.quantity)}
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
-          </div>
 
-          <button
-            onClick={() => setShowManual((v) => !v)}
-            className="text-sm text-indigo-400 hover:text-indigo-300"
-          >
-            {showManual ? 'Cancel Manual Entry' : '+ Manual Entry'}
-          </button>
+            {/* running total */}
+            <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+              <span className="font-mono uppercase text-ink-soft" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 600 }}>
+                Running Total
+              </span>
+              <span className="font-mono tabular-nums text-ink" style={{ fontSize: '1.3rem', fontWeight: 700 }}>
+                {formatCents(totalOfferCents)}
+              </span>
+            </div>
 
-          {showManual && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Item name"
-                value={manualName}
-                onChange={(e) => setManualName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addManualItem()}
-                className="flex-1 rounded-xl border border-zinc-600 bg-card-hover px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-              />
-              <input
-                type="text"
-                placeholder="Category"
-                value={manualCategory}
-                onChange={(e) => setManualCategory(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addManualItem()}
-                className="w-36 rounded-xl border border-zinc-600 bg-card-hover px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-              />
+            <div className="flex justify-between">
               <button
-                onClick={addManualItem}
-                disabled={!manualName.trim()}
-                className="rounded-xl bg-card-hover px-3 py-2 text-sm text-foreground hover:bg-card-hover disabled:opacity-50 transition-colors"
+                onClick={() => setStep(1)}
+                className="inline-flex items-center font-mono uppercase transition-colors"
+                style={ghostBtnStyle}
               >
-                Add
+                ← Back
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                disabled={items.length === 0}
+                className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                style={primaryBtnStyle}
+              >
+                Next: Payout →
               </button>
             </div>
-          )}
-
-          {/* items list */}
-          {items.length > 0 && (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div
-                  key={item.key}
-                  className="rounded-xl border border-input-border bg-card-hover p-4 space-y-3"
-                >
-                  {/* Row 1: Item info left, remove button right */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex gap-3 min-w-0">
-                      {/* Card image */}
-                      {item.image_url && item.category === "tcg_single" && (
-                        <div className="shrink-0 w-14 h-[78px] rounded-lg overflow-hidden bg-background border border-card-border">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="font-medium text-foreground truncate">{item.name}</div>
-                        {item.category && (
-                          <div className="text-xs text-muted">{item.category}</div>
-                        )}
-                        {item.market_price_cents > 0 && (
-                          <div className="text-xs text-muted">
-                            Market: {formatCents(item.market_price_cents)}
-                          </div>
-                        )}
-                        {item.current_stock !== undefined && item.category === "tcg_single" && (
-                          <div className="text-[10px] mt-0.5">
-                            {item.current_stock <= 1 ? (
-                              <span className="text-red-400">{"\u{1F525}"} Low stock — offer more to secure</span>
-                            ) : item.current_stock >= 5 ? (
-                              <span className="text-blue-400">Well stocked ({item.current_stock}) — standard offer</span>
-                            ) : (
-                              <span className="text-muted">{item.current_stock} in stock</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => removeItem(item.key)}
-                      className="text-muted hover:text-red-400 transition-colors text-lg leading-none"
-                      title="Remove item"
-                    >
-                      &times;
-                    </button>
-                  </div>
-
-                  {/* Row 2: Condition buttons (prominent, big) */}
-                  <div className="flex gap-1.5">
-                    {CONDITIONS.map((c) => {
-                      const isActive = item.condition === c;
-                      const colors = CONDITION_COLORS[c];
-                      return (
-                        <button
-                          key={c}
-                          onClick={() => updateItem(item.key, { condition: c })}
-                          className={`flex-1 rounded-lg border py-2 text-sm font-bold transition-all ${
-                            isActive ? colors.active : colors.base
-                          }`}
-                        >
-                          {c}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Row 3: Offer + Qty + Line total */}
-                  <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <label className="flex items-center gap-1.5 text-muted">
-                      Offer $
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={(item.offer_price_cents / 100).toFixed(2)}
-                        onChange={(e) =>
-                          updateItem(item.key, {
-                            offer_price_cents: parseDollars(e.target.value),
-                          })
-                        }
-                        className={`w-24 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none transition-all ${
-                          flashingKeys.has(item.key)
-                            ? 'ring-2 ring-accent bg-accent/10'
-                            : ''
-                        }`}
-                      />
-                      {item.manualOffer && (
-                        <button
-                          onClick={() => {
-                            const recalc = computeOffer(item, item.condition);
-                            setItems((prev) => prev.map((i) =>
-                              i.key === item.key ? { ...i, offer_price_cents: recalc, manualOffer: false } : i
-                            ));
-                            triggerFlash(item.key);
-                          }}
-                          className="text-[10px] text-accent hover:text-accent/80 underline"
-                          title="Reset to auto-calculated offer"
-                        >
-                          reset
-                        </button>
-                      )}
-                    </label>
-
-                    <label className="flex items-center gap-1.5 text-muted">
-                      Qty
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(item.key, { quantity: Math.max(1, Number(e.target.value)) })
-                        }
-                        className="w-16 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
-                      />
-                    </label>
-
-                    <div className="ml-auto font-semibold text-foreground tabular-nums text-base">
-                      {formatCents(item.offer_price_cents * item.quantity)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* running total */}
-          <div className="flex items-center justify-between border-t border-input-border pt-4">
-            <span className="text-muted">Running Total</span>
-            <span className="text-lg font-semibold text-foreground tabular-nums">
-              {formatCents(totalOfferCents)}
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <button
-              onClick={() => setStep(1)}
-              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => setStep(3)}
-              disabled={items.length === 0}
-              className="rounded-xl bg-accent px-6 py-2 text-sm font-medium text-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-            >
-              Next: Payout
-            </button>
           </div>
         </div>
       )}
 
       {/* ============ STEP 3: PAYOUT ============ */}
       {step === 3 && (
-        <div className="space-y-4 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">Payout</h2>
+        <div className="ar-zone">
+          <div className="ar-zone-head"><span>Step 3 · Payout</span></div>
+          <div className="p-5 space-y-4">
 
-          {/* toggle */}
-          <div className="flex gap-2">
-            {(['cash', 'credit'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setPayoutType(t)}
-                className={`flex-1 rounded-xl py-2 text-sm font-medium capitalize transition-colors ${
-                  payoutType === t
-                    ? 'bg-accent text-foreground'
-                    : 'bg-card-hover text-muted hover:bg-card-hover'
-                }`}
-              >
-                {t === 'credit' ? 'Store Credit' : 'Cash'}
-              </button>
-            ))}
-          </div>
+            {/* toggle */}
+            <div className="flex gap-1.5">
+              {(['cash', 'credit'] as const).map((t) => {
+                const on = payoutType === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setPayoutType(t)}
+                    className="flex-1 inline-flex items-center justify-center font-mono uppercase transition-colors"
+                    style={{
+                      fontSize: '0.7rem',
+                      letterSpacing: '0.18em',
+                      fontWeight: 700,
+                      minHeight: 48,
+                      color: on ? 'var(--orange)' : 'var(--ink-soft)',
+                      border: `1px solid ${on ? 'var(--orange)' : 'var(--rule-hi)'}`,
+                      background: on ? 'var(--orange-mute)' : 'var(--panel)',
+                    }}
+                  >
+                    {t === 'credit' ? 'Store Credit' : 'Cash'}
+                  </button>
+                );
+              })}
+            </div>
 
-          {payoutType === 'credit' && (
-            <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2">
-              <label className="flex items-center gap-2 text-sm text-foreground/70">
-                Credit Bonus %
-                <HelpTooltip text="The credit bonus is an extra percentage added on top of the cash offer when customers choose store credit. A 30% bonus means a $10 cash offer becomes $13 in store credit." />
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={creditBonus}
-                  onChange={(e) => setCreditBonus(Math.max(0, Number(e.target.value)))}
-                  className="w-20 rounded border border-zinc-600 bg-card px-2 py-1 text-foreground tabular-nums focus:border-accent focus:outline-none"
-                />
-              </label>
-              {customerTier && (
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${customerTier === "VIP" ? "bg-amber-900/40 text-amber-400" : "bg-blue-900/40 text-blue-400"}`}>
-                    {customerTier} +{customerTier === "VIP" ? "10" : "5"}% bonus
-                  </span>
+            {payoutType === 'credit' && (
+              <div className="p-4 space-y-2" style={{ background: 'var(--panel-mute)', border: '1px solid var(--rule)' }}>
+                <label className="flex items-center gap-2 text-sm text-ink-soft">
+                  <span className="font-mono uppercase" style={{ fontSize: '0.66rem', letterSpacing: '0.18em', fontWeight: 600 }}>Credit Bonus %</span>
+                  <HelpTooltip text="The credit bonus is an extra percentage added on top of the cash offer when customers choose store credit. A 30% bonus means a $10 cash offer becomes $13 in store credit." />
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={creditBonus}
+                    onChange={(e) => setCreditBonus(Math.max(0, Number(e.target.value)))}
+                    className="w-20 font-mono tabular-nums"
+                    style={{ ...inputStyle, padding: '0.4rem 0.5rem' }}
+                  />
+                </label>
+                {customerTier && (
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="font-mono uppercase"
+                      style={{
+                        fontSize: '0.6rem',
+                        letterSpacing: '0.18em',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        color: customerTier === "VIP" ? 'var(--yellow)' : 'var(--teal)',
+                        background: customerTier === "VIP" ? 'var(--yellow-mute)' : 'var(--teal-mute)',
+                        border: `1px solid ${customerTier === "VIP" ? 'var(--yellow)' : 'var(--teal)'}`,
+                      }}
+                    >
+                      {customerTier} +{customerTier === "VIP" ? "10" : "5"}% bonus
+                    </span>
+                  </div>
+                )}
+                <div className="font-mono text-ink-soft" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                  Base: <span className="tabular-nums">{formatCents(totalOfferCents)}</span> + {creditBonus}% bonus ={' '}
+                  <span className="tabular-nums text-teal" style={{ fontWeight: 600 }}>{formatCents(totalPayoutCents)}</span>
                 </div>
-              )}
-              <div className="text-sm text-muted">
-                Base: {formatCents(totalOfferCents)} + {creditBonus}% bonus ={' '}
-                <span className="font-medium text-green-400">{formatCents(totalPayoutCents)}</span>
+              </div>
+            )}
+
+            {/* notes */}
+            <textarea
+              placeholder="Notes (optional)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              style={{ ...inputStyle, minHeight: 60 }}
+            />
+
+            {/* summary */}
+            <div className="ar-zone">
+              <div className="ar-zone-head"><span>Summary</span></div>
+              <div className="p-4 space-y-2 text-sm">
+                <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                  Customer: <span className="text-ink">{selectedCustomer?.name}</span>
+                </div>
+                <div className="font-mono text-ink-soft" style={{ fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                  Items: <span className="text-ink">{items.length}</span> ({items.reduce((s, i) => s + i.quantity, 0)} total qty)
+                </div>
+                <ul className="space-y-1 pt-2" style={{ borderTop: '1px solid var(--rule)' }}>
+                  {items.map((item) => (
+                    <li key={item.key} className="flex justify-between text-ink-soft">
+                      <span>
+                        {item.name} <span className="font-mono text-ink-faint">({item.condition})</span> ×{item.quantity}
+                      </span>
+                      <span className="font-mono tabular-nums">
+                        {formatCents(item.offer_price_cents * item.quantity)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex justify-between pt-2 text-ink" style={{ fontWeight: 500, borderTop: '1px solid var(--rule)' }}>
+                  <span>Total Offer</span>
+                  <span className="font-mono tabular-nums">{formatCents(totalOfferCents)}</span>
+                </div>
+                <div className="flex justify-between text-ink" style={{ fontWeight: 700, fontSize: '1.05rem' }}>
+                  <span className="font-display">
+                    Payout ({payoutType === 'credit' ? `Credit +${creditBonus}%` : 'Cash'})
+                  </span>
+                  <span className="font-mono tabular-nums text-teal">{formatCents(totalPayoutCents)}</span>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* notes */}
-          <textarea
-            placeholder="Notes (optional)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-            className="w-full rounded-xl border border-input-border bg-card-hover px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-          />
-
-          {/* summary */}
-          <div className="rounded-xl border border-input-border bg-card-hover p-4 space-y-2 text-sm">
-            <h3 className="font-medium text-foreground">Summary</h3>
-            <div className="text-muted">
-              Customer: <span className="text-foreground">{selectedCustomer?.name}</span>
+            <div className="flex justify-between">
+              <button
+                onClick={() => setStep(2)}
+                className="inline-flex items-center font-mono uppercase transition-colors"
+                style={ghostBtnStyle}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="inline-flex items-center font-display uppercase transition-colors disabled:opacity-50"
+                style={{
+                  ...primaryBtnStyle,
+                  background: 'var(--teal)',
+                  border: '1px solid var(--teal)',
+                }}
+              >
+                {submitting ? 'Processing...' : 'Complete Trade-In'}
+              </button>
             </div>
-            <div className="text-muted">
-              Items: <span className="text-foreground">{items.length}</span> (
-              {items.reduce((s, i) => s + i.quantity, 0)} total qty)
-            </div>
-            <ul className="space-y-1 border-t border-input-border pt-2">
-              {items.map((item) => (
-                <li key={item.key} className="flex justify-between text-foreground/70">
-                  <span>
-                    {item.name} ({item.condition}) &times;{item.quantity}
-                  </span>
-                  <span className="tabular-nums">
-                    {formatCents(item.offer_price_cents * item.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="flex justify-between border-t border-input-border pt-2 font-medium text-foreground">
-              <span>Total Offer</span>
-              <span className="tabular-nums">{formatCents(totalOfferCents)}</span>
-            </div>
-            <div className="flex justify-between font-semibold text-foreground">
-              <span>
-                Payout ({payoutType === 'credit' ? `Credit +${creditBonus}%` : 'Cash'})
-              </span>
-              <span className="tabular-nums text-green-400">{formatCents(totalPayoutCents)}</span>
-            </div>
-          </div>
-
-          <div className="flex justify-between">
-            <button
-              onClick={() => setStep(2)}
-              className="rounded-xl bg-card-hover px-4 py-2 text-sm text-foreground/70 hover:bg-card-hover transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-xl bg-green-600 px-6 py-2 text-sm font-medium text-foreground hover:bg-green-500 disabled:opacity-50 transition-colors"
-            >
-              {submitting ? 'Processing...' : 'Complete Trade-In'}
-            </button>
           </div>
         </div>
       )}
+
       {/* Barcode scanner */}
       {showBarcodeScanner && (
         <BarcodeScanner
