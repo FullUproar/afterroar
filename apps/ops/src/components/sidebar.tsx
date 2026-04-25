@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useStore } from "@/lib/store-context";
 import { useMode } from "@/lib/mode-context";
+import { useQuickSwitch } from "@/lib/quick-switch-context";
 import { type Permission, type FeatureModule } from "@/lib/permissions";
 import { useCallback, useEffect, useState } from "react";
 
@@ -105,6 +106,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { store, staff, effectiveRole, isTestMode, can, hasModule, activeStaff, endShift } = useStore();
   const { mode } = useMode();
+  const { open: openQuickSwitch } = useQuickSwitch();
 
   const rawHidden = (store?.settings as Record<string, unknown>)?.hidden_nav_items;
   const hiddenItems = Array.isArray(rawHidden) ? (rawHidden as string[]) : [];
@@ -304,7 +306,12 @@ export function Sidebar() {
 
       {/* You footer */}
       <div className="border-t border-rule px-4 py-3">
-        <div className="flex items-center gap-3">
+        <button
+          onClick={openQuickSwitch}
+          className="flex items-center gap-3 w-full text-left transition-colors hover:bg-panel"
+          title="Switch operator"
+          style={{ padding: "0.25rem", margin: "-0.25rem" }}
+        >
           <div
             className="flex items-center justify-center bg-slate border border-rule-hi shrink-0"
             style={{
@@ -330,7 +337,23 @@ export function Sidebar() {
               </span>
             </div>
           </div>
-        </div>
+          <span
+            aria-hidden
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.6rem",
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              fontWeight: 700,
+              color: "var(--orange)",
+              padding: "2px 6px",
+              border: "1px solid var(--orange)",
+              background: "var(--orange-mute)",
+            }}
+          >
+            Switch
+          </span>
+        </button>
         <div className="mt-3 flex items-center gap-3" style={{ fontFamily: "var(--font-mono)", fontSize: "0.62rem", letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 600 }}>
           {activeStaff && (
             <button

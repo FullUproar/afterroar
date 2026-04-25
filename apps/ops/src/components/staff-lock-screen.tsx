@@ -36,14 +36,15 @@ export function StaffLockScreen({ storeName, onUnlock }: StaffLockScreenProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Load staff list
+  // Load staff list — use the roster endpoint so cashiers can unlock too
+  // (the manager-only /api/staff route 403s for non-managers, breaking lock).
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/staff");
+        const res = await fetch("/api/staff/roster");
         if (res.ok) {
           const data = await res.json();
-          setStaffList(data.filter((s: StaffOption & { active: boolean }) => s.active && s.has_pin));
+          setStaffList(data.filter((s: StaffOption) => s.has_pin));
         }
       } catch {
         // fail silently

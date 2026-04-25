@@ -20,6 +20,7 @@ import { useTrainingMode } from "@/lib/training-mode";
 import { useMode } from "@/lib/mode-context";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
+import { BarcodeSvg } from "@/components/barcode-svg";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { useScanner } from "@/hooks/use-scanner";
 import type { ScannerError } from "@/lib/scanner-manager";
@@ -426,6 +427,10 @@ export default function RegisterPage() {
   const [discountValue, setDiscountValue] = useState("");
   const [discountReason, setDiscountReason] = useState("");
   const [discountError, setDiscountError] = useState<string | null>(null);
+  // Coupon code (within discount panel)
+  const [couponCode, setCouponCode] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // USB scanner status
   const [scannerFlash, setScannerFlash] = useState<"none" | "success" | "error">("none");
@@ -1120,6 +1125,67 @@ export default function RegisterPage() {
 
   function removeDiscount(id: string) { setDiscounts((prev) => prev.filter((d) => d.id !== id)); }
 
+  // ---- Coupon redemption ----
+  // Hits /api/promotions/redeem to validate the code against current cart,
+  // then materialises the result as a cart-scope dollar discount so the
+  // existing discount math + receipt rendering need no changes.
+  async function applyCoupon() {
+    const code = couponCode.trim();
+    if (!code) { setCouponError("Enter a coupon code"); return; }
+    if (cart.length === 0) { setCouponError("Add items to the cart first"); return; }
+    if (discounts.some((d) => d.reason?.startsWith("Coupon: "))) {
+      setCouponError("A coupon is already applied");
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/promotions/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          subtotal_cents: subtotal,
+          items: cart.map((c) => ({
+            inventory_id: c.inventory_item_id ?? undefined,
+            category: c.category,
+            subtotal_cents: c.price_cents * c.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data?.error || "Invalid coupon");
+        setCouponLoading(false);
+        return;
+      }
+
+      const discountCentsValue = Number(data.discount_cents) || 0;
+      if (discountCentsValue <= 0) {
+        setCouponError("Coupon does not apply to this cart");
+        setCouponLoading(false);
+        return;
+      }
+
+      const newDiscount: CartDiscount = {
+        id: `d_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        scope: "cart",
+        type: "dollar",
+        value: discountCentsValue,
+        reason: `Coupon: ${data.code || code.toUpperCase()}`,
+      };
+      setDiscounts((prev) => [...prev, newDiscount]);
+      setCouponCode("");
+      setCouponError(null);
+      setActivePanel(null);
+    } catch {
+      setCouponError("Connection error");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
   // ---- Barcode scan handler (camera scanner) ----
   function handleBarcodeScan(code: string) {
     setActivePanel(null); setSearchQuery(code); setActivePanel("search"); playBeep();
@@ -1541,6 +1607,7 @@ export default function RegisterPage() {
     discountScope, setDiscountScope, discountType, setDiscountType,
     discountValue, setDiscountValue, discountReason, setDiscountReason,
     discountCents, cartLength: cart.length, applyDiscount, discountError,
+    couponCode, setCouponCode, applyCoupon, couponError, couponLoading,
     effectiveRole, cart, storeSettings, setToastMessage, showError,
     setShowGiftCardPayment, setShowPaySheet, orderLookupReceipt, setOrderLookupReceipt,
   };
@@ -1563,8 +1630,11 @@ export default function RegisterPage() {
               <div className="space-y-2 pt-2">
                 <div className="text-sm text-muted uppercase tracking-wide">Gift Card{createdGiftCards.length > 1 ? "s" : ""} Created</div>
                 {createdGiftCards.map((gc) => (
-                  <div key={gc.code} className="rounded-xl border-2 border-green-500/30 bg-green-500/5 p-3 space-y-1">
+                  <div key={gc.code} className="rounded-xl border-2 border-green-500/30 bg-green-500/5 p-3 space-y-2">
                     <div className="text-xl font-mono font-bold tracking-wider select-all">{gc.code}</div>
+                    <div className="bg-white px-2 py-1 rounded">
+                      <BarcodeSvg value={gc.code} height={48} narrow={1.6} showText={false} />
+                    </div>
                     <div className="text-green-400 font-semibold">{formatCents(gc.balance_cents)}</div>
                   </div>
                 ))}
@@ -2096,6 +2166,19 @@ export default function RegisterPage() {
           <div className="receipt-line receipt-total"><span>TOTAL</span><span>{formatCents(lastReceipt.totalCents)}</span></div>
           <div className="receipt-line"><span>Paid</span><span>{lastReceipt.paymentMethod.toUpperCase()}</span></div>
           <div className="receipt-divider">{"--------------------------------"}</div>
+          {/* Gift cards purchased in this sale — printed with scannable barcode */}
+          {createdGiftCards && createdGiftCards.length > 0 && (
+            <div className="receipt-gift-cards">
+              {createdGiftCards.map((gc) => (
+                <div key={gc.code} className="receipt-gift-card">
+                  <div className="receipt-gift-card-label">GIFT CARD &mdash; {formatCents(gc.balance_cents)}</div>
+                  <BarcodeSvg value={gc.code} height={48} narrow={1.6} showText />
+                  <div className="receipt-gift-card-note">Present this card or scan the code to redeem.</div>
+                </div>
+              ))}
+              <div className="receipt-divider">{"--------------------------------"}</div>
+            </div>
+          )}
           <div className="receipt-footer">{storeSettings.receipt_footer || "Thank you for shopping with us!"}</div>
           <div className="receipt-barcode">{"||||| |||| ||||| |||| |||||"}</div>
         </div>

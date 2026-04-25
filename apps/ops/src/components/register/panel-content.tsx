@@ -76,6 +76,12 @@ interface PanelContentProps {
   cartLength: number;
   applyDiscount: () => void;
   discountError: string | null;
+  // Coupon
+  couponCode: string;
+  setCouponCode: (v: string) => void;
+  applyCoupon: () => void;
+  couponError: string | null;
+  couponLoading: boolean;
   // More menu passthrough
   effectiveRole: string | null;
   cart: Array<{ inventory_item_id: string | null; name: string; category: string; price_cents: number; quantity: number; max_quantity: number }>;
@@ -98,6 +104,7 @@ export function PanelContent(props: PanelContentProps) {
     discountScope, setDiscountScope, discountType, setDiscountType,
     discountValue, setDiscountValue, discountReason, setDiscountReason,
     discountCents, cartLength, applyDiscount, discountError,
+    couponCode, setCouponCode, applyCoupon, couponError, couponLoading,
     effectiveRole, cart, storeSettings, setToastMessage, showError,
     setShowGiftCardPayment, setShowPaySheet, orderLookupReceipt, setOrderLookupReceipt,
   } = props;
@@ -326,7 +333,33 @@ export function PanelContent(props: PanelContentProps) {
     case "discount":
       return (
         <div className="p-3 space-y-3">
-          <div className="text-sm font-semibold text-muted uppercase tracking-wider">Apply Discount</div>
+          {/* Coupon redemption — quick path, validated server-side */}
+          <div className="rounded-xl border border-card-border bg-card-hover p-3 space-y-2">
+            <div className="text-xs font-semibold text-muted uppercase tracking-wider">Coupon Code</div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter" && couponCode.trim() && cartLength) applyCoupon(); }}
+                placeholder="e.g. SAVE10"
+                className="flex-1 rounded-xl border border-input-border bg-input-bg px-4 py-2.5 text-foreground placeholder:text-muted focus:border-accent focus:outline-none font-mono uppercase tracking-wider"
+                style={{ fontSize: 18 }}
+                disabled={couponLoading}
+              />
+              <button
+                onClick={applyCoupon}
+                disabled={!couponCode.trim() || !cartLength || couponLoading}
+                className="rounded-xl px-4 text-base font-medium text-white disabled:opacity-30 transition-colors"
+                style={{ height: 48, backgroundColor: "#16a34a" }}
+              >
+                {couponLoading ? "…" : "Apply"}
+              </button>
+            </div>
+            {couponError && <div className="text-sm text-red-400 bg-red-950/30 border border-red-500/20 rounded-lg px-3 py-2">{couponError}</div>}
+          </div>
+
+          <div className="text-sm font-semibold text-muted uppercase tracking-wider">Manual Discount</div>
           <div className="flex gap-1 bg-card-hover rounded-xl p-1">
             <button onClick={() => setDiscountScope("item")} className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${discountScope === "item" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Last Item</button>
             <button onClick={() => setDiscountScope("cart")} className={`flex-1 rounded-lg py-2 text-lg font-medium transition-colors ${discountScope === "cart" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"}`} style={{ minHeight: "auto" }}>Whole Cart</button>

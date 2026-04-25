@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useStore } from "@/lib/store-context";
 import { useMode } from "@/lib/mode-context";
+import { useQuickSwitch } from "@/lib/quick-switch-context";
 import { signOut } from "next-auth/react";
 import { useTheme } from "@/components/theme-provider";
 import { NAV_ITEMS } from "@/lib/permissions";
@@ -21,8 +22,9 @@ type PanelState = "closed" | "opening" | "open" | "closing";
 
 export function RegisterNav() {
   const pathname = usePathname();
-  const { can, staff, effectiveRole, isTestMode } = useStore();
+  const { can, staff, effectiveRole, isTestMode, activeStaff } = useStore();
   const { toggleMode } = useMode();
+  const { open: openQuickSwitch } = useQuickSwitch();
   const { resolvedTheme, setTheme } = useTheme();
   const [panelState, setPanelState] = useState<PanelState>("closed");
   const moreOpen = panelState === "open" || panelState === "opening";
@@ -145,17 +147,27 @@ export function RegisterNav() {
             </div>
           </div>
 
-          {/* Switch to Dashboard button */}
-          <div className="border-b border-card-border px-4 py-3">
+          {/* Quick actions: Switch User + Switch to Dashboard */}
+          <div className="border-b border-card-border px-4 py-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                openQuickSwitch();
+                closeMore();
+              }}
+              className="rounded-xl bg-accent text-accent-foreground px-4 py-3 text-sm font-bold hover:opacity-90 active:opacity-80 transition-opacity"
+              style={{ minHeight: 56 }}
+            >
+              Switch User
+            </button>
             <button
               onClick={() => {
                 toggleMode();
                 closeMore();
               }}
-              className="w-full rounded-xl border border-card-border bg-card-hover px-4 py-3 text-sm font-medium text-foreground hover:bg-accent-light transition-colors"
+              className="rounded-xl border border-card-border bg-card-hover px-4 py-3 text-sm font-medium text-foreground hover:bg-accent-light transition-colors"
               style={{ minHeight: 56 }}
             >
-              Switch to Dashboard Mode
+              Dashboard Mode
             </button>
           </div>
 
@@ -189,9 +201,9 @@ export function RegisterNav() {
 
           {/* Footer */}
           <div className="border-t border-card-border px-4 py-3 pb-safe">
-            {staff && (
+            {(activeStaff || staff) && (
               <p className="truncate text-xs text-muted">
-                {staff.name} &middot;{" "}
+                {activeStaff?.name || staff?.name} &middot;{" "}
                 <span className={isTestMode ? "text-purple-400" : ""}>
                   {effectiveRole}
                 </span>

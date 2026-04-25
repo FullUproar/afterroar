@@ -7,6 +7,7 @@ import { StaffLockGate } from "@/components/staff-lock-gate";
 import { TrialBanner } from "@/components/trial-banner";
 import { OnboardingPanel, OnboardingSandboxBanner } from "@/components/onboarding-panel";
 import { useStore } from "@/lib/store-context";
+import { QuickSwitchProvider } from "@/lib/quick-switch-context";
 
 /**
  * All dashboard chrome that depends on client-only state.
@@ -18,29 +19,31 @@ export default function DashboardChrome({ children }: { children: React.ReactNod
 
   return (
     <StaffLockGate>
-      <div className="flex flex-col h-screen overflow-hidden">
-        {error && (
-          <div className="shrink-0 w-full bg-red-500/15 border-b border-red-500/30 px-4 py-2 text-center">
-            <span className="text-xs font-medium text-red-400">{error}</span>
-            <button
-              onClick={() => window.location.reload()}
-              className="ml-3 text-xs text-red-300 underline hover:text-red-200"
-            >
-              Retry
-            </button>
+      <QuickSwitchProvider>
+        <div className="flex flex-col h-screen overflow-hidden">
+          {error && (
+            <div className="shrink-0 w-full bg-red-500/15 border-b border-red-500/30 px-4 py-2 text-center">
+              <span className="text-xs font-medium text-red-400">{error}</span>
+              <button
+                onClick={() => window.location.reload()}
+                className="ml-3 text-xs text-red-300 underline hover:text-red-200"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          <TrialBanner />
+          <TrainingBanner />
+          <OnboardingSandboxBanner />
+          <div className="flex-1 min-h-0">
+            <DashboardLayoutInner>
+              {children}
+            </DashboardLayoutInner>
           </div>
-        )}
-        <TrialBanner />
-        <TrainingBanner />
-        <OnboardingSandboxBanner />
-        <div className="flex-1 min-h-0">
-          <DashboardLayoutInner>
-            {children}
-          </DashboardLayoutInner>
         </div>
-      </div>
-      <OnboardingPanel />
-      <ShortcutsHelp />
+        <OnboardingPanel />
+        <ShortcutsHelp />
+      </QuickSwitchProvider>
     </StaffLockGate>
   );
 }
