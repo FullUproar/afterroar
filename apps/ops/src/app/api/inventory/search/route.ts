@@ -22,9 +22,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (q) {
+      // Multi-barcode lookup: match the legacy primary `barcode` column AND
+      // the new `barcodes` array (alternate UPCs from publisher reprints,
+      // case codes, in-house labels). Postgres `has` translates to
+      // ARRAY @> ARRAY[q] which uses the GIN index on barcodes.
       where.OR = [
         { name: { contains: q, mode: "insensitive" } },
         { barcode: q },
+        { barcodes: { has: q } },
         { sku: { contains: q, mode: "insensitive" } },
       ];
     }

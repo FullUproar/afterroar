@@ -487,6 +487,10 @@ model PosStore {
   hosted_network_tournaments  PosNetworkTournament[]
   network_tournament_entries  PosNetworkTournamentStore[]
   network_player_ratings      PosNetworkPlayerRating[]
+  vendor_items                PosVendorItem[]
+  cost_history                PosCostHistory[]
+  break_recipes               PosBreakRecipe[]
+  break_events                PosBreakEvent[]
 
   @@map("pos_stores")
 }
@@ -999,8 +1003,21 @@ model PosInventoryItem {
   category            String
   sku                 String?
   barcode             String?
+  /// Alternate barcodes (publisher reprints with new UPCs, manufacturer pack
+  /// codes, in-house labels). Lookups should query both `barcode` and this
+  /// array. The primary `barcode` is kept for the existing index + display.
+  barcodes            String[] @default([])
   price_cents         Int      @default(0)
   cost_cents          Int      @default(0)
+  /// Highest cost ever paid (or first cost — see metadata). Set on the first
+  /// non-zero cost write and never overwritten thereafter. Used to show
+  /// historical pricing context on the item edit form. Nullable so legacy
+  /// rows that have never had a cost write stay null.
+  first_cost_cents    Int?
+  /// Most recently paid cost. Updated on every cost write. Mirrors `cost_cents`
+  /// today but kept separate so we can wire `cost_cents` to the *current
+  /// average cost* later without losing the most-recent-purchase signal.
+  last_cost_cents     Int?
   quantity            Int      @default(0)
   low_stock_threshold Int      @default(5)
   attributes          Json     @default("{}")
@@ -1020,6 +1037,15 @@ model PosInventoryItem {
 
   catalog_product_id  String?
   shared_to_catalog   Boolean  @default(false)
+
+  /// Variant parent. When set, this row is a child variant of `parent_id`
+  /// (e.g. "Pandemic Legacy Season 1 — Red Box"). Both parent and children
+  /// can be sold; the relationship is for grouping in the catalog UI and
+  /// sharing core metadata. Self-referential — null for stand-alone items.
+  parent_id           String?
+  /// Display label for the variant pick on the register (e.g. "Cover A",
+  /// "Foil", "Season 1"). Free text, store-defined.
+  variant_label       String?
 
   weight_oz           Int?
   length_in           Decimal? @db.Decimal(5, 1)
@@ -1042,6 +1068,8 @@ model PosInventoryItem {
   store           PosStore           @relation(fields: [store_id], references: [id], onDelete: Cascade)
   supplier        PosSupplier?       @relation(fields: [supplier_id], references: [id])
   catalog_product PosCatalogProduct? @relation(fields: [catalog_product_id], references: [id])
+  parent          PosInventoryItem?  @relation("InventoryVariants", fields: [parent_id], references: [id], onDelete: SetNull)
+  variants        PosInventoryItem[] @relation("InventoryVariants")
   trade_in_items       PosTradeInItem[]
   return_items         PosReturnItem[]
   inventory_levels     PosInventoryLevel[]
@@ -1051,6 +1079,11 @@ model PosInventoryItem {
   order_items          PosOrderItem[]
   consignment_items    PosConsignmentItem[]
   holds                PosInventoryHold[]
+  cost_history         PosCostHistory[]
+  vendor_links         PosVendorItem[]
+  break_recipes_parent PosBreakRecipe[]      @relation("BreakRecipeParent")
+  break_recipes_child  PosBreakRecipe[]      @relation("BreakRecipeChild")
+  break_events_parent  PosBreakEvent[]       @relation("BreakEventParent")
 
   @@index([store_id])
   @@index([store_id, active])
@@ -1059,6 +1092,7 @@ model PosInventoryItem {
   @@index([store_id, sku])
   @@index([catalog_product_id])
   @@index([oracle_id])
+  @@index([parent_id])
   @@map("pos_inventory_items")
 }
 
@@ -1094,13 +1128,124 @@ model PosSupplier {
   contact                String?
   default_lead_time_days Int      @default(14)
   notes                  String?
+  /// Optional account number / customer ID at this distributor (e.g. Alliance
+  /// account #). Used as the "from" identifier on POs and helpful when the
+  /// store has separate accounts at the same distributor.
+  account_number         String?
+  /// Free-form metadata: ordering URL, sales rep contact, payment terms, etc.
+  metadata               Json     @default("{}")
   created_at             DateTime @default(now()) @db.Timestamptz()
 
   store           PosStore           @relation(fields: [store_id], references: [id], onDelete: Cascade)
   items           PosInventoryItem[]
   purchase_orders PosPurchaseOrder[]
+  vendor_items    PosVendorItem[]
 
+  @@index([store_id])
   @@map("pos_suppliers")
+}
+
+/// Per-(supplier, item) link. Lets one inventory item carry SKUs from multiple
+/// distributors (e.g. Alliance, ACD, GTS for the same board game), with one
+/// flagged `preferred` so reorder defaults to it. Cost shown here is the most
+/// recent cost from THAT vendor — distinct from PosInventoryItem.last_cost
+/// which is the most recent cost from ANY vendor.
+model PosVendorItem {
+  id                String   @id @default(cuid())
+  store_id          String
+  supplier_id       String
+  inventory_item_id String
+  vendor_sku        String?
+  case_pack         Int?
+  last_cost_cents   Int?
+  preferred         Boolean  @default(false)
+  notes             String?
+  created_at        DateTime @default(now()) @db.Timestamptz()
+  updated_at        DateTime @default(now()) @db.Timestamptz()
+
+  store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  supplier       PosSupplier      @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem @relation(fields: [inventory_item_id], references: [id], onDelete: Cascade)
+
+  @@unique([supplier_id, inventory_item_id])
+  @@index([store_id])
+  @@index([inventory_item_id])
+  @@index([store_id, preferred])
+  @@map("pos_vendor_items")
+}
+
+/// Cost history — one row per cost change on an inventory item. Sourced from
+/// PO receipts, manual edits, or imports. Used to compute first/last/average
+/// cost trends and to show the cost timeline on the item edit form.
+model PosCostHistory {
+  id                String   @id @default(cuid())
+  store_id          String
+  inventory_item_id String
+  cost_cents        Int
+  /// Source of the cost change: "po", "manual", "import", "trade_in"
+  source            String
+  /// Linking to a PO if source=po — soft reference (no FK so PO deletion
+  /// doesn't cascade-delete history).
+  purchase_order_id String?
+  supplier_id       String?
+  quantity          Int?
+  note              String?
+  staff_id          String?
+  created_at        DateTime @default(now()) @db.Timestamptz()
+
+  store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem @relation(fields: [inventory_item_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@index([inventory_item_id, created_at])
+  @@map("pos_cost_history")
+}
+
+/// A reusable "break this into N of those" recipe. Used to convert a sealed
+/// case into booster boxes, or a booster box into individual packs. Cost is
+/// allocated proportionally on break (see /api/inventory/break).
+model PosBreakRecipe {
+  id                  String   @id @default(cuid())
+  store_id            String
+  parent_inventory_id String
+  child_inventory_id  String
+  /// How many child units one parent unit produces (case → 6 boxes = 6).
+  child_qty_per_parent Int
+  /// Optional human-readable name (e.g. "Booster Box → Packs").
+  name                String?
+  active              Boolean  @default(true)
+  created_at          DateTime @default(now()) @db.Timestamptz()
+
+  store  PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  parent PosInventoryItem @relation("BreakRecipeParent", fields: [parent_inventory_id], references: [id], onDelete: Cascade)
+  child  PosInventoryItem @relation("BreakRecipeChild", fields: [child_inventory_id], references: [id], onDelete: Cascade)
+
+  @@unique([parent_inventory_id, child_inventory_id])
+  @@index([store_id])
+  @@map("pos_break_recipes")
+}
+
+/// Audit trail of break operations performed. One row per break event.
+model PosBreakEvent {
+  id                  String   @id @default(cuid())
+  store_id            String
+  recipe_id           String?
+  parent_inventory_id String
+  parent_qty_consumed Int
+  /// JSON array: [{ child_inventory_id, qty_added, unit_cost_cents }, ...]
+  /// Stored denormalised so deletion of a child item doesn't break the audit
+  /// trail. Use parent_id for the canonical FK; children are reference-only.
+  children            Json     @default("[]")
+  staff_id            String?
+  note                String?
+  created_at          DateTime @default(now()) @db.Timestamptz()
+
+  store  PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  parent PosInventoryItem @relation("BreakEventParent", fields: [parent_inventory_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@index([store_id, created_at])
+  @@map("pos_break_events")
 }
 
 // ============================================================
@@ -1433,6 +1578,18 @@ model PosPurchaseOrder {
   order_date        DateTime  @default(now()) @db.Timestamptz()
   expected_delivery DateTime? @db.Timestamptz()
   total_cost_cents  Int       @default(0)
+  /// Total freight / shipping charged on this PO. Allocated to line items at
+  /// receive time, proportional to line cost (or weight, if weights available)
+  /// — see /api/inventory/receive landed-cost logic.
+  freight_cents     Int       @default(0)
+  /// Sales tax / VAT on the PO if charged at distributor level.
+  tax_cents         Int       @default(0)
+  /// Other fees (handling, fuel surcharge, hazmat, etc).
+  other_fees_cents  Int       @default(0)
+  /// How freight + fees should be spread across line items. "by_cost" = pro
+  /// rata of line cost (default), "by_weight" = needs weight_oz on items,
+  /// "even" = split evenly across qty.
+  cost_allocation   String    @default("by_cost")
   notes             String?
   created_at        DateTime  @default(now()) @db.Timestamptz()
   updated_at        DateTime  @default(now()) @db.Timestamptz()

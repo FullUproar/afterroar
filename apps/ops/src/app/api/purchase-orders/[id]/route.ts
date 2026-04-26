@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
+import { allocateLandedCost, type AllocationMethod } from "@/lib/landed-cost";
 
 export async function GET(
   _request: NextRequest,
@@ -142,21 +143,99 @@ export async function POST(
 
       const newReceived = poItem.quantity_received + quantity_received;
 
+      // Compute landed unit cost for THIS line by allocating PO header fees
+      // (freight + tax + other_fees) across all lines proportional to the PO's
+      // chosen cost_allocation method. We compute once per receive event using
+      // ordered quantities, so partial receives still see the same landed
+      // unit cost — the share of freight is decided at PO time, not at
+      // receive time, even if items dribble in across multiple shipments.
+      const totalFees = (po.freight_cents ?? 0) + (po.tax_cents ?? 0) + (po.other_fees_cents ?? 0);
+      const allocMethod = (po.cost_allocation as AllocationMethod) || "by_cost";
+      let landedUnitCostCents = poItem.cost_cents;
+      let allocatedFeeCents = 0;
+      if (totalFees > 0 && po.items.length > 0) {
+        // Pull weight_oz only if we need it (avoids an extra fetch on by_cost).
+        let weightById: Map<string, number | null> = new Map();
+        if (allocMethod === "by_weight") {
+          const linkedIds = po.items
+            .map((i) => i.inventory_item_id)
+            .filter((id): id is string => !!id);
+          if (linkedIds.length > 0) {
+            const weights = await db.posInventoryItem.findMany({
+              where: { id: { in: linkedIds } },
+              select: { id: true, weight_oz: true },
+            });
+            weightById = new Map(weights.map((w) => [w.id, w.weight_oz]));
+          }
+        }
+        const allocations = allocateLandedCost(
+          po.items.map((i) => ({
+            id: i.id,
+            unit_cost_cents: i.cost_cents,
+            quantity_ordered: i.quantity_ordered,
+            weight_oz: i.inventory_item_id
+              ? weightById.get(i.inventory_item_id) ?? null
+              : null,
+          })),
+          totalFees,
+          allocMethod,
+        );
+        const mine = allocations.find((a) => a.id === poItem.id);
+        if (mine) {
+          landedUnitCostCents = mine.landed_unit_cost_cents;
+          allocatedFeeCents = mine.allocated_fee_cents;
+        }
+      }
+
       // Update PO item
       await db.posPurchaseOrderItem.update({
         where: { id: item_id },
         data: { quantity_received: newReceived },
       });
 
-      // Update inventory quantity if linked to an item
+      // Update inventory quantity AND cost if linked to an item, then write
+      // a row to cost history so the item-history view shows the receive event.
       if (poItem.inventory_item_id) {
+        const existing = await db.posInventoryItem.findUnique({
+          where: { id: poItem.inventory_item_id },
+          select: { first_cost_cents: true, cost_cents: true },
+        });
+        const isFirstCost = existing?.first_cost_cents == null && landedUnitCostCents > 0;
+
         await db.posInventoryItem.update({
           where: { id: poItem.inventory_item_id },
           data: {
             quantity: { increment: quantity_received },
+            ...(landedUnitCostCents > 0
+              ? {
+                  cost_cents: landedUnitCostCents,
+                  last_cost_cents: landedUnitCostCents,
+                  ...(isFirstCost ? { first_cost_cents: landedUnitCostCents } : {}),
+                }
+              : {}),
             updated_at: new Date(),
           },
         });
+
+        if (landedUnitCostCents > 0 && landedUnitCostCents !== existing?.cost_cents) {
+          db.posCostHistory
+            .create({
+              data: {
+                store_id: po.store_id,
+                inventory_item_id: poItem.inventory_item_id,
+                cost_cents: landedUnitCostCents,
+                source: "po",
+                purchase_order_id: po.id,
+                supplier_id: po.supplier_id ?? null,
+                quantity: quantity_received,
+                note:
+                  allocatedFeeCents > 0
+                    ? `Landed (incl. ${(allocatedFeeCents / 100).toFixed(2)} ${allocMethod} fee allocation)`
+                    : null,
+              },
+            })
+            .catch((err) => console.error("[cost history] po receive write failed", err));
+        }
       }
 
       // Check if all items are fully received
