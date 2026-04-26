@@ -13,6 +13,8 @@ import {
 import { StatusBadge } from "@/components/mobile-card";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/shared/ui";
+import { ItemAdvancedPanels } from "@/components/inventory/item-advanced-panels";
+import { BreakNowModal } from "@/components/inventory/break-now-modal";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -126,6 +128,7 @@ export default function InventoryDetailPage() {
 
   // Edit state
   const [editing, setEditing] = useState(false);
+  const [showBreak, setShowBreak] = useState(false);
   const [editForm, setEditForm] = useState<EditForm>({
     name: "",
     category: "other",
@@ -343,15 +346,45 @@ export default function InventoryDetailPage() {
         backHref="/dashboard/inventory"
         action={
           can("inventory.adjust") && !editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
-            >
-              Edit Item
-            </button>
+            <div className="flex items-center gap-2">
+              {item.quantity > 0 && (
+                <button
+                  onClick={() => setShowBreak(true)}
+                  className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+                  title="Break a sealed case or box into smaller units"
+                >
+                  Break…
+                </button>
+              )}
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded-xl border border-card-border px-4 py-2 text-sm font-medium text-muted hover:bg-card-hover transition-colors"
+              >
+                Edit Item
+              </button>
+            </div>
           ) : undefined
         }
       />
+
+      {showBreak && (
+        <BreakNowModal
+          parent={{
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            cost_cents: item.cost_cents,
+          }}
+          open={showBreak}
+          onClose={() => setShowBreak(false)}
+          onBroken={() => {
+            // Re-fetch item to reflect the decremented quantity
+            fetch(`/api/inventory/${item.id}`).then(async (r) => {
+              if (r.ok) setItem(await r.json());
+            });
+          }}
+        />
+      )}
 
       {/* ============================================================ */}
       {/*  Section 1: Item Header                                       */}
@@ -969,6 +1002,29 @@ export default function InventoryDetailPage() {
       {/* Holds */}
       {can("inventory.adjust") && (
         <HoldsSection itemId={item.id} itemName={item.name} />
+      )}
+
+      {/* Phase 2: Distributors / Variants / Multi-Barcode / Cost History */}
+      {can("inventory.adjust") && (
+        <ItemAdvancedPanels
+          item={{
+            id: item.id,
+            name: item.name,
+            cost_cents: item.cost_cents,
+            first_cost_cents: (item as unknown as { first_cost_cents: number | null }).first_cost_cents ?? null,
+            last_cost_cents: (item as unknown as { last_cost_cents: number | null }).last_cost_cents ?? null,
+            barcode: item.barcode,
+            barcodes: ((item as unknown as { barcodes?: string[] }).barcodes) ?? [],
+            parent_id: ((item as unknown as { parent_id: string | null }).parent_id) ?? null,
+            variant_label: ((item as unknown as { variant_label: string | null }).variant_label) ?? null,
+          }}
+          onItemUpdated={() => {
+            // Re-fetch the item so barcode/parent state stays consistent
+            fetch(`/api/inventory/${item.id}`).then(async (r) => {
+              if (r.ok) setItem(await r.json());
+            });
+          }}
+        />
       )}
 
       {/* Delete Item */}
