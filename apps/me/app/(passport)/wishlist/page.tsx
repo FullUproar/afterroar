@@ -122,7 +122,10 @@ export default function WishlistPage() {
             <SpinnerInline /> Loading…
           </p>
         ) : items.length === 0 ? (
-          <EmptyState title="Your wishlist is empty" desc="Add games you want — share the list with family or let stores see it at checkout." />
+          <EmptyState
+            title="What's on your radar?"
+            desc="Drop in games you'd like to play or own. Share with family for gift hints, or let your local store see it at the counter so they can flag when stock arrives."
+          />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
             {items.map((item) => {

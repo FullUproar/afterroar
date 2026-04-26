@@ -334,7 +334,10 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
 
       {/* Game list */}
       {games.length === 0 ? (
-        <EmptyState title="Your library is empty" desc="Search above to add games you own." />
+        <EmptyState
+          title="Build your shelf"
+          desc="Add the games you own. Stores can use this to recommend matches at the counter, and you can filter by player count, time, or complexity. Search above to start."
+        />
       ) : filtered.length === 0 ? (
         <EmptyState title="No games match" desc={`Your filters exclude all ${games.length} games. Try loosening them — games without play data can't match precise filters.`} />
       ) : (

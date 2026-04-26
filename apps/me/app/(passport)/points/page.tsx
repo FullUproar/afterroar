@@ -90,7 +90,10 @@ export default async function PointsPage() {
         <section>
           <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.75rem' }}>Recent Transactions</h2>
           {recentTx.length === 0 ? (
-            <EmptyState title="No transactions yet" desc="Earn points by checking in, buying, or playing at Afterroar stores." />
+            <EmptyState
+              title="Earn your first points"
+              desc="Points stack across every Afterroar store you visit. Check in, buy a game, attend an event — points apply at the counter, no rewards card to hand over."
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
               {recentTx.map((tx, i) => (

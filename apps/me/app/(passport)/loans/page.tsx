@@ -96,7 +96,10 @@ export default function LoansPage() {
               Currently out ({loans.active.length})
             </h2>
             {loans.active.length === 0 ? (
-              <EmptyState title="No games out" desc="Your shelf is complete. Lend something with the button above." />
+              <EmptyState
+                title="Nothing out on loan"
+                desc="Track who has what. When a friend borrows Pandemic, log it here — Passport remembers, so you don't have to ask 'wait, did I give you that?' six months later."
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)', marginBottom: '1.5rem' }}>
                 {loans.active.map((loan) => {

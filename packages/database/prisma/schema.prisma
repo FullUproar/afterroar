@@ -455,6 +455,12 @@ model Venue {
   coverImageUrl    String?
   hours            String?
   amenities        String?
+  /// Origin + extras. Crowdsourced rows carry { crowdsourced: true,
+  /// suggested_by_user_id, suggested_at }. Bulk-imported rows carry
+  /// { source: 'flgs_network_import', imported_at }. Free-form so
+  /// downstream tools can attach analytics + provenance without schema
+  /// churn.
+  metadata         Json?    @default("{}")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

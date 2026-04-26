@@ -189,6 +189,9 @@ export default async function SettingsPage() {
                 </div>
               ))}
             </div>
+            <p style={{ ...TYPE.mono, fontSize: '0.62rem', color: 'var(--ink-faint)', margin: '0.85rem 0 0', letterSpacing: '0.06em' }}>
+              More badges unlock as you visit stores, attend events, finish tournaments, and contribute to the community.
+            </p>
           </section>
         ) : null}
 
@@ -199,7 +202,10 @@ export default async function SettingsPage() {
             Stores and creators you&apos;ve granted access to your Passport data. Revoke any time — they lose access immediately.
           </p>
           {entityConsents.length === 0 ? (
-            <EmptyState title="No connections yet" desc="Stores can generate a QR code for you to scan when they want to connect to your Passport." />
+            <EmptyState
+              title="No store connections yet"
+              desc="When you visit an Afterroar store, they can scan your Passport code to recognize you on future visits — recommend games, save your wishlist at checkout, credit loyalty points. Each connection is consent-gated and revocable here."
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--rule)', border: '1px solid var(--rule)' }}>
               {entityConsents.map((ec) => (
