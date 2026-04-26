@@ -133,7 +133,7 @@ function SignupContent() {
                 Create your<br />Passport
               </h1>
               <p style={{ ...TYPE.body, fontSize: "0.9rem", color: "var(--ink-soft)", margin: "0.75rem 0 0", lineHeight: 1.5 }}>
-                One identity. Every game store. Every app.
+                Your portable gaming profile. Track your collection, find local stores, earn points and badges — all in one place you control.
               </p>
             </div>
 
@@ -206,7 +206,6 @@ function SignupContent() {
                 placeholder="At least 8 characters"
                 type="password"
                 required
-                hint="We'll never share it. Hashed with bcrypt at 12 rounds."
               />
 
               <button

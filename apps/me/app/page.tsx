@@ -71,7 +71,23 @@ export default async function PassportLanding() {
 
             {/* QR card — the main event */}
             {user?.passportCode ? (
-              <PassportCard code={user.passportCode} />
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
+                <PassportCard code={user.passportCode} />
+                <p style={{
+                  ...TYPE.mono,
+                  fontSize: '0.62rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: 'var(--ink-faint)',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  margin: 0,
+                  maxWidth: '22ch',
+                  lineHeight: 1.5,
+                }}>
+                  Show this at Afterroar stores to check in &amp; earn points
+                </p>
+              </div>
             ) : (
               <div style={{
                 padding: '1rem',
@@ -130,7 +146,47 @@ export default async function PassportLanding() {
                   ) : null}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              // Empty-state preview — communicates what kind of activity will
+              // appear here without literally saying "click here to do X".
+              <div style={{ width: '100%' }}>
+                <p style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', margin: '0 0 0.55rem', fontWeight: 700 }}>
+                  Recent
+                </p>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  border: '1px dashed var(--rule-hi)',
+                  padding: '0.85rem 0.95rem',
+                  gap: '0.5rem',
+                  background: 'rgba(255, 255, 255, 0.015)',
+                }}>
+                  {[
+                    { label: 'Visit a store', preview: 'Check-in @ FLGS' },
+                    { label: 'Earn a badge', preview: 'Tournament regular' },
+                    { label: 'Add a game', preview: 'Catan to your library' },
+                  ].map((row) => (
+                    <div key={row.label} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.65rem',
+                      opacity: 0.45,
+                    }}>
+                      <p style={{ ...TYPE.body, margin: 0, color: 'var(--cream)', fontSize: '0.78rem', fontWeight: 500 }}>
+                        {row.preview}
+                      </p>
+                      <span style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.62rem', letterSpacing: '0.06em' }}>
+                        {row.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.6rem', letterSpacing: '0.06em', textAlign: 'center', margin: '0.55rem 0 0' }}>
+                  Your activity shows up here as you play
+                </p>
+              </div>
+            )}
 
             {/* Primary action: Dashboard */}
             <Button href="/dashboard">

@@ -32,12 +32,15 @@ export default async function StoresPage() {
         fieldNum="06"
         fieldType="Waypoints"
         title="Stores"
-        desc="Game stores in the Afterroar network. Check in, earn points, find your next game night."
+        desc="Game stores in your area. Walk in, show your Passport at the counter, and the store can recognize you, recommend games, and credit points to your account."
       />
 
       <div style={{ padding: '1rem var(--pad-x) 1.5rem', ...TYPE.body }}>
         {stores.length === 0 ? (
-          <EmptyState title="No stores yet" desc="The directory is still filling up. Check back soon." />
+          <EmptyState
+            title="The directory is still filling up"
+            desc="We're adding game stores across the country. Don't see your favorite local? Tell them about Afterroar — we'll handle the integration."
+          />
         ) : (
           <div style={{
             display: 'grid',

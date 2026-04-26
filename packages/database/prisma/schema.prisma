@@ -44,6 +44,7 @@ model User {
   badges       UserBadge[]
   entityMemberships EntityMember[]
   entityConsents    EntityConsent[]
+  entityClaims      EntityClaim[]
 
   @@map("User")
 }
@@ -65,8 +66,15 @@ model AfterroarEntity {
   slug         String    @unique
   name         String
   type         String    @default("store")
+  /// Lifecycle: "unclaimed" (auto-imported from FLGS network DB, no owner
+  /// has verified yet) → "pending" (claim submitted, awaiting verification)
+  /// → "active" (claim verified, owner has access). "suspended" pulls the
+  /// entity offline. Stored as string for flexibility — no DB enum.
   status       String    @default("pending")
-  contactEmail String
+  /// Nullable on unclaimed entities — bulk-imported FLGS data is often
+  /// missing a public business email. The claim flow asks the claimant to
+  /// provide one and uses that for verification email delivery.
+  contactEmail String?
   contactName  String?
   contactPhone String?
   websiteUrl   String?
@@ -89,10 +97,52 @@ model AfterroarEntity {
 
   members  EntityMember[]
   consents EntityConsent[]
+  claims   EntityClaim[]
 
   @@index([type])
   @@index([status])
   @@index([city])
+}
+
+/// Audit + state for "I own this store, give me access" claim attempts.
+/// One row per claim attempt; verified claims flip the entity to status=active
+/// and create an EntityMember row with role=owner. Tokens are 64-char hex
+/// strings sent via email; rotated on each new claim attempt for the same
+/// entity to invalidate old links.
+model EntityClaim {
+  id           String   @id @default(cuid())
+  entityId     String
+  /// User initiating the claim (must be signed in to Passport).
+  claimantUserId String
+  /// Email the verification link was sent to. May differ from the user's
+  /// primary email — e.g. owner uses owner@thestore.com to receive the link
+  /// but is logged in as their personal Passport account.
+  contactEmail String
+  contactName  String?
+  contactPhone String?
+  /// Verification token (64 hex chars). Hashed at rest would be better for
+  /// breach posture — leaving in plaintext for v1 to keep the link-redemption
+  /// flow simple. Tokens expire 72h after creation; old tokens for the same
+  /// entity are deleted when a new claim is initiated.
+  token        String   @unique
+  /// "pending" → "verified" → "rejected" / "expired".
+  status       String   @default("pending")
+  expiresAt    DateTime
+  verifiedAt   DateTime?
+  /// Free-form proof the claimant supplied (URLs, FEIN last 4, etc).
+  /// Auto-verified if contactEmail's domain matches entity.websiteUrl.
+  evidence     Json?    @default("{}")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  entity AfterroarEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [claimantUserId], references: [id], onDelete: Cascade)
+
+  @@index([entityId])
+  @@index([claimantUserId])
+  @@index([status])
+  @@index([token])
 }
 
 model EntityMember {

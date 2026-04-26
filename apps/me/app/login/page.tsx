@@ -10,7 +10,12 @@ import { PlayerCard, Workbench } from '@/app/components/card-shell';
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  // First-sign-in routing: when ?fresh=1 is set (passed by /verify-email
+  // after a brand-new email signup verifies), route the user to /welcome
+  // so they hit the onboarding tour instead of bouncing to home with no
+  // context. The query string survives across the OAuth round-trip too.
+  const fresh = searchParams.get('fresh') === '1';
+  const callbackUrl = fresh ? '/welcome' : searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
   const deleted = searchParams.get('deleted') === 'true';
   const verified = searchParams.get('verified') === '1';
@@ -74,7 +79,7 @@ function LoginContent() {
                 Log in with<br />Afterroar
               </h1>
               <p style={{ ...TYPE.body, fontSize: '0.9rem', color: 'var(--ink-soft)', margin: '0.75rem 0 0', lineHeight: 1.5 }}>
-                Your tabletop identity. One login, every store, every app.
+                Your portable gaming profile. Stores, library, points — all in one place.
               </p>
             </div>
 

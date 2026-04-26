@@ -31,7 +31,10 @@ function VerifyEmailContent() {
           setState("ok");
           setMessage("Email verified. You can sign in now.");
           // After a beat, send them to login
-          setTimeout(() => router.push("/login?verified=1"), 1500);
+          // ?verified=1 shows the green "Email verified" banner on /login
+          // ?fresh=1 tells /login to route this newly-verified user to
+          // /welcome after they sign in, instead of dumping them on /
+          setTimeout(() => router.push("/login?verified=1&fresh=1"), 1500);
         } else {
           setState("error");
           setMessage(data?.error || "Verification failed.");

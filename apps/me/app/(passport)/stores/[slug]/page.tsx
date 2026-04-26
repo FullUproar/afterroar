@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Phone, Mail, Globe, Clock, Star } from 'lucide-react';
 import { TitleBar, SecHero, Panel, TYPE } from '@/app/components/ui';
+import { StoreClaimPanel } from './StoreClaimPanel';
 
 export default async function StoreDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -52,6 +53,16 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ sl
           ) : undefined
         }
       />
+
+      {/* Claim CTA — only visible when the venue isn't yet claimed/active */}
+      {(venue.status === 'unclaimed' || venue.status === 'pending') && (
+        <StoreClaimPanel
+          slug={venue.slug}
+          storeName={venue.name}
+          status={venue.status}
+          websiteUrl={venue.website ?? null}
+        />
+      )}
 
       <div style={{ padding: '1rem var(--pad-x) 1.5rem', display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
         <Panel>
