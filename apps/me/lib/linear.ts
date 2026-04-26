@@ -93,8 +93,9 @@ async function getOrCreateLabelId(name: string, teamId: string): Promise<string 
   const cached = labelIdCache.get(cacheKey);
   if (cached) return cached;
 
-  // 1. Look up by name
-  const found = await gql<{ issueLabels: { nodes: Array<{ id: string; name: string; team: { id: string } }> } }>(
+  // 1. Look up by name. Some labels are workspace-wide (no team) so
+  // `team` can be null on the response — defend against that in the find.
+  const found = await gql<{ issueLabels: { nodes: Array<{ id: string; name: string; team: { id: string } | null }> } }>(
     `
       query LabelByName($name: String!) {
         issueLabels(filter: { name: { eq: $name } }, first: 25) {
@@ -104,7 +105,11 @@ async function getOrCreateLabelId(name: string, teamId: string): Promise<string 
     `,
     { name },
   );
-  const existing = found?.issueLabels.nodes.find((l) => l.team.id === teamId);
+  // Prefer the team-scoped label; fall back to a workspace label if it
+  // exists. Either way, attaching it to an issue in the team is fine.
+  const existing =
+    found?.issueLabels.nodes.find((l) => l.team?.id === teamId) ??
+    found?.issueLabels.nodes.find((l) => l.team == null);
   if (existing) {
     labelIdCache.set(cacheKey, existing.id);
     return existing.id;
@@ -184,6 +189,87 @@ export async function createLinearIssue(params: CreateIssueParams): Promise<Line
     return null;
   }
   return created.issueCreate.issue;
+}
+
+/**
+ * Resolve an issue (mark as Done) with a closing comment. Used by the
+ * "fix from CLI / claude session" workflow — set the issue to its team's
+ * "Done" state and post a brief note about what changed.
+ *
+ * Returns true on success, false on any failure (with console error).
+ */
+export async function closeLinearIssue(
+  identifier: string,
+  comment: string,
+): Promise<boolean> {
+  if (!isEnabled()) return false;
+
+  // Look up the issue by identifier (e.g. "FUL-13") to get the actual id +
+  // team id, then resolve the team's Done state. Filter by the numeric
+  // suffix; since multiple teams can share the same number, we narrow by
+  // the full identifier in JS afterward.
+  const issueNumber = parseInt(identifier.split("-")[1] ?? "0", 10);
+  const found = await gql<{
+    issues: {
+      nodes: Array<{
+        id: string;
+        identifier: string;
+        team: { id: string; states: { nodes: Array<{ id: string; name: string; type: string }> } };
+      }>;
+    };
+  }>(
+    `
+      query FindIssue($num: Float!) {
+        issues(filter: { number: { eq: $num } }, first: 5) {
+          nodes {
+            id
+            identifier
+            team {
+              id
+              states { nodes { id name type } }
+            }
+          }
+        }
+      }
+    `,
+    { num: issueNumber },
+  );
+  const issue = found?.issues.nodes.find((i) => i.identifier === identifier);
+  if (!issue) {
+    console.error(`[linear] could not find ${identifier}`);
+    return false;
+  }
+  const doneState = issue.team.states.nodes.find(
+    (s) => s.type === "completed" || s.name.toLowerCase() === "done",
+  );
+  if (!doneState) {
+    console.error(`[linear] no Done state for ${identifier}'s team`);
+    return false;
+  }
+
+  // Comment first (so the comment is the most recent activity before the
+  // state change shows in the timeline)
+  if (comment.trim().length > 0) {
+    await gql(
+      `
+        mutation Comment($input: CommentCreateInput!) {
+          commentCreate(input: $input) { success }
+        }
+      `,
+      { input: { issueId: issue.id, body: comment } },
+    );
+  }
+
+  // Update state
+  const updated = await gql<{ issueUpdate: { success: boolean } }>(
+    `
+      mutation UpdateIssue($id: String!, $input: IssueUpdateInput!) {
+        issueUpdate(id: $id, input: $input) { success }
+      }
+    `,
+    { id: issue.id, input: { stateId: doneState.id } },
+  );
+  return !!updated?.issueUpdate.success;
 }
 
 /* ------------------------------------------------------------------ */
