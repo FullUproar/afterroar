@@ -243,6 +243,19 @@ function SignupContent() {
                 Sign in
               </a>
             </p>
+            <p
+              style={{
+                ...TYPE.body,
+                fontSize: "0.78rem",
+                color: "var(--ink-faint)",
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
+              <a href="/passport-101" style={{ color: "var(--ink-soft)" }}>
+                What is a Passport? →
+              </a>
+            </p>
 
             <p style={{ ...TYPE.body, fontSize: "0.72rem", color: "var(--ink-faint)", lineHeight: 1.5, margin: 0, textAlign: "center" }}>
               By signing up, you agree to our{" "}

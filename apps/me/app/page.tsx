@@ -205,8 +205,8 @@ export default async function PassportLanding() {
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
           }}>
+            <Link href="/passport-101" style={{ color: 'var(--ink-soft)', textDecoration: 'none' }}>What is this?</Link>
             <Link href="/credo" style={{ color: 'var(--orange)', textDecoration: 'none' }}>The Credo</Link>
-            <Link href="/store" style={{ color: 'var(--ink-soft)', textDecoration: 'none' }}>Connect</Link>
             <Link href="/privacy" style={{ color: 'var(--ink-soft)', textDecoration: 'none' }}>Privacy</Link>
             <Link href="/terms" style={{ color: 'var(--ink-soft)', textDecoration: 'none' }}>Terms</Link>
             <Link href="/api/auth/signout" style={{ color: 'var(--ink-faint)', textDecoration: 'none' }}>Sign out</Link>

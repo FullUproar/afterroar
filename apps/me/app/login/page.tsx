@@ -213,6 +213,10 @@ function LoginContent() {
               <a href="/signup" style={{ color: 'var(--orange)' }}>
                 Create a Passport
               </a>
+              {' · '}
+              <a href="/passport-101" style={{ color: 'var(--ink-soft)' }}>
+                What is this?
+              </a>
             </p>
 
             <p style={{ ...TYPE.body, fontSize: '0.72rem', color: 'var(--ink-faint)', lineHeight: 1.5, margin: 0, textAlign: 'center' }}>
