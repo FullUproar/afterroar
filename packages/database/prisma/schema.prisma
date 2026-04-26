@@ -12,7 +12,7 @@ datasource db {
 // Only fields Store Ops needs are declared here.
 // ============================================================
 model User {
-  id              String    @id
+  id              String    @id @default(cuid())
   email           String    @unique
   displayName     String?
   username        String?   @unique
@@ -21,6 +21,11 @@ model User {
   passportCode    String?   @unique @db.VarChar(8)
   membershipTier  String    @default("FREE")
   gameLibrary     String?
+  /// Standard NextAuth/email-verification timestamp. Set when the user clicks
+  /// the verification link, OR when an OAuth provider that asserts a verified
+  /// email (Google with email_verified=true) signs them in.
+  emailVerified   DateTime?
+  /// KYC-grade identity verification (Persona, ID.me) — separate from email.
   identityVerified Boolean  @default(false)
   reputationScore Int       @default(100)
   isFrozen        Boolean   @default(false)

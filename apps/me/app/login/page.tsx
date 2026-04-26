@@ -1,17 +1,61 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import { ChromeNav } from '@/app/components/card-shell';
 import { TYPE, TitleBar } from '@/app/components/ui';
 import { PlayerCard, Workbench } from '@/app/components/card-shell';
 
 function LoginContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
   const deleted = searchParams.get('deleted') === 'true';
+  const verified = searchParams.get('verified') === '1';
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  async function submitEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setFormError(null);
+
+    if (!email.includes('@') || !password) {
+      setFormError('Enter your email and password.');
+      return;
+    }
+
+    setSubmitting(true);
+    const result = await signIn('credentials', {
+      email: email.trim(),
+      password,
+      redirect: false,
+    });
+    setSubmitting(false);
+
+    if (result?.error) {
+      // NextAuth v5 wraps errors as `CredentialsSignin` regardless of the
+      // underlying throw. We can read `result.code` (custom message we
+      // threw in authorize) when set.
+      if (result.error === 'CredentialsSignin') {
+        // Most common — bad password or unknown email. Don't leak which.
+        setFormError('Incorrect email or password.');
+      } else if (result.error.includes('EmailNotVerified')) {
+        setFormError('Verify your email first — check your inbox for the link.');
+      } else {
+        setFormError('Sign-in failed. Try again.');
+      }
+      return;
+    }
+
+    router.push(callbackUrl);
+    router.refresh();
+  }
 
   return (
     <>
@@ -24,16 +68,30 @@ function LoginContent() {
             display: 'flex',
             flexDirection: 'column',
             gap: '1.25rem',
-            textAlign: 'center',
           }}>
-            <h1 style={{ ...TYPE.display, fontSize: 'clamp(1.6rem, 5vw, 2rem)', color: 'var(--cream)', margin: 0, lineHeight: 1 }}>
-              Log in with<br />Afterroar
-            </h1>
-            <p style={{ ...TYPE.body, fontSize: '0.9rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.5 }}>
-              Your tabletop identity. One login, every store, every app.
-            </p>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ ...TYPE.display, fontSize: 'clamp(1.6rem, 5vw, 2rem)', color: 'var(--cream)', margin: 0, lineHeight: 1 }}>
+                Log in with<br />Afterroar
+              </h1>
+              <p style={{ ...TYPE.body, fontSize: '0.9rem', color: 'var(--ink-soft)', margin: '0.75rem 0 0', lineHeight: 1.5 }}>
+                Your tabletop identity. One login, every store, every app.
+              </p>
+            </div>
 
-            {deleted ? (
+            {verified && (
+              <div style={{
+                padding: '0.75rem 0.9rem',
+                background: 'rgba(125, 184, 125, 0.08)',
+                border: '1px solid rgba(125, 184, 125, 0.35)',
+                color: 'var(--green, #7db87d)',
+                ...TYPE.body,
+                fontSize: '0.82rem',
+              }}>
+                Email verified. Sign in below.
+              </div>
+            )}
+
+            {deleted && (
               <div style={{
                 padding: '0.75rem 0.9rem',
                 background: 'var(--green-mute)',
@@ -44,9 +102,9 @@ function LoginContent() {
               }}>
                 Your Passport has been deleted. All your data is gone.
               </div>
-            ) : null}
+            )}
 
-            {error ? (
+            {(error || formError) && (
               <div style={{
                 padding: '0.75rem 0.9rem',
                 background: 'rgba(196, 77, 77, 0.08)',
@@ -55,15 +113,18 @@ function LoginContent() {
                 ...TYPE.body,
                 fontSize: '0.82rem',
               }}>
-                {error === 'OAuthSignin' ? 'Could not start sign-in. Please try again.'
+                {formError ? formError
+                : error === 'OAuthSignin' ? 'Could not start sign-in. Please try again.'
                 : error === 'OAuthCallback' ? 'Sign-in was interrupted. Please try again.'
+                : error === 'OAuthCreateAccount' ? 'Could not create account. Try again or use email/password.'
                 : error === 'Default' ? 'Something went wrong. Please try again.'
                 : 'Sign-in failed. Please try again.'}
               </div>
-            ) : null}
+            )}
 
             <button
               onClick={() => signIn('google', { callbackUrl })}
+              disabled={submitting}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -77,7 +138,8 @@ function LoginContent() {
                 ...TYPE.display,
                 fontSize: '0.95rem',
                 letterSpacing: '0.01em',
-                cursor: 'pointer',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                opacity: submitting ? 0.5 : 1,
                 transition: 'border-color 0.2s ease, background 0.2s ease',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--orange)'; }}
@@ -92,8 +154,64 @@ function LoginContent() {
               Continue with Google
             </button>
 
-            <p style={{ ...TYPE.body, fontSize: '0.72rem', color: 'var(--ink-faint)', lineHeight: 1.5, margin: 0 }}>
-              By signing in, you create an Afterroar Passport and agree to our{' '}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--ink-faint)' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+              <span style={{ ...TYPE.body, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>or</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+            </div>
+
+            <form onSubmit={submitEmail} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+                style={fieldStyle}
+                onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--orange)')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--rule)')}
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete="current-password"
+                required
+                style={fieldStyle}
+                onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--orange)')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--rule)')}
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  width: '100%',
+                  padding: '0.9rem 1.25rem',
+                  background: 'var(--orange)',
+                  border: 'none',
+                  color: 'var(--void, #1a1a1a)',
+                  ...TYPE.display,
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  opacity: submitting ? 0.6 : 1,
+                }}
+              >
+                {submitting ? 'Signing in…' : 'Sign in with Email'}
+              </button>
+            </form>
+
+            <p style={{ ...TYPE.body, fontSize: '0.85rem', color: 'var(--ink-soft)', textAlign: 'center', margin: 0 }}>
+              New here?{' '}
+              <a href="/signup" style={{ color: 'var(--orange)' }}>
+                Create a Passport
+              </a>
+            </p>
+
+            <p style={{ ...TYPE.body, fontSize: '0.72rem', color: 'var(--ink-faint)', lineHeight: 1.5, margin: 0, textAlign: 'center' }}>
+              By signing in, you agree to our{' '}
               <a href="/terms" style={{ color: 'var(--orange)' }}>Terms of Service</a> and{' '}
               <a href="/privacy" style={{ color: 'var(--orange)' }}>Privacy Policy</a>.
               Governed by <a href="/credo" style={{ color: 'var(--orange)' }}>the Afterroar Credo</a>:
@@ -105,6 +223,17 @@ function LoginContent() {
     </>
   );
 }
+
+const fieldStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.75rem 0.9rem',
+  background: 'var(--panel-mute)',
+  border: '1.5px solid var(--rule)',
+  color: 'var(--cream)',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.95rem',
+  outline: 'none',
+};
 
 export default function LoginPage() {
   return (
