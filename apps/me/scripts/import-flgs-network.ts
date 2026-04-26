@@ -52,9 +52,20 @@ const args = process.argv.slice(2);
 const inputPath = args.find((a) => !a.startsWith("--"));
 const dryRun = args.includes("--dry-run");
 const update = args.includes("--update");
+/**
+ * --replace: purge stale "junk" rows before importing. ONLY deletes Venue
+ * rows where ALL of:
+ *   - status = "unclaimed" (so claimed/active/pending rows are protected)
+ *   - metadata.crowdsourced is not true (so user-submitted rows are protected)
+ *   - no AfterroarEntity exists with the same slug (so anything that's been
+ *     touched by the claim flow stays put)
+ * Use when the upstream dataset is the new source of truth and the existing
+ * rows are stale imports.
+ */
+const replace = args.includes("--replace");
 
 if (!inputPath) {
-  console.error("Usage: tsx scripts/import-flgs-network.ts <input.csv|input.json> [--dry-run] [--update]");
+  console.error("Usage: tsx scripts/import-flgs-network.ts <input.csv|input.json> [--dry-run] [--update] [--replace]");
   process.exit(1);
 }
 
@@ -70,24 +81,93 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
+/**
+ * State-machine CSV parser. Handles:
+ *   - quoted fields containing commas: "Foo, Bar"
+ *   - escaped quotes inside quoted fields: "she said ""hi""" → she said "hi"
+ *   - newlines inside quoted fields (multi-line addresses, etc.)
+ *   - Windows / Unix / classic-Mac line endings
+ *
+ * Returns: array of records (one per row), each as { [columnName]: string }.
+ * Empty strings stay empty strings; the caller decides what to nullify.
+ */
+function parseCsvRobust(text: string): Record<string, string>[] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  let i = 0;
+  // Strip BOM if present
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+        } else {
+          inQuotes = false;
+          i++;
+        }
+      } else {
+        field += c;
+        i++;
+      }
+    } else {
+      if (c === '"') {
+        inQuotes = true;
+        i++;
+      } else if (c === ",") {
+        row.push(field);
+        field = "";
+        i++;
+      } else if (c === "\r" || c === "\n") {
+        row.push(field);
+        field = "";
+        if (row.length > 1 || row[0] !== "") rows.push(row);
+        row = [];
+        // consume \r\n as one
+        if (c === "\r" && text[i + 1] === "\n") i += 2;
+        else i++;
+      } else {
+        field += c;
+        i++;
+      }
+    }
+  }
+  // Trailing field
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    if (row.length > 1 || row[0] !== "") rows.push(row);
+  }
+
+  if (rows.length === 0) return [];
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const records: Record<string, string>[] = [];
+  for (let r = 1; r < rows.length; r++) {
+    const cells = rows[r];
+    const rec: Record<string, string> = {};
+    for (let c = 0; c < header.length; c++) {
+      rec[header[c]] = (cells[c] ?? "").trim();
+    }
+    records.push(rec);
+  }
+  return records;
+}
+
 function parseCsv(text: string): FlgsRow[] {
-  // Minimal CSV parser — splits on newlines + commas, trims, treats empty
-  // strings as null. Doesn't handle quoted commas; fine for our seed data
-  // (FLGS network CSV is hand-curated). For messier data, use --json.
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
-  const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
-  const idx = (col: string) => header.indexOf(col.toLowerCase());
+  const records = parseCsvRobust(text);
   const rows: FlgsRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cells = lines[i].split(",").map((c) => c.trim());
+  for (const rec of records) {
     const get = (col: string): string | null => {
-      const j = idx(col);
-      if (j < 0) return null;
-      const val = cells[j];
-      return val && val.length > 0 ? val : null;
+      const v = rec[col.toLowerCase()];
+      return v && v.length > 0 ? v : null;
     };
-    const name = get("name");
+    // Accept several common spellings for the name column. Lead-Harvester
+    // exports use `store_name`; older hand-curated CSVs use `name`.
+    const name = get("name") ?? get("store_name");
     if (!name) continue;
     rows.push({
       name,
@@ -111,15 +191,22 @@ function parseCsv(text: string): FlgsRow[] {
   return rows;
 }
 
-async function uniqueSlug(base: string, seen: Set<string>): Promise<string> {
+/**
+ * In-memory slug collision check. We pre-fetch every existing Venue slug
+ * once at start, then dedup against the in-memory set as we walk the input.
+ * For 6k+ rows this turns ~12k Neon roundtrips (1 lookup + 1 existing-fetch
+ * per row) into a single SELECT slug FROM Venue plus zero DB hits during
+ * the loop until we either skip or write.
+ */
+function uniqueSlugSync(base: string, taken: Set<string>): string {
   let candidate = base;
   let n = 2;
-  while (seen.has(candidate) || (await prisma.afterroarEntity.findUnique({ where: { slug: candidate } }))) {
+  while (taken.has(candidate)) {
     candidate = `${base}-${n}`;
     n++;
     if (n > 100) throw new Error(`Could not find unique slug for ${base}`);
   }
-  seen.add(candidate);
+  taken.add(candidate);
   return candidate;
 }
 
@@ -128,20 +215,98 @@ async function main() {
   const raw = readFileSync(fullPath, "utf8");
   const rows: FlgsRow[] = inputPath!.endsWith(".json") ? JSON.parse(raw) : parseCsv(raw);
 
-  console.log(`→ ${rows.length} rows from ${inputPath}${dryRun ? " (dry run)" : ""}`);
+  console.log(`→ ${rows.length} rows parsed from ${inputPath}${dryRun ? " (dry run)" : ""}`);
 
-  const seenSlugs = new Set<string>();
+  // Track simulated purges so the dry-run loop count reflects post-purge state.
+  let purgedSlugSetForDryRun = new Set<string>();
+
+  // ── Replace mode: purge stale-import rows first ──
+  if (replace) {
+    console.log("→ --replace: identifying stale-import rows…");
+
+    // Pull every claimed/pending AfterroarEntity slug — those Venues are
+    // protected even if Venue.status still says unclaimed (claim in flight
+    // races where Venue hasn't been bumped yet).
+    const protectedEntitySlugs = new Set(
+      (await prisma.afterroarEntity.findMany({ select: { slug: true } })).map((e) => e.slug),
+    );
+
+    // Candidates for deletion: status=unclaimed, NOT crowdsourced, NOT in
+    // any protected entity slug list.
+    // (Prisma JSON path filtering for "not equals true" is awkward;
+    // simplest is to pull all unclaimed Venues + their metadata in one
+    // query and filter in memory.)
+    const unclaimedRows = await prisma.venue.findMany({
+      where: { status: "unclaimed" },
+      select: { id: true, slug: true, metadata: true, name: true },
+    });
+
+    const toDelete = unclaimedRows.filter((v) => {
+      if (protectedEntitySlugs.has(v.slug)) return false;
+      const meta = (v.metadata as Record<string, unknown> | null) ?? {};
+      if (meta.crowdsourced === true) return false;
+      return true;
+    });
+
+    console.log(
+      `  ${unclaimedRows.length} unclaimed Venues found — ${toDelete.length} eligible for purge ` +
+      `(${unclaimedRows.length - toDelete.length} protected: claimed-or-crowdsourced)`,
+    );
+
+    if (toDelete.length > 0 && !dryRun) {
+      // Chunked delete — Postgres handles `id IN (...)` but enormous IN
+      // lists slow the planner. Batch into 500-id chunks.
+      const ids = toDelete.map((v) => v.id);
+      const CHUNK = 500;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const slice = ids.slice(i, i + CHUNK);
+        const result = await prisma.venue.deleteMany({ where: { id: { in: slice } } });
+        console.log(`  …purged ${i + result.count}/${ids.length}`);
+      }
+    } else if (dryRun && toDelete.length > 0) {
+      console.log(`  (dry run — would purge ${toDelete.length} rows)`);
+    }
+    // In dry-run mode, expose the purged-slug set so the loop counts as
+    // if the purge had happened (otherwise skipped/created counts lie).
+    purgedSlugSetForDryRun = new Set(toDelete.map((v) => v.slug));
+  }
+
+  // Pre-fetch every existing Venue slug + status so we can dedup in-memory
+  // and decide skip-vs-update without per-row DB calls.
+  console.log("→ pre-fetching existing Venue slugs…");
+  let existingVenues = await prisma.venue.findMany();
+  if (dryRun && purgedSlugSetForDryRun.size > 0) {
+    const before = existingVenues.length;
+    existingVenues = existingVenues.filter((v) => !purgedSlugSetForDryRun.has(v.slug));
+    console.log(`  (dry run: simulating purge — ${before} → ${existingVenues.length} remaining)`);
+  }
+  const existingSlugSet = new Set(existingVenues.map((v) => v.slug));
+  const existingBySlug = new Map(existingVenues.map((v) => [v.slug, v]));
+  console.log(`  ${existingVenues.length} existing venues already in directory`);
+
+  // Track slugs we'll mint during this run (matters for in-batch collisions)
+  const takenSlugs = new Set<string>(existingSlugSet);
+
   let created = 0;
   let updated = 0;
   let skipped = 0;
   const errors: { row: FlgsRow; reason: string }[] = [];
 
-  for (const row of rows) {
+  const PROGRESS_EVERY = 500;
+  for (let idx = 0; idx < rows.length; idx++) {
+    if (idx > 0 && idx % PROGRESS_EVERY === 0) {
+      console.log(`  …${idx}/${rows.length} (created ${created}, updated ${updated}, skipped ${skipped}, errors ${errors.length})`);
+    }
+    const row = rows[idx];
     try {
       const baseSlug = row.slug ? slugify(row.slug) : slugify(row.name);
-      const finalSlug = await uniqueSlug(baseSlug, seenSlugs);
+      // If the bare slug already exists and belongs to a row we'd update
+      // (or skip), prefer it over minting a new one — this lets re-runs of
+      // the same input keep matching the same target rows.
+      const reuseExisting = existingSlugSet.has(baseSlug);
+      const finalSlug = reuseExisting ? baseSlug : uniqueSlugSync(baseSlug, takenSlugs);
 
-      const existing = await prisma.afterroarEntity.findUnique({ where: { slug: finalSlug } });
+      const existing = existingBySlug.get(finalSlug) ?? null;
       if (existing) {
         if (existing.status !== "unclaimed") {
           skipped++;
@@ -152,22 +317,19 @@ async function main() {
           continue;
         }
         if (!dryRun) {
-          await prisma.afterroarEntity.update({
+          await prisma.venue.update({
             where: { id: existing.id },
             data: {
               name: row.name,
-              websiteUrl: row.websiteUrl ?? existing.websiteUrl,
-              contactEmail: row.contactEmail ?? existing.contactEmail,
-              contactName: row.contactName ?? existing.contactName,
-              contactPhone: row.contactPhone ?? existing.contactPhone,
-              addressLine1: row.addressLine1 ?? existing.addressLine1,
-              addressLine2: row.addressLine2 ?? existing.addressLine2,
+              website: row.websiteUrl ?? existing.website,
+              email: row.contactEmail ?? existing.email,
+              phone: row.contactPhone ?? existing.phone,
+              address: row.addressLine1 ?? existing.address,
               city: row.city ?? existing.city,
               state: row.state ?? existing.state,
-              postalCode: row.postalCode ?? existing.postalCode,
-              country: row.country ?? existing.country,
-              latitude: row.latitude ?? existing.latitude,
-              longitude: row.longitude ?? existing.longitude,
+              zip: row.postalCode ?? existing.zip,
+              lat: row.latitude ?? existing.lat,
+              lng: row.longitude ?? existing.lng,
               description: row.description ?? existing.description,
               logoUrl: row.logoUrl ?? existing.logoUrl,
             },
@@ -178,24 +340,21 @@ async function main() {
       }
 
       if (!dryRun) {
-        await prisma.afterroarEntity.create({
+        await prisma.venue.create({
           data: {
             slug: finalSlug,
             name: row.name,
-            type: "store",
             status: "unclaimed",
-            websiteUrl: row.websiteUrl ?? null,
-            contactEmail: row.contactEmail ?? null,
-            contactName: row.contactName ?? null,
-            contactPhone: row.contactPhone ?? null,
-            addressLine1: row.addressLine1 ?? null,
-            addressLine2: row.addressLine2 ?? null,
+            venueType: "game_store",
+            website: row.websiteUrl ?? null,
+            email: row.contactEmail ?? null,
+            phone: row.contactPhone ?? null,
+            address: row.addressLine1 ?? null,
             city: row.city ?? null,
             state: row.state ?? null,
-            postalCode: row.postalCode ?? null,
-            country: row.country ?? "US",
-            latitude: row.latitude ?? null,
-            longitude: row.longitude ?? null,
+            zip: row.postalCode ?? null,
+            lat: row.latitude ?? null,
+            lng: row.longitude ?? null,
             description: row.description ?? null,
             logoUrl: row.logoUrl ?? null,
             metadata: { source: "flgs_network_import", imported_at: new Date().toISOString() },
