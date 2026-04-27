@@ -45,6 +45,7 @@ model User {
   entityMemberships EntityMember[]
   entityConsents    EntityConsent[]
   entityClaims      EntityClaim[]
+  apiKeys      ApiKey[]
 
   @@map("User")
 }
@@ -2079,4 +2080,62 @@ model PosNetworkPlayerRating {
   @@index([game, format])
   @@index([store_id])
   @@map("pos_network_player_ratings")
+}
+
+// ============================================================
+// AFTERROAR FEDERATION API
+// Server-to-server API keys for cross-service calls.
+// FU is one consumer; FLGS storefronts will be others.
+// ============================================================
+
+model ApiKey {
+  id           String    @id @default(cuid())
+  /// Display prefix shown in admin UIs. Format: ar_live_xxxxxxxx (8 chars after ar_live_)
+  /// Full key is never stored — only the prefix + sha256 hash.
+  keyPrefix    String    @unique
+  /// SHA-256 hash of the full key. Lookup is by hash, not by prefix.
+  keyHash      String    @unique
+  name         String
+  /// Permission scopes — array of strings like 'read:users', 'read:venues:inventory'.
+  /// Scope checks happen in the API middleware before the route runs.
+  scopes       String[]
+  /// User who minted the key. Mostly informational — keys are tied to scopes, not a user identity.
+  createdById  String?
+  createdBy    User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+  expiresAt    DateTime?
+  revokedAt    DateTime?
+  revokedBy    String?
+  /// Usage counter (denormalized — exact source-of-truth is ApiUsageLog).
+  /// Cheap monitoring badge in the admin UI.
+  usageCount   Int       @default(0)
+
+  usageLogs    ApiUsageLog[]
+
+  @@index([keyHash])
+  @@index([createdById])
+  @@index([revokedAt])
+}
+
+model ApiUsageLog {
+  id          String   @id @default(cuid())
+  apiKeyId    String?
+  apiKey      ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  /// e.g. "/api/v1/users/lookup". Stored as raw path; do not include query string.
+  endpoint    String
+  method      String
+  status      Int
+  /// Latency in ms — request received → response sent.
+  latencyMs   Int
+  /// Best-effort. Reads X-Forwarded-For first, falls back to remoteAddress.
+  ip          String?
+  /// Optional error code for fast filtering (e.g. "rate_limited", "scope_denied", "not_found").
+  errorCode   String?
+  timestamp   DateTime @default(now())
+
+  @@index([timestamp(sort: Desc)])
+  @@index([apiKeyId, timestamp(sort: Desc)])
+  @@index([endpoint, timestamp(sort: Desc)])
+  @@index([status, timestamp(sort: Desc)])
 }
