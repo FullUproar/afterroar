@@ -30,7 +30,7 @@ export function CardFootClient() {
           fontWeight: 700,
         }}>← Player Card</Link>
       ) : (
-        <span>© Afterroar {new Date().getFullYear()}</span>
+        <span>© {new Date().getFullYear()} Full Uproar Games</span>
       )}
       <nav style={{ display: 'flex', gap: '0.9rem' }}>
         <Link href="/credo" style={{ color: 'var(--orange)', textDecoration: 'none' }}>The Credo</Link>
