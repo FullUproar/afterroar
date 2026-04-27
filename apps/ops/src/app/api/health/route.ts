@@ -51,7 +51,11 @@ export async function GET() {
     },
     {
       status: allOk ? 200 : 503,
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        // Public monitoring endpoint — anyone can read this.
+        "Access-Control-Allow-Origin": "*",
+      },
     },
   );
 }

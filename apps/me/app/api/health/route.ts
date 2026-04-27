@@ -38,7 +38,12 @@ export async function GET() {
     },
     {
       status: allOk ? 200 : 503,
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        // Public monitoring endpoint — anyone (Sentry, Garmr, third-party
+        // status pages, FLGS owner's own dashboard) can read this.
+        "Access-Control-Allow-Origin": "*",
+      },
     },
   );
 }
