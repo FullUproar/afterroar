@@ -8,6 +8,15 @@ interface GameEntry {
   title: string;
   slug?: string;
   bggId?: number;
+  /**
+   * User-defined tags. Free text, case-preserved, compared case-insensitively
+   * for dedupe + filtering. Power users with hundreds of games rely on these.
+   *
+   * NOTE: When user demand for richer per-game metadata emerges (custom fields
+   * with typed values: enum, number, date), add a `customFields?: Record<string,
+   * string | number | string[]>` here. The current JSON-blob storage on
+   * User.gameLibrary already accommodates arbitrary keys — no schema change.
+   */
   tags?: string[];
   minPlayers?: number | null;
   maxPlayers?: number | null;
@@ -54,9 +63,36 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
   const [playerFilter, setPlayerFilter] = useState<number | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeBand | null>(null);
   const [weightFilter, setWeightFilter] = useState<WeightBand | null>(null);
+  /** Selected tag filters — lowercase for matching. AND semantics: a game
+   *  must carry every selected tag to be shown. */
+  const [tagFilters, setTagFilters] = useState<string[]>([]);
+  /** Game.title currently showing the inline tag-add input. */
+  const [tagInputFor, setTagInputFor] = useState<string | null>(null);
+  const [tagInputValue, setTagInputValue] = useState('');
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filtersActive = playerFilter != null || timeFilter != null || weightFilter != null;
+  // All distinct tags across the user's library, ordered by frequency.
+  // Used for filter chips + inline-input autocomplete.
+  const tagsByFrequency = useMemo(() => {
+    const counts = new Map<string, { display: string; count: number }>();
+    for (const g of games) {
+      for (const tag of g.tags || []) {
+        const key = tag.toLowerCase();
+        const slot = counts.get(key);
+        if (slot) {
+          slot.count++;
+        } else {
+          counts.set(key, { display: tag, count: 1 });
+        }
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([key, v]) => ({ key, display: v.display, count: v.count }))
+      .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  }, [games]);
+
+  const filtersActive =
+    playerFilter != null || timeFilter != null || weightFilter != null || tagFilters.length > 0;
 
   const filtered = useMemo(() => {
     if (!filtersActive) return games;
@@ -81,14 +117,24 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
         if (weightFilter === 'mid' && (g.complexity < 2.5 || g.complexity > 3.5)) return false;
         if (weightFilter === 'heavy' && g.complexity <= 3.5) return false;
       }
+      if (tagFilters.length > 0) {
+        const gameTags = (g.tags || []).map((t) => t.toLowerCase());
+        // AND semantics: every selected filter tag must be on the game
+        if (!tagFilters.every((t) => gameTags.includes(t))) return false;
+      }
       return true;
     });
-  }, [games, playerFilter, timeFilter, weightFilter, filtersActive]);
+  }, [games, playerFilter, timeFilter, weightFilter, tagFilters, filtersActive]);
 
   function clearFilters() {
     setPlayerFilter(null);
     setTimeFilter(null);
     setWeightFilter(null);
+    setTagFilters([]);
+  }
+
+  function toggleTagFilter(tagKey: string) {
+    setTagFilters((prev) => (prev.includes(tagKey) ? prev.filter((t) => t !== tagKey) : [...prev, tagKey]));
   }
 
   const handleSearch = (query: string) => {
@@ -126,21 +172,33 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
   };
 
   const addTag = (gameTitle: string, tag: string) => {
-    const slug = tag.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+    const lower = trimmed.toLowerCase();
     const updated = games.map((g) => {
       if (g.title !== gameTitle) return g;
       const existing = g.tags || [];
-      if (existing.some((t) => t.toLowerCase() === slug)) return g;
-      return { ...g, tags: [...existing, tag.toUpperCase()] };
+      // Case-insensitive dedupe — preserve user's original casing on display.
+      if (existing.some((t) => t.toLowerCase() === lower)) return g;
+      return { ...g, tags: [...existing, trimmed] };
     });
     setGames(updated);
     save(updated);
+    // Best-effort register in the shared tag namespace (autocomplete / discovery).
     fetch('/api/tags', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: tag }),
+      body: JSON.stringify({ name: trimmed }),
     }).catch(() => {});
   };
+
+  function commitTagInput() {
+    if (!tagInputFor) return;
+    const value = tagInputValue.trim();
+    if (value) addTag(tagInputFor, value);
+    setTagInputFor(null);
+    setTagInputValue('');
+  }
 
   const removeTag = (gameTitle: string, tag: string) => {
     const updated = games.map((g) => {
@@ -329,6 +387,23 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
               }}>clear</button>
             ) : null}
           </div>
+          {tagsByFrequency.length > 0 ? (
+            <div className="ar-chips" style={{ marginTop: '0.15rem' }}>
+              {tagsByFrequency.map(({ key, display, count }) => {
+                const on = tagFilters.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => toggleTagFilter(key)}
+                    title={`${count} ${count === 1 ? 'game' : 'games'} tagged ${display}`}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  >
+                    <Chip on={on}>#{display}</Chip>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -378,19 +453,105 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
                     }}><X size={10} /></button>
                   </span>
                 ))}
-                <button onClick={() => {
-                  const tag = prompt('Add tag (e.g., GOTO, BASEMENT, PARTY):');
-                  if (tag?.trim()) addTag(game.title, tag.trim());
-                }} style={{
-                  padding: '0.15rem 0.5rem',
-                  background: 'transparent',
-                  border: '1px dashed var(--rule)',
-                  color: 'var(--ink-soft)',
-                  ...TYPE.mono,
-                  fontSize: '0.6rem',
-                  letterSpacing: '0.08em',
-                  cursor: 'pointer',
-                }}>+ tag</button>
+                {tagInputFor === game.title ? (() => {
+                  const existingTagsOnGame = new Set((game.tags || []).map((t) => t.toLowerCase()));
+                  const matchValue = tagInputValue.trim().toLowerCase();
+                  const suggestions = tagsByFrequency
+                    .filter((t) => !existingTagsOnGame.has(t.key))
+                    .filter((t) => !matchValue || t.key.includes(matchValue))
+                    .slice(0, 6);
+                  return (
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <input
+                        type="text"
+                        value={tagInputValue}
+                        onChange={(e) => setTagInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); commitTagInput(); }
+                          else if (e.key === 'Escape') { setTagInputFor(null); setTagInputValue(''); }
+                        }}
+                        onBlur={() => {
+                          // Defer so a click on a suggestion fires before blur cancels.
+                          setTimeout(() => {
+                            if (document.activeElement?.tagName !== 'BUTTON') {
+                              commitTagInput();
+                            }
+                          }, 120);
+                        }}
+                        placeholder="tag"
+                        autoFocus
+                        style={{
+                          padding: '0.15rem 0.5rem',
+                          background: 'var(--panel-mute)',
+                          border: '1px solid var(--orange)',
+                          color: 'var(--cream)',
+                          ...TYPE.mono,
+                          fontSize: '0.6rem',
+                          letterSpacing: '0.08em',
+                          width: '110px',
+                          outline: 'none',
+                        }}
+                      />
+                      {suggestions.length > 0 ? (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          marginTop: '2px',
+                          background: 'var(--panel-mute)',
+                          border: '1px solid var(--rule)',
+                          minWidth: '140px',
+                          maxHeight: '180px',
+                          overflowY: 'auto',
+                          zIndex: 10,
+                        }}>
+                          {suggestions.map((s) => (
+                            <button
+                              key={s.key}
+                              type="button"
+                              onMouseDown={(e) => {
+                                // onMouseDown so blur of input fires AFTER this — input's
+                                // blur-handler reads activeElement to detect this case.
+                                e.preventDefault();
+                                addTag(game.title, s.display);
+                                setTagInputFor(null);
+                                setTagInputValue('');
+                              }}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '0.3rem 0.5rem',
+                                background: 'transparent',
+                                border: 'none',
+                                ...TYPE.mono,
+                                fontSize: '0.62rem',
+                                letterSpacing: '0.05em',
+                                color: 'var(--ink-soft)',
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--orange)'; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--ink-soft)'; }}
+                            >
+                              #{s.display} <span style={{ color: 'var(--ink-faint)' }}>· {s.count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })() : (
+                  <button onClick={() => { setTagInputFor(game.title); setTagInputValue(''); }} style={{
+                    padding: '0.15rem 0.5rem',
+                    background: 'transparent',
+                    border: '1px dashed var(--rule)',
+                    color: 'var(--ink-soft)',
+                    ...TYPE.mono,
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                  }}>+ tag</button>
+                )}
               </div>
             </div>
             );
