@@ -239,6 +239,8 @@ export function canAccess(
     "/dashboard/returns": "returns",
     "/dashboard/returns/new": "returns",
     "/dashboard/customers": "customers.view",
+    "/dashboard/pull-lists": "customers.view",
+    "/dashboard/pull-lists/receive": "customers.edit",
     "/dashboard/events": "events.checkin",
     "/dashboard/promotions": "inventory.pricing",
     "/dashboard/reports": "reports",

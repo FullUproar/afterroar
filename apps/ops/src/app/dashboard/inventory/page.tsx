@@ -23,11 +23,16 @@ import { PageHeader } from "@/components/page-header";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { BarcodeLearnModal } from "@/components/barcode-learn-modal";
 import { PrintLabelsModal } from "@/components/print-labels-modal";
+import { CategoryFilterBar, CategoryAttributeBadges } from "@/components/inventory/category-attribute-fields";
 import { useScanner } from "@/hooks/use-scanner";
+import { useEnabledModules } from "@/hooks/use-enabled-modules";
 
 const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: "tcg_single", label: "TCG Single" },
   { value: "sealed", label: "Sealed" },
+  { value: "rpg", label: "RPG Book" },
+  { value: "comic", label: "Comic" },
+  { value: "collectible", label: "Collectible" },
   { value: "board_game", label: "Board Game" },
   { value: "miniature", label: "Miniature" },
   { value: "accessory", label: "Accessory" },
@@ -108,6 +113,8 @@ const selectStyle: React.CSSProperties = {
 
 export default function InventoryPage() {
   const { can } = useStore();
+  const { filterCategories } = useEnabledModules();
+  const visibleCategories = filterCategories(CATEGORIES);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +135,12 @@ export default function InventoryPage() {
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  // Category + attribute filtering. When `categoryFilter` is null, show all
+  // categories. When set, the filter bar surfaces searchable fields from that
+  // category's schema (lib/category-attributes.ts) and applies them client-side.
+  const [categoryFilter, setCategoryFilter] = useState<ItemCategory | "">("");
+  const [attrFilters, setAttrFilters] = useState<Record<string, string>>({});
 
   // Stock adjustment modal
   const [adjust, setAdjust] = useState<AdjustState | null>(null);
@@ -436,7 +449,27 @@ export default function InventoryPage() {
     setLearnBarcode(code);
   }
 
-  const sortedItems = [...items].sort((a, b) => {
+  // Category + attribute filter gate, applied BEFORE sort.
+  const visibleItems = items.filter((it) => {
+    if (categoryFilter && it.category !== categoryFilter) return false;
+    if (categoryFilter) {
+      const attrs = (it.attributes ?? {}) as Record<string, unknown>;
+      for (const [key, val] of Object.entries(attrFilters)) {
+        if (val === "" || val == null) continue;
+        const itemVal = attrs[key];
+        if (itemVal == null) return false;
+        // Boolean-ish filter: "true"/"false" strings filter to those exact values
+        if (val === "true" && itemVal !== true) return false;
+        if (val === "false" && itemVal !== false) return false;
+        if (val !== "true" && val !== "false") {
+          if (String(itemVal).toLowerCase() !== val.toLowerCase()) return false;
+        }
+      }
+    }
+    return true;
+  });
+
+  const sortedItems = [...visibleItems].sort((a, b) => {
     const dir = sortDir === "asc" ? 1 : -1;
     switch (sortField) {
       case "name":
@@ -708,6 +741,20 @@ export default function InventoryPage() {
         </kbd>
       </div>
 
+      {/* Category + attribute filters. When a category is picked, the schema's
+          searchable fields surface as filter inputs. The schema is the single
+          source of truth — adding a category in lib/category-attributes.ts
+          surfaces it here automatically. */}
+      <CategoryFilterBar
+        category={categoryFilter}
+        attrFilters={attrFilters}
+        onCategoryChange={(c) => {
+          setCategoryFilter(c);
+          setAttrFilters({});
+        }}
+        onAttrChange={(next) => setAttrFilters(next)}
+      />
+
       {scanMessage && (
         <div
           className="flex items-center gap-2"
@@ -783,7 +830,7 @@ export default function InventoryPage() {
                   }
                   style={selectStyle}
                 >
-                  {CATEGORIES.map((c) => (
+                  {visibleCategories.map((c) => (
                     <option key={c.value} value={c.value}>
                       {c.label}
                     </option>
@@ -1035,7 +1082,6 @@ export default function InventoryPage() {
             style={{ gap: 1, background: 'var(--rule)', border: '1px solid var(--rule)' }}
           >
             {sortedItems.map((item) => {
-              const isFoil = Boolean((item.attributes as Record<string, unknown>)?.foil);
               return (
                 <div
                   key={item.id}
@@ -1071,12 +1117,15 @@ export default function InventoryPage() {
                     >
                       {getCategoryLabel(item.category)}
                     </span>
-                    {isFoil && <ItemTag tone="yellow">Foil</ItemTag>}
                     {item.lendable && <ItemTag tone="teal">Lendable</ItemTag>}
                     {item.shared_to_catalog && <ItemTag tone="orange">Shared</ItemTag>}
                     {item.catalog_product_id && !item.shared_to_catalog && (
                       <ItemTag tone="ink">Linked</ItemTag>
                     )}
+                    <CategoryAttributeBadges
+                      category={item.category}
+                      attributes={item.attributes as Record<string, unknown>}
+                    />
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span
@@ -1191,7 +1240,6 @@ export default function InventoryPage() {
             {/* Rows */}
             <div className="ar-stagger flex flex-col">
               {sortedItems.map((item, idx) => {
-                const isFoil = Boolean((item.attributes as Record<string, unknown>)?.foil);
                 const cond = String((item.attributes as Record<string, unknown>)?.condition ?? '');
                 return (
                   <div
@@ -1235,12 +1283,15 @@ export default function InventoryPage() {
                         >
                           {item.name}
                         </Link>
-                        {isFoil && <ItemTag tone="yellow">Foil</ItemTag>}
                         {item.lendable && <ItemTag tone="teal">Lendable</ItemTag>}
                         {item.shared_to_catalog && <ItemTag tone="orange">Shared</ItemTag>}
                         {item.catalog_product_id && !item.shared_to_catalog && (
                           <ItemTag tone="ink">Linked</ItemTag>
                         )}
+                        <CategoryAttributeBadges
+                          category={item.category}
+                          attributes={item.attributes as Record<string, unknown>}
+                        />
                       </div>
                       {(item.barcode || cond) && (
                         <div

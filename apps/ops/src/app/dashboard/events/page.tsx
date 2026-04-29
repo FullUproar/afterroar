@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/ui/pagination';
 import { SubNav } from '@/components/ui/sub-nav';
 import { EVENTS_TABS } from '@/lib/nav-groups';
+import { TicketingPanel } from '@/components/events/ticketing-panel';
 
 type EventWithCount = GameEvent & { checkin_count: number; rsvp_count: number | null };
 
@@ -1022,6 +1023,11 @@ function EventRow({
               ) : (
                 <p className="font-mono text-ink-soft" style={{ fontSize: '0.78rem' }}>No players checked in yet.</p>
               )}
+
+              {/* Tickets + prize pool — applies to all events that have ticket tiers
+                  or want to reserve prize-pool inventory. Always visible since events
+                  may not have a tier configured yet (the panel handles empty state). */}
+              <TicketingPanel eventId={event.id} />
 
               {/* Inline tournament management for tournament/fnm events */}
               {(event.event_type === 'tournament' || event.event_type === 'fnm') && (

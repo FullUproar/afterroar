@@ -67,6 +67,14 @@ export interface StoreSettings {
   mobile_allow_refunds: boolean;      // can mobile register process refunds (default false)
   mobile_allow_cash: boolean;         // can mobile register accept cash (default true)
   hidden_nav_items: string[];        // hrefs of nav items to hide (e.g. ["/dashboard/cafe", "/dashboard/consignment"])
+  // Per-store vertical-module toggles. Each key in this array (e.g. "tcg",
+  // "comics", "cafe") flags a product line as enabled at the store level.
+  // UNDEFINED here means "all modules enabled" (backward-compat for stores
+  // that predate the toggle). An EMPTY array means the operator actively
+  // turned everything off. Module catalog lives at lib/store-modules.ts.
+  // Hides nav entries + inventory categories + integration lookups; never
+  // deletes data.
+  enabled_verticals?: string[];
   // Custom tags — store-defined taxonomy on top of the fixed `category` enum.
   // Stores use these for things like "Asmodee exclusive", "Clearance", or
   // "Holiday gift idea". Applied to inventory via attributes.tags[] and

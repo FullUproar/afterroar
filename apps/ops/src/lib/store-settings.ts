@@ -104,6 +104,9 @@ export interface StoreSettings {
   // Custom tags & register quick items (see store-settings-shared.ts)
   custom_tags: { id: string; label: string; color: string }[];
   quick_items: { id: string; label: string; inventory_id?: string; price_cents?: number; color?: string }[];
+  // Per-store vertical-module toggles (see lib/store-modules.ts).
+  // Undefined = all on (legacy default). Empty array = nothing on.
+  enabled_verticals?: string[];
 }
 
 /** Sensible defaults — a store works immediately with zero config */

@@ -37,8 +37,11 @@ export type ItemCategory =
   | "tcg_single"
   | "sealed"
   | "board_game"
+  | "rpg"
   | "miniature"
+  | "comic"
   | "accessory"
+  | "collectible"
   | "food_drink"
   | "other";
 

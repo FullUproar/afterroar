@@ -17,6 +17,8 @@ import { PermissionsEditor } from '@/components/permissions-editor';
 import { SubNav } from "@/components/ui/sub-nav";
 import { CustomTagsPanel, type CustomTag } from "@/components/settings/custom-tags-panel";
 import { QuickItemsPanel, type QuickItem } from "@/components/settings/quick-items-panel";
+import { VerticalModulesPanel } from "@/components/settings/vertical-modules-panel";
+import { VERTICAL_MODULES, resolveEnabledModules, type VerticalModuleKey } from "@/lib/store-modules";
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -1297,6 +1299,21 @@ export default function SettingsPage() {
                   summary: sectionSummary(s, settings),
                 })),
                 {
+                  key: 'vertical_modules',
+                  label: 'Product Lines (verticals)',
+                  summary: (() => {
+                    const enabled = resolveEnabledModules(
+                      settings.enabled_verticals as VerticalModuleKey[] | undefined,
+                    );
+                    if (settings.enabled_verticals === undefined) {
+                      return 'All product lines on (default)';
+                    }
+                    return `${enabled.size} of ${VERTICAL_MODULES.length} on${
+                      enabled.size === 0 ? ' — everything hidden' : ''
+                    }`;
+                  })(),
+                },
+                {
                   key: 'quick_items',
                   label: 'Register Quick Buttons',
                   summary: (() => {
@@ -1315,6 +1332,28 @@ export default function SettingsPage() {
               onSelect={setActiveSection}
             />
           )}
+          {activeTab === 'operations' && activeSection === 'vertical_modules' && (
+            <Panel
+              num="01"
+              eyebrow="Store mix"
+              title="Product Lines"
+              desc="Toggle each product line your store carries. Hides nav entries, inventory categories, and catalog-lookup integrations for the lines you don't carry — without deleting any data. Flip a line back on and everything reappears."
+            >
+              <div className="px-5 py-5">
+                <VerticalModulesPanel
+                  value={settings.enabled_verticals as string[] | undefined}
+                  saving={saving === 'enabled_verticals'}
+                  onChange={(next) => {
+                    updateLocal(
+                      'enabled_verticals' as keyof StoreSettings,
+                      next as unknown as StoreSettings[keyof StoreSettings],
+                    );
+                    saveField('enabled_verticals', next);
+                  }}
+                />
+              </div>
+            </Panel>
+          )}
           {activeTab === 'operations' && activeSection === 'quick_items' && (
             <Panel
               num="01"
@@ -1332,7 +1371,7 @@ export default function SettingsPage() {
               />
             </Panel>
           )}
-          {activeTab === 'operations' && activeSection && activeSection !== 'appearance' && activeSection !== 'quick_items' && (
+          {activeTab === 'operations' && activeSection && activeSection !== 'appearance' && activeSection !== 'quick_items' && activeSection !== 'vertical_modules' && (
             <>
               {tabSections
                 .filter((s) => s.key === activeSection)

@@ -557,6 +557,10 @@ model PosStore {
   break_recipes               PosBreakRecipe[]
   break_events                PosBreakEvent[]
   register_devices            RegisterDevice[]
+  game_reservations           PosGameReservation[]
+  event_tickets               PosEventTicket[]
+  integration_statuses        PosIntegrationStatus[]
+  pull_lists                  PosPullList[]
 
   @@map("pos_stores")
 }
@@ -665,12 +669,20 @@ model PosTabItem {
   status            String    @default("pending") // pending | in_progress | served
   item_type         String    @default("cafe") // cafe | retail | table_fee
   inventory_item_id String?
+  /// Link to a managed menu item. When set, closing the tab triggers
+  /// PosMenuRecipe-driven decrement of the linked ingredients (espresso →
+  /// beans + cup + lid + milk). Tab items added from the hardcoded
+  /// quick-add list don't have this set; only items added via the menu
+  /// management surface do.
+  menu_item_id      String?
   created_at        DateTime  @default(now()) @db.Timestamptz()
   served_at         DateTime? @db.Timestamptz()
 
-  tab PosTab @relation(fields: [tab_id], references: [id], onDelete: Cascade)
+  tab       PosTab        @relation(fields: [tab_id], references: [id], onDelete: Cascade)
+  menu_item PosMenuItem?  @relation(fields: [menu_item_id], references: [id])
 
   @@index([tab_id])
+  @@index([menu_item_id])
   @@map("pos_tab_items")
 }
 
@@ -682,14 +694,50 @@ model PosMenuItem {
   price_cents    Int      @default(0)
   description    String?
   available      Boolean  @default(true)
+  /// "86" list — temporary daily sold-out flag. Distinct from `available`,
+  /// which is the permanent on/off menu state. When set, the item is hidden
+  /// from the register today; cleared by midnight cron OR manual reset.
+  sold_out_at    DateTime? @db.Timestamptz()
   sort_order     Int      @default(0)
   age_restricted Boolean  @default(false)
+  /// Approximate prep time in seconds for the kitchen/barista. Optional.
+  prep_seconds   Int?
+  /// Free-form allergen flags and nutrition facts. Stored as JSON so adding
+  /// new dietary flags doesn't require a migration. Common keys today:
+  /// allergens (string[]), is_vegan, is_vegetarian, is_gluten_free, calories.
+  dietary_info   Json     @default("{}")
   created_at     DateTime @default(now()) @db.Timestamptz()
 
-  store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  store     PosStore       @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  recipes   PosMenuRecipe[]
+  tab_items PosTabItem[]
 
   @@index([store_id])
   @@map("pos_menu_items")
+}
+
+/// Bill of materials: what inventory items get decremented when this menu
+/// item sells. A latte → { espresso_beans: 18g (as 1 unit), 12oz_cup: 1, lid: 1, milk: 240ml }.
+/// Quantities are stored as decimal so fractional units are honored.
+model PosMenuRecipe {
+  id                String   @id @default(cuid())
+  menu_item_id      String
+  inventory_item_id String
+  /// How many units of the inventory item are consumed per one menu item sold.
+  /// Example: a latte recipe might link 12oz_cup with quantity=1 and milk_carton
+  /// with quantity=0.25 (one quarter of a carton).
+  quantity_used     Decimal  @default(1) @db.Decimal(10, 3)
+  /// Free-text role of this ingredient in the recipe. Optional.
+  notes             String?
+  created_at        DateTime @default(now()) @db.Timestamptz()
+
+  menu_item      PosMenuItem      @relation(fields: [menu_item_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem @relation(fields: [inventory_item_id], references: [id], onDelete: Cascade)
+
+  @@unique([menu_item_id, inventory_item_id])
+  @@index([menu_item_id])
+  @@index([inventory_item_id])
+  @@map("pos_menu_recipes")
 }
 
 model PosMenuModifier {
@@ -927,6 +975,8 @@ model PosStaff {
   stock_counts     PosStockCount[]
   mobile_sessions  PosMobileSession[]
   inventory_holds  PosInventoryHold[]
+  game_reservations PosGameReservation[]
+  redeemed_tickets  PosEventTicket[]
 
   @@unique([user_id, store_id])
   @@map("pos_staff")
@@ -989,6 +1039,9 @@ model PosCustomer {
   tabs               PosTab[]
   consignment_items  PosConsignmentItem[]
   inventory_holds    PosInventoryHold[]
+  game_reservations  PosGameReservation[]
+  event_tickets      PosEventTicket[]
+  pull_lists         PosPullList[]
 
   @@index([store_id])
   @@map("pos_customers")
@@ -1150,6 +1203,9 @@ model PosInventoryItem {
   break_recipes_parent PosBreakRecipe[]      @relation("BreakRecipeParent")
   break_recipes_child  PosBreakRecipe[]      @relation("BreakRecipeChild")
   break_events_parent  PosBreakEvent[]       @relation("BreakEventParent")
+  game_reservations    PosGameReservation[]
+  menu_recipes         PosMenuRecipe[]
+  pull_list_items      PosPullListItem[]
 
   @@index([store_id])
   @@index([store_id, active])
@@ -1162,14 +1218,133 @@ model PosInventoryItem {
   @@map("pos_inventory_items")
 }
 
+// ============================================================
+// POS PULL LIST — comic shop subscriber pull lists.
+// ============================================================
+// The killer comic-shop feature. Each PosPullList is a customer's standing
+// subscription to a series; new issues that match get auto-allocated to
+// their box on receive (or via the weekly "fulfill pulls" workflow).
+//
+// PosPullListItem is the per-issue allocation: when a new issue of the
+// series arrives, an item is created with status='pending'. The shop
+// notifies the customer via email/sms/in-store, customer picks up,
+// item flips to 'fulfilled' (and converts to a sale).
+//
+// Future: Diamond/Lunar/PRH weekly catalog ingest will auto-create the
+// pending allocations. Today, the shop creates them manually on receive.
+// ============================================================
+model PosPullList {
+  id                 String   @id @default(cuid())
+  store_id           String
+  customer_id        String
+  /// Free-text series identifier — store-defined (e.g. "Saga", "The Department of Truth").
+  /// Future: replace with PosCatalogProduct relation when ComicVine ingest exists.
+  series_title       String
+  /// Optional publisher filter (so "Saga" subscribers don't get an unrelated
+  /// indie book that happens to share the title).
+  publisher          String?
+  /// Customer wants variant covers? (Cover B, ratio variants, etc.)
+  wants_variants     Boolean  @default(false)
+  /// Hold capacity per issue (usually 1, but some collectors want 2 for
+  /// reading-copy + bag-and-board copy).
+  qty_per_issue      Int      @default(1)
+  /// Notes from the cashier — "wants signed if available", "skip if Hickman", etc.
+  notes              String?
+  /// status: active | paused | cancelled
+  status             String   @default("active")
+  paused_at          DateTime? @db.Timestamptz()
+  cancelled_at       DateTime? @db.Timestamptz()
+  /// When the customer last picked up an issue.
+  last_pickup_at     DateTime? @db.Timestamptz()
+  created_at         DateTime  @default(now()) @db.Timestamptz()
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz()
+
+  store    PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer PosCustomer      @relation(fields: [customer_id], references: [id])
+  items    PosPullListItem[]
+
+  @@index([store_id, status])
+  @@index([customer_id])
+  @@index([store_id, series_title])
+  @@map("pos_pull_lists")
+}
+
+model PosPullListItem {
+  id                 String   @id @default(cuid())
+  pull_list_id       String
+  /// Optional link to the actual inventory item. Set on fulfill so the
+  /// pickup converts cleanly to a sale.
+  inventory_item_id  String?
+  issue_number       String
+  variant_label      String?
+  /// status: pending | held | fulfilled | skipped | expired
+  status             String   @default("pending")
+  notified_at        DateTime? @db.Timestamptz()
+  held_at            DateTime? @db.Timestamptz()
+  fulfilled_at      DateTime? @db.Timestamptz()
+  ledger_entry_id   String?
+  /// When the item auto-expires if not picked up. Default ~90 days.
+  expires_at         DateTime? @db.Timestamptz()
+  notes              String?
+  created_at         DateTime  @default(now()) @db.Timestamptz()
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz()
+
+  pull_list      PosPullList       @relation(fields: [pull_list_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem? @relation(fields: [inventory_item_id], references: [id])
+
+  @@index([pull_list_id])
+  @@index([pull_list_id, status])
+  @@index([inventory_item_id])
+  @@map("pos_pull_list_items")
+}
+
+// ============================================================
+// POS INTEGRATION STATUS — health tracking for the data
+// integrations registry (lib/integrations/registry.ts).
+// ============================================================
+// One row per (store_id, integration_id). The integrations dashboard at
+// /dashboard/integrations reads this to render status pills and last-tested
+// timestamps. Adapters write here on every test-connection call.
+//
+// store_id = null is a platform-wide integration (Scryfall, BGG, etc. — no
+// per-store config). store_id = X is a per-store integration where each
+// store has its own API key/credentials (ComicVine, eBay, ManaPool).
+// ============================================================
+model PosIntegrationStatus {
+  id              String    @id @default(cuid())
+  store_id        String?
+  /// Integration id from lib/integrations/registry.ts.
+  integration_id  String
+  /// "ok" | "degraded" | "down" | "unconfigured" | "untested"
+  status          String    @default("untested")
+  last_tested_at  DateTime? @db.Timestamptz()
+  last_latency_ms Int?
+  last_error      String?
+  /// Per-store config blob (e.g. encrypted API key when configScope=per_store).
+  /// Empty object for platform-wide integrations.
+  config          Json      @default("{}")
+  created_at      DateTime  @default(now()) @db.Timestamptz()
+  updated_at      DateTime  @default(now()) @updatedAt @db.Timestamptz()
+
+  store PosStore? @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@unique([store_id, integration_id])
+  @@index([integration_id])
+  @@map("pos_integration_status")
+}
+
 model PosInventoryHold {
   id              String    @id @default(cuid())
   store_id        String
   item_id         String
   customer_id     String?
   staff_id        String
+  /// Optional event link — when set, this hold reserves prize-pool inventory
+  /// for an event/tournament. Released back to general stock if the event is
+  /// cancelled, allocated to winners on event completion.
+  event_id        String?
   quantity        Int       @default(1)
-  reason          String?   // "Customer request", "Phone order", etc.
+  reason          String?   // "Customer request", "Phone order", "Prize pool", etc.
   status          String    @default("active") // active | fulfilled | released | expired
   held_at         DateTime  @default(now()) @db.Timestamptz()
   expires_at      DateTime  @db.Timestamptz()
@@ -1180,9 +1355,11 @@ model PosInventoryHold {
   item     PosInventoryItem @relation(fields: [item_id], references: [id], onDelete: Cascade)
   customer PosCustomer?     @relation(fields: [customer_id], references: [id])
   staff    PosStaff         @relation(fields: [staff_id], references: [id])
+  event    PosEvent?        @relation(fields: [event_id], references: [id], onDelete: SetNull)
 
   @@index([store_id, status])
   @@index([item_id, status])
+  @@index([event_id])
   @@index([expires_at])
   @@map("pos_inventory_holds")
 }
@@ -1339,6 +1516,8 @@ model PosEvent {
   allocation_pools PosAllocationPool[]
   tabs             PosTab[]
   ticket_tiers     PosEventTicketTier[]
+  tickets          PosEventTicket[]
+  inventory_holds  PosInventoryHold[]
 
   @@index([store_id])
   @@index([store_id, starts_at(sort: Desc)])
@@ -1379,9 +1558,71 @@ model PosEventTicketTier {
 
   event    PosEvent          @relation(fields: [event_id], references: [id], onDelete: Cascade)
   checkins PosEventCheckin[]
+  tickets  PosEventTicket[]
 
   @@index([event_id])
   @@map("pos_event_ticket_tiers")
+}
+
+// ============================================================
+// POS EVENT TICKET — the sold artifact, with QR-scannable serial
+// ============================================================
+// PosEventCheckin records "showed up at the door, paid at door."
+// PosEventTicket records "bought a ticket (maybe in advance), state
+// tracks whether it's been redeemed yet."
+//
+// Lifecycle: sold → redeemed (terminal happy path)
+//                or refunded (terminal refund path)
+//                or cancelled (event cancelled, auto-refund)
+//
+// Ticket serial is a printable/scannable string. We embed it in QR codes
+// for door scanning. Format: "TKT-<base32>-<checksum>" (10–14 chars).
+// Capacity enforcement happens at sale time on the tier's `sold` counter.
+//
+// Guest tickets (no customer_id) are allowed — anonymous walk-in pre-sale,
+// gift purchases, etc. Email/name captured at sale time so we can re-send.
+// ============================================================
+model PosEventTicket {
+  id                  String    @id @default(cuid())
+  store_id            String
+  event_id            String
+  ticket_tier_id      String
+  customer_id         String?
+  /// Free-form identity for guest tickets (no customer_id). We capture this
+  /// at sale time so the ticket can be re-sent / refund issued by name+email.
+  guest_name          String?
+  guest_email         String?
+  guest_phone         String?
+  /// Scannable serial. Unique per ticket. Encoded as QR for door check-in.
+  serial              String    @unique
+  status              String    @default("sold") // sold | redeemed | refunded | cancelled
+  amount_paid_cents   Int       @default(0)
+  /// Sale-side ledger entry (nullable for comp tickets and during refunds).
+  ledger_entry_id     String?
+  sold_at             DateTime  @default(now()) @db.Timestamptz()
+  redeemed_at         DateTime? @db.Timestamptz()
+  /// Staff who scanned/checked in this ticket.
+  redeemed_by_staff_id String?
+  refunded_at         DateTime? @db.Timestamptz()
+  refund_amount_cents Int?
+  refund_reason       String?
+  /// Used to mark the ticket as already converted into a check-in row.
+  /// When redeemed, we also create a PosEventCheckin so the existing event
+  /// reporting flows pick it up. This is the link.
+  checkin_id          String?
+
+  store              PosStore           @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  event              PosEvent           @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  tier               PosEventTicketTier @relation(fields: [ticket_tier_id], references: [id])
+  customer           PosCustomer?       @relation(fields: [customer_id], references: [id])
+  redeemed_by_staff  PosStaff?          @relation(fields: [redeemed_by_staff_id], references: [id])
+
+  @@index([store_id])
+  @@index([event_id])
+  @@index([event_id, status])
+  @@index([customer_id])
+  @@index([ticket_tier_id])
+  @@map("pos_event_tickets")
 }
 
 // ============================================================
@@ -1630,6 +1871,53 @@ model PosGameCheckout {
   @@index([store_id, status])
   @@index([inventory_item_id])
   @@map("pos_game_checkouts")
+}
+
+// ============================================================
+// POS GAME RESERVATIONS
+// ============================================================
+// Reservation queue for the lending library. When a customer wants a
+// lendable game that's currently checked out (or just unavailable today),
+// they can join the queue. Position is implicit by created_at.
+//
+// Lifecycle:
+//   - active   → in queue, waiting for current copy to return
+//   - notified → copy is back; staff has reached out (sms/email/in-store)
+//   - claimed  → became a checkout (linked via claimed_checkout_id)
+//   - released → customer gave up / no-show / staff released
+//   - expired  → window passed without claim
+// ============================================================
+model PosGameReservation {
+  id                   String    @id @default(cuid())
+  store_id             String
+  inventory_item_id    String
+  customer_id          String
+  staff_id             String?
+  status               String    @default("active") // active | notified | claimed | released | expired
+  /// Free-text note from staff: "wants for Saturday", "first time customer", etc.
+  notes                String?
+  /// Timestamp the customer was contacted that the copy is available.
+  notified_at          DateTime? @db.Timestamptz()
+  /// When notified, how long they have to come pick it up before the
+  /// reservation auto-expires and the next person in queue is notified.
+  notification_expires_at DateTime? @db.Timestamptz()
+  /// When the reservation became a checkout (terminal state for the happy path).
+  claimed_checkout_id  String?
+  released_at          DateTime? @db.Timestamptz()
+  release_reason       String?
+  created_at           DateTime  @default(now()) @db.Timestamptz()
+  updated_at           DateTime  @default(now()) @updatedAt @db.Timestamptz()
+
+  store          PosStore         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  inventory_item PosInventoryItem @relation(fields: [inventory_item_id], references: [id], onDelete: Cascade)
+  customer       PosCustomer      @relation(fields: [customer_id], references: [id])
+  staff          PosStaff?        @relation(fields: [staff_id], references: [id])
+
+  @@index([store_id])
+  @@index([store_id, status])
+  @@index([inventory_item_id, status, created_at])
+  @@index([customer_id])
+  @@map("pos_game_reservations")
 }
 
 // ============================================================

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 import { getDefaultTaxRate } from "@/lib/tax";
 import { getStoreSettings } from "@/lib/store-settings-shared";
+import { decrementMenuRecipeOnSale } from "@/lib/menu-recipe-decrement";
 
 /* ------------------------------------------------------------------ */
 /*  Cafe / Tab API                                                     */
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // ---- ADD ITEM TO TAB ----
     if (action === "add_item") {
-      const { tab_id, name, price_cents, quantity, modifiers, notes } = body;
+      const { tab_id, name, price_cents, quantity, modifiers, notes, menu_item_id, item_type, inventory_item_id } = body;
       if (!tab_id || !name) {
         return NextResponse.json({ error: "tab_id and name required" }, { status: 400 });
       }
@@ -63,6 +64,13 @@ export async function POST(request: NextRequest) {
       const tab = await db.posTab.findFirst({ where: { id: tab_id, store_id: storeId, status: "open" } });
       if (!tab) {
         return NextResponse.json({ error: "Tab not found or closed" }, { status: 404 });
+      }
+
+      // If menu_item_id is set, validate it belongs to this store. Same for
+      // inventory_item_id on retail tab items.
+      if (menu_item_id) {
+        const mi = await db.posMenuItem.findFirst({ where: { id: menu_item_id }, select: { id: true } });
+        if (!mi) return NextResponse.json({ error: "menu_item_id not found in this store" }, { status: 400 });
       }
 
       const item = await db.posTabItem.create({
@@ -73,6 +81,9 @@ export async function POST(request: NextRequest) {
           quantity: quantity || 1,
           modifiers: modifiers || null,
           notes: notes || null,
+          item_type: item_type || (inventory_item_id ? "retail" : "cafe"),
+          inventory_item_id: inventory_item_id || null,
+          menu_item_id: menu_item_id || null,
         },
       });
 
@@ -270,6 +281,21 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Recipe-driven decrement for menu-linked items. A latte sale → coffee
+      // beans + cup + lid + milk all decrement per the menu's recipe rows.
+      // See lib/menu-recipe-decrement.ts. Items on the tab without a
+      // menu_item_id (the hardcoded quick-add list) skip this entirely.
+      const recipeItems = tab.items.filter((i) => i.item_type === "cafe" && i.menu_item_id);
+      if (recipeItems.length > 0) {
+        await prisma.$transaction(async (tx) => {
+          for (const ri of recipeItems) {
+            await decrementMenuRecipeOnSale(tx, {
+              menu_item_id: ri.menu_item_id!,
+              quantity_sold: ri.quantity,
+            });
+          }
+        });
+      }
       // Close tab
       await db.posTab.update({
         where: { id: tab_id },

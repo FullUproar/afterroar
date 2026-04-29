@@ -15,6 +15,10 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/shared/ui";
 import { ItemAdvancedPanels } from "@/components/inventory/item-advanced-panels";
 import { BreakNowModal } from "@/components/inventory/break-now-modal";
+import { CategoryAttributeFields, CategoryAttributeBadges } from "@/components/inventory/category-attribute-fields";
+import { VariantMatrixModal } from "@/components/inventory/variant-matrix-modal";
+import { CatalogLookup } from "@/components/inventory/catalog-lookup";
+import { useEnabledModules } from "@/hooks/use-enabled-modules";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -24,8 +28,11 @@ const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: "tcg_single", label: "TCG Single" },
   { value: "sealed", label: "Sealed" },
   { value: "board_game", label: "Board Game" },
+  { value: "rpg", label: "RPG Book" },
   { value: "miniature", label: "Miniature" },
+  { value: "comic", label: "Comic" },
   { value: "accessory", label: "Accessory" },
+  { value: "collectible", label: "Collectible" },
   { value: "food_drink", label: "Food & Drink" },
   { value: "other", label: "Other" },
 ];
@@ -60,6 +67,9 @@ interface EditForm {
   price: string;
   cost: string;
   barcode: string;
+  /** Category-specific fields, rendered dynamically from CATEGORY_SCHEMAS.
+   *  See lib/category-attributes.ts. Keys map to PosInventoryItem.attributes. */
+  attributes: Record<string, unknown>;
 }
 
 interface AdjustState {
@@ -120,6 +130,7 @@ function formatDateTime(iso: string): string {
 export default function InventoryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { can } = useStore();
+  const { filterCategories, isCategoryEnabled } = useEnabledModules();
 
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [sales, setSales] = useState<SaleEntry[]>([]);
@@ -135,6 +146,7 @@ export default function InventoryDetailPage() {
     price: "",
     cost: "",
     barcode: "",
+    attributes: {},
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -152,6 +164,9 @@ export default function InventoryDetailPage() {
 
   // Lendable toggle
   const [togglingLendable, setTogglingLendable] = useState(false);
+
+  // Variant matrix modal
+  const [showVariantMatrix, setShowVariantMatrix] = useState(false);
 
   /* ---- Load item ---- */
   const loadItem = useCallback(async () => {
@@ -172,6 +187,7 @@ export default function InventoryDetailPage() {
         price: (data.item.price_cents / 100).toFixed(2),
         cost: (data.item.cost_cents / 100).toFixed(2),
         barcode: data.item.barcode || "",
+        attributes: (data.item.attributes ?? {}) as Record<string, unknown>,
       });
     } catch {
       setError("Failed to load item");
@@ -206,6 +222,7 @@ export default function InventoryDetailPage() {
           price_cents: parseDollars(editForm.price),
           cost_cents: parseDollars(editForm.cost),
           barcode: editForm.barcode.trim() || null,
+          attributes: editForm.attributes,
         }),
       });
 
@@ -426,11 +443,37 @@ export default function InventoryDetailPage() {
                   }
                   className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground focus:border-indigo-500 focus:outline-none"
                 >
-                  {CATEGORIES.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
+                  {/* Filter by enabled modules but always include the
+                      currently-selected value so an item that was created
+                      in a now-disabled vertical doesn't show a blank
+                      dropdown. The operator can still change it. */}
+                  {(() => {
+                    const visible = filterCategories(CATEGORIES);
+                    const current = editForm.category;
+                    const includesCurrent = visible.some((c) => c.value === current);
+                    if (includesCurrent || isCategoryEnabled(current)) {
+                      return visible.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ));
+                    }
+                    const orphan = CATEGORIES.find((c) => c.value === current);
+                    return [
+                      ...(orphan
+                        ? [
+                            <option key={orphan.value} value={orphan.value}>
+                              {orphan.label} (disabled vertical)
+                            </option>,
+                          ]
+                        : []),
+                      ...visible.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      )),
+                    ];
+                  })()}
                 </select>
               </div>
 
@@ -480,6 +523,29 @@ export default function InventoryDetailPage() {
               </div>
             </div>
 
+            {/* Category-aware catalog lookup. Surfaces source-specific
+                "Lookup from Scryfall / BGG / ComicVine / …" buttons based on
+                what the registry says is available + active for this category.
+                Picking a result prefills name, image, and category attributes. */}
+            <CatalogLookup
+              category={editForm.category}
+              onApply={(record) => {
+                setEditForm((prev) => ({
+                  ...prev,
+                  name: record.name || prev.name,
+                  attributes: { ...prev.attributes, ...record.attributes },
+                }));
+              }}
+            />
+
+            {/* Category-specific fields driven by lib/category-attributes.ts.
+                Rendering is generic; the schema declares everything. */}
+            <CategoryAttributeFields
+              category={editForm.category}
+              values={editForm.attributes}
+              onChange={(next) => setEditForm({ ...editForm, attributes: next })}
+            />
+
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => {
@@ -492,6 +558,7 @@ export default function InventoryDetailPage() {
                     price: (item.price_cents / 100).toFixed(2),
                     cost: (item.cost_cents / 100).toFixed(2),
                     barcode: item.barcode || "",
+                    attributes: (item.attributes ?? {}) as Record<string, unknown>,
                   });
                 }}
                 className="rounded-xl border border-card-border px-4 py-2 text-sm text-muted hover:bg-card-hover transition-colors"
@@ -555,9 +622,6 @@ export default function InventoryDetailPage() {
                 <span className="inline-block rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-medium text-muted">
                   {getCategoryLabel(item.category)}
                 </span>
-                {Boolean(attrs.foil) && (
-                  <StatusBadge variant="pending">Foil</StatusBadge>
-                )}
                 {item.lendable && (
                   <StatusBadge variant="success">Lendable</StatusBadge>
                 )}
@@ -565,6 +629,11 @@ export default function InventoryDetailPage() {
                   <StatusBadge variant="info">Shared to Catalog</StatusBadge>
                 )}
               </div>
+              <CategoryAttributeBadges
+                category={item.category}
+                attributes={attrs}
+                className="mt-2"
+              />
 
               {item.barcode && (
                 <p className="mt-2 text-sm text-muted">
@@ -1004,6 +1073,50 @@ export default function InventoryDetailPage() {
         <HoldsSection itemId={item.id} itemName={item.name} />
       )}
 
+      {/* Game library reservation queue — only surfaces for lendable items */}
+      {item.lendable && (
+        <ReservationQueueSection itemId={item.id} itemName={item.name} canManage={can("inventory.adjust")} />
+      )}
+
+      {/* Variant matrix — top-level items only (no parent_id). Lets staff
+          fan out a parent into N children by 1 or 2 axes. Apparel/TCG/etc. */}
+      {can("inventory.create") &&
+        !((item as unknown as { parent_id: string | null }).parent_id) && (
+          <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm dark:shadow-none">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  Variants
+                </h3>
+                <p className="text-[10px] text-muted mt-0.5">
+                  Generate child items by axis (size × color, foil × condition, etc.)
+                </p>
+              </div>
+              <button
+                onClick={() => setShowVariantMatrix(true)}
+                className="font-mono uppercase border border-rule px-3 py-1.5 hover:border-ink-soft text-ink-soft hover:text-ink transition-colors"
+                style={{ fontSize: "0.7rem", letterSpacing: "0.08em" }}
+              >
+                Generate variants
+              </button>
+            </div>
+          </div>
+        )}
+
+      {showVariantMatrix && (
+        <VariantMatrixModal
+          itemId={item.id}
+          itemName={item.name}
+          category={item.category}
+          onClose={() => setShowVariantMatrix(false)}
+          onSuccess={(count) => {
+            setShowVariantMatrix(false);
+            alert(`Created ${count} variant${count === 1 ? "" : "s"}.`);
+            void loadItem();
+          }}
+        />
+      )}
+
       {/* Phase 2: Distributors / Variants / Multi-Barcode / Cost History */}
       {can("inventory.adjust") && (
         <ItemAdvancedPanels
@@ -1244,6 +1357,264 @@ function HoldsSection({ itemId, itemName }: { itemId: string; itemName: string }
               <button onClick={() => releaseHold(h.id)} className="text-xs text-red-400 hover:text-red-300">Release</button>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reservation queue (game library)                                   */
+/*                                                                      */
+/*  Mounts only when item.lendable. Lets staff queue customers waiting  */
+/*  for a checked-out copy. See pos_game_reservations + the api at     */
+/*  /api/inventory/[id]/reservations.                                   */
+/* ------------------------------------------------------------------ */
+
+interface Reservation {
+  id: string;
+  position: number;
+  status: "active" | "notified" | "claimed" | "released" | "expired";
+  notes: string | null;
+  notified_at: string | null;
+  notification_expires_at: string | null;
+  customer: { id: string; name: string; email: string | null; phone: string | null };
+  staff: { id: string; name: string } | null;
+  created_at: string;
+}
+
+interface CustomerSearchResult {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+function ReservationQueueSection({
+  itemId,
+  itemName,
+  canManage,
+}: {
+  itemId: string;
+  itemName: string;
+  canManage: boolean;
+}) {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<CustomerSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [adding, setAdding] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    fetch(`/api/inventory/${itemId}/reservations`)
+      .then((r) => (r.ok ? r.json() : { reservations: [] }))
+      .then((data) => setReservations(data.reservations ?? []))
+      .catch(() => setReservations([]))
+      .finally(() => setLoading(false));
+  }, [itemId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Debounced customer search when adding
+  useEffect(() => {
+    if (!showAdd || !search.trim()) {
+      setResults([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/customers?q=${encodeURIComponent(search.trim())}`);
+        if (res.ok) {
+          const data = await res.json();
+          setResults(Array.isArray(data) ? data.slice(0, 8) : []);
+        }
+      } finally {
+        setSearching(false);
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [search, showAdd]);
+
+  async function addReservation(customerId: string) {
+    setAdding(customerId);
+    try {
+      const res = await fetch(`/api/inventory/${itemId}/reservations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customer_id: customerId, notes: notes.trim() || null }),
+      });
+      if (res.ok) {
+        load();
+        setShowAdd(false);
+        setSearch("");
+        setNotes("");
+        setResults([]);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Could not add reservation");
+      }
+    } finally {
+      setAdding(null);
+    }
+  }
+
+  async function changeStatus(id: string, status: string) {
+    const res = await fetch(`/api/reservations/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) load();
+    else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Status change failed");
+    }
+  }
+
+  async function release(id: string) {
+    if (!confirm("Release this reservation? The customer will be removed from the queue.")) return;
+    const res = await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+    if (res.ok) load();
+  }
+
+  return (
+    <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm dark:shadow-none">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Reservation queue
+          </h3>
+          <p className="text-[10px] text-muted mt-0.5">
+            Customers waiting for {itemName}. Position by signup order.
+          </p>
+        </div>
+        {canManage && (
+          <button
+            onClick={() => setShowAdd(!showAdd)}
+            className="text-xs text-accent hover:underline"
+          >
+            {showAdd ? "Cancel" : "+ Reserve for customer"}
+          </button>
+        )}
+      </div>
+
+      {showAdd && (
+        <div className="mb-4 p-3 rounded-lg border border-card-border bg-card-hover space-y-2">
+          <div>
+            <label className="block text-[10px] text-muted mb-0.5">Find customer</label>
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Name, email, or phone…"
+              className="w-full rounded border border-input-border bg-input-bg px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none"
+            />
+          </div>
+          {searching ? (
+            <div className="text-xs text-muted">Searching…</div>
+          ) : results.length > 0 ? (
+            <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+              {results.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  disabled={adding === c.id}
+                  onClick={() => addReservation(c.id)}
+                  className="text-left px-2 py-1.5 rounded border border-card-border hover:border-accent hover:bg-card transition-colors disabled:opacity-40"
+                >
+                  <div className="text-sm text-foreground">{c.name}</div>
+                  <div className="text-[10px] text-muted">
+                    {[c.email, c.phone].filter(Boolean).join(" · ") || "no contact info"}
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : search.trim() ? (
+            <div className="text-xs text-muted">No matches.</div>
+          ) : null}
+          <div>
+            <label className="block text-[10px] text-muted mb-0.5">Notes (optional)</label>
+            <input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="wants for Saturday, first-time customer, etc."
+              className="w-full rounded border border-input-border bg-input-bg px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none"
+            />
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-xs text-muted">Loading…</p>
+      ) : reservations.length === 0 ? (
+        <p className="text-xs text-muted">No active reservations.</p>
+      ) : (
+        <div className="flex flex-col gap-1">
+          {reservations.map((r) => {
+            const isNotified = r.status === "notified";
+            const expiresIn = r.notification_expires_at
+              ? new Date(r.notification_expires_at).getTime() - Date.now()
+              : null;
+            const expiresInHours = expiresIn != null ? Math.max(0, Math.floor(expiresIn / 3600_000)) : null;
+            return (
+              <div
+                key={r.id}
+                className="flex items-center gap-3 py-2 border-b border-card-border/50 last:border-b-0"
+              >
+                <span className="font-mono text-sm font-bold text-cream w-6 text-center">
+                  {r.position}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-foreground truncate">{r.customer.name}</span>
+                    {isNotified && (
+                      <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/40">
+                        Notified
+                        {expiresInHours != null ? ` · ${expiresInHours}h left` : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-muted mt-0.5">
+                    {[r.customer.email, r.customer.phone].filter(Boolean).join(" · ") || "no contact"}
+                    {r.notes && ` · ${r.notes}`}
+                  </div>
+                </div>
+                {canManage && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    {r.status === "active" && (
+                      <button
+                        onClick={() => changeStatus(r.id, "notified")}
+                        className="text-[10px] uppercase tracking-wider px-2 py-1 rounded border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 transition-colors"
+                      >
+                        Notify
+                      </button>
+                    )}
+                    {r.status === "notified" && (
+                      <button
+                        onClick={() => changeStatus(r.id, "claimed")}
+                        className="text-[10px] uppercase tracking-wider px-2 py-1 rounded border border-teal/60 text-teal hover:bg-teal/10 transition-colors"
+                      >
+                        Claimed
+                      </button>
+                    )}
+                    <button
+                      onClick={() => release(r.id)}
+                      className="text-[10px] uppercase tracking-wider px-2 py-1 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      Release
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

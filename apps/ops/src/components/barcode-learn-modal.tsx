@@ -41,8 +41,11 @@ const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: "board_game", label: "Board Game" },
   { value: "sealed", label: "Sealed Product" },
   { value: "tcg_single", label: "TCG Single" },
+  { value: "rpg", label: "RPG Book" },
   { value: "miniature", label: "Miniature" },
+  { value: "comic", label: "Comic" },
   { value: "accessory", label: "Accessory" },
+  { value: "collectible", label: "Collectible" },
   { value: "food_drink", label: "Food & Drink" },
   { value: "other", label: "Other" },
 ];

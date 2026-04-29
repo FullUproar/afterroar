@@ -7,7 +7,12 @@ import { useStore } from "@/lib/store-context";
 import { useMode } from "@/lib/mode-context";
 import { useQuickSwitch } from "@/lib/quick-switch-context";
 import { type Permission, type FeatureModule } from "@/lib/permissions";
-import { useCallback, useEffect, useState } from "react";
+import {
+  resolveEnabledModules,
+  isNavHrefGatedOff,
+  type VerticalModuleKey,
+} from "@/lib/store-modules";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface LiveStatus {
   register_live: boolean;
@@ -94,6 +99,12 @@ const ICON = {
       <path d="M12 1v22M5 6c0 5 7 5 7 10s-7 5-7 10M19 6c0 5-7 5-7 10s7 5 7 10" />
     </svg>
   ),
+  pulllist: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 3h9l4 4v14H6z" />
+      <path d="M14 3v5h5M9 13h7M9 17h7" />
+    </svg>
+  ),
   settings: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="3" />
@@ -110,6 +121,21 @@ export function Sidebar() {
 
   const rawHidden = (store?.settings as Record<string, unknown>)?.hidden_nav_items;
   const hiddenItems = Array.isArray(rawHidden) ? (rawHidden as string[]) : [];
+
+  // Per-store vertical-module gating — hides nav for product lines the
+  // store doesn't carry. UI-only; no data is removed when a module is off.
+  // See lib/store-modules.ts for the catalog and the undefined-vs-empty-array
+  // semantics (undefined = all on, [] = nothing on).
+  const rawEnabledVerticals = (store?.settings as Record<string, unknown>)?.enabled_verticals;
+  const enabledVerticals = useMemo(
+    () =>
+      resolveEnabledModules(
+        Array.isArray(rawEnabledVerticals)
+          ? (rawEnabledVerticals as VerticalModuleKey[])
+          : undefined,
+      ),
+    [rawEnabledVerticals],
+  );
 
   const [live, setLive] = useState<LiveStatus | null>(null);
   useEffect(() => {
@@ -144,12 +170,14 @@ export function Sidebar() {
       badge: live && live.buylist_waiting > 0 ? { kind: "warn", text: `${live.buylist_waiting} buylist` } : undefined,
     },
     { href: "/dashboard/customers", label: "Customers", icon: ICON.customers, permission: "customers.view" },
+    { href: "/dashboard/pull-lists", label: "Pull Lists", icon: ICON.pulllist, permission: "customers.view" },
     { href: "/dashboard/reports", label: "Reports", icon: ICON.reports, permission: "reports" },
     { href: "/dashboard/events", label: "Events", icon: ICON.events, permission: "events.checkin" },
     { href: "/dashboard/orders", label: "Orders", icon: ICON.orders, permission: "checkout" },
     { href: "/dashboard/cash-flow", label: "Intelligence", icon: ICON.intel, permission: "cash_flow" },
     { href: "/dashboard/staff", label: "Staff", icon: ICON.staff, permission: "staff.manage" },
     { href: "/dashboard/devices", label: "Devices", icon: ICON.staff, permission: "staff.manage" },
+    { href: "/dashboard/integrations", label: "Integrations", icon: ICON.settings, permission: "store.settings" },
     { href: "/dashboard/settings", label: "Settings", icon: ICON.settings, permission: "store.settings" },
   ];
 
@@ -255,7 +283,13 @@ export function Sidebar() {
       {/* Primary nav */}
       <nav className="flex-1 px-0 py-2 overflow-y-auto">
         {items
-          .filter((item) => can(item.permission) && (!item.feature || hasModule(item.feature)) && !hiddenItems.includes(item.href))
+          .filter(
+            (item) =>
+              can(item.permission) &&
+              (!item.feature || hasModule(item.feature)) &&
+              !hiddenItems.includes(item.href) &&
+              !isNavHrefGatedOff(item.href, enabledVerticals),
+          )
           .map((item) => {
             const active = isActive(item.href);
             return (
