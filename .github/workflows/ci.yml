@@ -1,0 +1,76 @@
+name: CI
+
+# Runs typecheck + lint + unit tests on every PR and on every push to main.
+# Build verification is intentionally NOT in CI — Vercel runs the real build
+# on every deploy, and reproducing the deploy environment in GHA (env vars,
+# Neon connection) is more pain than value when Vercel already gates the
+# merge-to-prod step.
+#
+# Matrix runs apps/ops and apps/me separately so a failure in one doesn't
+# obscure the other and so they can run in parallel.
+#
+# E2E (playwright) tests are not run here yet — they need a live server and
+# DB. Add a separate workflow once we have a CI-friendly DB setup.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel an in-flight run when a new commit arrives on the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.app }} — typecheck + lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [ops, me]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      # Typecheck — direct tsc invocation. Each app has its own tsconfig.json.
+      - name: Typecheck
+        run: npx tsc --noEmit
+        working-directory: apps/${{ matrix.app }}
+
+      # Lint — apps/ops uses raw eslint, apps/me uses `next lint`. Both via
+      # the package's `lint` script so per-app tooling is honored.
+      - name: Lint
+        run: npm run lint -w @afterroar/${{ matrix.app }}
+
+  unit:
+    name: ${{ matrix.app }} — unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Only apps that actually have unit-test scripts go in this matrix.
+        # apps/me doesn't have test:unit yet — add it here when it does.
+        app: [ops]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Unit tests
+        run: npm run test:unit -w @afterroar/${{ matrix.app }}
