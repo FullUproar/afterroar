@@ -12,10 +12,6 @@ import { pushVerifiedCountToSmiirl } from "@/lib/smiirl";
  * invocation works the same way:
  *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
  *     https://www.afterroar.me/api/cron/smiirl-push
- *
- * The push helper handles the device's off-by-one wheel defect via the
- * SMIIRL_COMPENSATE env var (defaults to true). When the device is fixed
- * or replaced, set SMIIRL_COMPENSATE=false in Vercel and redeploy.
  */
 export async function POST(request: NextRequest) {
   const expected = process.env.CRON_SECRET;
