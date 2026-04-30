@@ -48,28 +48,66 @@ interface SearchResult {
   complexity?: number;
 }
 
-function parseSearchXml(xml: string): SearchResult[] {
+function decodeXmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number.parseInt(n, 10)));
+}
+
+function relevanceScore(title: string, query: string): number {
+  const t = title.toLowerCase();
+  const q = query.toLowerCase().trim();
+  if (t === q) return 0;                               // exact match
+  if (t.startsWith(q + ' ')) return 1;                 // "Catan (1995)" beats "Catan: Cities..."
+  if (t.startsWith(q)) return 2;                       // "Catan: Cities & Knights"
+  // De-prioritize fan expansions, alternate editions, and sub-titled forks
+  // — anything where the query appears mid-title or in parentheses.
+  if (/\bfan expansion\b/i.test(title)) return 50;
+  if (/\(.*\)/.test(title)) return 40;
+  if (t.includes(q)) return 10;
+  return 20;
+}
+
+function parseSearchXml(xml: string, query: string): SearchResult[] {
   // BGG response is simple enough for regex extraction. Each result is:
   //   <item type="boardgame" id="13">
   //     <name type="primary" value="Catan"/>
   //     <yearpublished value="1995"/>
   //   </item>
   // We capture id + the primary name (BGG sometimes lists multiple
-  // <name> entries — one primary plus alternates).
+  // <name> entries — one primary plus alternates). XML entities in the
+  // value attribute (e.g. &amp; for &) get decoded before returning.
   const itemRegex = /<item\s+type="boardgame"\s+id="(\d+)"[^>]*>([\s\S]*?)<\/item>/g;
-  const results: SearchResult[] = [];
+  const raw: SearchResult[] = [];
   let match: RegExpExecArray | null;
   while ((match = itemRegex.exec(xml)) !== null) {
     const id = match[1];
     const inner = match[2];
     const primaryNameMatch = /<name[^>]*type="primary"[^>]*value="([^"]+)"/.exec(inner);
     const anyNameMatch = /<name[^>]*value="([^"]+)"/.exec(inner);
-    const title = primaryNameMatch?.[1] ?? anyNameMatch?.[1];
-    if (!id || !title) continue;
-    results.push({ title, slug: `bgg:${id}` });
-    if (results.length >= 15) break;
+    const rawTitle = primaryNameMatch?.[1] ?? anyNameMatch?.[1];
+    if (!id || !rawTitle) continue;
+    raw.push({ title: decodeXmlEntities(rawTitle), slug: `bgg:${id}` });
   }
-  return results;
+
+  // BGG returns alphabetical, so "Bards Against Humanity" beats "Cards
+  // Against Humanity" without re-ranking. Sort by relevance score, ties
+  // broken by title length (shorter wins — base game over expansions),
+  // then alpha.
+  raw.sort((a, b) => {
+    const sa = relevanceScore(a.title, query);
+    const sb = relevanceScore(b.title, query);
+    if (sa !== sb) return sa - sb;
+    if (a.title.length !== b.title.length) return a.title.length - b.title.length;
+    return a.title.localeCompare(b.title);
+  });
+
+  return raw.slice(0, 15);
 }
 
 export async function GET(request: NextRequest) {
@@ -100,7 +138,7 @@ export async function GET(request: NextRequest) {
       );
     }
     const xml = await res.text();
-    return NextResponse.json({ results: parseSearchXml(xml) });
+    return NextResponse.json({ results: parseSearchXml(xml, query) });
   } catch (err) {
     return NextResponse.json(
       {
