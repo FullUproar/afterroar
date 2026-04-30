@@ -3,14 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
-import { Loader2, Check, ArrowRight } from 'lucide-react';
+import { Loader2, Check, ArrowRight, User, Star, Library as LibraryIcon, Award, Trophy } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const SCOPES = [
-  { icon: '👤', label: 'Identity', desc: 'Name, email, Passport code', hint: null },
-  { icon: '⭐', label: 'Wishlist', desc: 'Games they want — match to your stock', hint: null },
-  { icon: '📚', label: 'Library', desc: 'Games they already own — avoid suggesting duplicates', hint: 'Collection-based recommendations coming soon' },
-  { icon: '🏅', label: 'Reputation & badges', desc: 'Verified status, community standing', hint: 'Cross-store verification coming soon' },
-  { icon: '🎯', label: 'Loyalty points', desc: 'Award and read your own store\'s points', hint: 'Federated points across stores coming soon' },
+interface ScopeRow {
+  Icon: LucideIcon;
+  label: string;
+  desc: string;
+  hint: string | null;
+}
+
+const SCOPES: ScopeRow[] = [
+  { Icon: User, label: 'Identity', desc: 'Name, email, Passport code', hint: null },
+  { Icon: Star, label: 'Wishlist', desc: 'Games they want — match to your stock', hint: null },
+  { Icon: LibraryIcon, label: 'Library', desc: 'Games they already own — avoid suggesting duplicates', hint: 'Collection-based recommendations coming soon' },
+  { Icon: Award, label: 'Reputation & badges', desc: 'Verified status, community standing', hint: 'Cross-store verification coming soon' },
+  { Icon: Trophy, label: 'Loyalty points', desc: 'Award and read your own store\'s points', hint: 'Federated points across stores coming soon' },
 ];
 
 export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
@@ -105,7 +113,19 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
               background: 'rgba(0,0,0,0.25)',
               borderRadius: '10px',
             }}>
-              <div style={{ fontSize: '1.5rem', lineHeight: 1, flexShrink: 0 }}>{s.icon}</div>
+              <div style={{
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 8,
+                background: 'rgba(255, 130, 0, 0.12)',
+                color: '#FF8200',
+              }}>
+                <s.Icon size={20} strokeWidth={2} />
+              </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, color: '#e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>{s.label}</p>
                 <p style={{ margin: '0.15rem 0 0', color: '#9ca3af', fontSize: '0.85rem' }}>{s.desc}</p>
@@ -130,17 +150,31 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
         <div style={stepStyle}>
           <div style={stepNum}>1</div>
           <h3 style={stepTitle}>Apply</h3>
-          <p style={stepDesc}>Tell us about your store. We approve each Connect partner manually during beta.</p>
+          <p style={stepDesc}>
+            Tell us about your store.
+            <br />
+            We approve each Connect partner manually during beta.
+          </p>
         </div>
         <div style={stepStyle}>
           <div style={stepNum}>2</div>
           <h3 style={stepTitle}>Customers opt in</h3>
-          <p style={stepDesc}>They scan, see what you&apos;re asking for, and approve (or don&apos;t). You never see anything without explicit consent.</p>
+          <p style={stepDesc}>
+            They scan, see what you&apos;re asking for, and approve (or don&apos;t).
+            <br />
+            You never see anything without explicit consent.
+          </p>
         </div>
         <div style={stepStyle}>
           <div style={stepNum}>3</div>
           <h3 style={stepTitle}>Better service</h3>
-          <p style={stepDesc}>At checkout, see their wishlist matches in stock. Skip the duplicates. Award loyalty without paperwork.</p>
+          <p style={stepDesc}>
+            At checkout, see their wishlist matches in stock.
+            <br />
+            Skip the duplicates.
+            <br />
+            Award loyalty without paperwork.
+          </p>
         </div>
       </div>
 
@@ -149,18 +183,30 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
         background: 'rgba(255, 130, 0, 0.06)',
         border: '2px solid rgba(255, 130, 0, 0.3)',
         borderRadius: '12px',
-        padding: '1.5rem',
+        padding: '1.75rem 1.5rem',
         marginBottom: '2.5rem',
         textAlign: 'center',
       }}>
-        <p style={{ color: '#FF8200', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 0.5rem' }}>
-          Beta pricing
+        <p style={{ color: '#FF8200', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', margin: '0 0 0.5rem' }}>
+          What it costs
         </p>
-        <p style={{ color: '#FBDB65', fontSize: '1.5rem', fontWeight: 900, margin: '0 0 0.5rem' }}>
-          $49/month
+        <p style={{
+          color: '#FBDB65',
+          fontSize: 'clamp(2.75rem, 7vw, 3.5rem)',
+          fontWeight: 900,
+          margin: 0,
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
+        }}>
+          FREE
         </p>
-        <p style={{ color: '#9ca3af', fontSize: '0.85rem', margin: 0 }}>
-          Free during beta through August 2026. Cancel anytime.
+        <p style={{ color: '#e2e8f0', fontSize: '0.95rem', margin: '0.4rem 0 0.85rem', fontWeight: 600 }}>
+          during the beta period
+        </p>
+        <p style={{ color: '#9ca3af', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+          $49/month after — beta wraps approximately Aug 1, 2026 (date TBD).
+          <br />
+          Cancel anytime.
         </p>
       </div>
 

@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, verifyEmailTemplate } from "@/lib/email";
+import { assignPassportCode } from "@/lib/passport-code";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/auth/signup                                              */
@@ -114,6 +115,15 @@ export async function POST(request: NextRequest) {
           displayName,
         },
       });
+
+  // Generate the passport code at signup time. NextAuth's events.createUser
+  // doesn't fire for our custom email-signup flow (it only fires for
+  // NextAuth-initiated user creation, i.e. OAuth providers), so we have to
+  // call the shared helper directly here. Best-effort: a failure here
+  // shouldn't block signup — the helper logs internally and returns null.
+  await assignPassportCode(user.id).catch((err) =>
+    console.error("[signup] assignPassportCode failed:", err),
+  );
 
   // Generate verification token + persist
   const token = generateToken();

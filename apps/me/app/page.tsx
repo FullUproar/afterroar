@@ -147,38 +147,44 @@ export default async function PassportLanding() {
                 </div>
               </div>
             ) : (
-              // Empty-state preview — communicates what kind of activity will
-              // appear here without literally saying "click here to do X".
+              // Empty-state — no activity yet. Show clear next-actions
+              // (action-forward, not fake-data-forward — earlier version
+              // mixed a preview column with an action label which read
+              // ambiguously). Alive Rule with honest content.
               <div style={{ width: '100%' }}>
                 <p style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', margin: '0 0 0.55rem', fontWeight: 700 }}>
-                  Recent
+                  Get started
                 </p>
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
                   border: '1px dashed var(--rule-hi)',
                   padding: '0.85rem 0.95rem',
-                  gap: '0.5rem',
+                  gap: '0.65rem',
                   background: 'rgba(255, 255, 255, 0.015)',
                 }}>
                   {[
-                    { label: 'Visit a store', preview: 'Check-in @ FLGS' },
-                    { label: 'Earn a badge', preview: 'Tournament regular' },
-                    { label: 'Add a game', preview: 'Catan to your library' },
-                  ].map((row) => (
-                    <div key={row.label} style={{
+                    'Check in at your local game store',
+                    'Add games to your library',
+                    'Earn your first badge',
+                  ].map((line) => (
+                    <div key={line} style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
                       gap: '0.65rem',
-                      opacity: 0.45,
                     }}>
-                      <p style={{ ...TYPE.body, margin: 0, color: 'var(--cream)', fontSize: '0.78rem', fontWeight: 500 }}>
-                        {row.preview}
-                      </p>
-                      <span style={{ ...TYPE.mono, color: 'var(--ink-faint)', fontSize: '0.62rem', letterSpacing: '0.06em' }}>
-                        {row.label}
+                      <span style={{
+                        color: 'var(--orange)',
+                        fontSize: '0.85rem',
+                        flexShrink: 0,
+                        fontWeight: 700,
+                        lineHeight: 1,
+                      }}>
+                        →
                       </span>
+                      <p style={{ ...TYPE.body, margin: 0, color: 'var(--cream)', fontSize: '0.85rem', opacity: 0.85 }}>
+                        {line}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -281,7 +287,7 @@ function SignedOut() {
             One login across every store and app in the Afterroar ecosystem.
             See your data. Control your consent. Delete anytime.
           </p>
-          <Button href="/login">Create your Passport</Button>
+          <Button href="/signup">Create your Passport</Button>
           <p style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.72rem', margin: 0, letterSpacing: '0.08em' }}>
             Already have one?{' '}
             <Link href="/login" style={{ color: 'var(--yellow)', fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: '3px' }}>

@@ -4,6 +4,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { CustomPrismaAdapter } from '@/lib/auth-adapter';
 import { prisma } from '@/lib/prisma';
+import { assignPassportCode } from '@/lib/passport-code';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: CustomPrismaAdapter(prisma),
@@ -88,22 +89,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Hardened: every step is independently try/caught so a failure here
       // can never crash the auth flow. Earlier versions of this handler let
       // a thrown exception bubble up and 500'd the OAuth callback.
-      try {
-        // Generate an 8-char Passport code (unambiguous chars, collision-safe)
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        for (let attempt = 0; attempt < 5; attempt++) {
-          let code = '';
-          for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-          try {
-            await prisma.user.update({ where: { id: user.id }, data: { passportCode: code } });
-            break;
-          } catch {
-            // collision on unique constraint — retry with a new code
-          }
-        }
-      } catch (err) {
+      // Generate the 8-char Passport code via the shared helper.
+      // Same logic now used by both OAuth (here) and email signup (in
+      // /api/auth/signup) so future flows can't drift apart.
+      await assignPassportCode(user.id).catch((err) => {
         console.error('[auth] Failed to set passportCode:', err);
-      }
+      });
 
       try {
         // Auto-issue Passport Pioneer badge to new users
