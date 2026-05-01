@@ -54,10 +54,21 @@ export default function TermsPage() {
 
         <h2 style={h2}>Public events at venues</h2>
         <p style={p}>
-          Verified venue partners (game stores, libraries, cafes, bars) may publish public events on Afterroar. Each public venue event carries an audience tag — &ldquo;all-ages,&rdquo; &ldquo;13+,&rdquo; &ldquo;18+,&rdquo; or &ldquo;21+&rdquo; — set by the venue. <strong>The venue is solely responsible</strong> for determining the age-appropriateness of its events, complying with applicable laws governing minors on its premises, and verifying the age of attendees in person. Afterroar acts as a neutral hosting platform and is not liable for the content, conduct, or age compliance of any in-person event hosted by a venue.
+          Verified venue partners (game stores, libraries, cafes, bars) may publish public events on Afterroar. Each public venue event carries an audience tag (&ldquo;all-ages,&rdquo; &ldquo;13+,&rdquo; &ldquo;18+,&rdquo; or &ldquo;21+&rdquo;) set by the venue. <strong>The venue is solely responsible</strong> for determining the age-appropriateness of its events, complying with applicable laws governing minors on its premises, and verifying the age of attendees in person. Afterroar acts as a neutral hosting platform and is not liable for the content, conduct, or age compliance of any in-person event hosted by a venue.
         </p>
         <p style={p}>
           User-hosted public events (events hosted by individuals, not verified venues) are visible only to other identity-verified Pro members and are not visible to minor accounts under any circumstances.
+        </p>
+
+        <h2 style={h2}>Age-based filtering: a tool, not a guarantee</h2>
+        <p style={p}>
+          Afterroar offers age-based filters that venues and Connect-tier vendors can apply to event visibility, attendee lists, and customer rosters. These filters operate on user-attested date of birth and, where applicable, on the user&apos;s identity-verification status with our third-party verification partner.
+        </p>
+        <p style={p}>
+          <strong>The filters are an operational convenience, not an age-verification service.</strong> Afterroar makes no representation, warranty, or assurance that any user&apos;s age, date of birth, or identity is accurate. Vendors are 100% responsible for verifying the age of their customers in person before serving any age-restricted goods, services, or experiences (alcohol, tobacco, 21+ events, etc.). The fact that a customer was returned by a filter, listed in an event roster, or appears in a Connect API response is not evidence of their age and must not be relied upon as such.
+        </p>
+        <p style={p}>
+          By using Afterroar&apos;s Connect API, age filters, or roster features, vendors expressly acknowledge that the in-person verification obligation rests entirely with them and agree to indemnify Afterroar against any claim arising from a vendor&apos;s reliance on Afterroar data in lieu of in-person verification.
         </p>
 
         <h2 style={h2}>Identity verification</h2>
