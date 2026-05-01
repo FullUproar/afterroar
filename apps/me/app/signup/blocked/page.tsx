@@ -65,17 +65,6 @@ export default function BlockedPage() {
               you love. There&apos;s a whole world of tabletop fun waiting
               at your local game store.
             </p>
-            <a
-              href="https://www.fulluproar.com"
-              style={{
-                color: 'var(--orange)',
-                ...TYPE.body,
-                fontSize: '0.88rem',
-                marginTop: '0.5rem',
-              }}
-            >
-              Back to fulluproar.com
-            </a>
           </div>
         </PlayerCard>
       </Workbench>

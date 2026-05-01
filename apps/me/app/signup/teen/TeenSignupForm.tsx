@@ -152,7 +152,7 @@ export default function TeenSignupForm({ requireConsent }: { requireConsent: boo
       {requireConsent ? (
         <Field
           label="A parent or guardian's email"
-          hint="We'll send them a quick approval link. They don't need to make an account first."
+          hint="We'll email them everything they need. They'll set up their own Afterroar account, verify their identity, and approve yours."
           placeholder="parent@example.com"
           type="email"
           value={parentEmail}

@@ -100,6 +100,18 @@ export default async function TeenSignupPage() {
                 <li>Direct messages from adults you don’t know</li>
                 <li>21+ events</li>
               </ul>
+              {requireConsent && (
+                <>
+                  <strong style={{ color: 'var(--orange)', display: 'block', marginTop: '0.6rem' }}>
+                    Heads up for your parent:
+                  </strong>
+                  <ul style={{ margin: '0.4rem 0 0', paddingLeft: '1.1rem' }}>
+                    <li>They&apos;ll set up their own Afterroar account ($5/mo) to manage yours</li>
+                    <li>They&apos;ll verify their identity (quick photo of their ID)</li>
+                    <li>If they cancel later, your account pauses until they renew</li>
+                  </ul>
+                </>
+              )}
             </div>
 
             <p
