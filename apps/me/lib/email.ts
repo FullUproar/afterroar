@@ -175,6 +175,58 @@ you can ignore this email — no claim will be granted.
   return { subject, html, text };
 }
 
+interface PasswordResetParams {
+  resetUrl: string;
+  email: string;
+  expiresHours: number;
+}
+
+export function passwordResetTemplate(params: PasswordResetParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const { resetUrl, email, expiresHours } = params;
+  const subject = "Reset your Afterroar password";
+
+  const text = `Someone (hopefully you) asked to reset the password on the Afterroar Passport at ${email}.
+
+If that was you, set a new password here:
+${resetUrl}
+
+This link expires in ${expiresHours} hours. If you didn't request a reset, ignore this email — your password won't change.
+
+If someone is trying to access your account without your permission, contact us at afterroar@fulluproar.com.
+
+— Afterroar`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; max-width: 540px; margin: 0 auto; padding: 32px 24px;">
+    <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 16px;">Reset your Afterroar password</h1>
+    <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">
+      Someone (hopefully you) asked to reset the password on your Afterroar Passport at <strong>${escapeHtml(email)}</strong>.
+    </p>
+    <p style="margin: 0 0 32px;">
+      <a href="${resetUrl}"
+         style="display: inline-block; padding: 12px 24px; background: #ff6b35; color: #fff; text-decoration: none; font-weight: 600; border-radius: 4px;">
+        Set a new password
+      </a>
+    </p>
+    <p style="font-size: 13px; color: #666; line-height: 1.5; margin: 0 0 8px;">
+      Or copy this link into your browser:<br>
+      <span style="word-break: break-all;">${resetUrl}</span>
+    </p>
+    <p style="font-size: 12px; color: #999; line-height: 1.5; margin: 24px 0 0;">
+      This link expires in ${expiresHours} hours. If you didn't request a reset, ignore this email and your password won't change. If someone is trying to access your account, contact us at afterroar@fulluproar.com.
+    </p>
+  </body>
+</html>`.trim();
+
+  return { subject, html, text };
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

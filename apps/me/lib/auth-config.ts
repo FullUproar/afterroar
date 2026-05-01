@@ -14,6 +14,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Always show the Google account chooser, even when Chrome already
+      // has an active session. Without this, Google auto-passes whichever
+      // account is "primary" in the user's profile, which is bad UX for
+      // anyone with multiple Google accounts (most testers and many
+      // adults). Costs one extra click for solo-account users; saves
+      // confusion for everyone else.
+      authorization: {
+        params: { prompt: 'select_account' },
+      },
       // Trust Google's email_verified flag — when true, mark the user as
       // email-verified at sign-in so we don't bug them with our own link.
       profile(profile) {

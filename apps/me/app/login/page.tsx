@@ -117,13 +117,21 @@ function LoginContent() {
                 color: 'var(--red)',
                 ...TYPE.body,
                 fontSize: '0.82rem',
+                lineHeight: 1.5,
               }}>
                 {formError ? formError
-                : error === 'OAuthSignin' ? 'Could not start sign-in. Please try again.'
-                : error === 'OAuthCallback' ? 'Sign-in was interrupted. Please try again.'
-                : error === 'OAuthCreateAccount' ? 'Could not create account. Try again or use email/password.'
-                : error === 'Default' ? 'Something went wrong. Please try again.'
-                : 'Sign-in failed. Please try again.'}
+                : error === 'OAuthAccountNotLinked' ? (
+                    <>
+                      An account with this email already exists, but it&apos;s not linked to Google. Sign in with your password below to continue. After you&apos;re in, you can link Google from your settings.
+                    </>
+                  )
+                : error === 'OAuthSignin' ? 'Could not start sign-in with Google. Try again.'
+                : error === 'OAuthCallback' ? 'Sign-in was interrupted. Try again.'
+                : error === 'OAuthCreateAccount' ? 'Could not create your account. Try again, or use email and password instead.'
+                : error === 'AccessDenied' ? 'Access denied. Try a different account or use email and password.'
+                : error === 'Verification' ? 'That sign-in link expired or was already used. Sign in fresh below.'
+                : error === 'Default' ? 'Something went wrong. Try again.'
+                : 'Sign-in failed. Try again.'}
               </div>
             )}
 
@@ -188,6 +196,19 @@ function LoginContent() {
                 onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--orange)')}
                 onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--rule)')}
               />
+              <div style={{ textAlign: 'right', margin: '-0.25rem 0 0' }}>
+                <a
+                  href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+                  style={{
+                    ...TYPE.body,
+                    fontSize: '0.78rem',
+                    color: 'var(--ink-soft)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Forgot password?
+                </a>
+              </div>
               <button
                 type="submit"
                 disabled={submitting}
