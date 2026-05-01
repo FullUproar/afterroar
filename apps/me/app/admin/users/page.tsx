@@ -172,6 +172,22 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
               >
                 + Add user
               </Link>
+              <Link
+                href="/admin/audit"
+                style={{
+                  padding: '0.55rem 1rem',
+                  background: 'transparent',
+                  border: '1.5px solid var(--rule)',
+                  color: 'var(--ink-soft)',
+                  ...TYPE.display,
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  borderRadius: '0.4rem',
+                }}
+              >
+                Audit log
+              </Link>
             </form>
 
             {/* Results meta */}

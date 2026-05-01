@@ -89,6 +89,7 @@ model User {
   parentConsentApprovals MinorConsentRequest[] @relation("ParentApprover")
   parentAlerts          MonitoredAlert[]      @relation("ParentAlerts")
   childAlerts           MonitoredAlert[]      @relation("ChildAlerts")
+  adminAuditActions     AdminAuditLog[]       @relation("AdminAuditActions")
 
   @@index([parentUserId])
   @@index([isMinor])
@@ -174,6 +175,47 @@ model MinorConsentRequest {
   @@index([parentEmail])
   @@index([status])
   @@index([expiresAt])
+}
+
+/// Append-only audit log of admin actions taken via /admin/* surfaces.
+/// Every state-changing admin action (verify, unverify, ban, unban,
+/// delete, update, create, resend) writes a row here with:
+///   - which admin took the action (adminUserId — the User.id of the
+///     allowlisted email that performed it)
+///   - what was done (action — discriminator string like 'user.verify')
+///   - what was acted on (targetType + targetId, free-form for now;
+///     today only User but extensible)
+///   - before/after state (Json snapshots — bounded to fields we
+///     actually mutate; do NOT include passwordHash or DOB)
+///   - request context (ip, userAgent) for forensics
+/// Read-only via /admin/audit. Never deleted (retention policy TBD;
+/// for now keep forever, revisit at scale).
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  /// Action code: 'user.verify' | 'user.unverify' | 'user.ban' |
+  /// 'user.unban' | 'user.delete' | 'user.update' | 'user.create' |
+  /// 'user.resend_verification'. Free-form so future surfaces (venue
+  /// admin, event admin) extend without schema migration.
+  action      String
+  targetType  String   @default("user")
+  targetId    String?
+  /// Snapshot of relevant fields BEFORE the action. Null for create.
+  /// Sensitive fields (passwordHash, DOB) are explicitly omitted by
+  /// the logging helper.
+  beforeState Json?
+  /// Snapshot AFTER the action. Null for delete.
+  afterState  Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  admin       User     @relation("AdminAuditActions", fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
 
 /// Alerts surfaced on a parent's monitoring dashboard for activity on a

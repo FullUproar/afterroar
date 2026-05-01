@@ -7,8 +7,23 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/admin-auth';
 import { sendEmail, verifyEmailTemplate } from '@/lib/email';
 import { assignPassportCode } from '@/lib/passport-code';
+import { logAdminAction, userAuditSnapshot } from '@/lib/admin-audit';
 
 const VERIFY_TOKEN_TTL_HOURS = 24;
+const AUDIT_USER_SELECT = {
+  id: true,
+  email: true,
+  displayName: true,
+  username: true,
+  membershipTier: true,
+  emailVerified: true,
+  identityVerified: true,
+  isFrozen: true,
+  accountStatus: true,
+  defaultVisibility: true,
+  isMinor: true,
+  parentUserId: true,
+} as const;
 
 function buildVerifyUrl(token: string, email: string): string {
   const base = process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'https://afterroar.me';
@@ -19,63 +34,106 @@ function buildVerifyUrl(token: string, email: string): string {
 }
 
 export async function verifyUser(userId: string) {
-  await requireAdmin();
-  await prisma.user.update({
+  const session = await requireAdmin();
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: AUDIT_USER_SELECT });
+  if (!before) return;
+  const after = await prisma.user.update({
     where: { id: userId },
     data: { emailVerified: new Date() },
+    select: AUDIT_USER_SELECT,
+  });
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.verify',
+    targetId: userId,
+    beforeState: userAuditSnapshot(before),
+    afterState: userAuditSnapshot(after),
   });
   revalidatePath('/admin/users');
 }
 
 export async function unverifyUser(userId: string) {
-  await requireAdmin();
-  await prisma.user.update({
+  const session = await requireAdmin();
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: AUDIT_USER_SELECT });
+  if (!before) return;
+  const after = await prisma.user.update({
     where: { id: userId },
     data: { emailVerified: null },
+    select: AUDIT_USER_SELECT,
+  });
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.unverify',
+    targetId: userId,
+    beforeState: userAuditSnapshot(before),
+    afterState: userAuditSnapshot(after),
   });
   revalidatePath('/admin/users');
 }
 
 export async function banUser(userId: string) {
-  await requireAdmin();
-  await prisma.user.update({
+  const session = await requireAdmin();
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: AUDIT_USER_SELECT });
+  if (!before) return;
+  const after = await prisma.user.update({
     where: { id: userId },
     data: { isFrozen: true, accountStatus: 'suspended' },
+    select: AUDIT_USER_SELECT,
+  });
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.ban',
+    targetId: userId,
+    beforeState: userAuditSnapshot(before),
+    afterState: userAuditSnapshot(after),
   });
   revalidatePath('/admin/users');
 }
 
 export async function unbanUser(userId: string) {
-  await requireAdmin();
-  await prisma.user.update({
+  const session = await requireAdmin();
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: AUDIT_USER_SELECT });
+  if (!before) return;
+  const after = await prisma.user.update({
     where: { id: userId },
     data: { isFrozen: false, accountStatus: 'active' },
+    select: AUDIT_USER_SELECT,
+  });
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.unban',
+    targetId: userId,
+    beforeState: userAuditSnapshot(before),
+    afterState: userAuditSnapshot(after),
   });
   revalidatePath('/admin/users');
 }
 
 export async function deleteUser(userId: string) {
-  await requireAdmin();
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true },
-  });
+  const session = await requireAdmin();
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: AUDIT_USER_SELECT });
   if (!user) return;
-  // Cascade related rows that aren't FK-cascaded automatically.
+
   await prisma.minorConsentRequest.deleteMany({
-    where: { OR: [{ childEmail: user.email }, { parentEmail: user.email }] },
+    where: { OR: [{ childEmail: user.email! }, { parentEmail: user.email! }] },
   });
-  await prisma.verificationToken.deleteMany({ where: { identifier: user.email } });
+  await prisma.verificationToken.deleteMany({ where: { identifier: user.email! } });
   await prisma.user.delete({ where: { id: userId } });
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.delete',
+    targetId: userId,
+    beforeState: userAuditSnapshot(user),
+    afterState: null,
+  });
   // NOTE: FU snapshot User row (full-uproar-site DB) is NOT touched here.
-  // Cross-DB cleanup needs the Connect API key pattern flowing the other
-  // direction; queued for a future build. For now, FU-side orphans are
-  // harmless (just unused snapshot data).
+  // Cross-DB cleanup is queued for a future build using the Connect API
+  // pattern in the other direction. FU-side orphans are harmless.
   revalidatePath('/admin/users');
 }
 
 export async function resendVerificationEmail(userId: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { email: true, displayName: true, emailVerified: true },
@@ -85,8 +143,6 @@ export async function resendVerificationEmail(userId: string) {
 
   const token = randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + VERIFY_TOKEN_TTL_HOURS * 60 * 60 * 1000);
-  // Delete prior verify-email tokens for this address (not pwreset:/signin:
-  // tokens — those serve different flows).
   await prisma.verificationToken.deleteMany({
     where: {
       identifier: user.email,
@@ -103,6 +159,14 @@ export async function resendVerificationEmail(userId: string) {
   const verifyUrl = buildVerifyUrl(token, user.email);
   const tpl = verifyEmailTemplate(verifyUrl, user.displayName);
   const sent = await sendEmail({ to: user.email, ...tpl });
+
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.resend_verification',
+    targetId: userId,
+    afterState: { sent, recipient: user.email },
+  });
+
   return sent
     ? { ok: true }
     : { ok: false, error: 'Email send failed (check Vercel logs for Resend error)' };
@@ -120,7 +184,9 @@ interface UpdateUserInput {
 }
 
 export async function updateUser(userId: string, input: UpdateUserInput) {
-  await requireAdmin();
+  const session = await requireAdmin();
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: AUDIT_USER_SELECT });
+  if (!before) return { ok: false, error: 'User not found' };
 
   const data: Record<string, unknown> = {};
   if (input.displayName !== undefined) data.displayName = input.displayName?.trim() || null;
@@ -136,8 +202,9 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
   if (input.accountStatus !== undefined) data.accountStatus = input.accountStatus;
   if (input.defaultVisibility !== undefined) data.defaultVisibility = input.defaultVisibility;
 
+  let after;
   try {
-    await prisma.user.update({ where: { id: userId }, data });
+    after = await prisma.user.update({ where: { id: userId }, data, select: AUDIT_USER_SELECT });
   } catch (err) {
     const code = (err as { code?: string }).code;
     if (code === 'P2002') {
@@ -145,6 +212,15 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
     }
     throw err;
   }
+
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.update',
+    targetId: userId,
+    beforeState: userAuditSnapshot(before),
+    afterState: userAuditSnapshot(after),
+  });
+
   revalidatePath('/admin/users');
   revalidatePath(`/admin/users/${userId}`);
   return { ok: true };
@@ -160,7 +236,7 @@ interface CreateUserInput {
 }
 
 export async function createUser(input: CreateUserInput) {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   const email = input.email.trim().toLowerCase();
   if (!email.includes('@')) return { ok: false, error: 'Invalid email' };
@@ -181,11 +257,20 @@ export async function createUser(input: CreateUserInput) {
       isMinor: false,
       defaultVisibility: 'public',
     },
+    select: AUDIT_USER_SELECT,
   });
 
   await assignPassportCode(created.id).catch((err) =>
     console.error('[admin/createUser] assignPassportCode failed', err),
   );
+
+  await logAdminAction({
+    adminUserId: session.user!.id as string,
+    action: 'user.create',
+    targetId: created.id,
+    beforeState: null,
+    afterState: userAuditSnapshot(created),
+  });
 
   revalidatePath('/admin/users');
   return { ok: true, userId: created.id };
