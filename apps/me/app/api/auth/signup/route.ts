@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, verifyEmailTemplate } from "@/lib/email";
 import { assignPassportCode } from "@/lib/passport-code";
+import { readAgeGateCookie, classifyAge, isUnder13Blocked } from "@/lib/age-gate";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/auth/signup                                              */
@@ -63,6 +64,39 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Age-gate enforcement. Adult signups (this endpoint) require the
+  // age-gate cookie set to "adult". Teens go through the parental-consent
+  // flow at /api/auth/parental-consent/request, which has its own gate.
+  // <13 users are blocked here even if they somehow bypassed the cookie.
+  if (await isUnder13Blocked()) {
+    return NextResponse.json(
+      { error: "This account cannot be created on this device." },
+      { status: 403 },
+    );
+  }
+  const ageCookie = await readAgeGateCookie();
+  if (!ageCookie) {
+    return NextResponse.json(
+      { error: "Date of birth required. Please start at /signup/age." },
+      { status: 400 },
+    );
+  }
+  if (ageCookie.cohort !== "adult") {
+    return NextResponse.json(
+      { error: "This signup path is for adults only." },
+      { status: 403 },
+    );
+  }
+  // Defense in depth: re-validate the DOB classifies as adult right now.
+  const dob = new Date(ageCookie.dob);
+  const reclassified = classifyAge(dob);
+  if (reclassified.cohort !== "adult") {
+    return NextResponse.json(
+      { error: "Age verification stale; please start over." },
+      { status: 400 },
+    );
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
 
   // Already exists with a verified email + password → just resend nothing,
@@ -106,6 +140,8 @@ export async function POST(request: NextRequest) {
         data: {
           passwordHash,
           ...(displayName ? { displayName } : {}),
+          dateOfBirth: dob,
+          isMinor: false,
         },
       })
     : await prisma.user.create({
@@ -113,6 +149,11 @@ export async function POST(request: NextRequest) {
           email,
           passwordHash,
           displayName,
+          dateOfBirth: dob,
+          isMinor: false,
+          // Adults default to public visibility; minors default to "circle"
+          // (handled in the parental-consent approval path).
+          defaultVisibility: "public",
         },
       });
 

@@ -6,6 +6,7 @@ import { CustomPrismaAdapter } from '@/lib/auth-adapter';
 import { prisma } from '@/lib/prisma';
 import { assignPassportCode } from '@/lib/passport-code';
 import { pushVerifiedCountToSmiirl } from '@/lib/smiirl';
+import { readAgeGateCookie, isUnder13Blocked } from '@/lib/age-gate';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: CustomPrismaAdapter(prisma),
@@ -70,6 +71,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: '/login',
   },
   callbacks: {
+    /**
+     * Age-gate enforcement on OAuth sign-up.
+     *
+     * Existing users (have a User row already) bypass the gate — they're
+     * signing in, not signing up. New users (no row yet) must have a
+     * valid adult age-gate cookie or we refuse the sign-in. Teens get
+     * pushed to /signup/teen; <13-blocked devices get a flat refusal.
+     *
+     * Credentials sign-ins always go through /api/auth/signup first, so
+     * the age gate is enforced there; here we just need to handle OAuth.
+     */
+    async signIn({ user, account }) {
+      if (account?.provider !== 'google') return true;
+      if (!user.email) return false;
+
+      const existing = await prisma.user.findUnique({
+        where: { email: user.email.toLowerCase() },
+      });
+      if (existing) return true; // Existing user signing in; skip age gate.
+
+      // New OAuth signup. Require age cookie.
+      if (await isUnder13Blocked()) {
+        return '/signup/blocked';
+      }
+      const ageCookie = await readAgeGateCookie();
+      if (!ageCookie) return '/signup/age';
+      if (ageCookie.cohort === 'under13') return '/signup/blocked';
+      if (ageCookie.cohort === 'teen') return '/signup/teen';
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -96,6 +127,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       await assignPassportCode(user.id).catch((err) => {
         console.error('[auth] Failed to set passportCode:', err);
       });
+
+      // Persist DOB from the age-gate cookie. signIn() already enforced
+      // that this is an adult cookie; we just write the date through.
+      // If the cookie is somehow missing (shouldn't happen per signIn),
+      // we leave dateOfBirth null and a daily audit job can flag it.
+      try {
+        const ageCookie = await readAgeGateCookie();
+        if (ageCookie?.cohort === 'adult') {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              dateOfBirth: new Date(ageCookie.dob),
+              isMinor: false,
+              defaultVisibility: 'public',
+            },
+          });
+        }
+      } catch (err) {
+        console.error('[auth] Failed to persist DOB on createUser:', err);
+      }
 
       try {
         // Auto-issue Passport Pioneer badge to new users

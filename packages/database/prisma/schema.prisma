@@ -30,8 +30,36 @@ model User {
   reputationScore Int       @default(100)
   isFrozen        Boolean   @default(false)
   marketingConsent Boolean  @default(false)
+  /// Date of birth. Required for new signups (collected via neutral age screen).
+  /// Used to gate <13 (block), 13-17 (parental consent path), 18+ (standard).
+  /// Nullable to allow legacy users created before age-gating shipped.
+  dateOfBirth     DateTime?
+  /// Denormalized snapshot of (dateOfBirth → age < 18). Set at signup, flipped
+  /// to false by daily cron on 18th birthday. Avoids recomputing from DOB on
+  /// every visibility/discovery query. Source of truth is dateOfBirth.
+  isMinor         Boolean   @default(false)
+  /// Default profile visibility for the user. "circle" is the most restrictive
+  /// (visible only to approved Circle members). Minor accounts default to
+  /// "circle" per privacy-by-default policy. Adults default to "public".
+  defaultVisibility String   @default("public")
+  /// Set on minor accounts: links to the verified Pro parent who consented to
+  /// the account. Null for adults. If parent's Pro lapses, the minor's account
+  /// pauses (state managed via accountStatus, not by clearing this field).
+  parentUserId    String?
+  /// Timestamp when the parental consent flow completed for this minor account
+  /// (parent ID-verified + Pro-active + attestation signed). Null until
+  /// activation; used to keep an audit trail of when the consent was given.
+  parentVerifiedAt DateTime?
+  /// Lifecycle: "active" | "pending_parent" | "paused" | "suspended". Minor
+  /// accounts start "pending_parent" and flip to "active" only after parent
+  /// completes consent. If parent's Pro lapses, kid flips to "paused" until
+  /// renewal.
+  accountStatus   String    @default("active")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
+
+  parent          User?      @relation("ParentChild", fields: [parentUserId], references: [id])
+  children        User[]     @relation("ParentChild")
 
   pos_staff    PosStaff[]
   accounts     Account[]
@@ -48,8 +76,80 @@ model User {
   apiKeys      ApiKey[]
   paired_register_devices RegisterDevice[]
   generated_pairing_codes RegisterPairingCode[]
+  parentConsentRequests MinorConsentRequest[] @relation("MinorRequester")
+  parentConsentApprovals MinorConsentRequest[] @relation("ParentApprover")
 
+  @@index([parentUserId])
+  @@index([isMinor])
+  @@index([accountStatus])
   @@map("User")
+}
+
+/// Waitlist for users who attempted signup at 13-17 but didn't complete
+/// parental consent (or the feature flag turned consent off and we still
+/// want to capture intent). Stored separately from User to avoid creating
+/// shadow accounts. notifyAfter = computed 18th birthday from stated DOB
+/// (DOB itself is NOT stored to minimize PII on minors).
+///
+/// Two flush triggers:
+///   1) Daily cron emails anyone whose notifyAfter <= today: "you can sign up now"
+///   2) On launch of <18 support: blast everyone with "we're ready for you"
+model MinorWaitlist {
+  id            String   @id @default(cuid())
+  email         String
+  parentEmail   String?
+  notifyAfter   DateTime
+  attemptedAt   DateTime @default(now())
+  notifiedAt    DateTime?
+  /// Set when this person eventually does sign up; lets us prove conversion.
+  convertedUserId String?
+  source        String   @default("signup")
+
+  @@index([email])
+  @@index([notifyAfter])
+}
+
+/// Tracks the parental consent flow for a 13-17 signup attempt. One row per
+/// signup attempt. Lifecycle:
+///   pending -> parent clicks magic link -> parent completes Pro+Persona+attest
+///   -> completed (kid account activates)
+///   pending -> token expires after 7 days -> expired
+///   pending -> parent declines -> declined
+///
+/// We DO store the kid's stated DOB here briefly (so we can re-validate they
+/// are 13-17 when the parent completes), but we do NOT persist it past
+/// completion — once linked, the kid's User row holds the DOB.
+model MinorConsentRequest {
+  id              String    @id @default(cuid())
+  /// Token for the parent's magic link. Random hex, ~32 chars.
+  token           String    @unique
+  /// The kid's email (the account-to-be).
+  childEmail      String
+  /// The kid's stated display name (for the parent's "your kid wants to sign up" email).
+  childDisplayName String?
+  /// The kid's stated DOB. Cleared when the request completes or expires.
+  childDateOfBirth DateTime?
+  /// The parent's email — where the magic link is sent.
+  parentEmail     String
+  /// Once the kid signs in to claim their pending account, this is set.
+  childUserId     String?
+  child           User?     @relation("MinorRequester", fields: [childUserId], references: [id])
+  /// Once the parent completes verification, this is set.
+  parentUserId    String?
+  parent          User?     @relation("ParentApprover", fields: [parentUserId], references: [id])
+  /// Lifecycle state.
+  status          String    @default("pending")
+  /// Free-text from the parent's attestation step (not legally required, but
+  /// kept for audit if a guardianship dispute arises).
+  attestationText String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  completedAt     DateTime?
+
+  @@index([childEmail])
+  @@index([parentEmail])
+  @@index([status])
+  @@index([expiresAt])
 }
 
 // ============================================================

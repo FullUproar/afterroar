@@ -1,12 +1,31 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChromeNav, PlayerCard, Workbench } from "@/app/components/card-shell";
 import { TYPE, TitleBar } from "@/app/components/ui";
 import { signIn } from "next-auth/react";
 
 function SignupContent() {
+  const router = useRouter();
+  // Age-gate guard: if the user lands here without going through the
+  // neutral age screen, bounce them. The server's signup endpoint also
+  // refuses to create the account without a valid age cookie, so this
+  // is just a UX shortcut to avoid filling the form pointlessly.
+  useEffect(() => {
+    fetch('/api/auth/age-gate/check')
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.cohort) {
+          router.replace('/signup/age');
+          return;
+        }
+        if (d.cohort === 'under13') router.replace('/signup/blocked');
+        if (d.cohort === 'teen') router.replace('/signup/teen');
+      })
+      .catch(() => {});
+  }, [router]);
+
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 

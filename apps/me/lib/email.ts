@@ -183,3 +183,76 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+interface ParentalConsentParams {
+  approveUrl: string;
+  childEmail: string;
+  childDisplayName: string | null;
+  expiresHours: number;
+}
+
+export function parentalConsentTemplate(params: ParentalConsentParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const { approveUrl, childEmail, childDisplayName, expiresHours } = params;
+  const childRef = childDisplayName ? `${childDisplayName} (${childEmail})` : childEmail;
+  const subject = `${childDisplayName || "A young player"} wants to set up an Afterroar Passport`;
+
+  const text = `Someone using ${childEmail} listed you as their parent or guardian on Afterroar.
+
+Afterroar is a tabletop gaming Passport — players use it to find local game stores, track the games they play, and earn badges for showing up.
+
+To set things up for ${childDisplayName || "them"}, click here:
+${approveUrl}
+
+What you'll do on the next screen:
+  • Confirm you are their parent or legal guardian
+  • Set up your own Afterroar account ($5/mo) so they can stay connected to you
+  • Verify your identity (we use Persona; quick photo of your ID)
+
+Their account will be set to the most private settings by default. They will not be able to receive direct messages from adults, host public events, or be discovered by anyone outside their approved circle without your involvement.
+
+This link expires in ${expiresHours} hours. If you didn't expect this email, you can ignore it — no account will be created without your action.
+
+— Afterroar`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; max-width: 540px; margin: 0 auto; padding: 32px 24px;">
+    <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 16px;">${escapeHtml(childDisplayName || "A young player")} wants to set up an Afterroar Passport</h1>
+    <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">
+      Someone using <strong>${escapeHtml(childEmail)}</strong> listed you as their parent or guardian on Afterroar.
+    </p>
+    <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">
+      Afterroar is a tabletop gaming Passport. Players use it to find local game stores, track the games they play, and earn badges for showing up.
+    </p>
+    <p style="margin: 0 0 32px;">
+      <a href="${approveUrl}"
+         style="display: inline-block; padding: 12px 24px; background: #ff6b35; color: #fff; text-decoration: none; font-weight: 600; border-radius: 4px;">
+        Set up ${escapeHtml(childDisplayName || "their")} account
+      </a>
+    </p>
+    <p style="font-size: 14px; line-height: 1.55; margin: 0 0 12px;"><strong>What you'll do on the next screen:</strong></p>
+    <ul style="font-size: 14px; line-height: 1.6; padding-left: 20px; margin: 0 0 20px;">
+      <li>Confirm you are their parent or legal guardian</li>
+      <li>Set up your own Afterroar account ($5/mo) so you stay connected to them</li>
+      <li>Verify your identity (we use Persona; quick photo of your ID)</li>
+    </ul>
+    <p style="font-size: 14px; line-height: 1.55; margin: 0 0 16px;">
+      Their account will be set to the most private settings by default. They will not be able to receive direct messages from adults, host public events, or be discovered outside their approved circle without your involvement.
+    </p>
+    <p style="font-size: 13px; color: #666; line-height: 1.5; margin: 0 0 8px;">
+      Or copy this link into your browser:<br>
+      <span style="word-break: break-all;">${approveUrl}</span>
+    </p>
+    <p style="font-size: 12px; color: #999; margin: 24px 0 0;">
+      This link expires in ${expiresHours} hours. If you didn't expect this email, you can ignore it — no account will be created without your action.
+    </p>
+  </body>
+</html>`.trim();
+
+  return { subject, html, text };
+}
