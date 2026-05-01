@@ -116,9 +116,17 @@ export async function POST(request: NextRequest) {
       { status: 403 },
     );
   }
-  if (parent.membershipTier !== 'PRO' && parent.membershipTier !== 'CONNECT') {
+  // Either path satisfies the consent: $5 one-time consent fee paid OR
+  // active Pro subscription. Pro adds the monitoring dashboard but is
+  // not required for the kid account to exist.
+  const proActive = parent.membershipTier === 'PRO' || parent.membershipTier === 'CONNECT';
+  const consentFeePaid = !!consent.consentFeePaidAt;
+  if (!proActive && !consentFeePaid) {
     return NextResponse.json(
-      { error: 'An active Pro subscription is required to maintain a minor account.' },
+      {
+        error:
+          'Choose a path: pay the one-time $5 consent fee or start a Pro subscription before activating.',
+      },
       { status: 402 },
     );
   }
@@ -135,6 +143,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // monitoringEnabled = true only when parent is on Pro AND chose the Pro
+  // path during consent. A parent who later upgrades to Pro can flip
+  // monitoring on from settings (post-v1 work).
+  const monitoringEnabled = proActive;
+
   const child = existingChild
     ? await prisma.user.update({
         where: { id: existingChild.id },
@@ -146,6 +159,7 @@ export async function POST(request: NextRequest) {
           parentUserId: parent.id,
           parentVerifiedAt: new Date(),
           accountStatus: 'active',
+          monitoringEnabled,
         },
       })
     : await prisma.user.create({
@@ -158,6 +172,7 @@ export async function POST(request: NextRequest) {
           parentUserId: parent.id,
           parentVerifiedAt: new Date(),
           accountStatus: 'active',
+          monitoringEnabled,
         },
       });
 

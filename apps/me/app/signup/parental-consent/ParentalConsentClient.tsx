@@ -1,24 +1,28 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { TYPE } from '@/app/components/ui';
 
 /**
- * The four-step parent consent UX:
+ * Four-step parent consent UX (revised model — May 2026):
  *   1. Sign in (Google or email/password). Required because the parent's
  *      Passport account is the link to the kid.
  *   2. Verify identity via Persona.
- *   3. Attest "I am the parent or legal guardian" + agree to the
- *      $5/mo Pro subscription.
- *   4. Confirm — kid account activates.
+ *   3. Choose a path: pay one-time consent fee ($5) for the verification
+ *      cost OR start Pro ($5/mo) which bundles the consent fee in the
+ *      first month AND unlocks the parent monitoring dashboard.
+ *   4. Attest "I am the parent or legal guardian" + activate.
  *
- * Flow is gated server-side: each step's API endpoint validates that the
- * parent has completed the prior step before letting them advance.
+ * The previous model required ongoing Pro for the kid account to exist.
+ * The new model treats Pro as a value-add ("monitor your kid's activity")
+ * rather than a tax. Free-parent kid accounts work fine; Pro-parent
+ * accounts get the monitoring dashboard.
  *
- * Stripe / Persona handoffs are wired in v1 as redirects to existing
- * /verify-identity and Stripe checkout flows. The status doc for AM
- * review notes which pieces are full vs. stubbed.
+ * Stripe handoffs are stubbed in v1 — the endpoints exist and mark
+ * payment status, but the actual checkout flow needs to be wired against
+ * the existing Stripe integration. The status doc tracks what's full vs
+ * stubbed.
  */
 export default function ParentalConsentClient({
   token,
@@ -26,6 +30,7 @@ export default function ParentalConsentClient({
   childDisplayName,
   parentEmail,
   session,
+  initialConsentFeePaid,
 }: {
   token: string;
   childEmail: string;
@@ -36,11 +41,37 @@ export default function ParentalConsentClient({
     identityVerified: boolean;
     membershipTier: string;
   } | null;
+  initialConsentFeePaid: boolean;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [attestationChecked, setAttestationChecked] = useState(false);
+  const [consentFeePaid, setConsentFeePaid] = useState(initialConsentFeePaid);
+  const [chosenPath, setChosenPath] = useState<'free' | 'pro' | null>(
+    session?.membershipTier === 'PRO' || session?.membershipTier === 'CONNECT' ? 'pro'
+    : initialConsentFeePaid ? 'free'
+    : null,
+  );
+  const [paymentStarting, setPaymentStarting] = useState(false);
+
+  // After a Stripe redirect-back, the URL may contain ?paid=consent or
+  // ?paid=pro. Re-read the consent state from the server to pick up the
+  // payment confirmation. (Actual Stripe wiring is stubbed; the endpoint
+  // marks paid via a manual call for now.)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('paid')) {
+      const paid = url.searchParams.get('paid');
+      if (paid === 'consent' || paid === 'pro') {
+        // Refresh page state via a soft reload so server data updates.
+        url.searchParams.delete('paid');
+        window.history.replaceState(null, '', url.toString());
+        setConsentFeePaid(true);
+        setChosenPath(paid === 'pro' ? 'pro' : 'free');
+      }
+    }
+  }, []);
 
   const callbackUrl = useMemo(
     () => `/signup/parental-consent?token=${encodeURIComponent(token)}`,
@@ -52,6 +83,37 @@ export default function ParentalConsentClient({
     isSignedIn && session.email && session.email.toLowerCase() !== parentEmail.toLowerCase();
   const isVerified = !!session?.identityVerified;
   const isProActive = session?.membershipTier === 'PRO' || session?.membershipTier === 'CONNECT';
+  const pathSatisfied = chosenPath === 'pro' ? isProActive : chosenPath === 'free' ? consentFeePaid : false;
+
+  async function startConsentFeePayment() {
+    if (paymentStarting) return;
+    setPaymentStarting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/auth/parental-consent/start-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, path: 'free' }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error || 'Could not start payment.');
+        setPaymentStarting(false);
+        return;
+      }
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else if (data.devMarkPaid) {
+        // Dev fallback: endpoint immediately marked paid (no Stripe key set).
+        setConsentFeePaid(true);
+        setChosenPath('free');
+        setPaymentStarting(false);
+      }
+    } catch {
+      setError('Network error. Try again.');
+      setPaymentStarting(false);
+    }
+  }
 
   async function handleApprove() {
     if (submitting) return;
@@ -101,9 +163,20 @@ export default function ParentalConsentClient({
           {childDisplayName || childEmail}&apos;s Passport is set up. They&apos;ll get an email at{' '}
           <strong>{childEmail}</strong> with a link to set their password and sign in.
         </p>
-        <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-          Your $5/mo subscription keeps their account active. You can manage everything from your settings.
-        </p>
+        {chosenPath === 'pro' ? (
+          <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+            Your Pro subscription includes the parent monitoring dashboard. You can find it under
+            <a href="/parent-dashboard" style={{ color: 'var(--orange)', marginLeft: '0.25rem' }}>
+              /parent-dashboard
+            </a>
+            .
+          </p>
+        ) : (
+          <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+            You can upgrade to Pro any time to monitor their activity. Your Afterroar account stays
+            active for free.
+          </p>
+        )}
       </div>
     );
   }
@@ -212,41 +285,71 @@ export default function ParentalConsentClient({
 
       <Step
         index={3}
-        title="Subscribe to Pro ($5/mo)"
-        complete={isProActive}
-        active={isVerified && !isProActive}
+        title="Choose how to maintain this consent"
+        complete={pathSatisfied}
+        active={isVerified && !pathSatisfied}
         disabled={!isVerified}
       >
         <p style={{ ...TYPE.body, fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.5 }}>
-          Your Pro subscription keeps {childDisplayName || childEmail}&apos;s Passport active. You can cancel any time;
-          their account will pause until renewed.
+          Pick what fits — both paths fully approve {childDisplayName || childEmail}&apos;s account.
+          Pro adds the ability to see what they&apos;re up to.
         </p>
-        {isVerified && !isProActive && (
-          <a
-            href={`/billing/subscribe?tier=pro&return=${encodeURIComponent(callbackUrl)}`}
-            style={{
-              display: 'inline-block',
-              padding: '0.7rem 1rem',
-              background: 'var(--orange)',
-              color: 'var(--void, #1a1a1a)',
-              ...TYPE.display,
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              textDecoration: 'none',
-              marginTop: '0.5rem',
-            }}
-          >
-            Subscribe to Pro
-          </a>
-        )}
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '0.75rem',
+          marginTop: '0.5rem',
+        }}>
+          {/* Free path: $5 one-time consent fee */}
+          <PathCard
+            tier="Free + verification"
+            price="$5 once"
+            selected={chosenPath === 'free'}
+            disabled={!isVerified}
+            features={[
+              'Approves their account',
+              'Verifies you as a real adult',
+              'Your Afterroar account stays free',
+            ]}
+            actionLabel={consentFeePaid ? 'Paid ✓' : paymentStarting ? 'Starting…' : 'Pay $5'}
+            actionDisabled={consentFeePaid || paymentStarting}
+            onAction={consentFeePaid ? undefined : startConsentFeePayment}
+            footnote="Covers the cost of your ID verification. No further charges."
+          />
+          {/* Pro path: $5/mo Pro */}
+          <PathCard
+            tier="Pro · Monitored account"
+            price="$5/mo"
+            highlighted
+            selected={chosenPath === 'pro'}
+            disabled={!isVerified}
+            features={[
+              'Everything in Free path',
+              'Monitor their activity (RSVPs, connections, photos)',
+              'Get alerts on adult connections outside their Circle',
+              'All your own Pro perks (verified profile, public hosting, etc.)',
+            ]}
+            actionLabel={isProActive ? 'Active ✓' : 'Start Pro'}
+            actionDisabled={isProActive}
+            onAction={
+              isProActive
+                ? undefined
+                : () => {
+                    window.location.href = `/billing/subscribe?tier=pro&consent_token=${encodeURIComponent(token)}&return=${encodeURIComponent(callbackUrl)}`;
+                  }
+            }
+            footnote="First month covers the consent fee. Cancel any time."
+          />
+        </div>
       </Step>
 
       <Step
         index={4}
         title="Confirm and activate"
         complete={false}
-        active={isProActive && isVerified}
-        disabled={!isProActive || !isVerified}
+        active={pathSatisfied}
+        disabled={!pathSatisfied}
       >
         <label
           style={{
@@ -273,7 +376,7 @@ export default function ParentalConsentClient({
         </label>
         <button
           onClick={handleApprove}
-          disabled={submitting || !attestationChecked || !isProActive || !isVerified}
+          disabled={submitting || !attestationChecked || !pathSatisfied}
           style={{
             width: '100%',
             padding: '0.9rem 1.25rem',
@@ -283,14 +386,108 @@ export default function ParentalConsentClient({
             ...TYPE.display,
             fontSize: '0.95rem',
             fontWeight: 700,
-            cursor: submitting || !attestationChecked || !isProActive || !isVerified ? 'not-allowed' : 'pointer',
-            opacity: submitting || !attestationChecked || !isProActive || !isVerified ? 0.5 : 1,
+            cursor: submitting || !attestationChecked || !pathSatisfied ? 'not-allowed' : 'pointer',
+            opacity: submitting || !attestationChecked || !pathSatisfied ? 0.5 : 1,
             marginTop: '0.5rem',
           }}
         >
           {submitting ? 'Activating…' : 'Activate their Passport'}
         </button>
       </Step>
+    </div>
+  );
+}
+
+function PathCard({
+  tier,
+  price,
+  features,
+  actionLabel,
+  actionDisabled,
+  onAction,
+  footnote,
+  selected,
+  highlighted,
+  disabled,
+}: {
+  tier: string;
+  price: string;
+  features: string[];
+  actionLabel: string;
+  actionDisabled?: boolean;
+  onAction?: () => void;
+  footnote?: string;
+  selected?: boolean;
+  highlighted?: boolean;
+  disabled?: boolean;
+}) {
+  const accent = highlighted ? 'var(--orange)' : 'var(--ink-soft)';
+  return (
+    <div style={{
+      padding: '1rem 1.1rem',
+      background: selected
+        ? 'rgba(16, 185, 129, 0.08)'
+        : highlighted
+          ? 'rgba(255, 130, 0, 0.05)'
+          : 'var(--panel-mute)',
+      border: `1.5px solid ${selected ? 'rgba(16, 185, 129, 0.5)' : highlighted ? 'rgba(255, 130, 0, 0.4)' : 'var(--rule)'}`,
+      borderRadius: '0.6rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.6rem',
+      opacity: disabled ? 0.55 : 1,
+    }}>
+      <div>
+        <div style={{ ...TYPE.display, fontSize: '0.95rem', color: accent, fontWeight: 700, marginBottom: '0.2rem' }}>
+          {tier}
+        </div>
+        <div style={{ ...TYPE.display, fontSize: '1.4rem', color: 'var(--cream)', fontWeight: 800, lineHeight: 1 }}>
+          {price}
+        </div>
+      </div>
+      <ul style={{ margin: 0, paddingLeft: '1.05rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        {features.map((f, i) => (
+          <li key={i} style={{ ...TYPE.body, fontSize: '0.82rem', color: 'var(--ink-soft)', lineHeight: 1.5 }}>{f}</li>
+        ))}
+      </ul>
+      {onAction ? (
+        <button
+          onClick={onAction}
+          disabled={actionDisabled || disabled}
+          style={{
+            padding: '0.55rem 0.85rem',
+            background: highlighted ? 'var(--orange)' : 'var(--panel)',
+            color: highlighted ? 'var(--void, #1a1a1a)' : 'var(--cream)',
+            border: highlighted ? 'none' : '1px solid var(--rule)',
+            borderRadius: '0.4rem',
+            ...TYPE.display,
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            cursor: actionDisabled || disabled ? 'not-allowed' : 'pointer',
+            opacity: actionDisabled || disabled ? 0.5 : 1,
+          }}
+        >
+          {actionLabel}
+        </button>
+      ) : (
+        <div style={{
+          padding: '0.55rem 0.85rem',
+          background: 'rgba(16, 185, 129, 0.1)',
+          color: '#10b981',
+          borderRadius: '0.4rem',
+          ...TYPE.display,
+          fontSize: '0.85rem',
+          fontWeight: 700,
+          textAlign: 'center',
+        }}>
+          {actionLabel}
+        </div>
+      )}
+      {footnote && (
+        <div style={{ ...TYPE.body, fontSize: '0.74rem', color: 'var(--ink-faint)', lineHeight: 1.45, marginTop: '0.1rem' }}>
+          {footnote}
+        </div>
+      )}
     </div>
   );
 }

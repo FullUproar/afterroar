@@ -42,14 +42,23 @@ model User {
   /// (visible only to approved Circle members). Minor accounts default to
   /// "circle" per privacy-by-default policy. Adults default to "public".
   defaultVisibility String   @default("public")
-  /// Set on minor accounts: links to the verified Pro parent who consented to
-  /// the account. Null for adults. If parent's Pro lapses, the minor's account
-  /// pauses (state managed via accountStatus, not by clearing this field).
+  /// Set on minor accounts: links to the verified parent who consented to
+  /// the account. Null for adults. If parent deletes their account, the
+  /// minor's account cascades to deletion. If parent revokes consent in
+  /// settings, the minor's account deactivates (accountStatus flip).
   parentUserId    String?
   /// Timestamp when the parental consent flow completed for this minor account
-  /// (parent ID-verified + Pro-active + attestation signed). Null until
-  /// activation; used to keep an audit trail of when the consent was given.
+  /// (parent verified + consent fee paid OR Pro active + attestation signed).
+  /// Null until activation; used to keep an audit trail of when consent was
+  /// given.
   parentVerifiedAt DateTime?
+  /// Monitoring opt-in state. When true, the parent can see this minor
+  /// account's activity (RSVPs, connections, photos, alerts) on their
+  /// /parent-dashboard. Requires the parent to be on Pro tier — toggling
+  /// off Pro turns this off. Kid sees a "Supervised by [parent]" badge on
+  /// their own profile when this is true (transparency, not stealth).
+  /// Always false on adult accounts.
+  monitoringEnabled Boolean @default(false)
   /// Lifecycle: "active" | "pending_parent" | "paused" | "suspended". Minor
   /// accounts start "pending_parent" and flip to "active" only after parent
   /// completes consent. If parent's Pro lapses, kid flips to "paused" until
@@ -78,6 +87,8 @@ model User {
   generated_pairing_codes RegisterPairingCode[]
   parentConsentRequests MinorConsentRequest[] @relation("MinorRequester")
   parentConsentApprovals MinorConsentRequest[] @relation("ParentApprover")
+  parentAlerts          MonitoredAlert[]      @relation("ParentAlerts")
+  childAlerts           MonitoredAlert[]      @relation("ChildAlerts")
 
   @@index([parentUserId])
   @@index([isMinor])
@@ -111,14 +122,20 @@ model MinorWaitlist {
 
 /// Tracks the parental consent flow for a 13-17 signup attempt. One row per
 /// signup attempt. Lifecycle:
-///   pending -> parent clicks magic link -> parent completes Pro+Persona+attest
-///   -> completed (kid account activates)
+///   pending -> parent clicks magic link -> parent completes Persona + pays
+///     consent fee (or starts Pro) + attest -> completed (kid activates)
 ///   pending -> token expires after 7 days -> expired
 ///   pending -> parent declines -> declined
 ///
 /// We DO store the kid's stated DOB here briefly (so we can re-validate they
 /// are 13-17 when the parent completes), but we do NOT persist it past
 /// completion — once linked, the kid's User row holds the DOB.
+///
+/// `consentFeePaidAt`: tracks the one-time $5 consent fee that covers the
+/// Persona verification cost. Either the parent pays this AND the
+/// approve endpoint marks the kid active, OR the parent subscribes to Pro
+/// (which bundles the consent fee in the first month). Both unlock kid
+/// activation; only Pro unlocks the parent monitoring dashboard.
 model MinorConsentRequest {
   id              String    @id @default(cuid())
   /// Token for the parent's magic link. Random hex, ~32 chars.
@@ -142,6 +159,13 @@ model MinorConsentRequest {
   /// Free-text from the parent's attestation step (not legally required, but
   /// kept for audit if a guardianship dispute arises).
   attestationText String?
+  /// Set when the parent pays the one-time $5 consent fee. Mutually
+  /// exclusive with the Pro path (Pro parents bundle the fee into their
+  /// first month and don't need this set).
+  consentFeePaidAt DateTime?
+  /// Whether the parent chose the Pro path during this consent flow.
+  /// Used to set User.monitoringEnabled on the kid at activation time.
+  parentChoseProPath Boolean @default(false)
   createdAt       DateTime  @default(now())
   expiresAt       DateTime
   completedAt     DateTime?
@@ -150,6 +174,36 @@ model MinorConsentRequest {
   @@index([parentEmail])
   @@index([status])
   @@index([expiresAt])
+}
+
+/// Alerts surfaced on a parent's monitoring dashboard for activity on a
+/// linked minor account. Created by background jobs that watch for
+/// noteworthy events (new adult connection outside Circle, RSVP to
+/// non-venue public event, etc.).
+///
+/// Privacy note: alerts contain METADATA only (event type, counterparty
+/// name/email, timestamps). They do NOT contain message contents. The
+/// monitoring dashboard is light-touch oversight, not surveillance.
+model MonitoredAlert {
+  id           String    @id @default(cuid())
+  parentUserId String
+  childUserId  String
+  /// Type discriminator: 'new_adult_connection' | 'public_rsvp' |
+  /// 'photo_upload' | 'circle_change' | etc. Free-form string for now;
+  /// can promote to enum once the catalog stabilizes.
+  alertType    String
+  /// JSON metadata for the dashboard to render (counterparty info,
+  /// event link, etc.). Schema varies by alertType.
+  payload      Json
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  parent       User      @relation("ParentAlerts", fields: [parentUserId], references: [id], onDelete: Cascade)
+  child        User      @relation("ChildAlerts", fields: [childUserId], references: [id], onDelete: Cascade)
+
+  @@index([parentUserId, readAt])
+  @@index([childUserId])
+  @@index([createdAt])
 }
 
 // ============================================================

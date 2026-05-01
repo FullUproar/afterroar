@@ -20,7 +20,14 @@ export default async function PassportLanding() {
   let [user, recentBadges, recentPoints] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId as string },
-      select: { displayName: true, email: true, passportCode: true },
+      select: {
+        displayName: true,
+        email: true,
+        passportCode: true,
+        isMinor: true,
+        monitoringEnabled: true,
+        parent: { select: { displayName: true, email: true } },
+      },
     }),
     prisma.userBadge.findMany({
       where: { userId: userId as string, revokedAt: null },
@@ -47,7 +54,14 @@ export default async function PassportLanding() {
     });
     user = await prisma.user.findUnique({
       where: { id: userId as string },
-      select: { displayName: true, email: true, passportCode: true },
+      select: {
+        displayName: true,
+        email: true,
+        passportCode: true,
+        isMinor: true,
+        monitoringEnabled: true,
+        parent: { select: { displayName: true, email: true } },
+      },
     });
   }
 
@@ -84,6 +98,51 @@ export default async function PassportLanding() {
                 {first}
               </h1>
             </div>
+
+            {/* Supervised-by badge for minor accounts whose parent has Pro
+                + monitoring enabled. Transparency-by-design: kid sees this
+                on their own page so they know oversight is on. NOT a stealth
+                surveillance pattern. */}
+            {user?.isMinor && user?.monitoringEnabled && user?.parent && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  padding: '0.6rem 0.85rem',
+                  background: 'rgba(255, 130, 0, 0.08)',
+                  border: '1px solid rgba(255, 130, 0, 0.3)',
+                  borderRadius: '0.5rem',
+                  width: '100%',
+                  maxWidth: '22rem',
+                }}
+              >
+                <div
+                  style={{
+                    width: '1.5rem',
+                    height: '1.5rem',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 130, 0, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.85rem',
+                    flexShrink: 0,
+                  }}
+                  aria-hidden
+                >
+                  🛡
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ ...TYPE.mono, color: 'var(--orange)', fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Supervised account
+                  </div>
+                  <div style={{ ...TYPE.body, fontSize: '0.78rem', color: 'var(--ink-soft)', marginTop: '0.1rem', lineHeight: 1.4 }}>
+                    {user.parent.displayName || user.parent.email} can see your activity. They never see message contents.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* QR card — the main event */}
             {user?.passportCode ? (

@@ -130,6 +130,7 @@ export default async function ParentalConsentPage({ searchParams }: PageProps) {
               childEmail={request.childEmail}
               childDisplayName={request.childDisplayName}
               parentEmail={request.parentEmail}
+              initialConsentFeePaid={!!request.consentFeePaidAt}
               session={
                 sessionUser
                   ? {

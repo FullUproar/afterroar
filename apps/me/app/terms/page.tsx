@@ -43,13 +43,16 @@ export default function TermsPage() {
 
         <h2 style={h2}>Players aged 13–17</h2>
         <p style={p}>
-          A parent or legal guardian must approve every account for a player under 18. The parent maintains an active Afterroar account and remains the responsible party for the minor account. By granting consent, the parent or legal guardian represents that they are exactly that — misrepresenting the relationship is a serious offense.
+          A parent or legal guardian must approve every account for a player under 18. The parent maintains an active Afterroar account and remains the responsible party for the minor account. By granting consent, the parent or legal guardian represents that they are exactly that. Misrepresenting the relationship is a serious offense.
         </p>
         <p style={p}>
-          Minor accounts inherit privacy-by-default settings: profile visibility is restricted to approved circles, direct messages from adults outside the approved circle are blocked, public game-night discovery is limited to events hosted by verified venues and tagged appropriate for the minor&apos;s age, and the minor cannot host public events. The parent may revoke consent at any time via the parent&apos;s settings, which pauses the minor account.
+          Consent is finalized via one of two paths, both of which require parent identity verification through our verification partner: a one-time $5 verification fee, or an active Pro subscription ($5 per month). The Pro path additionally unlocks the parent monitoring dashboard, which surfaces metadata about the minor&apos;s on-platform activity (RSVPs, connections, photos, badges, alerts on adult connections outside their approved circle) but never exposes message contents. Read more on the <a href="/parents" style={a}>parent help page</a>.
         </p>
         <p style={p}>
-          If the parent&apos;s subscription lapses, the minor account is paused until renewed.
+          Minor accounts inherit privacy-by-default settings: profile visibility is restricted to approved circles, direct messages from adults outside the approved circle are blocked, public game-night discovery is limited to events hosted by verified venues and tagged appropriate for the minor&apos;s age, and the minor cannot host public events. Minors with monitoring enabled see a clearly-marked &ldquo;Supervised by [parent]&rdquo; indicator on their own profile.
+        </p>
+        <p style={p}>
+          The parent may revoke consent at any time via account settings or by deleting their own account. Revocation pauses the minor account immediately; deletion of the parent account cascades to the minor account. On the minor&apos;s 18th birthday the parental link auto-detaches and the account graduates to standalone adult control.
         </p>
 
         <h2 style={h2}>Public events at venues</h2>
