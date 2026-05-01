@@ -29,14 +29,23 @@ export function CustomPrismaAdapter(prisma: PrismaClient): Adapter {
   return {
     async createUser(data) {
       // NextAuth passes { name, email, emailVerified, image } — translate to schema.
-      // For Google OAuth, emailVerified is set to a Date when Google asserts the
-      // email is verified; we keep that timestamp.
+      //
+      // Note: this adapter is only hit by OAuth signups (Google). The
+      // Credentials signup path at /api/auth/signup writes to the User
+      // table directly and never goes through here. So we can safely
+      // default emailVerified to a Date when none is supplied — every
+      // user reaching this code path came in via an OAuth provider
+      // whose token already proves email ownership. NextAuth v5 strips
+      // emailVerified from the profile() return value before it hits
+      // the adapter (it's an AdapterUser-only field), which is why the
+      // Google profile callback's "emailVerified: profile.email_verified
+      // ? new Date() : null" line can't actually carry through to here.
       const user = await prisma.user.create({
         data: {
           email: data.email,
           displayName: data.name ?? null,
           avatarUrl: data.image ?? null,
-          emailVerified: data.emailVerified ?? null,
+          emailVerified: data.emailVerified ?? new Date(),
         },
       });
       return userToAdapter(user);
