@@ -8,10 +8,6 @@
     {
       "path": "/api/cron/bgg-refresh",
       "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/smiirl-push",
-      "schedule": "0 * * * *"
     }
   ]
 }

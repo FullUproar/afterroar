@@ -5,7 +5,6 @@ import { compare } from 'bcryptjs';
 import { CustomPrismaAdapter } from '@/lib/auth-adapter';
 import { prisma } from '@/lib/prisma';
 import { assignPassportCode } from '@/lib/passport-code';
-import { pushVerifiedCountToSmiirl } from '@/lib/smiirl';
 import { readAgeGateCookie, isUnder13Blocked, hasAdultAttestation } from '@/lib/age-gate';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -254,18 +253,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.error('[auth] Failed to issue Pioneer badge:', err);
       }
 
-      // Push the verified-user count to the Smiirl so the convention
-      // counter ticks up within ~1s. Google signups are auto-verified
-      // via the Google profile callback (we trust email_verified) and
-      // therefore never hit the email-verification route where the
-      // existing Smiirl push lives. Without this, only credential
-      // signups bumped the counter and the hourly cron caught the rest.
-      // Fire-and-forget; never block auth on the device call. The push
-      // helper queries DB for verified count, so for unverified
-      // credential signups the count just doesn't include them yet.
-      pushVerifiedCountToSmiirl().catch((err) =>
-        console.error('[auth] Smiirl push on createUser failed:', err),
-      );
+      // Smiirl push removed — the device is now in poll mode (JSON URL)
+      // pointed at /api/smiirl/count.json. Push mode collided with manual
+      // sets via the Smiirl admin UI, causing the counter to oscillate.
+      // Poll mode makes us the single source of truth without needing to
+      // call out from inside the auth flow.
     },
   },
 });
