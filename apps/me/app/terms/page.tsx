@@ -59,6 +59,9 @@ export default function TermsPage() {
         <p style={p}>
           User-hosted public events (events hosted by individuals, not verified venues) are visible only to other identity-verified Pro members and are not visible to minor accounts under any circumstances.
         </p>
+        <p style={p}>
+          <strong>Alcohol-themed events are not currently permitted.</strong> Events whose name or description suggests alcohol is the central activity (for example, &ldquo;Drunk Magic,&rdquo; &ldquo;Shots &amp; Ladders,&rdquo; &ldquo;Beer &amp; Boards Night&rdquo;) may not be posted on Afterroar at this time. Venues may host events where alcohol is incidentally available by tagging them 21+. A future Afterroar release may add explicit support for alcohol-themed events with additional verification requirements (verified liquor license on file, identity-verified RSVP only, etc.). Until then, posting such an event is a violation of these Terms.
+        </p>
 
         <h2 style={h2}>Age-based filtering: a tool, not a guarantee</h2>
         <p style={p}>

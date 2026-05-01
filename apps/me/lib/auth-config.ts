@@ -146,7 +146,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // what we need and only when we need it.
       try {
         const ageCookie = await readAgeGateCookie();
-        if (ageCookie?.cohort === 'adult') {
+        if (ageCookie?.cohort === 'adult' && ageCookie.dob) {
           await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -156,7 +156,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           });
         } else {
-          // Adult attestation only; ensure isMinor + visibility defaults
+          // Cohort attestation only (radio-button signup path with no DOB,
+          // or attestation cookie). Ensure isMinor + visibility defaults
           // are set correctly without writing a fake DOB.
           await prisma.user.update({
             where: { id: user.id },

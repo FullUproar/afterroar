@@ -93,15 +93,20 @@ export async function POST(request: NextRequest) {
       );
     }
     // Defense in depth: re-validate the DOB classifies as adult right now.
-    const candidate = new Date(ageCookie.dob);
-    const reclassified = classifyAge(candidate);
-    if (reclassified.cohort !== "adult") {
-      return NextResponse.json(
-        { error: "Age verification stale; please start over." },
-        { status: 400 },
-      );
+    // The cookie's dob field is optional under the radio-button signup
+    // flow (cohort selection without DOB capture), so only re-classify
+    // if a DOB is actually present.
+    if (ageCookie.dob) {
+      const candidate = new Date(ageCookie.dob);
+      const reclassified = classifyAge(candidate);
+      if (reclassified.cohort !== "adult") {
+        return NextResponse.json(
+          { error: "Age verification stale; please start over." },
+          { status: 400 },
+        );
+      }
+      dob = candidate;
     }
-    dob = candidate;
   } else if (!confirmedAdult) {
     return NextResponse.json(
       { error: "Please confirm you are 18 or older to create an account." },

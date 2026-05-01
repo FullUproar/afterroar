@@ -79,15 +79,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Re-validate the cookie's DOB still classifies as teen — defends
-  // against a stale cookie if classifier rules ever change.
-  const dob = new Date(cookie.dob);
-  const result = classifyAge(dob);
-  if (result.cohort !== 'teen') {
-    return NextResponse.json(
-      { error: 'Age gate stale. Please start over.' },
-      { status: 400 },
-    );
+  // Re-validate the cookie's DOB still classifies as teen IF a DOB is
+  // present. New radio-button signup flow doesn't capture DOB, so we
+  // rely on the cohort field alone in that case. If a DOB is present,
+  // we double-check the classifier hasn't drifted.
+  let dob: Date | null = null;
+  if (cookie.dob) {
+    dob = new Date(cookie.dob);
+    const result = classifyAge(dob);
+    if (result.cohort !== 'teen') {
+      return NextResponse.json(
+        { error: 'Age gate stale. Please start over.' },
+        { status: 400 },
+      );
+    }
   }
 
   // If the child email already belongs to an active adult account, refuse.
@@ -115,6 +120,8 @@ export async function POST(request: NextRequest) {
       token,
       childEmail,
       childDisplayName,
+      // Pass null when the radio-button signup flow gave us cohort
+      // without DOB; the schema column is nullable.
       childDateOfBirth: dob,
       parentEmail,
       expiresAt,

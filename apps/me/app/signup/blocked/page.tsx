@@ -37,21 +37,19 @@ export default function BlockedPage() {
                 lineHeight: 1.2,
               }}
             >
-              We can&apos;t set up a Passport for you yet.
+              You must be 13 or older to create an account.
             </h1>
             <p
               style={{
                 ...TYPE.body,
-                fontSize: '0.9rem',
+                fontSize: '0.95rem',
                 color: 'var(--ink-soft)',
                 lineHeight: 1.55,
                 margin: 0,
                 maxWidth: '24rem',
               }}
             >
-              Afterroar is built for older players right now. We&apos;re
-              working on the right way to welcome younger gamers, but
-              we&apos;re not there yet.
+              We hope to see you soon!
             </p>
             <p
               style={{
@@ -64,7 +62,7 @@ export default function BlockedPage() {
               }}
             >
               In the meantime, ask a parent or older sibling about the games
-              you love — there&apos;s a whole world of tabletop fun waiting
+              you love. There&apos;s a whole world of tabletop fun waiting
               at your local game store.
             </p>
             <a

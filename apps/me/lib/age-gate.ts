@@ -64,12 +64,15 @@ export function isValidDob(dob: Date): boolean {
 
 /**
  * Cookie payload for the age gate. Stored as JSON in a signed httpOnly
- * cookie. Contains DOB so the downstream signup endpoints can persist it
- * without re-prompting.
+ * cookie. The DOB field is optional: when the user came through the
+ * default radio-button signup, we know their cohort but not their
+ * birthday. When they came through /signup/age (DOB picker, the
+ * under-18 side-door), we have both. Downstream code should treat
+ * missing DOB as "we know the cohort by self-attestation only."
  */
 export interface AgeGatePayload {
   cohort: AgeCohort;
-  dob: string;
+  dob?: string;
   setAt: number;
 }
 
@@ -83,7 +86,8 @@ export async function readAgeGateCookie(): Promise<AgeGatePayload | null> {
   try {
     const decoded = JSON.parse(Buffer.from(raw, 'base64url').toString('utf-8'));
     if (!decoded || typeof decoded !== 'object') return null;
-    if (!decoded.cohort || !decoded.dob || !decoded.setAt) return null;
+    if (!decoded.cohort || !decoded.setAt) return null;
+    // dob is optional — radio-button cohort attestation has no DOB
     // Cookie expires after 24 hours of inactivity at the form level
     if (Date.now() - decoded.setAt > 24 * 60 * 60 * 1000) return null;
     return decoded as AgeGatePayload;
