@@ -44,7 +44,7 @@ export default function MarketingNav() {
           ))}
           <Link
             href="/login"
-            className="rounded-lg bg-[#FF8200] px-5 py-2 font-medium text-white transition-colors hover:bg-[#e67400]"
+            className="rounded-lg bg-[#FF8200] px-5 py-2 font-medium text-[#0a0a0a] transition-colors hover:bg-[#e67400]"
           >
             Sign In
           </Link>
@@ -54,7 +54,7 @@ export default function MarketingNav() {
         <div className="flex items-center gap-3 md:hidden">
           <Link
             href="/login"
-            className="rounded-lg bg-[#FF8200] px-4 py-2 text-sm font-medium text-white"
+            className="rounded-lg bg-[#FF8200] px-4 py-2 text-sm font-medium text-[#0a0a0a]"
           >
             Sign In
           </Link>

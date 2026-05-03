@@ -15,7 +15,9 @@
   --cream: #f6eedd;
   --ink: #dcd6c6;
   --ink-soft: #8a8478;
-  --ink-faint: #4f4a42;
+  /* WCAG AA-passing on the dark Passport bg. Was #4f4a42 (ratio 2.22) — */
+  /* every use case needed a brighter shade to be readable. Now ~5.2 ratio. */
+  --ink-faint: #8a8478;
 
   --red: #c44d4d;
   --red-mute: rgba(196, 77, 77, 0.12);

@@ -106,7 +106,7 @@ function LoginContent() {
         <h1 className="text-2xl font-bold text-white">
           {isSignUp ? "Create Your Account" : "Welcome Back"}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-400">
           {isSignUp
             ? "Set up your game store on Afterroar"
             : "Sign in to Afterroar Store Ops"}
@@ -148,7 +148,7 @@ function LoginContent() {
             </div>
             {!isSignUp && (
               <div className="text-right mt-1">
-                <button type="button" onClick={() => setShowForgotMsg(true)} className="text-xs text-zinc-500 hover:text-blue-400 min-h-0">
+                <button type="button" onClick={() => setShowForgotMsg(true)} className="text-xs text-zinc-400 hover:text-blue-400 min-h-0">
                   Forgot password?
                 </button>
               </div>
@@ -176,7 +176,7 @@ function LoginContent() {
 
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-zinc-800" />
-            <span className="text-xs text-zinc-600">or</span>
+            <span className="text-xs text-zinc-400">or</span>
             <div className="h-px flex-1 bg-zinc-800" />
           </div>
 
@@ -191,14 +191,14 @@ function LoginContent() {
         </div>
       </div>
 
-      <p className="mt-6 text-sm text-zinc-500">
+      <p className="mt-6 text-sm text-zinc-400">
         {isSignUp ? "Already have an account?" : "New store?"}{" "}
         <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(""); }} className="font-medium text-blue-400 hover:text-blue-300">
           {isSignUp ? "Sign in" : "Create account"}
         </button>
       </p>
 
-      <p className="mt-8 text-xs text-zinc-600">Afterroar Store Ops &mdash; by Full Uproar Games</p>
+      <p className="mt-8 text-xs text-zinc-400/70">Afterroar Store Ops &mdash; by Full Uproar Games</p>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export function ChromeNav({ email, signedIn = true }: { email?: string | null; s
         </span>
       ) : (
         <span style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-          <Link href="/credo" style={{ color: '#6b7280', textDecoration: 'none', fontSize: '0.7rem' }}>The Credo</Link>
+          <Link href="/credo" style={{ color: '#9ca3af', textDecoration: 'none', fontSize: '0.7rem' }}>The Credo</Link>
           <Link href="/login" style={{ color: 'var(--orange)', textDecoration: 'none', fontSize: '0.7rem', fontWeight: 700 }}>Sign in</Link>
         </span>
       )}

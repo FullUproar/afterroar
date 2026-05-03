@@ -32,18 +32,18 @@ export default function Home() {
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#94a3b8] sm:text-xl">
             The operating system for friendly local game stores.
           </p>
-          <p className="mt-4 text-sm text-[#4a4a6a] tracking-wide">
+          <p className="mt-4 text-sm text-[#94a3b8] tracking-wide">
             POS &middot; TCG Pricing &middot; Events &middot; Inventory &middot; Marketplace &middot; Cafe &middot; Shipping
           </p>
           <div className="mt-10">
             <Link
               href="/features"
-              className="inline-block rounded-xl bg-[#FF8200] px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-[#FF8200]/20 transition-all hover:bg-[#e67400] hover:shadow-[#FF8200]/30"
+              className="inline-block rounded-xl bg-[#FF8200] px-10 py-4 text-lg font-semibold text-[#0a0a0a] shadow-lg shadow-[#FF8200]/20 transition-all hover:bg-[#e67400] hover:shadow-[#FF8200]/30"
             >
               See What It Does
             </Link>
           </div>
-          <p className="mt-6 text-sm text-[#4a4a6a]">
+          <p className="mt-6 text-sm text-[#94a3b8]">
             Built by game people, for game stores
           </p>
         </div>
