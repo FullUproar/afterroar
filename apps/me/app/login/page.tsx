@@ -81,6 +81,39 @@ function LoginContent() {
     router.refresh();
   }
 
+  // While the autostart redirect to Google is in flight, render a tight
+  // loading state instead of the full login form. Without this the user
+  // sees the form flash for ~250ms before the browser navigates away,
+  // which reads as "the page is asking me to do something" right before
+  // it whisks them to Google.
+  if (autostart === 'google') {
+    return (
+      <>
+        <ChromeNav signedIn={false} />
+        <Workbench>
+          <PlayerCard maxWidth="26rem">
+            <TitleBar left="Sign In" />
+            <div style={{
+              padding: '2.5rem var(--pad-x) 2rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem',
+              textAlign: 'center',
+            }}>
+              <h1 style={{ ...TYPE.display, fontSize: '1.4rem', color: 'var(--cream)', margin: 0 }}>
+                Continuing to Google…
+              </h1>
+              <p style={{ ...TYPE.body, fontSize: '0.9rem', color: 'var(--ink-soft)', margin: 0 }}>
+                Redirecting now.
+              </p>
+            </div>
+          </PlayerCard>
+        </Workbench>
+      </>
+    );
+  }
+
   return (
     <>
       <ChromeNav signedIn={false} />
