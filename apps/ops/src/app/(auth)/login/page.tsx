@@ -138,7 +138,7 @@ function LoginContent() {
             <label htmlFor="password" className="mb-1 block text-xs font-medium text-zinc-400">Password</label>
             <div className="relative">
               <input ref={passwordRef} id="password" type={showPassword ? "text" : "password"} placeholder={isSignUp ? "Min 6 characters" : "••••••••"} autoComplete={isSignUp ? "new-password" : "current-password"} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleClick(); } }} className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-              <button type="button" tabIndex={-1} onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:text-zinc-300">
+              <button type="button" tabIndex={-1} onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:text-zinc-300">
                 {showPassword ? (
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                 ) : (
