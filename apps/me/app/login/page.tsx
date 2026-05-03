@@ -19,8 +19,14 @@ function LoginContent() {
   const error = searchParams.get('error');
   const deleted = searchParams.get('deleted') === 'true';
   const verified = searchParams.get('verified') === '1';
+  // Venue-claim flow: FU's claim-and-signup endpoint redirects here with
+  // ?email=X&from=venue-claim&callbackUrl=hq.fulluproar.com/my-venue/Y
+  // after creating the user. We pre-fill the email and surface a banner
+  // so the user knows they're 1 step from the venue dashboard.
+  const fromVenueClaim = searchParams.get('from') === 'venue-claim';
+  const prefilledEmail = searchParams.get('email') ?? '';
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(prefilledEmail);
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -93,6 +99,21 @@ function LoginContent() {
                 fontSize: '0.82rem',
               }}>
                 Email verified. Sign in below.
+              </div>
+            )}
+
+            {fromVenueClaim && (
+              <div style={{
+                padding: '0.85rem 1rem',
+                background: 'rgba(255, 130, 0, 0.1)',
+                border: '1px solid rgba(255, 130, 0, 0.4)',
+                color: 'var(--cream)',
+                ...TYPE.body,
+                fontSize: '0.85rem',
+                lineHeight: 1.5,
+              }}>
+                <strong style={{ color: 'var(--orange)' }}>Account created. </strong>
+                Sign in once with the password you just set, then we&rsquo;ll take you to your venue dashboard.
               </div>
             )}
 

@@ -46,6 +46,15 @@ export async function POST(request: NextRequest) {
     password?: string;
     displayName?: string;
     confirmedAdult?: boolean;
+    // Venue-claim signup path: when called by FU's claim-and-signup
+    // orchestrator, FU includes an HMAC-signed claim token proving the
+    // user clicked the magic link sent to the venue's listed email.
+    // That email control proof lets us skip the email-verification
+    // step (verification email + click-to-verify) since we already
+    // know they control the inbox.
+    claimToken?: string;
+    venueSlug?: string;
+    claimSignature?: string;
   };
   try {
     body = await request.json();
@@ -61,6 +70,21 @@ export async function POST(request: NextRequest) {
       : null;
   const confirmedAdult = body.confirmedAdult === true;
 
+  // Venue-claim path verification: HMAC over (claimToken|venueSlug|email)
+  // signed with the shared secret. FU side computes this when it knows
+  // the claim is valid; Passport verifies before bypassing email verif.
+  let venueClaimVerified = false;
+  if (body.claimToken && body.venueSlug && body.claimSignature) {
+    const secret = process.env.VENUE_CLAIM_HMAC_SECRET || "";
+    if (secret) {
+      const { createHmac } = await import("node:crypto");
+      const expected = createHmac("sha256", secret)
+        .update(`${body.claimToken}|${body.venueSlug}|${email}`)
+        .digest("hex");
+      venueClaimVerified = body.claimSignature === expected;
+    }
+  }
+
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
   }
@@ -69,6 +93,59 @@ export async function POST(request: NextRequest) {
       { error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters` },
       { status: 400 },
     );
+  }
+
+  // Venue-claim path bypasses age-gate cookie checks: by the nature of
+  // venue ownership, the claimer is presumed an adult business operator.
+  // The HMAC proof from FU is sufficient.
+  if (venueClaimVerified) {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing && existing.passwordHash) {
+      return NextResponse.json({
+        error: "An account already exists at this email — please sign in to claim.",
+      }, { status: 409 });
+    }
+    const passwordHash = await hash(password, 12);
+    const now = new Date();
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            passwordHash,
+            emailVerified: now,
+            ...(displayName ? { displayName } : {}),
+            isMinor: false,
+            defaultVisibility: "public",
+          },
+        })
+      : await prisma.user.create({
+          data: {
+            email,
+            passwordHash,
+            emailVerified: now,
+            displayName,
+            isMinor: false,
+            defaultVisibility: "public",
+          },
+        });
+    await assignPassportCode(user.id).catch((err) =>
+      console.error("[signup/venue-claim] assignPassportCode failed:", err),
+    );
+    if (!existing) {
+      await logUserActivity({
+        userId: user.id,
+        action: 'lifecycle.account_create',
+        metadata: {
+          source: 'venue_claim',
+          venueSlug: body.venueSlug,
+        },
+      });
+    }
+    return NextResponse.json({
+      ok: true,
+      userId: user.id,
+      message: "Account created via venue claim. You can sign in immediately.",
+    });
   }
 
   // Age-gate enforcement (distillery model). The default adult signup
