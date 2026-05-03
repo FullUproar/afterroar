@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { ChromeNav } from '@/app/components/card-shell';
 import { TYPE, TitleBar } from '@/app/components/ui';
 import { PlayerCard, Workbench } from '@/app/components/card-shell';
@@ -30,6 +30,19 @@ function LoginContent() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // ?autostart=google → auto-trigger the Google signIn() call on mount.
+  // Used by cross-origin entry points (e.g. FU's venue claim modal) that
+  // can't call signIn() directly because NextAuth v5 requires same-origin
+  // CSRF-protected POST. They redirect here instead with autostart set.
+  const autostart = searchParams.get('autostart');
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autostart === 'google' && !autoStartedRef.current) {
+      autoStartedRef.current = true;
+      void signIn('google', { callbackUrl });
+    }
+  }, [autostart, callbackUrl]);
 
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
