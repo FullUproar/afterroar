@@ -1,0 +1,119 @@
+# Mimir seed BGG IDs -- onboarding cold-start pool
+#
+# Format: one ID per line, optionally followed by # comment.
+# Empty lines and lines starting with # are ignored by fetch-bgg.mjs
+# (it splits on whitespace and filters out non-numeric tokens).
+#
+# Hand-curated for diversity across:
+#   - Weight tiers (party, light, medium-light, medium, medium-heavy, heavy)
+#   - Mechanic families (engine, deck-builder, area control, worker placement,
+#     deduction, dexterity, social deduction, cooperative, wargame, abstract,
+#     drafting, push-your-luck, racing, narrative)
+#   - Theme breadth (fantasy, sci-fi, civ, abstract, train, nature, food,
+#     historical, horror, espionage)
+#   - Era (classics + modern hits)
+#
+# Goal: ~60 games such that any new player presented with this pool can
+# pick 5 they love + 2 they can't stand and produce a useful seed taste
+# vector (per design doc § 8).
+#
+# Refresh quarterly based on what is actually being played in the FLGS
+# network. This is v0 hand-curated by Claude during Sprint 1.0.1 -- a
+# human pass to validate IDs and adjust based on real-world usage data
+# is on the open-questions list (mimir/README.md).
+#
+# Notes on IDs:
+# - BGG IDs are stable but games occasionally get renumbered when entries
+#   merge. If `fetch-bgg.mjs` returns no item for a given ID, check BGG
+#   directly and update this file.
+# - Where multiple editions exist, prefer the most-played edition's ID
+#   (e.g., War of the Ring 2nd Edition over the original).
+# - Some choices are deliberately classical (Catan, Carcassonne) even
+#   when newer games might dominate hot lists -- onboarding needs games
+#   most respondents have an opinion on, not just current darlings.
+
+# === Party / Very Light (weight ~1.0-1.5) ===
+178900   # Codenames -- word association, party, deduction
+254640   # Just One -- cooperative party word game
+262543   # Wavelength -- spectrum guessing, social
+46213    # Telestrations -- sketching/whispers party
+133473   # Sushi Go! -- light drafting, gateway
+225694   # Decrypto -- team deduction, code-breaking
+244992   # The Mind -- cooperative number-syncing
+432      # 6 Nimmt! -- classic German push-your-luck
+92415    # Skull -- bluffing card game
+
+# === Light / Family (weight ~1.5-2.0) ===
+9209     # Ticket to Ride -- gateway route-building
+13       # Catan (Settlers of) -- THE gateway game
+822      # Carcassonne -- tile-laying classic
+148228   # Splendor -- engine-builder gateway
+230802   # Azul -- pattern-making tile-drafting
+163412   # Patchwork -- 2-player tile-laying
+2655     # Hive -- abstract 2-player, no board
+65244    # Forbidden Island -- cooperative gateway
+70323    # King of Tokyo -- dice / take-that
+192291   # Sushi Go Party -- expanded drafting
+295947   # Cascadia -- nature tile-laying, modern hit
+160477   # Onitama -- abstract 2-player chess-like
+
+# === Medium-Light (weight ~2.0-2.5) ===
+68448    # 7 Wonders -- card drafting, civ-lite
+36218    # Dominion -- deck-builder, the OG
+204583   # Kingdomino -- tile-laying with auction
+266192   # Wingspan -- engine-builder, nature theme
+30549    # Pandemic -- cooperative classic
+244521   # Quacks of Quedlinburg -- push-your-luck bag-builder
+312484   # Lost Ruins of Arnak -- engine + adventure hybrid
+283155   # Calico -- pattern-laying with cats
+123540   # Tokaido -- aesthetic point-to-point
+34635    # Stone Age -- gateway worker placement
+
+# === Medium (weight ~2.5-3.0) ===
+2651     # Power Grid -- auction / route / economic
+153938   # Camel Up -- push-your-luck / betting
+124361   # Concordia -- deck-building / area control
+84876    # Castles of Burgundy -- dice + multi-track
+199792   # Everdell -- worker placement / engine, charming
+28720    # Brass: Lancashire -- economic / network classic
+162886   # Spirit Island -- deep cooperative
+28143    # Race for the Galaxy -- engine / role selection
+167791   # Terraforming Mars -- engine + drafting + theme
+
+# === Medium-Heavy (weight ~3.0-3.5) ===
+169786   # Scythe -- area control + engine + theme
+342942   # Ark Nova -- engine, zoo theme, modern darling
+224517   # Brass: Birmingham -- economic / network, often top-1
+193738   # Great Western Trail -- point-to-point + deck-shaping
+102794   # Caverna -- worker placement, expanded Agricola
+31260    # Agricola -- worker placement classic
+72125    # Eclipse -- 4X medium-heavy entry
+12333    # Twilight Struggle -- 2-player CDG, Cold War
+366013   # Heat: Pedal to the Metal -- racing + deck-shaping
+
+# === Heavy (weight ~3.5-4.0+) ===
+174430   # Gloomhaven -- campaign dungeon-crawl
+25613    # Through the Ages -- civ-builder
+233078   # Twilight Imperium 4th Ed -- epic 4X
+220308   # Gaia Project -- 4X (Terra Mystica successor)
+96848    # Mage Knight -- solo/coop deck-building adventure
+177736   # A Feast for Odin -- worker placement, deep
+175914   # Food Chain Magnate -- economic, brutal
+
+# === Social Deduction / Hidden Role ===
+128882   # The Resistance: Avalon -- modern deduction classic
+188834   # Secret Hitler -- streamer favorite
+147949   # One Night Ultimate Werewolf -- compressed werewolf
+240980   # Blood on the Clocktower -- modern social deduction
+
+# === Dexterity ===
+521      # Crokinole -- physical flicking, classic
+
+# === Wargame / 2-Player Conflict ===
+115746   # War of the Ring (Second Edition) -- LOTR thematic war
+10630    # Memoir '44 -- WWII gateway wargame
+
+# === Cooperative / Narrative / Mystery ===
+284083   # The Crew: Quest for Planet Nine -- cooperative tricks
+204      # Sherlock Holmes Consulting Detective -- narrative classic
+146508   # T.I.M.E Stories -- one-shot narrative adventure
