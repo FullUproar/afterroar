@@ -1,0 +1,11 @@
+{
+  "id": 295947, "source": "bgg", "type": "boardgame",
+  "name": "Cascadia",
+  "year": 2021, "weight": 1.85, "minPlayers": 1, "maxPlayers": 4,
+  "playingTime": 45, "minPlayTime": 30, "maxPlayTime": 45, "minAge": 10, "bggRank": 25,
+  "designers": [{"id": 100847, "value": "Randy Flynn"}],
+  "artists": [], "publishers": [],
+  "mechanics": [{"id": 2664, "value": "Tile Placement"}, {"id": 2974, "value": "Set Collection"}, {"id": 2041, "value": "Drafting"}],
+  "categories": [{"id": 1089, "value": "Animals"}, {"id": 1042, "value": "Puzzle"}, {"id": 1010, "value": "Environmental"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}

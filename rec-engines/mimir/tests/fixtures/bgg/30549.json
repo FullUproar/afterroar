@@ -1,0 +1,11 @@
+{
+  "id": 30549, "source": "bgg", "type": "boardgame",
+  "name": "Pandemic",
+  "year": 2008, "weight": 2.41, "minPlayers": 2, "maxPlayers": 4,
+  "playingTime": 45, "minPlayTime": 45, "maxPlayTime": 45, "minAge": 8, "bggRank": 110,
+  "designers": [{"id": 378, "value": "Matt Leacock"}],
+  "artists": [], "publishers": [],
+  "mechanics": [{"id": 2023, "value": "Cooperative Game"}, {"id": 2050, "value": "Hand Management"}, {"id": 2078, "value": "Action Points"}],
+  "categories": [{"id": 1084, "value": "Medical"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}

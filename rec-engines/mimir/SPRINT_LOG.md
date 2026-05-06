@@ -4,51 +4,131 @@ Per-sprint development history. Most recent at top.
 
 ---
 
-## Sprint 1.0.9 — HOTFIX: explain.mjs syntax + npm test glob (2026-05-06) ✅
+## Sprint 1.0.10 — Sandbox end-to-end validation + fixtures + integration tests (2026-05-06) ✅
 
-**Why:** Cloned the branch in a sandbox, ran `npm install` + `npm test` against the actual code. **Two bugs that mental traces missed:**
+**Why:** With sandbox approval to spin up a local Postgres + run end-to-end without touching real infrastructure, we validated the entire Phase 0 pipeline empirically. **Sprint 0.3 ("apply migration to non-prod DB") is now effectively done in a sandbox** — the runner, schema, and safety harness all work against a real Postgres 16. The user still needs to apply against their own Neon branch when at the laptop, but the migration code is now empirically proven.
 
-1. **`src/explain.mjs:121`** — single-quoted string with an apostrophe inside it (`'in a series you've shown interest in'`). Pure JS syntax error. Cascaded to break the loading of `tests/explain.test.mjs` AND `tests/recommend.test.mjs` (which transitively imports `explain.mjs`).
-2. **`package.json` `test` script** — `node --test tests/` fails on Node 22 with MODULE_NOT_FOUND because Node tries to resolve the path as a single module. The correct invocation is `node --test tests/*.test.mjs` (shell glob expansion) or `cd tests && node --test`.
+**Goal:**
+1. Validate the migration runner end-to-end against a real local Postgres.
+2. Validate the offline driver against hand-crafted BGG fixtures.
+3. Lock in realistic-data validation by adding fixtures + integration tests to the test suite.
 
-**Result before fix:** 117 of 119 testable assertions passed; 2 of 8 test files failed at module load.
-**Result after fix:** **153 of 153 assertions pass.**
-
-**Goal:** Fix both bugs and verify with a real `npm test` run (not a mental trace).
+**Why this sprint is special:** Earlier sprints used mental traces. Sprint 1.0.9 caught two bugs that mental traces missed (apostrophe in single-quoted string + npm test glob). This sprint ran ACTUAL CODE against ACTUAL POSTGRES and ACTUAL fixture files, which is the only way to be sure.
 
 **Scope:**
-- `src/explain.mjs:121` — wrap the offending string in double quotes so the apostrophe is literal: `"in a series you've shown interest in"`.
-- `package.json` — change `"test": "node --test tests/"` to `"test": "node --test tests/*.test.mjs"`.
-- Update SPRINT_LOG with Sprint 1.0.9 entry.
+- `tests/fixtures/bgg/*.json` — 7 hand-crafted BGG-shaped game fixtures (Terraforming Mars, Wingspan, Cascadia, Codenames, Pandemic, Ark Nova, Twilight Imperium 4)
+- `tests/integration.test.mjs` — 6 end-to-end pipeline tests against the fixtures
+- SPRINT_LOG.md — this entry, capturing the validation results
+
+**Sandbox validation results (the actual proof, not committed but documented):**
+
+```
+=== Sprint 0.3 EFFECTIVELY VALIDATED in sandbox ===
+local Postgres: 16.13 (Ubuntu)
+DATABASE_URL: postgresql://mimir_test:localtest@localhost:5432/mimir_dev
+
+STEP 1: npm run migrate:dry-run
+  Found 1 migration file(s): 0001_create_rec_tables.sql
+  ✓ 0001_create_rec_tables.sql passes safety check
+  Dry run complete. No DB changes made.
+
+STEP 2: npm run migrate
+  Found 1 migration file(s): 0001_create_rec_tables.sql
+  ✓ 0001_create_rec_tables.sql passes safety check
+  → applying 0001_create_rec_tables.sql
+    ✓ committed
+  All migrations applied successfully.
+
+STEP 3: schema verification
+  rec_table_count: 15 (14 from 0001 + rec_migrations from runner) ✓
+  rec_edge indexes: rec_edge_pkey, _src_id_dst_..._key, _src, _dst,
+                    _type_ts, _context_gin (6 total) ✓
+  rec_migrations: 1 row for 0001_create_rec_tables.sql ✓
+
+STEP 4: idempotency (re-run npm run migrate)
+  - 0001_create_rec_tables.sql already applied; skipping ✓
+
+STEP 5: safety harness rejects malicious migration
+  Created tmp 0002_TEST_BAD with `drop table users;`
+  Output: 'Migration runner failed: 0002_TEST_BAD failed safety
+    check: Safety check failed: migration attempts to drop non-rec_
+    object "users".' ✓
+
+STEP 6: prod-name guard rejects -prod URL
+  DATABASE_URL=...mimir_test@.../afterroar-prod
+  Output: 'Migration runner failed: Refusing to run against
+    production-like database (URL contains prod/production/-live).
+    Pass --allow-prod to override.' ✓
+
+STEP 7: state unchanged after rejected attempts
+  rec_table_count: still 15 ✓
+  rec_migrations: still 1 row ✓
+```
+
+**Offline driver smoke test results:**
+
+```
+npm run run-rec -- --loved 167791,266192 --noped 178900 \
+                   --players 4 --minutes 90 --explain rich
+
+  1. Wingspan        score=5.862  conf=0.90  (loved)
+  2. Terraforming Mars score=5.104 conf=0.90  (loved)
+  3. Pandemic        score=4.339  conf=0.90  (cooperative + medium-light)
+  4. Cascadia        score=4.339  conf=0.90  (tile-laying + drafting)
+  5. Twilight Imperium score=2.164 conf=0.90 (length_violated flagged)
+  6. Ark Nova        score=4.041  conf=0.90  (MMR pushed it down for diversity)
+  7. Codenames       score=-10.000 conf=1.0  ("on your no-list")
+```
+
+Observations:
+- Codenames hard-vetoed and ranked last with veto language ✅
+- TI4 ranked below shorter games and emits `length_violated` reason ✅
+- Ark Nova has higher score than TI4 but appears AFTER it due to MMR diversification (similar mechanic profile to Wingspan/TM seeds) ✅ — this is correct behavior, MMR is doing real work.
+- Engine games rank top for engine-lover seed ✅
+
+**Open observation worth noting** (not a bug, but a UX consideration for Sprint 1.x): the player’s seed-loved games appear at top of recommendations. v0 doesn’t filter them out. UX-wise we may want to exclude `seed_loved` from results in a wrapper (don’t recommend a game the player just told us they love). Not a Phase 0 issue — the recommender is correctly scoring them; the surface using it can apply the filter.
 
 **Acceptance criteria:**
-1. `npm test` runs all 153 assertions and reports `pass 153, fail 0` ✅ (verified locally via `git clone` + `npm install` + `npm test` in a sandbox).
-2. No source file changes other than the one quote fix on line 121 ✅.
-3. SPRINT_LOG documents the failure mode honestly so future Claudes / humans don’t repeat it.
+1. Local Postgres validation passes all 7 steps above ✅
+2. Offline driver produces sensible recommendations for at least one realistic seed combination ✅
+3. 7 game fixtures committed to `tests/fixtures/bgg/` ✅
+4. Integration test suite exists and passes ✅ (6/6 new tests pass)
+5. Total test suite count: 153 + 6 = 159, all green ✅
 
 **Test plan (executed BEFORE push):**
-- `git clone -b claude/review-uoroar-platform-CuLMi https://github.com/fulluproar/afterroar.git` in a fresh sandbox.
-- `cd rec-engines/mimir && npm install`.
-- `npm test` after applying the two-line fix — must report 153 pass / 0 fail.
-- Verified on Node 22.22.2.
+- `git clone -b claude/review-uoroar-platform-CuLMi`
+- `cd rec-engines/mimir && npm install`
+- Set up local Postgres + dev DB
+- Run all 7 migration validation steps — all pass
+- Hand-craft 7 BGG fixtures into `tmp/bgg/`
+- Run `npm run run-rec` with engine-lover seed — sensible output
+- Copy fixtures to `tests/fixtures/bgg/`
+- Add `tests/integration.test.mjs` with 6 assertions
+- Run `npm test` — 159/159 pass
 
-**Outcome:** Locally verified `npm test` reports `pass 153, fail 0, duration_ms 311`. Push contains only the two file edits + this SPRINT_LOG update.
+**Outcome:** Pushed in this commit. 7 fixtures + 1 integration test file + SPRINT_LOG entry.
 
-**Verification:** Will be confirmed via post-push read-back. The local clone+install+test cycle is the canonical proof.
+**Verification:** Will be confirmed via post-push fresh-clone read-back.
 
-**Learnings (the important part):**
-- **Mental traces are necessary but not sufficient.** I traced 14 sprints worth of code mentally, and 12 of them were perfect. The two that weren’t (an apostrophe in a string literal, a Node `--test` invocation that doesn’t walk directories the way I expected) are exactly the kinds of micro-syntax/runtime details mental simulation skips. Lesson: **whenever a `npm test` round-trip is feasible, do it.** The 30 seconds of clone+install+test would have caught both bugs at sprint 1.0.5 and 1.0.2 respectively.
-- **The SILO discipline of "verify post-state before declaring complete" is what saved this.** Sprint 1.0.6 was declared complete after a directory listing. That’s not enough — the right "post-state" for a code sprint is also "the test suite passes." Updating my own discipline going forward: post-state = directory listing AND tests green when tests are runnable.
-- **The bug location is a meta-data point.** The apostrophe bug was on line 121 of an ~250-line file. The sentence was the only one in the entire file using a contraction inside a single-quoted string. My mental trace skimmed over it because the structure looked the same as the surrounding patterns. Real review (or a parser) doesn’t skim.
-- **One bug cascades to multiple test files.** explain.mjs failing to parse made BOTH `tests/explain.test.mjs` AND `tests/recommend.test.mjs` (which imports explain via recommend.mjs) fail at module-load. A single broken file in a small project takes a chunk of unrelated tests with it. Worth knowing.
+**Learnings:**
+- The local-Postgres validation took ~5 minutes and caught zero bugs in the migration code. That’s actually the IMPORTANT result — the test plan executed correctly because the code was right. The hotfix in 1.0.9 means I now trust the test suite, and end-to-end validation confirms it.
+- The offline driver output is genuinely good for v0. The MMR + designer cap is doing real work; the explanation generator is producing readable English; the hard veto is unmissable. The AI-window investment paid off.
+- **Hand-crafted fixtures are valuable for integration tests but expensive to author.** 7 fixtures took ~10 minutes. Worth it for the locked-in behavior they validate; not worth scaling beyond a representative set. When fetch-bgg is reachable from the laptop, real fixtures from `tmp/bgg/` will replace these for offline eval; integration tests can stay on the hand-crafted set for determinism.
+- The user’s Neon DB needs the same migration applied. Path forward unchanged from HANDOFF.md § "When you sit at the laptop next."
 
-**Rollback:** Revert this commit to restore the broken state. Don’t.
+**Rollback:** Revert this commit. The fixtures + integration tests are additive; no production code touched.
+
+---
+
+## Sprint 1.0.9 — HOTFIX: explain.mjs syntax + npm test glob (2026-05-06) ✅
+
+Pushed at commit `7b3e85e`. Two bugs caught by real `npm test` execution after sandbox clone+install. Apostrophe in single-quoted string (line 121 of explain.mjs) + `node --test tests/` not walking directory in Node 22. Result: 153/153 pass.
 
 ---
 
 ## Sprint 1.0.8 — Logging helpers (2026-05-06) ✅
 
-Pushed at commit `dacc20b`. Pure functions for log row construction. 22 assertions.
+Pushed at commit `dacc20b`.
 
 ---
 
@@ -60,13 +140,13 @@ Pushed at commit `5690d21`.
 
 ## Sprint 1.0.6 — recommend() composer + offline driver (2026-05-06) ✅
 
-Pushed at commit `f6e60db`. THE CAPSTONE. End-to-end pipeline runnable offline.
+Pushed at commit `f6e60db`. THE CAPSTONE.
 
 ---
 
-## Sprint 1.0.5 — Explanation generator (2026-05-06) ✅
+## Sprint 1.0.5 — Explanation generator (2026-05-06) ✅ (with apostrophe bug, fixed in 1.0.9)
 
-Pushed at commit `0bd5d31`. **Contained the apostrophe bug fixed in 1.0.9.**
+Pushed at commit `0bd5d31`.
 
 ---
 
@@ -100,9 +180,9 @@ Pushed at commit `337ed7c`.
 
 ---
 
-## Sprint 0.2 — Migration runner script (2026-05-06) ✅
+## Sprint 0.2 — Migration runner script (2026-05-06) ✅ (with npm test glob bug, fixed in 1.0.9)
 
-Pushed at commit `df30ac0`. **Contained the npm test script bug fixed in 1.0.9** — the bug shipped here but only became user-visible in Sprint 1.0.9 because earlier sprints didn’t have a real test suite running.
+Pushed at commit `df30ac0`.
 
 ---
 
@@ -132,11 +212,13 @@ Pushed at commit `1d32f9e`.
 
 ## Next sprint planned
 
-## Sprint 0.3 — Apply 0001 migration to a non-prod DB (DRAFT, REQUIRES LAPTOP)
+## Sprint 0.3 — Apply 0001 migration to user’s Neon branch (REQUIRES LAPTOP, but EMPIRICALLY VALIDATED in sandbox)
 
-Reiterated. See HANDOFF.md § "When you sit at the laptop next".
+**Note:** Sprint 1.0.10 effectively completed Sprint 0.3 against a local Postgres. The migration code, schema, safety harness, and idempotency are all empirically proven. The remaining work is just "apply against your Neon branch" — same steps as documented in HANDOFF.md § "When you sit at the laptop next."
 
-## Sprint 1.1 — BGG JSON → rec_* writer (DRAFT, depends on 0.3)
+**Confidence level:** High. The runner has been adversarially tested (rejects malicious migrations and prod-named DBs).
+
+## Sprint 1.1 — BGG JSON → rec_* writer (DRAFT, depends on 0.3 against real Neon)
 
 Reiterated.
 

@@ -1,0 +1,11 @@
+{
+  "id": 266192, "source": "bgg", "type": "boardgame",
+  "name": "Wingspan",
+  "year": 2019, "weight": 2.41, "minPlayers": 1, "maxPlayers": 5,
+  "playingTime": 70, "minPlayTime": 40, "maxPlayTime": 70, "minAge": 10, "bggRank": 28,
+  "designers": [{"id": 99593, "value": "Elizabeth Hargrave"}],
+  "artists": [], "publishers": [{"id": 41459, "value": "Stonemaier Games"}],
+  "mechanics": [{"id": 2041, "value": "Drafting"}, {"id": 2050, "value": "Hand Management"}, {"id": 2697, "value": "Engine Building"}, {"id": 2974, "value": "Set Collection"}],
+  "categories": [{"id": 1089, "value": "Animals"}, {"id": 1002, "value": "Card Game"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}

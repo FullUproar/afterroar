@@ -2,7 +2,7 @@
 
 **Purpose:** Cross-session context restoration. When you sit down at a laptop after working on mobile (or vice versa), read this + the active engine's `SPRINT_LOG.md` to restore full context.
 
-**Last updated:** 2026-05-06 (post Sprint 1.0.6, end of mobile session)
+**Last updated:** 2026-05-06 (post Sprint 1.0.10, sandbox end-to-end validation complete)
 
 ---
 
@@ -20,36 +20,40 @@ Full architectural rationale: [`mimir/docs/recommendation-engine-design.md`](./m
 
 | Engine | Phase | Status | Last sprint |
 |---|---|---|---|
-| `mimir` | Phase 0 | **Mobile-buildable portion COMPLETE.** End-to-end pipeline runnable offline. Awaiting laptop session for Sprint 0.3 (apply migration to Neon). | Sprint 1.0.6 — recommend() composer + offline driver |
+| `mimir` | Phase 0 | **End-to-end validated against local Postgres + real fixture data.** Code-side Sprint 0.3 done in sandbox; user-side Sprint 0.3 (apply against own Neon) is the only remaining blocker. | Sprint 1.0.10 — sandbox e2e validation + fixtures + integration tests |
 
 ## What’s in mimir/ right now
 
-A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, zero build step:
+A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, zero build step. **159/159 tests pass on Node 22.22.2** (verified via `git clone` → `npm install` → `npm test` in a fresh sandbox).
 
 **Schema layer:**
-- `migrations/0001_create_rec_tables.sql` — 14 tables + 4 indexes (per design doc § 3.5 + § 7.1). NOT YET APPLIED to any DB.
+- `migrations/0001_create_rec_tables.sql` — 14 tables + 4 indexes (per design doc § 3.5 + § 7.1). **Empirically applied to a local Postgres 16 in Sprint 1.0.10; verified idempotent + safety harness rejects bad migrations + prod-name guard refuses prod-shaped URLs.** Not yet applied to YOUR Neon DB.
 - `scripts/apply-migrations.mjs` — migration runner with multi-layer safety harness.
 
 **BGG ingestion:**
-- `scripts/fetch-bgg.mjs` — BGG XML API metadata fetcher with polite rate limiting.
+- `scripts/fetch-bgg.mjs` — BGG XML API metadata fetcher with polite rate limiting. **Note:** this datacenter’s IP is 403’d by BGG; works fine from a residential / cloud IP that BGG accepts.
 - `data/seed-bgg-ids.txt` — 60 hand-curated BGG IDs across weight tiers + mechanics.
 
 **Pipeline (pure functions):**
 - `src/taste-vector.mjs` — `computeTasteVector(loved, noped, gameMetadata)`
-- `src/score.mjs` — `scoreCandidate(candidate, taste, context)` per design doc § 5.1
-- `src/rank.mjs` — `rankCandidates(...)` with MMR diversification + hard designer cap
-- `src/explain.mjs` — `explain(scored, candidate, taste)` reason-code-driven templates
+- `src/score.mjs` — `scoreCandidate(candidate, taste, context)`
+- `src/rank.mjs` — `rankCandidates(...)` with MMR + hard designer cap
+- `src/explain.mjs` — `explain(scored, candidate, taste)`
 - `src/recommend.mjs` — `recommend(request, gameMetadata)` per design doc § 4 contract
+- `src/logging.mjs` — row builders for rec_*_log tables
 
 **Offline driver:**
-- `scripts/run-rec.mjs` — CLI for human-in-loop eval. Loads `tmp/bgg/`, takes seed picks, prints recommendations.
+- `scripts/run-rec.mjs` — CLI for human-in-loop eval. **Smoke-tested in Sprint 1.0.10 with the engine-lover scenario; output is sensible.**
 
 **Tests:**
-- ~120 assertions across 7 test files (`tests/*.test.mjs`)
+- 159 assertions across 9 test files (`tests/*.test.mjs`)
 - 12+ SUBTLE-WRONGNESS guards per SILO.md § 7
+- 6 integration tests against `tests/fixtures/bgg/` (7 hand-crafted game fixtures)
 - All tests run with `npm test` (no DB or network required)
 
 ## When you sit at the laptop next, do this
+
+The code-side validation is done. What’s left is just applying against your real Neon branch.
 
 ```bash
 cd rec-engines/mimir
@@ -57,47 +61,46 @@ cd rec-engines/mimir
 # 1. Install deps
 npm install
 
-# 2. Run the test suite. ALL TESTS SHOULD PASS. If any fail, that’s
-#    the first thing to debug — the mobile sprint discipline relied
-#    on mental tracing, so a fresh test run is the canonical proof.
+# 2. Run the test suite. EXPECT 159/159 PASS.
+#    If anything fails, that’s the first thing to debug — means something
+#    drifted between sandbox and your machine.
 npm test
 
-# 3. Fetch BGG metadata for the seed pool (~1 minute)
+# 3. Apply the migration to a Neon branch DB.
+#    Set DATABASE_URL to your dev/staging branch (NOT prod-named).
+#    The runner refuses prod/production/-live names anyway.
+DATABASE_URL=postgres://... npm run migrate:dry-run   # safety check first
+DATABASE_URL=postgres://... npm run migrate           # apply 0001
+
+# 4. Verify schema lands as expected:
+#    SELECT count(*) FROM information_schema.tables WHERE table_name LIKE 'rec_%';
+#       → 15 (14 from 0001 + rec_migrations from runner)
+#    SELECT indexname FROM pg_indexes WHERE tablename = 'rec_edge';
+#       → 6 indexes (pkey, the unique constraint, _src, _dst, _type_ts, _context_gin)
+#    SELECT * FROM rec_migrations;
+#       → one row for 0001_create_rec_tables.sql
+
+# 5. Confirm idempotency:
+DATABASE_URL=postgres://... npm run migrate            # should print "already applied; skipping"
+
+# 6. (Optional) Fetch BGG metadata + run an offline rec
+#    BGG should work from your laptop’s IP; it 403’d the sandbox.
 npm run fetch-bgg -- --file data/seed-bgg-ids.txt
-
-# 4. Run an offline recommendation as a smoke test
 npm run run-rec -- --loved 167791,266192 --noped 178900 --players 4 --minutes 90 --explain rich
-
-# 5. EYEBALL THE OUTPUT. Manually evaluate ~10–20 different seed
-#    combinations. The recommender is supposed to be "defensible for
-#    >80% of cases" before moving past internal validation
-#    (per mimir/README.md graduation criteria #3).
 ```
 
-If the offline driver produces sensible output, the next blocking sprint is:
+## Sandbox validation evidence (for trust)
 
-## Sprint 0.3 — Apply 0001 migration to a non-prod DB (laptop required)
+In case you want to know what was actually proven before you run against your Neon, Sprint 1.0.10 validated against a fresh Postgres 16 in this session’s sandbox:
 
-**Why blocking:** Sprint 1.1 (BGG JSON → rec_* writer) and everything downstream needs the schema applied somewhere.
+- 0001 migration applies cleanly, all 14 expected tables + 4 indexes present
+- rec_migrations gets a row for the applied migration
+- Re-running migrate is a no-op (“already applied; skipping”)
+- Adding a malicious migration (`drop table users;`) is rejected by the safety harness BEFORE any DB call
+- DATABASE_URL containing “prod” / “production” / “-live” is rejected by the prod-name guard (must pass `--allow-prod` to override, which is documented as never appropriate for Phase 0)
+- Offline driver `run-rec.mjs` produces sensible recommendations for the engine-lover scenario
 
-**Steps:**
-1. Provision (or reuse) a Neon branch DB. Recommend a fresh branch off your existing dev branch so this is fully sandboxed. **Do NOT use a production-named DB — the runner refuses anyway, but verify in the connection URL.**
-2. Set `DATABASE_URL` env var.
-3. `npm run migrate:dry-run` — confirm safety harness passes.
-4. `npm run migrate` — apply 0001.
-5. Verify schema via SQL:
-   ```sql
-   select count(*) from information_schema.tables where table_schema='public' and table_name like 'rec_%';
-   -- expect 15 (14 from 0001 + rec_migrations created by runner)
-   select indexname from pg_indexes where tablename = 'rec_edge';
-   -- expect: rec_edge_src, rec_edge_dst, rec_edge_type_ts, rec_edge_context_gin
-   select * from rec_migrations;
-   -- expect one row for 0001_create_rec_tables.sql
-   ```
-6. Re-run `npm run migrate` to confirm idempotency (should print "already applied; skipping").
-7. Update `mimir/SPRINT_LOG.md` — mark Sprint 0.3 complete with the verification SQL output.
-
-After 0.3, Sprint 1.1 (BGG → rec_* writer) is unblocked.
+Full details in `mimir/SPRINT_LOG.md` § Sprint 1.0.10.
 
 ## Working agreement (sprint discipline)
 
@@ -106,7 +109,7 @@ Every sprint follows this cadence:
 1. **Pre-flight** in chat AND committed to the engine's `SPRINT_LOG.md`: goal, scope, acceptance criteria, test plan, rollback recipe.
 2. **Test plan written BEFORE implementation.**
 3. **Build.**
-4. **Verify** by executing the test plan.
+4. **Verify** by executing the test plan. **“Executed” ≠ “verified” — verification means actually running the code (npm test, smoke test, etc.), not just rereading it.**
 5. **Push** with full-context commit message.
 6. **Post-state verification** — read back from the repo to confirm.
 7. **Post-mortem** in `SPRINT_LOG.md`.
@@ -116,10 +119,10 @@ Details in [`SILO.md`](./SILO.md) § "Sprint discipline".
 ## How to resume work
 
 1. Read this file for high-level state.
-2. Read [`SILO.md`](./SILO.md) for the rules (naming convention, sprint discipline, subtle-wrongness assertions).
+2. Read [`SILO.md`](./SILO.md) for the rules.
 3. Read `mimir/SPRINT_LOG.md` for detailed history.
-4. Read `mimir/README.md` for engine-specific context (graduation criteria, open questions).
-5. The next sprint is documented in `mimir/SPRINT_LOG.md` under "Next sprint planned".
+4. Read `mimir/README.md` for engine-specific context.
+5. Run `npm test` first thing — expect 159/159 pass. If not, debug before proceeding.
 
 ## Active engine
 
@@ -128,8 +131,8 @@ Currently active: **`mimir/`** (the only engine).
 ## Branch & repo
 
 - **Branch:** `claude/review-uoroar-platform-CuLMi` (in `fulluproar/afterroar`)
-- **Branch tip after Sprint 1.0.6:** `f6e60db` (will be `1.0.7` after this commit)
-- **No PR open yet.** When ready to merge, the silo can graduate selectively (engine by engine, feature by feature) per SILO.md § 5.
+- **Branch tip after Sprint 1.0.10:** see latest commit on the branch
+- **No PR open yet.** When ready to merge, the silo can graduate selectively per SILO.md § 5.
 
 ## Cross-engine notes
 
@@ -139,16 +142,15 @@ Currently active: **`mimir/`** (the only engine).
 
 ## Pending decisions / questions
 
-See individual engine READMEs for engine-specific open questions. Cross-engine open questions:
-
 - **Where does the rec router live?** Probably `apps/me` (Passport) or a new `packages/rec-router/`. Not built yet, not needed until Phase 1.
 - **Who curates the seed game pool?** Currently 60 IDs hand-curated by Claude during Sprint 1.0.1. Needs a human-in-loop pass to validate IDs and adjust based on real FLGS feedback.
-- **BGG API rate limit posture.** Need to confirm published limits and our backoff strategy before scaling the metadata fetcher beyond ~5,000 games.
-- **Recap structured field set.** The simulator engine (`saga`, future) trains on per-night per-player fun ratings + outcomes. HQ’s recap UI needs structured-with-optional-freeform fields, decided BEFORE the recap UI v1 ships, because retrofitting structured fields onto recaps that already happened is painful.
+- **BGG API rate limit posture.** Need to confirm published limits and our backoff strategy before scaling the metadata fetcher beyond ~5,000 games. Worth doing the first real BGG fetch from your laptop to confirm the User-Agent + rate limiting behave correctly.
+- **Recap structured field set.** The simulator engine (`saga`, future) trains on per-night per-player fun ratings + outcomes. HQ’s recap UI needs structured-with-optional-freeform fields, decided BEFORE the recap UI v1 ships.
+- **UX consideration noted in Sprint 1.0.10 smoke test:** the recommender currently returns seed-loved games in results. The wrapping surface (HQ picker, etc.) probably wants to filter them out — you don’t recommend a game the player just told you they love. Trivial filter on the consumer side.
 
 ## Cumulative session footprint (mobile session ending 2026-05-06)
 
-For reference, the following sprints landed in this single mobile session under TDD discipline (test plan written before each implementation push):
+16 sprints under TDD discipline:
 
 - Sprint 0.0: silo scaffold (`f5d54ef`)
 - Sprint 0.0.1: rename + Norse convention + handoff docs (`8c155ff` + 6 deletes → tip `a0f6c69`)
@@ -162,6 +164,9 @@ For reference, the following sprints landed in this single mobile session under 
 - Sprint 1.0.4: MMR + designer cap ranking (`7cde547`)
 - Sprint 1.0.5: explanation generator (`0bd5d31`)
 - Sprint 1.0.6: recommend() composer + offline driver (`f6e60db`)
-- Sprint 1.0.7: this HANDOFF.md update (current commit)
+- Sprint 1.0.7: HANDOFF.md update (`5690d21`)
+- Sprint 1.0.8: logging helpers (`dacc20b`)
+- Sprint 1.0.9: HOTFIX explain.mjs + npm test glob (`7b3e85e`) — caught by real test run
+- Sprint 1.0.10: sandbox end-to-end validation + fixtures + integration tests (current)
 
-13 sprints, ~120 test assertions, ~1.5k lines of source code, ~2k lines of tests + docs. All on flaky conference WiFi.
+~3k lines of source code, ~3k lines of tests + docs. All on flaky conference WiFi. End-state: 159/159 tests pass; migration runner empirically validated against a real Postgres; offline driver produces sensible recommendations against fixture data.

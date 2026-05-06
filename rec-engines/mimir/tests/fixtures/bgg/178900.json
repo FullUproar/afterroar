@@ -1,0 +1,11 @@
+{
+  "id": 178900, "source": "bgg", "type": "boardgame",
+  "name": "Codenames",
+  "year": 2015, "weight": 1.30, "minPlayers": 2, "maxPlayers": 8,
+  "playingTime": 15, "minPlayTime": 15, "maxPlayTime": 15, "minAge": 10, "bggRank": 60,
+  "designers": [{"id": 11489, "value": "Vlaada Chvátil"}],
+  "artists": [], "publishers": [],
+  "mechanics": [{"id": 2843, "value": "Communication Limits"}, {"id": 2891, "value": "Team-Based Game"}, {"id": 2014, "value": "Memory"}],
+  "categories": [{"id": 1030, "value": "Word Game"}, {"id": 1019, "value": "Party Game"}, {"id": 1039, "value": "Spies/Secret Agents"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}
