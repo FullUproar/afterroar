@@ -51,8 +51,6 @@ test('parseMigrationOps: ignores SQL in line comments', () => {
 
 test('parseMigrationOps: detects CREATE INDEX', () => {
   const ops = parseMigrationOps('create index if not exists rec_foo_idx on rec_foo (id);');
-  // The CREATE INDEX captures the index name (rec_foo_idx). The ON clause
-  // is not separately matched as a CREATE.
   assert.equal(ops.length, 1);
   assert.equal(ops[0].op, 'create');
   assert.equal(ops[0].target, 'rec_foo_idx');
@@ -165,7 +163,7 @@ test('isProductionDb: allows dev/staging/test names', () => {
 });
 
 // ----------------------------------------------------------------------------
-// Integration: real 0001 migration
+// Integration: 0001 migration
 // ----------------------------------------------------------------------------
 
 test('integration: 0001 migration parses cleanly and is safe', () => {
@@ -212,5 +210,57 @@ test('listMigrationFiles: finds 0001 migration', () => {
   assert.ok(
     files.includes('0001_create_rec_tables.sql'),
     `Expected 0001_create_rec_tables.sql in migrations/, got: ${files.join(', ')}`
+  );
+});
+
+// ----------------------------------------------------------------------------
+// Integration: 0002 migration (Sprint 1.0.15)
+// ----------------------------------------------------------------------------
+
+test('integration: 0002 migration parses cleanly and is safe', () => {
+  const sql = readFileSync(
+    join(__dirname, '..', 'migrations', '0002_extend_rec_tables.sql'),
+    'utf8'
+  );
+  assert.doesNotThrow(() => validateMigrationSafety(sql));
+});
+
+test('integration: 0002 migration has expected number of CREATE statements', () => {
+  const sql = readFileSync(
+    join(__dirname, '..', 'migrations', '0002_extend_rec_tables.sql'),
+    'utf8'
+  );
+  const ops = parseMigrationOps(sql);
+  const createCount = ops.filter(o => o.op === 'create').length;
+  // 4 node tables: rec_personality_profile, rec_emotion,
+  // rec_cognitive_profile, rec_context_type
+  assert.equal(
+    createCount,
+    4,
+    `Expected 4 CREATE statements in 0002, got ${createCount}`
+  );
+});
+
+test('integration: 0002 migration has zero destructive ops', () => {
+  const sql = readFileSync(
+    join(__dirname, '..', 'migrations', '0002_extend_rec_tables.sql'),
+    'utf8'
+  );
+  const ops = parseMigrationOps(sql);
+  const destructive = ops.filter(o =>
+    ['drop', 'truncate', 'alter'].includes(o.op)
+  );
+  assert.equal(destructive.length, 0,
+    `Expected 0 destructive ops in 0002, got ${destructive.length}: ${JSON.stringify(destructive)}`);
+});
+
+test('integration: listMigrationFiles finds both 0001 and 0002', () => {
+  const files = listMigrationFiles();
+  assert.ok(files.includes('0001_create_rec_tables.sql'));
+  assert.ok(files.includes('0002_extend_rec_tables.sql'));
+  assert.deepEqual(
+    [...files].sort(),
+    files,
+    'Migration files should be in lex order'
   );
 });
