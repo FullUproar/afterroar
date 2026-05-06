@@ -4,6 +4,7 @@ Experimental recommendation engines built under silo discipline. The platform's 
 
 ## Read first
 
+- [`QUICKSTART.md`](./QUICKSTART.md) — 60-second "I want to see seidr work" guide.
 - [`SILO.md`](./SILO.md) — the constitution. Rules every engine here must follow, naming convention, sprint discipline.
 - [`HANDOFF.md`](./HANDOFF.md) — cross-engine context. Read this when resuming a session (especially laptop pickup from a mobile session).
 - [`mimir/docs/recommendation-engine-design.md`](./mimir/docs/recommendation-engine-design.md) — the architectural design doc that informs all engines in this directory. Lives under `mimir/` because that's the foundation engine all others build on, but applies to the whole roadmap.
