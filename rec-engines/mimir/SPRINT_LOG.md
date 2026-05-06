@@ -4,6 +4,20 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.21 — Seidr quiz-UI-export interop (closes offline demo loop) (2026-05-06) ✅
+
+Pure-function `normalizePlayerProfile()` translates quiz UI exports (`{profile, confidence, raw, meta}`) into the matcher's canonical shape. CLI runner now accepts real quiz UI export JSON without manual reshaping. **Mimir 168/168 unchanged.** seidr now 169/169 (was 154; +15).
+
+- `seidr/src/load-player-profile.mjs`: 4-shape auto-detection
+- `seidr/data/sample-quiz-export.json`: real-shape demo fixture
+- `seidr/tests/load-player-profile.test.mjs`: 15 tests, including 2 integration tests that prove the demo loop works end-to-end
+
+Catches a gap discovered during 1.0.20 smoke testing — would have shipped without it. The integration tests added would have caught the bug if it existed.
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.21.
+
+---
+
 ## Sprint 1.0.20 — Seidr explanation generator + offline CLI runner (2026-05-06) ✅
 
 Closes the seidr loop end-to-end. Pure-function `explain()` produces natural-language explanations from matcher output; `scripts/run-rec.mjs` is an offline CLI that bridges quiz UI exports to recommendations with explanations. **Mimir 168/168 unchanged.** seidr now 154/154 (was 131; +23).

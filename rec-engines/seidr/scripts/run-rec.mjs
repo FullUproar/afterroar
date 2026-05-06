@@ -54,6 +54,7 @@ import { fileURLToPath } from 'node:url';
 
 import { match } from '../src/match.mjs';
 import { explainAll } from '../src/explain.mjs';
+import { normalizePlayerProfile } from '../src/load-player-profile.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -240,15 +241,20 @@ function main() {
     console.error(`(no --player-profile or --archetype given; defaulting to archetype "heavy-strategist")`);
   }
 
-  // Load player profile
+  // Load player profile (auto-detect quiz UI export vs. matcher-native shapes)
   let playerProfile;
   let playerLabel = null;
   if (args.playerProfile) {
-    playerProfile = JSON.parse(readFileSync(args.playerProfile, 'utf8'));
-    playerLabel = playerProfile.label || `(loaded from ${args.playerProfile})`;
-    // Quiz UI exports may not have confidence_vector under that exact name -- accommodate both
-    if (!playerProfile.confidence_vector && playerProfile.confidence_per_dim) {
-      playerProfile.confidence_vector = playerProfile.confidence_per_dim;
+    const raw = JSON.parse(readFileSync(args.playerProfile, 'utf8'));
+    playerProfile = normalizePlayerProfile(raw);
+    if (raw.label) {
+      playerLabel = raw.label;
+    } else {
+      const meta = playerProfile._meta || {};
+      const sourceLabel = meta.source === 'quiz_ui_export'
+        ? `quiz UI export (${meta.questions_answered ?? '?'} questions answered, bank v${meta.bank_version ?? '?'})`
+        : `(loaded from ${args.playerProfile})`;
+      playerLabel = sourceLabel;
     }
   } else {
     playerProfile = buildArchetypeProfile(args.archetype);

@@ -4,6 +4,67 @@ Per-sprint development history.
 
 ---
 
+## Sprint 1.0.21 — Quiz-UI-export interop in CLI loader (2026-05-06) ✅
+
+**Why:** Caught a real gap during Sprint 1.0.20 smoke-testing. The quiz UI exports `{ profile, confidence, raw, meta }` (per `seidr/quiz-ui/index.html` line 444). The matcher consumes `{ dim_vector, confidence_vector }`. Without translation, dropping a real quiz UI export into `run-rec.mjs` would silently produce empty results (no key intersection → cosine 0). A real demo loop requires the CLI to accept the quiz UI's actual output format.
+
+**Goal:** Pure-function `normalizePlayerProfile(input)` that auto-detects accepted shapes (quiz UI export, matcher-native, game-profile-style) and returns canonical matcher-shape output. Wire into the CLI runner. Add a sample quiz export fixture for testing + demo. Tests with shape-detection + integration.
+
+**What landed:**
+- `src/load-player-profile.mjs` — pure function, ~70 lines:
+  * Auto-detects 4 input shapes (quiz UI export, matcher-native, dim_vector + confidence_per_dim, game-profile-as-player)
+  * Returns canonical `{ dim_vector, confidence_vector, _meta }`
+  * `_meta.source` carries provenance for diagnostics; `_meta.bank_version` and `_meta.questions_answered` for quiz UI exports
+  * Returns COPIES (not references) of the dim/confidence objects so caller mutations don't leak
+- `scripts/run-rec.mjs` updated to use the normalizer; auto-derives a player label from quiz UI metadata when a `--player-profile` JSON is loaded
+- `data/sample-quiz-export.json` — synthetic-but-realistic quiz UI export for a peaceful-planner archetype (PSY_KILLER -0.6, PSY_CONSCIENTIOUSNESS 0.7, MEC_STRATEGY 0.6). Used as a CLI demo fixture and integration-test input.
+- `tests/load-player-profile.test.mjs` — 15 tests:
+  * 6 shape-detection tests (quiz UI, matcher-native, alt-confidence-key, game-profile-as-player)
+  * 5 error-path tests (null, string, unknown shape, half-shape, array)
+  * 1 mutation-isolation test (dim_vector copies aren't aliased to input)
+  * 2 integration tests against real `sample-quiz-export.json` flowing through `match()`:
+    - normalization preserves all 24 dims; top recommendation cosine > 0.5 (proves no silent key-mismatch)
+    - low-conflict planner profile keeps TI4 (PSY_KILLER 0.7) and Codenames (party) OUT of top-3
+
+**Smoke test:**
+```
+$ run-rec.mjs --player-profile data/sample-quiz-export.json --bgg-dir ../mimir/tests/fixtures/bgg --limit 3 --detail short
+=== Seidr Recommendations ===
+Player: quiz UI export (18 questions answered, bank v1.0.0)
+1. Ark Nova [BGG 342942]   score=0.936
+2. Wingspan [BGG 266192]   score=0.893
+3. Terraforming Mars [BGG 167791]  score=0.870
+```
+
+The demo loop is now: real user does the quiz on their phone → exports JSON → emails it to Shawn → Shawn pipes it into `run-rec.mjs` → seidr produces ranked recommendations with explanations.
+
+**Acceptance criteria:**
+1. Pure function — no I/O, no side effects ✅
+2. Quiz UI export format auto-detected ✅
+3. Matcher-native format passes through unchanged ✅
+4. Returns COPIES (mutation-safe) ✅
+5. CLI runner accepts a real quiz UI export JSON without manual reshaping ✅
+6. Integration test verifies the full demo loop works end-to-end ✅
+7. seidr 169/169 tests pass (was 154; +15) ✅
+8. Mimir 168/168 regression-clean ✅
+
+**Test plan (executed BEFORE push):**
+- `npm test` in seidr → 169/169 ✅ (after fixing one test failure: array input was passing the typeof object check; added `Array.isArray` guard)
+- `cd ../mimir && npm test` → 168/168 ✅
+- CLI smoke with sample-quiz-export.json ✅
+
+**Outcome:** Pushed in this commit. Closes the offline demo loop: the quiz UI's actual output format flows into the matcher without manual translation. The sample fixture is checked in so the test fixture + demo input are the same file (no drift between what tests verify and what the demo uses).
+
+**Learnings:**
+- **Caught this gap during sprint 1.0.20 smoke-testing** — would have shipped without it. The CLI runner's loader logic looked fine in isolation but didn't accommodate the actual export shape from the quiz UI. Lesson: ALWAYS exercise the boundary between two artifacts (quiz UI ↔ CLI matcher) end-to-end with the real format, not just synthetic test inputs. The integration test I added does this and would have caught the bug if it had existed in the original test suite.
+- **Auto-detection by shape (not explicit format flag) is the right call.** Asking the user to specify `--profile-format quiz` or `--profile-format matcher` is friction; auto-detection on object keys is robust because the shapes are mutually exclusive (`profile + confidence` vs. `dim_vector + confidence_vector`).
+- **Returning copies, not references, prevents subtle bugs.** The mutation-isolation test caught one of those: my first draft returned `input.profile` by reference; the test (`out.dim_vector.A = 999; assert input.profile.A === 1`) failed. Fixed by spread-copying. Without that test, a downstream caller mutating the matcher input would silently corrupt the source quiz JSON.
+- **Discipline: caught a real failure in a TDD-style speculative test.** The "rejects array input" test was added preemptively (since `typeof [] === 'object'` is a known JS gotcha) and failed on the first run because my validator didn't have the Array.isArray guard. Quick fix; would have been a latent bug.
+
+**Rollback:** Revert this sprint's commit. Pure additive code; no schema changes; no other engines affected.
+
+---
+
 ## Sprint 1.0.20 — Explanation generator + offline CLI runner (2026-05-06) ✅
 
 **Why:** Per Credo's "no black-box rankings" principle, every recommendation must be defensible in plain English. Sprint 1.0.19 produced ranked recommendations with `contributingDims` diagnostics; Sprint 1.0.20 turns those diagnostics into natural-language explanations. Plus an offline CLI runner that closes the seidr loop end-to-end (player profile JSON → recommendations + explanations) for demos and pre-launch validation.
