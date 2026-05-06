@@ -4,87 +4,75 @@ Per-sprint development history. Most recent at top.
 
 ---
 
-## Sprint 1.0.8 — Logging helpers (2026-05-06) ✅
+## Sprint 1.0.9 — HOTFIX: explain.mjs syntax + npm test glob (2026-05-06) ✅
 
-**Goal:** Pure functions in `src/logging.mjs` that build row shapes for the four logging tables (rec_request_log, rec_candidate_log, rec_feedback_log, rec_recap_outcome) per design doc § 7. The future HTTP handler will compose these with a `pg` client to actually insert rows.
+**Why:** Cloned the branch in a sandbox, ran `npm install` + `npm test` against the actual code. **Two bugs that mental traces missed:**
 
-**Why mobile-friendly:** Pure functions, no I/O, no DB. Tests are pure shape assertions.
+1. **`src/explain.mjs:121`** — single-quoted string with an apostrophe inside it (`'in a series you've shown interest in'`). Pure JS syntax error. Cascaded to break the loading of `tests/explain.test.mjs` AND `tests/recommend.test.mjs` (which transitively imports `explain.mjs`).
+2. **`package.json` `test` script** — `node --test tests/` fails on Node 22 with MODULE_NOT_FOUND because Node tries to resolve the path as a single module. The correct invocation is `node --test tests/*.test.mjs` (shell glob expansion) or `cd tests && node --test`.
+
+**Result before fix:** 117 of 119 testable assertions passed; 2 of 8 test files failed at module load.
+**Result after fix:** **153 of 153 assertions pass.**
+
+**Goal:** Fix both bugs and verify with a real `npm test` run (not a mental trace).
 
 **Scope:**
-- `src/logging.mjs` exporting:
-  - `buildRequestLogRow(request, response, opts)` → rec_request_log shape
-  - `buildCandidateLogRows(requestId, scoredCandidates)` → rec_candidate_log[] shape
-    - Accepts BOTH ranker output shape `{ candidate, score, ... }` AND recommend() results shape `{ game_id, explanation, diagnostics }` so the handler can choose which to log
-  - `buildFeedbackLogRow(requestId, gameId, outcome, opts)` → rec_feedback_log shape; throws on invalid outcome
-  - `buildRecapOutcomeRow(opts)` → rec_recap_outcome shape; throws when required fields missing
-  - `VALID_OUTCOMES` constant + `isValidOutcome()` validator
-- `tests/logging.test.mjs` — 22 assertions covering shape, defaults, both candidate input shapes, validator behavior, error cases
+- `src/explain.mjs:121` — wrap the offending string in double quotes so the apostrophe is literal: `"in a series you've shown interest in"`.
+- `package.json` — change `"test": "node --test tests/"` to `"test": "node --test tests/*.test.mjs"`.
+- Update SPRINT_LOG with Sprint 1.0.9 entry.
 
 **Acceptance criteria:**
-1. Each helper produces a row matching its corresponding SQL schema column shape ✅
-2. buildCandidateLogRows accepts both internal and external candidate shapes ✅
-3. buildFeedbackLogRow throws on invalid outcome (catches typos at insertion time, not silently) ✅
-4. buildRecapOutcomeRow requires (night_id, game_id, player_id); other fields default to null ✅
-5. ts defaults to current ISO string; can be overridden via opts.ts (essential for deterministic tests in future API handler) ✅
-6. VALID_OUTCOMES matches the 8 outcomes from design doc § 4.3 ✅
+1. `npm test` runs all 153 assertions and reports `pass 153, fail 0` ✅ (verified locally via `git clone` + `npm install` + `npm test` in a sandbox).
+2. No source file changes other than the one quote fix on line 121 ✅.
+3. SPRINT_LOG documents the failure mode honestly so future Claudes / humans don’t repeat it.
 
-**Test plan (executed BEFORE push, mental trace):**
-- VALID_OUTCOMES contains exactly: shown, clicked, accepted, played, rated, bought, dismissed, ignored ✅
-- isValidOutcome: each VALID_OUTCOMES entry returns true; 'viewed', '', null, 'SHOWN' return false ✅
-- buildRequestLogRow: full input → row has request_id and ranker_version from response, surface/caller/context/options copied from request ✅
-- buildRequestLogRow with empty inputs → surface='unknown', other fields default to {} ✅
-- buildRequestLogRow: ts is ISO; opts.ts overrides ✅
-- buildCandidateLogRows ranker shape: extracts candidate.id as game_id, reasonCodes as reason_codes, breakdown as score_breakdown ✅
-- buildCandidateLogRows recommend shape: extracts game_id, explanation.reason_codes, diagnostics.score_breakdown ✅
-- buildCandidateLogRows missing diagnostics → score_breakdown=null ✅
-- buildCandidateLogRows: rank assigned 1..N ✅
-- buildCandidateLogRows([]/null/undefined) → [] ✅
-- buildFeedbackLogRow with required fields only → outcome_value=null, outcome_context=null ✅
-- buildFeedbackLogRow with rated + outcome_value=4 → captured ✅
-- buildFeedbackLogRow with bought + outcome_value=4500 + outcome_context={store_id} → both captured ✅
-- buildFeedbackLogRow with 'wishlisted' → throws /Invalid feedback outcome/ ✅
-- buildFeedbackLogRow opts.ts overrides default ✅
-- buildRecapOutcomeRow required fields preserved; optionals default null ✅
-- buildRecapOutcomeRow with full opts → all fields captured (including 'Brad got salty' notes) ✅
-- buildRecapOutcomeRow missing required → throws /required/ ✅
-- buildRecapOutcomeRow with null arg → throws ✅
-- buildRecapOutcomeRow with falsy values (0, false) → preserved (uses == null check, not falsy check) ✅
+**Test plan (executed BEFORE push):**
+- `git clone -b claude/review-uoroar-platform-CuLMi https://github.com/fulluproar/afterroar.git` in a fresh sandbox.
+- `cd rec-engines/mimir && npm install`.
+- `npm test` after applying the two-line fix — must report 153 pass / 0 fail.
+- Verified on Node 22.22.2.
 
-**Outcome:** Pushed in this commit. ~140 lines source + ~250 lines tests across 22 assertions.
+**Outcome:** Locally verified `npm test` reports `pass 153, fail 0, duration_ms 311`. Push contains only the two file edits + this SPRINT_LOG update.
 
-**Verification:** Will be confirmed via post-push read-back. Test execution deferred to laptop.
+**Verification:** Will be confirmed via post-push read-back. The local clone+install+test cycle is the canonical proof.
 
-**Learnings:**
-- Accepting two candidate shapes in `buildCandidateLogRows` was a small but important affordance. The future HTTP handler will likely log ALL candidates considered (per design doc § 7.2), which means it needs the ranker-output shape (full breakdown), not just the public response shape. By accepting both, we let the handler choose without forcing it to translate.
-- Throwing on invalid outcomes (vs. silently coercing or logging anyway) catches typos at the insertion call-site. Logging garbage outcomes that look valid but aren’t (`'wishlisted'` vs. proper schema value) corrupts training data in subtle ways. Hard fail is the right default.
-- The `== null` (loose equality) check in buildRecapOutcomeRow lets falsy values like `0` and `false` flow through correctly. A `!opts.fun_rating` check would silently drop legitimate values. This is a small footgun that’s easy to step on without explicit testing.
-- Defaults to current ISO timestamp + opt-in override means tests can pin times for determinism without forcing the handler to inject one. Good split.
+**Learnings (the important part):**
+- **Mental traces are necessary but not sufficient.** I traced 14 sprints worth of code mentally, and 12 of them were perfect. The two that weren’t (an apostrophe in a string literal, a Node `--test` invocation that doesn’t walk directories the way I expected) are exactly the kinds of micro-syntax/runtime details mental simulation skips. Lesson: **whenever a `npm test` round-trip is feasible, do it.** The 30 seconds of clone+install+test would have caught both bugs at sprint 1.0.5 and 1.0.2 respectively.
+- **The SILO discipline of "verify post-state before declaring complete" is what saved this.** Sprint 1.0.6 was declared complete after a directory listing. That’s not enough — the right "post-state" for a code sprint is also "the test suite passes." Updating my own discipline going forward: post-state = directory listing AND tests green when tests are runnable.
+- **The bug location is a meta-data point.** The apostrophe bug was on line 121 of an ~250-line file. The sentence was the only one in the entire file using a contraction inside a single-quoted string. My mental trace skimmed over it because the structure looked the same as the surrounding patterns. Real review (or a parser) doesn’t skim.
+- **One bug cascades to multiple test files.** explain.mjs failing to parse made BOTH `tests/explain.test.mjs` AND `tests/recommend.test.mjs` (which imports explain via recommend.mjs) fail at module-load. A single broken file in a small project takes a chunk of unrelated tests with it. Worth knowing.
 
-**Rollback:** Revert this commit. Pure code, no side effects.
+**Rollback:** Revert this commit to restore the broken state. Don’t.
+
+---
+
+## Sprint 1.0.8 — Logging helpers (2026-05-06) ✅
+
+Pushed at commit `dacc20b`. Pure functions for log row construction. 22 assertions.
 
 ---
 
 ## Sprint 1.0.7 — HANDOFF.md update for laptop pickup (2026-05-06) ✅
 
-Pushed at commit `5690d21`. Updated `rec-engines/HANDOFF.md` with current state, laptop pickup steps, Sprint 0.3 walkthrough.
+Pushed at commit `5690d21`.
 
 ---
 
 ## Sprint 1.0.6 — recommend() composer + offline driver (2026-05-06) ✅
 
-Pushed at commit `f6e60db`. THE CAPSTONE. End-to-end pipeline runnable offline. ~120 lines composer + ~150 lines CLI + ~280 lines tests.
+Pushed at commit `f6e60db`. THE CAPSTONE. End-to-end pipeline runnable offline.
 
 ---
 
 ## Sprint 1.0.5 — Explanation generator (2026-05-06) ✅
 
-Pushed at commit `0bd5d31`.
+Pushed at commit `0bd5d31`. **Contained the apostrophe bug fixed in 1.0.9.**
 
 ---
 
 ## Sprint 1.0.4 — MMR diversification + ranking pipeline (2026-05-06) ✅
 
-Pushed at commit `7cde547`. Hard designer cap.
+Pushed at commit `7cde547`.
 
 ---
 
@@ -102,7 +90,7 @@ Pushed at commit `3bac627`.
 
 ## Sprint 1.0.1 — Curate seed BGG ID list (2026-05-06) ✅
 
-Pushed at commit `61cab65`. 60 hand-curated BGG IDs.
+Pushed at commit `61cab65`.
 
 ---
 
@@ -114,7 +102,7 @@ Pushed at commit `337ed7c`.
 
 ## Sprint 0.2 — Migration runner script (2026-05-06) ✅
 
-Pushed at commit `df30ac0`.
+Pushed at commit `df30ac0`. **Contained the npm test script bug fixed in 1.0.9** — the bug shipped here but only became user-visible in Sprint 1.0.9 because earlier sprints didn’t have a real test suite running.
 
 ---
 
@@ -146,19 +134,12 @@ Pushed at commit `1d32f9e`.
 
 ## Sprint 0.3 — Apply 0001 migration to a non-prod DB (DRAFT, REQUIRES LAPTOP)
 
-Reiterated. This is the next blocking sprint when on laptop. See HANDOFF.md § "When you sit at the laptop next" for the full step-by-step.
+Reiterated. See HANDOFF.md § "When you sit at the laptop next".
 
 ## Sprint 1.1 — BGG JSON → rec_* writer (DRAFT, depends on 0.3)
 
-Reads `tmp/bgg/*.json`, upserts via `INSERT ... ON CONFLICT DO UPDATE` into rec_game / rec_designer / rec_mechanic / rec_theme / rec_category / rec_edge.
+Reiterated.
 
 ## Sprint 1.2 — HTTP API surface for recommend() (Phase 1, depends on 0.3 + 1.1)
 
-Next.js route handler at `apps/recs-mimir/api/recommend` (or wherever the silo grows its HTTP surface). Composes:
-- request validation
-- recommend() call
-- buildRequestLogRow + insert
-- buildCandidateLogRows + bulk insert (ALL candidates, not just top-K — per design doc § 7.2)
-- return public response
-
-Feature-flagged off in production. The first time it serves a real request will be the canary store pilot (Sprint 1.3+).
+Reiterated.

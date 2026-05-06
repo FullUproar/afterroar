@@ -118,7 +118,7 @@ const REASON_RENDERERS = {
     return `${formatList(mismatched)} category isn't typically your style`;
   },
 
-  family_match: () => 'in a series you've shown interest in',
+  family_match: () => "in a series you've shown interest in",
   family_mismatch: () => null, // family mismatches are usually weak signal
 
   weight_match: ({ candidate, tasteVector }) => {
