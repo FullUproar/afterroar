@@ -1,0 +1,9 @@
+{
+  "name": "@afterroar/rec-engine-mimir",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Mimir — foundation recommendation engine. Pure metadata-based scoring; cold-start baseline for the platform rec roadmap. See README.md for context. Under silo discipline; see ../SILO.md.",
+  "scripts": {
+    "noop": "echo 'No build configured yet — Phase 0 scaffolding'"
+  }
+}

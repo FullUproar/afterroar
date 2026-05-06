@@ -1,6 +1,6 @@
 # Rec Engine Silo Rules
 
-This directory contains experimental recommendation engines under construction. Each subdirectory (`content-similarity/`, future `ppr/`, `embeddings/`, `simulator/`, `gene-graph/`, etc.) is a single engine implementation in isolation.
+This directory contains experimental recommendation engines under construction. Each subdirectory (`mimir/`, future `huginn/`, `muninn/`, `saga/`, `norns/`, etc.) is a single engine implementation in isolation.
 
 ## Why silos exist
 
@@ -49,17 +49,53 @@ Every engine's test suite must include assertions that catch the recommendation-
 
 These are required, not aspirational. An engine cannot graduate without them passing.
 
+## Naming convention
+
+Engines in this directory are named after figures in Norse / Aesir mythology, matching the existing platform pattern (Garmr the watchdog, Afterroar the post-roar). The mythological role hints at the engine's function:
+
+- **`mimir`** — god of wisdom; well of all knowledge. Foundation engine, knowledge-graph based content similarity.
+- **`huginn`** (future) — Odin's raven of *thought*. Graph-traversal engine (Personalized PageRank).
+- **`muninn`** (future) — Odin's raven of *memory*. Learned-representation engine (embeddings).
+- **`saga`** (future) — goddess of stories. Narrative simulator engine (Monte Carlo + per-player fun model).
+- **`norns`** (future) — fates who weave destiny. Emergent-dimensionality gene-graph engine.
+- **`yggdrasil`** (future) — the world tree. Federated cross-store learning engine.
+
+Cross-vertical engines append a vertical suffix when a single algorithm is reused across verticals: `mimir-books`, `mimir-vinyl`, etc.
+
+Guidelines for new engine names:
+- Two syllables when possible, easy to say in conversation
+- Distinct from existing platform service names
+- Thematic connection to what the engine does
+- Norse / Aesir mythology preferred to keep platform brand coherence
+
+## Sprint discipline
+
+Engines under construction follow strict sprint cadence:
+
+1. **Pre-flight** in chat AND committed to the engine's `SPRINT_LOG.md`: goal, scope, acceptance criteria, test plan, rollback recipe.
+2. **Test plan written before implementation.** Test or test plan must exist before the implementation push.
+3. **Build.**
+4. **Verify** by executing the test plan. Failures block the push.
+5. **Push** with a commit message that includes context (not just "fix" or "update").
+6. **Post-state verification** — read back from the repo to confirm the change actually landed. "Executed" ≠ "verified."
+7. **Post-mortem** in `SPRINT_LOG.md`: outcome, learnings, what's next.
+
+A sprint is one PR / one observable change / one shippable state. Could be 30 minutes; could be a day. Each engine maintains its own `SPRINT_LOG.md` documenting its history.
+
+Cross-engine context lives in `rec-engines/HANDOFF.md` so any session (especially laptop sessions resuming from mobile) can restore full context from two files: HANDOFF + the active engine's SPRINT_LOG.
+
 ## Adding a new engine
 
 1. Create `rec-engines/<descriptive-name>/` with:
    - `README.md` — what this engine is, what makes it different, current phase, graduation criteria
+   - `SPRINT_LOG.md` — sprint history, starting with Sprint 0.0 (scaffold)
    - `docs/` — design docs and decisions specific to this engine
-   - `migrations/` — SQL files (engine-specific or shared `rec_*` tables)
+   - `migrations/` — SQL files
    - `src/` — implementation
    - `tests/` — test suite (must include the subtle-wrongness assertions above)
    - `package.json` — independent package, no cross-engine imports
 
-2. The first commit only adds scaffolding. Real code follows in subsequent commits per the sprint discipline (one PR, one deploy, one observable change).
+2. The first commit only adds scaffolding. Real code follows in subsequent commits per the sprint discipline.
 
 ## Removing an engine
 
@@ -70,14 +106,12 @@ These are required, not aspirational. An engine cannot graduate without them pas
 
 ## Cross-engine coordination
 
-Multiple engines may share the `rec_*` schema namespace. Migrations that affect shared tables go in the foundation engine (`content-similarity/migrations/`). Migrations specific to one engine (e.g., `rec_embeddings_v2` for the embedding engine) go in that engine's own `migrations/`. The migration runner is engine-aware.
-
-If two engines need the same new shared table, the convention is: the engine that needs it first creates the migration in its directory, and other engines depend on it being applied. Alternative: a `rec-engines/shared/migrations/` directory for genuinely cross-engine schema (TBD if that pattern is needed).
+Multiple engines may share the `rec_*` schema namespace. Migrations that affect shared tables go in the foundation engine (`mimir/migrations/`). Migrations specific to one engine go in that engine's own `migrations/`.
 
 ## Engines in this directory
 
 | Engine | Phase | Status | Notes |
 |---|---|---|---|
-| `content-similarity` | Phase 0 | Scaffolding | Foundation engine; pure metadata-based scoring; the always-available cold-start baseline |
+| `mimir` | Phase 0 | Scaffolding | Foundation engine; pure metadata-based scoring; the always-available cold-start baseline |
 
 (Update this table as engines are added, graduated, or removed.)
