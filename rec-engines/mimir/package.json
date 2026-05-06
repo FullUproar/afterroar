@@ -2,8 +2,14 @@
   "name": "@afterroar/rec-engine-mimir",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "description": "Mimir — foundation recommendation engine. Pure metadata-based scoring; cold-start baseline for the platform rec roadmap. See README.md for context. Under silo discipline; see ../SILO.md.",
   "scripts": {
-    "noop": "echo 'No build configured yet — Phase 0 scaffolding'"
+    "migrate:dry-run": "node scripts/apply-migrations.mjs --dry-run",
+    "migrate": "node scripts/apply-migrations.mjs",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "pg": "^8.11.0"
   }
 }

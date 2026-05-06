@@ -19,17 +19,39 @@ It's deliberately the dumbest possible reasonable engine. **It is not the differ
 
 ## What's inside
 
-- `migrations/` — SQL DDL for `rec_*` tables (game, designer, mechanic, theme, category, edge, request_log, candidate_log, feedback_log) [Sprint 0.1]
-- `src/` — TypeScript implementation: BGG fetcher, ranker, API endpoints [later sprints]
-- `tests/` — Test suite including the SILO-required subtle-wrongness assertions [later sprints]
-- `docs/recommendation-engine-design.md` — The architectural design doc (full spec for all engines)
-- `SPRINT_LOG.md` — Sprint history for this engine
+- `migrations/` — SQL DDL for `rec_*` tables (foundation schema). Currently: `0001_create_rec_tables.sql`.
+- `scripts/apply-migrations.mjs` — Migration runner with multi-layer safety harness. Refuses non-`rec_*` operations. Refuses production-named DBs.
+- `tests/` — Test suite (currently runner safety tests; subtle-wrongness assertions for the recommender land later).
+- `docs/recommendation-engine-design.md` — The architectural design doc (full spec for all engines in the roadmap).
+- `SPRINT_LOG.md` — Sprint history for this engine. Read this when resuming work.
+- `package.json` — Node ES module package. Single dependency: `pg`.
+
+## Running it
+
+```bash
+# Install deps (first time only)
+npm install
+
+# Run the test suite (no DB required — pure parsing/safety tests)
+npm test
+
+# Dry-run the migrations (parses + safety-checks all migration files; no DB writes)
+DATABASE_URL=postgres://user:pass@host:5432/your-dev-db npm run migrate:dry-run
+
+# Apply migrations to a non-prod DB
+DATABASE_URL=postgres://user:pass@host:5432/your-dev-db npm run migrate
+```
+
+**Safety rails (per SILO.md § 3 and the runner's own checks):**
+- The runner refuses to apply any migration that creates/alters/drops/truncates a non-`rec_*` table or index.
+- The runner refuses to run against a database whose URL contains `prod`, `production`, or `-live` unless `--allow-prod` is passed (do not pass that flag during Mimir Phase 0).
+- Migration progress is tracked in a self-managed `rec_migrations` table; re-running is idempotent.
 
 ## Current phase
 
-**Phase 0 — Scaffolding.** Directory exists, design doc and sprint log are in place, no executable code yet. Schema not applied to any database.
+**Phase 0 — Scaffolding + foundation schema.** Schema committed; migration runner ready; not yet applied to any database (Sprint 0.3 will do that against a Neon branch DB).
 
-Next: Sprint 0.1 — first migration file with the `rec_*` table DDL. See `SPRINT_LOG.md` for the running plan.
+Next: see `SPRINT_LOG.md` § "Next sprint planned".
 
 ## Graduation criteria (out of silo)
 
@@ -52,10 +74,10 @@ Until all five are met, Mimir stays in silo.
 
 1. [`../HANDOFF.md`](../HANDOFF.md) — cross-engine context
 2. [`../SILO.md`](../SILO.md) — silo rules + sprint discipline + naming convention
-3. [`./SPRINT_LOG.md`](./SPRINT_LOG.md) — sprint history for this engine
+3. [`./SPRINT_LOG.md`](./SPRINT_LOG.md) — sprint history for this engine (the "what has happened, what is queued" log)
 4. [`./docs/recommendation-engine-design.md`](./docs/recommendation-engine-design.md) — full architectural spec
-5. This README — engine-specific context
-6. `migrations/` and `src/` — implementation
+5. This README — engine-specific context + how to run
+6. `migrations/`, `scripts/`, `src/`, `tests/` — implementation
 
 ## Open questions specific to Mimir
 
