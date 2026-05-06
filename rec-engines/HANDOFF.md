@@ -2,7 +2,7 @@
 
 **Purpose:** Cross-session context restoration. When you sit down at a laptop after working on mobile (or vice versa), read this + the active engine's `SPRINT_LOG.md` to restore full context.
 
-**Last updated:** 2026-05-06 (post Sprint 1.0.10, sandbox end-to-end validation complete)
+**Last updated:** 2026-05-06 (post Sprint 1.0.17, saga scaffold + architecture lock-in)
 
 ---
 
@@ -20,14 +20,18 @@ Full architectural rationale: [`mimir/docs/recommendation-engine-design.md`](./m
 
 | Engine | Phase | Status | Last sprint |
 |---|---|---|---|
-| `mimir` | Phase 0 | **End-to-end validated against local Postgres + real fixture data.** Code-side Sprint 0.3 done in sandbox; user-side Sprint 0.3 (apply against own Neon) is the only remaining blocker. | Sprint 1.0.10 — sandbox e2e validation + fixtures + integration tests |
+| `mimir` | Phase 0 | **End-to-end validated against local Postgres + real fixture data.** 168/168 tests pass. Code-side Sprint 0.3 done in sandbox; user-side Sprint 0.3 (apply against own Neon) is the only remaining blocker. | Sprint 1.0.15 — schema extension for dimension framework |
+| `huginn` | Phase 0 | Scaffold-only. Implementation deferred to Phase 1+ (≥50 active users with real edges). | Sprint 1.0.12 |
+| `seidr` | Phase 0 | Research artifacts + 24-dim taxonomy + 50-question bank + deployable static quiz UI. No DB writes, no recommendations yet — quiz emits a profile JSON only. | Sprint 1.0.16 |
+| `saga` | Phase 0 | Scaffold + architecture locked in 3 design docs. Implementation deferred until graduation thresholds met (≥3000 recap records, ≥200 active players with ≥10 recaps each, ≥6mo corpus). Estimate 12–18 months post-launch. | Sprint 1.0.17 (current) |
 
 ## What’s in mimir/ right now
 
-A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, zero build step. **159/159 tests pass on Node 22.22.2** (verified via `git clone` → `npm install` → `npm test` in a fresh sandbox).
+A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, zero build step. **168/168 tests pass on Node 22.22.2** (verified via `git clone` → `npm install` → `npm test` in a fresh sandbox; Sprint 1.0.15 added 4 new tests for the dimension-framework schema extension).
 
 **Schema layer:**
 - `migrations/0001_create_rec_tables.sql` — 14 tables + 4 indexes (per design doc § 3.5 + § 7.1). **Empirically applied to a local Postgres 16 in Sprint 1.0.10; verified idempotent + safety harness rejects bad migrations + prod-name guard refuses prod-shaped URLs.** Not yet applied to YOUR Neon DB.
+- `migrations/0002_extend_rec_tables.sql` — 4 new node tables for the dimension framework (`rec_personality_profile`, `rec_emotion`, `rec_cognitive_profile`, `rec_context_type`). Pure additive; sandbox-validated against Postgres 16 in Sprint 1.0.15. Total schema after 0002: 19 rec_* tables.
 - `scripts/apply-migrations.mjs` — migration runner with multi-layer safety harness.
 
 **BGG ingestion:**
@@ -46,9 +50,10 @@ A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, 
 - `scripts/run-rec.mjs` — CLI for human-in-loop eval. **Smoke-tested in Sprint 1.0.10 with the engine-lover scenario; output is sensible.**
 
 **Tests:**
-- 159 assertions across 9 test files (`tests/*.test.mjs`)
+- 168 assertions across 9+ test files (`tests/*.test.mjs`)
 - 12+ SUBTLE-WRONGNESS guards per SILO.md § 7
 - 6 integration tests against `tests/fixtures/bgg/` (7 hand-crafted game fixtures)
+- 4 migration tests for 0002 (parses cleanly, 4 CREATE statements, zero destructive ops, listMigrationFiles finds both 0001+0002 in lex order)
 - All tests run with `npm test` (no DB or network required)
 
 ## When you sit at the laptop next, do this
@@ -61,7 +66,7 @@ cd rec-engines/mimir
 # 1. Install deps
 npm install
 
-# 2. Run the test suite. EXPECT 159/159 PASS.
+# 2. Run the test suite. EXPECT 168/168 PASS.
 #    If anything fails, that’s the first thing to debug — means something
 #    drifted between sandbox and your machine.
 npm test
@@ -74,14 +79,14 @@ DATABASE_URL=postgres://... npm run migrate           # apply 0001
 
 # 4. Verify schema lands as expected:
 #    SELECT count(*) FROM information_schema.tables WHERE table_name LIKE 'rec_%';
-#       → 15 (14 from 0001 + rec_migrations from runner)
+#       → 19 (14 from 0001 + 4 from 0002 + rec_migrations from runner)
 #    SELECT indexname FROM pg_indexes WHERE tablename = 'rec_edge';
 #       → 6 indexes (pkey, the unique constraint, _src, _dst, _type_ts, _context_gin)
 #    SELECT * FROM rec_migrations;
-#       → one row for 0001_create_rec_tables.sql
+#       → two rows: 0001_create_rec_tables.sql AND 0002_extend_rec_tables.sql
 
 # 5. Confirm idempotency:
-DATABASE_URL=postgres://... npm run migrate            # should print "already applied; skipping"
+DATABASE_URL=postgres://... npm run migrate            # should print "already applied; skipping" for both
 
 # 6. (Optional) Fetch BGG metadata + run an offline rec
 #    BGG should work from your laptop’s IP; it 403’d the sandbox.
@@ -122,11 +127,16 @@ Details in [`SILO.md`](./SILO.md) § "Sprint discipline".
 2. Read [`SILO.md`](./SILO.md) for the rules.
 3. Read `mimir/SPRINT_LOG.md` for detailed history.
 4. Read `mimir/README.md` for engine-specific context.
-5. Run `npm test` first thing — expect 159/159 pass. If not, debug before proceeding.
+5. Run `npm test` first thing — expect 168/168 pass. If not, debug before proceeding.
 
-## Active engine
+## Active engines
 
-Currently active: **`mimir/`** (the only engine).
+- **`mimir/`** — foundation; mostly complete, blocked on user-side Sprint 0.3 (apply migrations to Neon)
+- **`huginn/`** — scaffold-only, deferred until Phase 1+
+- **`seidr/`** — research + deployable quiz UI, awaiting first round of real-user testing
+- **`saga/`** — architecture locked, deferred until ≥3000 recap records + ≥6mo corpus
+
+The next mimir-side sprint planned is **1.0.18 — Game-profiling v0** (LLM-generated 24-dim profiles for top 500 BGG games). This is the dependency seidr needs before it can produce recommendations, AND a useful upstream for saga's eventual game-side feature inputs.
 
 ## Branch & repo
 
@@ -137,7 +147,7 @@ Currently active: **`mimir/`** (the only engine).
 ## Cross-engine notes
 
 - **Schema sharing:** `rec_*` tables defined in `mimir/migrations/` are shared by all engines. Engine-specific tables get the engine name prefixed (e.g., `rec_huginn_pageranks`).
-- **Naming convention:** Norse mythology. Future engines: `huginn` (PPR), `muninn` (embeddings), `saga` (simulator), `norns` (gene-graph), `yggdrasil` (federated).
+- **Naming convention:** Norse mythology. Engines on disk: `mimir`, `huginn`, `seidr`, `saga`. Future engines: `muninn` (embeddings), `norns` (gene-graph), `yggdrasil` (federated cross-store).
 - **Sprint discipline applies to all engines.** Each engine maintains its own `SPRINT_LOG.md`.
 
 ## Pending decisions / questions
@@ -167,6 +177,13 @@ Currently active: **`mimir/`** (the only engine).
 - Sprint 1.0.7: HANDOFF.md update (`5690d21`)
 - Sprint 1.0.8: logging helpers (`dacc20b`)
 - Sprint 1.0.9: HOTFIX explain.mjs + npm test glob (`7b3e85e`) — caught by real test run
-- Sprint 1.0.10: sandbox end-to-end validation + fixtures + integration tests (current)
+- Sprint 1.0.10: sandbox end-to-end validation + fixtures + integration tests
+- Sprint 1.0.11: exclude_seeds option (UX fix from smoke test) (`790426c`)
+- Sprint 1.0.12: huginn scaffold — second engine validates silo pattern (`524e774`)
+- Sprint 1.0.13: recap data spec for HQ recap UI v1 (`610eb35`)
+- Sprint 1.0.14: saga scaffold — DEFERRED (rolled into 1.0.17 with full architectural context)
+- Sprint 1.0.15: schema extension — 4 dimension-framework node tables (`b6cb0b6`); 168/168 tests
+- Sprint 1.0.16: seidr scaffold + research artifacts + deployable quiz UI (5 commits, `c60771e` → `62f0279`)
+- Sprint 1.0.17: saga scaffold + 3 architecture docs (current)
 
-~3k lines of source code, ~3k lines of tests + docs. All on flaky conference WiFi. End-state: 159/159 tests pass; migration runner empirically validated against a real Postgres; offline driver produces sensible recommendations against fixture data.
+~3k lines of source code, ~6k+ lines of tests + docs. End-state: 168/168 tests pass; migration runner empirically validated against a real Postgres; four engines registered (mimir running, huginn/seidr/saga scaffolds); seidr quiz UI deployable today; saga architecture locked for implementation in 12–18 months.

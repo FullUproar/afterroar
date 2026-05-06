@@ -1,0 +1,11 @@
+{
+  "name": "@afterroar/rec-engine-saga",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Saga — Monte Carlo simulator + per-player fun model. The breakthrough engine: predicts expected fun per player per game-night via forward simulation, trained on recap data. Phase 0 scaffold only; activates after ~6 months of recap data accumulation. See README.md, docs/design-notes.md, docs/simulator-architecture.md, docs/recap-as-training-data.md.",
+  "scripts": {
+    "test": "echo 'saga has no tests yet — scaffold only. See SPRINT_LOG.md for activation triggers.' && exit 0"
+  },
+  "dependencies": {}
+}

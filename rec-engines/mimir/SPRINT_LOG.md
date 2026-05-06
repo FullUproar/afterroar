@@ -4,6 +4,50 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.17 — Saga engine scaffold + architecture lock-in (2026-05-06) ✅
+
+**Why:** Saga is the breakthrough engine — Monte Carlo simulator + per-player fun model trained on recap data. The competitive moat. Distinct from anything that matches, traverses, or scores against features: saga *simulates* game-nights and predicts probability distributions over fun outcomes per player.
+
+It cannot be implemented now (training data doesn't exist yet — needs ≥3000 recap records, ~6 months of platform usage). But the architecture can and should be locked NOW, while the dimension framework (Sprint 1.0.15) and seidr's player profile output (Sprint 1.0.16) are fresh, and while the recap data spec (Sprint 1.0.13) is being honored by HQ engineering. Locking architecture now also surfaces upstream requirements that affect design choices being made today (recap field shape, dimension taxonomy, seidr profile contract) — get them right or pay later.
+
+**Goal:** Land the saga engine scaffold under silo discipline. Three substantively rich design docs cover the breakthrough architecture. No source code, no DB writes, no simulator implementation. Pure architecture lock-in.
+
+**Why this sprint is good for mobile:** Pure documentation. No code, no DB writes, no test changes to mimir. Mimir's 168/168 stays unchanged.
+
+**Scope:**
+- `rec-engines/saga/` directory created per SILO.md § "Adding a new engine"
+- `saga/README.md` — engine context, Phase activation criteria (≥3000 recap records, ≥200 active players with ≥10 recaps each, ≥6mo corpus, seidr coverage ≥40%, etc.), how saga complements the other engines (it doesn't replace them — it runs alongside, becoming primary in the hot regime)
+- `saga/SPRINT_LOG.md` — own sprint log seeded with this scaffold sprint; future sprints (Saga-0.0 through Saga-0.6) sketched
+- `saga/docs/design-notes.md` — saga's algorithmic choices: per-player fun model architecture (regularized regression, NOT neural net — interpretability matters), game outcome model architecture, integration with the dimension framework (1.0.15) and seidr profiles (1.0.16) and the rec router, subtle-wrongness assertions specific to saga (miserable-time guardrail, calibration target, variance honesty, player-count honoring, cold-start safety, negative-edge respect, designer cap)
+- `saga/docs/simulator-architecture.md` — the Monte Carlo machinery: single-simulation step pseudocode, N-simulation aggregation, latency budget (~250ms per request at N=1000 × 50 candidates × 5p group fits in <2000ms with comfortable headroom), reproducibility via explicit rng_seed in every request, failure modes + fallbacks
+- `saga/docs/recap-as-training-data.md` — the training corpus dependency: what recap data gives saga, what features are derivable from each recap field (per Sprint 1.0.13's spec), training pipeline (5-step, runs offline at varying cadences), graduation thresholds, capture rate as the bottleneck, what recap data CAN'T provide and how saga handles it, privacy + retention
+- `saga/package.json`, `saga/.gitignore`, `saga/{migrations,src,tests}/.gitkeep` — independent package scaffolding per silo rule § 8
+- `rec-engines/SILO.md` — engines table updated with saga row; naming-convention list updated; saga's status reflects "scaffold + architecture, deferred until thresholds"
+- `rec-engines/README.md` — engines list updated with saga entry
+
+**Acceptance criteria:**
+1. Saga directory exists with required structure per SILO.md § "Adding a new engine" ✅
+2. No imports from any sibling engine (mimir, huginn, seidr) per SILO.md § 8 ✅ (no source code yet)
+3. No new rec_* tables or migrations — saga is architecture-only this sprint ✅
+4. Mimir tests still 168/168 — saga changes don't touch mimir code ✅ (verified post-state)
+5. SILO.md and README.md updated to register saga in engines tables ✅
+6. Three design docs are substantively complete — not stubs, not "TBD" placeholders ✅ (~1500 lines combined)
+7. Architecture is consistent with upstream sprints: dimension framework (1.0.15), seidr profile contract (1.0.16), recap data spec (1.0.13) ✅
+
+**Outcome:** Pushed in this commit. Saga's architecture is locked at design-doc level. Implementation cannot begin until graduation thresholds are met (estimated 12–18 months from platform launch); the scaffold establishes WHAT will be built, the docs establish WHY each architectural choice was made, and the Saga-N sprint sketches in `saga/SPRINT_LOG.md` establish the order of operations when implementation begins.
+
+**Learnings:**
+- Designing the breakthrough engine while it can't be implemented is paradoxically easier than designing a soon-to-implement engine. No pressure to cut scope or defer questions; can spend the time required on the architectural choices that compound.
+- The decision to use **regularized regression instead of a neural network** for the per-player fun model is the most important interpretability choice in the entire silo. A neural model would marginally improve accuracy at significant cost to subtle-wrongness detection (the very property the silo exists to enforce). Regression coefficients can be audited; learned embeddings cannot. This decision is documented as a first-class design choice in `design-notes.md` so future contributors understand it's not laziness — it's a deliberate Credo-aligned tradeoff.
+- The decision to **simulate (Monte Carlo) instead of regress directly** on predicted fun is similarly first-class. A direct regression skips the simulation loop and saves compute; it also discards the ability to surface variance + tail-risk metrics, which are saga's whole point. The simulator's per-outcome breakdown ("30% chance of kingmaker → -0.8 fun") is also the substrate for explanations grounded in concrete predicted dynamics, qualitatively richer than rule-based templates.
+- **Saga's value is bounded above by recap capture rate, not platform user count.** This is captured precisely in `recap-as-training-data.md` § "Capture rate is the bottleneck." Implication for HQ: optimize recap UI for capture rate, not feature-completeness; a stripped-down one-tap recap UI that captures 80% will outperform a feature-rich UI that captures 20%.
+- **Architecture lock-in is more valuable than implementation when the model parameters depend on data we don't have yet.** Saga implementation in 12 months will face zero design ambiguity if these docs are right; if instead I'd implemented now and revised later, every design choice would be deferred to a future Claude session that may not have full context. The time-investment here compounds.
+- **Seidr's worth was triple-counted in this sprint.** Independently as a Phase-0-deployable quiz engine (Sprint 1.0.16's stated value), as priors that compress saga's training requirement by 7× (from ~20 recaps/player to ~3 recaps/player to be useful), AND as the substrate for the dimension framework being a meaningful feature input. That last is structural and almost invisible in Sprint 1.0.16's own framing — saga lays it bare.
+
+**Rollback:** Revert this commit. Saga leaves no schema, no production wiring, no cross-engine references. Pure additive architectural documentation, mechanical to remove.
+
+---
+
 ## Sprint 1.0.16 — Seidr engine scaffold + research artifacts + deployable quiz UI (2026-05-06) ✅
 
 Pushed in three parts: `c60771e` (research + scaffold), `2e70d795` (question bank + structural files), `19390742` (quiz UI), plus this sprint's `f77d18c` (quiz-ui question-bank copy) and the SILO/README/SPRINT_LOG updates.
@@ -174,10 +218,6 @@ Pushed at commit `524e774`.
 ---
 
 ## Next sprint planned
-
-## Sprint 1.0.17 — Saga scaffold (incorporating dimension framework) (DRAFT)
-
-Sprint 1.0.16 took the slot originally pencilled for saga (seidr's research + quiz UI was the higher-value next step given Manus's deliverables landing). Saga's scaffold is the next planned sprint. Will mirror huginn (Sprint 1.0.12) but with substantively richer design notes given saga is the breakthrough engine, and will incorporate the four new node types from Sprint 1.0.15.
 
 ## Sprint 1.0.18 — Game-profiling v0 (LLM-generated profiles for top 500 games) (DRAFT)
 
