@@ -1,0 +1,11 @@
+{
+  "id": 233078, "source": "bgg", "type": "boardgame",
+  "name": "Twilight Imperium: Fourth Edition",
+  "year": 2017, "weight": 4.34, "minPlayers": 3, "maxPlayers": 6,
+  "playingTime": 480, "minPlayTime": 240, "maxPlayTime": 480, "minAge": 14, "bggRank": 8,
+  "designers": [{"id": 1, "value": "Christian T. Petersen"}],
+  "artists": [], "publishers": [],
+  "mechanics": [{"id": 2080, "value": "Area Majority"}, {"id": 2027, "value": "Trading"}, {"id": 2078, "value": "Action Points"}],
+  "categories": [{"id": 1084, "value": "Science Fiction"}, {"id": 1020, "value": "Negotiation"}, {"id": 1041, "value": "Wargame"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}

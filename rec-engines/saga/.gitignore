@@ -1,0 +1,15 @@
+# Saga engine local artifacts (not committed)
+
+tmp/
+node_modules/
+*.log
+npm-debug.log*
+.env
+.env.local
+.env.*.local
+
+# Trained model artifacts — too large for git, regenerated from recap data
+models/*.bin
+models/*.safetensors
+models/*.pt
+fixtures/recap-corpus-*.jsonl

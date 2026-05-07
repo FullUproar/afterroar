@@ -1,0 +1,11 @@
+{
+  "id": 167791, "source": "bgg", "type": "boardgame",
+  "name": "Terraforming Mars",
+  "year": 2016, "weight": 3.24, "minPlayers": 1, "maxPlayers": 5,
+  "playingTime": 120, "minPlayTime": 120, "maxPlayTime": 120, "minAge": 12, "bggRank": 4,
+  "designers": [{"id": 9220, "value": "Jacob Fryxelius"}],
+  "artists": [], "publishers": [],
+  "mechanics": [{"id": 2041, "value": "Drafting"}, {"id": 2664, "value": "Tile Placement"}, {"id": 2050, "value": "Hand Management"}],
+  "categories": [{"id": 1015, "value": "Economic"}, {"id": 1016, "value": "Environmental"}, {"id": 1084, "value": "Science Fiction"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}

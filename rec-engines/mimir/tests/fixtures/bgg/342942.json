@@ -1,0 +1,11 @@
+{
+  "id": 342942, "source": "bgg", "type": "boardgame",
+  "name": "Ark Nova",
+  "year": 2021, "weight": 3.78, "minPlayers": 1, "maxPlayers": 4,
+  "playingTime": 150, "minPlayTime": 90, "maxPlayTime": 150, "minAge": 14, "bggRank": 2,
+  "designers": [{"id": 12362, "value": "Mathias Wigge"}],
+  "artists": [], "publishers": [],
+  "mechanics": [{"id": 2697, "value": "Engine Building"}, {"id": 2050, "value": "Hand Management"}, {"id": 2974, "value": "Set Collection"}, {"id": 2041, "value": "Drafting"}],
+  "categories": [{"id": 1089, "value": "Animals"}, {"id": 1015, "value": "Economic"}, {"id": 1010, "value": "Environmental"}],
+  "families": [], "expansions": [], "fetchedAt": "2026-05-06T00:00:00Z"
+}
