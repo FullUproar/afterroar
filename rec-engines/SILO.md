@@ -67,6 +67,10 @@ Engines in this directory are named after figures in Norse / Aesir mythology, ma
 - **`norns`** (future) — fates who weave destiny. Emergent-dimensionality gene-graph engine.
 - **`yggdrasil`** (future) — the world tree. Federated cross-store learning engine.
 
+### The orchestrator (not an engine)
+
+- **`heimdall`** (future) — watcher at the bridge of the gods, far-seeing, decides who passes. **The orchestrator/composer** that runs engines, threads outputs between them, produces a final ranking, manages the learning feedback loop. **NOT a recommendation engine** and **NOT a sibling of mimir/huginn/seidr/saga** — it's the consumer that calls them. Lives outside `rec-engines/` (per `README.md`: "lives in `apps/me` or a dedicated package"). Design anchor in [`HEIMDALL.md`](./HEIMDALL.md).
+
 Cross-vertical engines append a vertical suffix when a single algorithm is reused across verticals: `mimir-books`, `mimir-vinyl`, etc.
 
 Guidelines for new engine names:
