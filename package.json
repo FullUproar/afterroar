@@ -5,7 +5,11 @@
   "description": "Afterroar platform monorepo — Store Ops (apps/ops) and Passport (apps/me) on top of shared packages (database, auth, types, ui). See CLAUDE.md and docs/.",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "rec-engines/mimir",
+    "rec-engines/seidr",
+    "rec-engines/huginn",
+    "rec-engines/saga"
   ],
   "scripts": {
     "dev": "npm run dev -w @afterroar/ops",

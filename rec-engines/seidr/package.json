@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Seidr — Profile-driven recommendation engine. Consumes player questionnaire output and matches against game profiles via cosine similarity. Phase 0: schema + reference profiles + LLM pipeline scaffold + cosine matcher (Sprint 1.0.18+).",
+  "exports": {
+    "./match": "./src/match.mjs",
+    "./load-player-profile": "./src/load-player-profile.mjs",
+    "./validate-profile": "./src/validate-profile.mjs",
+    "./explain": "./src/explain.mjs"
+  },
   "scripts": {
     "migrate:dry-run": "node scripts/apply-migrations.mjs --dry-run",
     "migrate": "node scripts/apply-migrations.mjs",
