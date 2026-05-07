@@ -33,6 +33,11 @@
 //   node scripts/run-rec.mjs --archetype heavy-strategist
 //   node scripts/run-rec.mjs --archetype party-extravert
 //   node scripts/run-rec.mjs --archetype coop-puzzler
+//   node scripts/run-rec.mjs --archetype high-killer
+//   node scripts/run-rec.mjs --archetype narrative-seeker
+//   node scripts/run-rec.mjs --archetype casual-family
+//   node scripts/run-rec.mjs --archetype kids-evening
+//   node scripts/run-rec.mjs --archetype drinking-game-night
 //
 // CLI flags:
 //   --player-profile <path>  load player profile JSON (overrides --archetype)
@@ -63,7 +68,7 @@ const __dirname = dirname(__filename);
 // Built-in player archetypes (handy for smoke-testing without a quiz file)
 // ----------------------------------------------------------------------------
 
-const ARCHETYPES = {
+export const ARCHETYPES = {
   'heavy-strategist': {
     label: 'Heavy strategist (long sessions, optimization-heavy, low conflict)',
     dim_vector: {
@@ -103,9 +108,74 @@ const ARCHETYPES = {
       EMO_TENSION: 0.3, EMO_HUMOR: -0.2,
     },
   },
+  'high-killer': {
+    label: 'High killer (direct conflict, dominance, wargames + asymmetric strategy)',
+    dim_vector: {
+      PSY_ACHIEVEMENT: 0.7, PSY_EXPLORATION: 0.4, PSY_SOCIAL: 0.3, PSY_KILLER: 0.85,
+      PSY_OPENNESS: 0.4, PSY_CONSCIENTIOUSNESS: 0.7, PSY_EXTRAVERSION: 0.0,
+      PSY_AGREEABLENESS: -0.5, PSY_NEUROTICISM: 0.2,
+      SOC_COOP_COMP: 0.95, SOC_DIRECT_INDIRECT: 0.85, SOC_TRUST_BETRAYAL: 0.4,
+      MEC_LUCK_SKILL: 0.4, MEC_COMPLEXITY: 0.6, MEC_STRATEGY: 0.85, MEC_ASYMMETRY: 0.6,
+      AES_THEME_MECH: 0.7, AES_NARRATIVE: 0.4, AES_COMPONENT: 0.6,
+      CTX_TIME: 0.6, CTX_NOSTALGIA: 0.3, CTX_PLAYER_COUNT: -0.3,
+      EMO_TENSION: 0.85, EMO_HUMOR: -0.5,
+    },
+  },
+  'narrative-seeker': {
+    label: 'Narrative seeker (story-rich campaigns, deep theme, emotional arc)',
+    dim_vector: {
+      PSY_ACHIEVEMENT: 0.4, PSY_EXPLORATION: 0.85, PSY_SOCIAL: 0.4, PSY_KILLER: -0.3,
+      PSY_OPENNESS: 0.7, PSY_CONSCIENTIOUSNESS: 0.5, PSY_EXTRAVERSION: -0.1,
+      PSY_AGREEABLENESS: 0.5, PSY_NEUROTICISM: 0.2,
+      SOC_COOP_COMP: -0.5, SOC_DIRECT_INDIRECT: -0.2, SOC_TRUST_BETRAYAL: -0.4,
+      MEC_LUCK_SKILL: 0.2, MEC_COMPLEXITY: 0.4, MEC_STRATEGY: 0.4, MEC_ASYMMETRY: 0.6,
+      AES_THEME_MECH: 0.85, AES_NARRATIVE: 0.95, AES_COMPONENT: 0.7,
+      CTX_TIME: 0.5, CTX_NOSTALGIA: 0.4, CTX_PLAYER_COUNT: -0.2,
+      EMO_TENSION: 0.6, EMO_HUMOR: -0.1,
+    },
+  },
+  'casual-family': {
+    label: 'Casual family (multi-generational, gateway-friendly, peaceful, evening-length)',
+    dim_vector: {
+      PSY_ACHIEVEMENT: 0.2, PSY_EXPLORATION: 0.2, PSY_SOCIAL: 0.4, PSY_KILLER: -0.7,
+      PSY_OPENNESS: 0.2, PSY_CONSCIENTIOUSNESS: 0.3, PSY_EXTRAVERSION: 0.1,
+      PSY_AGREEABLENESS: 0.6, PSY_NEUROTICISM: -0.2,
+      SOC_COOP_COMP: 0.0, SOC_DIRECT_INDIRECT: -0.5, SOC_TRUST_BETRAYAL: -0.85,
+      MEC_LUCK_SKILL: -0.1, MEC_COMPLEXITY: -0.5, MEC_STRATEGY: -0.2, MEC_ASYMMETRY: -0.1,
+      AES_THEME_MECH: 0.5, AES_NARRATIVE: -0.2, AES_COMPONENT: 0.4,
+      CTX_TIME: -0.4, CTX_NOSTALGIA: 0.3, CTX_PLAYER_COUNT: 0.0,
+      EMO_TENSION: -0.1, EMO_HUMOR: 0.3,
+    },
+  },
+  'kids-evening': {
+    label: 'Kids evening (under-12 friendly, very light, coop or low-conflict, short)',
+    dim_vector: {
+      PSY_ACHIEVEMENT: 0.2, PSY_EXPLORATION: 0.3, PSY_SOCIAL: 0.5, PSY_KILLER: -0.95,
+      PSY_OPENNESS: 0.3, PSY_CONSCIENTIOUSNESS: 0.0, PSY_EXTRAVERSION: 0.3,
+      PSY_AGREEABLENESS: 0.85, PSY_NEUROTICISM: 0.0,
+      SOC_COOP_COMP: -0.7, SOC_DIRECT_INDIRECT: -0.7, SOC_TRUST_BETRAYAL: -0.95,
+      MEC_LUCK_SKILL: -0.3, MEC_COMPLEXITY: -0.85, MEC_STRATEGY: -0.5, MEC_ASYMMETRY: 0.2,
+      AES_THEME_MECH: 0.6, AES_NARRATIVE: 0.2, AES_COMPONENT: 0.4,
+      CTX_TIME: -0.7, CTX_NOSTALGIA: 0.0, CTX_PLAYER_COUNT: -0.2,
+      EMO_TENSION: 0.0, EMO_HUMOR: 0.4,
+    },
+  },
+  'drinking-game-night': {
+    label: 'Drinking game night (large group, very light, humor-heavy, hidden roles + party)',
+    dim_vector: {
+      PSY_ACHIEVEMENT: -0.2, PSY_EXPLORATION: 0.3, PSY_SOCIAL: 0.85, PSY_KILLER: 0.2,
+      PSY_OPENNESS: 0.5, PSY_CONSCIENTIOUSNESS: -0.4, PSY_EXTRAVERSION: 0.95,
+      PSY_AGREEABLENESS: 0.3, PSY_NEUROTICISM: -0.2,
+      SOC_COOP_COMP: 0.2, SOC_DIRECT_INDIRECT: 0.3, SOC_TRUST_BETRAYAL: 0.6,
+      MEC_LUCK_SKILL: -0.5, MEC_COMPLEXITY: -0.85, MEC_STRATEGY: -0.7, MEC_ASYMMETRY: 0.4,
+      AES_THEME_MECH: 0.0, AES_NARRATIVE: -0.5, AES_COMPONENT: -0.1,
+      CTX_TIME: -0.3, CTX_NOSTALGIA: 0.0, CTX_PLAYER_COUNT: 0.85,
+      EMO_TENSION: 0.4, EMO_HUMOR: 0.95,
+    },
+  },
 };
 
-function buildArchetypeProfile(name) {
+export function buildArchetypeProfile(name) {
   const arch = ARCHETYPES[name];
   if (!arch) {
     throw new Error(`Unknown archetype: ${name}. Known: ${Object.keys(ARCHETYPES).join(', ')}`);

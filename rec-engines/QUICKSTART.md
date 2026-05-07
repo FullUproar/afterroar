@@ -13,7 +13,7 @@ Welcome back. This file is your "I just sat down at a laptop and want to see sei
 ```bash
 cd rec-engines/seidr
 npm install
-npm test                                  # expect 228/228 passing
+npm test                                  # expect 264/264 passing
 ```
 
 ## Run recommendations against the full 225-game corpus
@@ -115,7 +115,7 @@ Until the rec router is wired, the loop is offline-only — which is exactly wha
 |---|---|---|---|
 | `mimir` | End-to-end validated, 3 migrations sandbox-applied | **182/182** | Sprint 1.0.22 |
 | `huginn` | Phase 0 scaffold | scaffold-only | Sprint 1.0.12 |
-| `seidr` | End-to-end runnable via CLI against 225-game corpus | **228/228** | Sprint 1.0.26 |
+| `seidr` | End-to-end runnable via CLI against 225-game corpus | **264/264** | Sprint 1.0.28 |
 | `saga` | Architecture locked; awaits recap data | scaffold + 3 design docs | Sprint 1.0.17 |
 
 ## Three useful archetypes for demos

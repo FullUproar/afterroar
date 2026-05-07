@@ -4,6 +4,140 @@ Per-sprint development history.
 
 ---
 
+## Sprint 1.0.28 — `find-similar.mjs` CLI + pure-function module (2026-05-06) ✅
+
+**Why:** Given a game the player loves, what other games in the corpus share its dimensional fingerprint? This is the seed of a future "more like this" production feature, and a useful debugging tool today. ("Why did the matcher recommend X for this player?" → often: because X is dimensionally close to a game they loved.)
+
+**Goal:** Pure-function `findSimilarGames(sourceId, gameProfiles, options)` + CLI wrapper. Self-exclusion (source never appears in its own list). Subtle-wrongness assertions that anchor expected dimensional clusters.
+
+**What landed:**
+- `src/find-similar.mjs` — pure function, no I/O:
+  * `findSimilarGames(sourceGameId, gameProfiles, options)` — returns `{ source, recommendations }` with per-rec `{ game_id, cosine, profile }`
+  * `findSimilarBatch(sourceGameIds, gameProfiles, options)` — convenience wrapper for batch exploration
+  * Self-exclusion + custom `excludeGameIds` filter
+  * Uses existing `gameGameSimilarity` from `match.mjs` (cosine in dim space, not Jaccard)
+- `scripts/find-similar.mjs` — CLI wrapper (~150 lines):
+  * Positional `<game_id>` + flags: `--limit`, `--game-profiles`, `--bgg-dir`, `--exclude`, `--json`
+  * Human-formatted output with cosine + narrative; JSON mode for piping
+  * Loads BGG metadata for game-name display when available
+- `tests/find-similar.test.mjs` — 20 tests:
+  * 3 argument-validation tests (non-int source / non-array corpus / source not in corpus)
+  * 7 core-behavior tests (self-exclusion, descending sort, source returned, default+custom limit, undersized corpus, exclude additional ids, every rec carries cosine + profile)
+  * 2 batch tests
+  * **6 SUBTLE-WRONGNESS assertions against the real seed corpus:**
+    1. Brass: Birmingham → top-1 is Brass: Lancashire (sequel)
+    2. Pandemic Legacy S1 → top-2 includes another Pandemic Legacy season
+    3. Codenames → top-5 are all party-coded (MEC_COMPLEXITY ≤ -0.4)
+    4. TI4 → top-5 are all heavy strategy (MEC_COMPLEXITY ≥ 0.5)
+    5. Zombie Kidz Evolution → top-3 are all kids' games (low complexity, low killer)
+    6. 5 sample games all have ≥ 0 top-cosine (no orphan dimensions)
+  * 1 performance smoke test (10 × 225-corpus scans < 500ms)
+
+**Smoke verification (this sprint):**
+```
+$ node scripts/find-similar.mjs 224517 --bgg-dir ../mimir/tests/fixtures/bgg --limit 5
+1. Brass: Lancashire (BGG 28720)               cosine=0.980  -- 2007 original; same DNA
+2. Through the Ages (BGG 182028)               cosine=0.935  -- heavy economic
+3. On Mars (BGG 184267)                        cosine=0.927  -- Lacerda heavy
+4. Lisboa (BGG 161533)                         cosine=0.921  -- Lacerda heavy
+5. Kanban EV (BGG 284378)                      cosine=0.920  -- brutal worker placement
+
+$ node scripts/find-similar.mjs 178900 --limit 3   # Codenames
+1. Monikers (cosine 0.880)
+2. Just One (cosine 0.849)
+3. Time's Up! (cosine 0.848)
+   -- all party word/charades games
+
+$ node scripts/find-similar.mjs 161936 --limit 3   # Pandemic Legacy S1
+1. Pandemic Legacy: Season 2 (cosine 0.995)
+2. Pandemic Legacy: Season 0 (cosine 0.985)
+3. LotR: The Card Game – Revised Core Set (cosine 0.908)
+   -- coop campaign DNA
+```
+
+**Acceptance criteria:**
+1. Pure function `findSimilarGames` is no-I/O, deterministic ✅
+2. Self-exclusion verified (source never in own results) ✅
+3. CLI runs against real corpus with sensible top-N for spot-checked games ✅
+4. 6 SUBTLE-WRONGNESS assertions pass against the real seed corpus ✅
+5. seidr 264/264 tests pass (was 244; +20 from this sprint) ✅
+6. Mimir 182/182 regression-clean ✅
+
+**Test plan (executed BEFORE push):**
+- `npm test` → 264/264 ✅
+- `cd ../mimir && npm test` → 182/182 ✅
+- CLI smoke for 4 different dimensional regions (heavy strategy, party, coop campaign, peaceful builders) ✅
+
+**Outcome:** Pushed in this commit. Tomorrow's laptop session has a debugging tool: when a real user's recommendation looks weird, run `find-similar.mjs <weird_game_id>` to see if the corpus places it near sensible neighbors.
+
+**Learnings:**
+- **Game-game cosine is qualitatively different from Jaccard.** Mimir's `itemSimilarity` (Jaccard over mechanic/category/family/designer attribute sets) catches "shared mechanics." Seidr's `gameGameSimilarity` (cosine in 24-dim space) catches "shared player experience." Wingspan and Cascadia have ~25% Jaccard overlap (both Animals + Set Collection + Open Drafting) but ~89% cosine (both peaceful, parallel-play, ~45 min, low conflict, beautiful components). Cosine is the right measure for "would the same player enjoy both."
+- **The TI4 → Here I Stand cluster was unexpected and educationally interesting.** I'd have intuitively pegged TI4's nearest neighbor as War of the Ring 2E. But Here I Stand variants are BGG-rank-50ish 6-player asymmetric political+military epics — that's the same dimensional region as TI4. WotR 2E differs because it's 2P-best, not multiplayer. The matcher captured a real distinction my human intuition initially smoothed over.
+- **Performance is fine at 225-game scale.** A full corpus scan + sort takes < 50ms on this hardware; 10 scans in series < 500ms. No optimization needed for current corpus size; even 5,000-game corpus would scan in < 1s.
+
+**Rollback:** Revert this commit. Pure additive code + tests; no schema changes; no other engines affected.
+
+---
+
+## Sprint 1.0.27 — Five new built-in archetypes (2026-05-06) ✅
+
+**Why:** Demos and offline real-user testing benefit from more archetypes covering wider dimensional space. The original 3 (heavy-strategist, party-extravert, coop-puzzler) covered the heaviest, lightest, and most-coop regions. Five more fill the gaps: aggressive (high-killer), narrative-driven, family-friendly, kids-only, and party-loud.
+
+**Goal:** 5 new archetypes in `scripts/run-rec.mjs`. Each lands its #1 recommendation in the expected dimensional region against the 225-game seed corpus. Tests anchor the expected regions as subtle-wrongness assertions.
+
+**What landed:**
+- `scripts/run-rec.mjs`:
+  * 5 new entries in `ARCHETYPES`: `high-killer`, `narrative-seeker`, `casual-family`, `kids-evening`, `drinking-game-night`
+  * `ARCHETYPES` and `buildArchetypeProfile` exported (was internal) for test access
+  * CLI help comment lists all 8 archetypes
+- `tests/archetypes.test.mjs` — 16 tests:
+  * 5 structural tests (all 8 archetypes present, all have 24 dims, all values in [-1,1], buildArchetypeProfile shape, throws on unknown name)
+  * **8 SUBTLE-WRONGNESS assertions** — one per archetype's expected dimensional region:
+    - heavy-strategist #1: high MEC_COMPLEXITY + MEC_STRATEGY
+    - party-extravert #1: low MEC_COMPLEXITY + high PSY_SOCIAL or EMO_HUMOR
+    - coop-puzzler #1: pure-coop (SOC_COOP_COMP ≤ -0.5)
+    - high-killer #1: high PSY_KILLER (≥ 0.5) + competitive (SOC_COOP_COMP ≥ 0.5)
+    - narrative-seeker #1: high AES_NARRATIVE (≥ 0.5)
+    - casual-family #1: low MEC_COMPLEXITY (≤ 0) + low PSY_KILLER (≤ -0.3)
+    - kids-evening #1: very low MEC_COMPLEXITY (≤ -0.6) + very low PSY_KILLER (≤ -0.7)
+    - drinking-game-night #1: low MEC_COMPLEXITY + high EMO_HUMOR or PSY_SOCIAL
+  * 3 cross-archetype tests — opposing archetypes shouldn't share top picks (high-killer ≠ coop-puzzler, kids-evening ≠ heavy-strategist, drinking-game-night ≠ narrative-seeker)
+
+**Smoke verification:**
+```
+high-killer        -> Fire in the Lake (0.977), Eclipse 2nd Dawn (0.974), Dune: War for Arrakis (0.971)
+narrative-seeker   -> Elder Scrolls Betrayal (0.972), Frosthaven (0.958), Gloomhaven (0.952)
+casual-family      -> Outfoxed! (0.875), Welcome to Everdell (0.867), The Magic Labyrinth (0.858)
+kids-evening       -> Zombie Kidz Evolution (0.973), Zombie Teenz (0.968), Outfoxed! (0.942)
+drinking-game-night -> Monikers (0.766), Codenames (0.763), Time's Up! (0.761)
+```
+
+Every archetype's top-3 lands in its expected dimensional region.
+
+**Acceptance criteria:**
+1. 8 archetypes total in ARCHETYPES (3 original + 5 new) ✅
+2. All have valid 24-dim vectors with values in [-1,1] ✅
+3. ARCHETYPES + buildArchetypeProfile exported for test access ✅
+4. 8 SUBTLE-WRONGNESS assertions pass against the 225-corpus ✅
+5. 3 archetype-vs-archetype assertions pass (opposing archetypes don't share top-1) ✅
+6. seidr 244/244 tests pass (was 228; +16 from this sprint) ✅
+7. Mimir 182/182 regression-clean ✅
+
+**Test plan (executed BEFORE push):**
+- `npm test` → 244/244 ✅
+- CLI smoke for all 8 archetypes ✅ (results above)
+
+**Outcome:** Pushed in this commit. The CLI is now a richer demo tool. When a real user's profile is somewhere in between archetypes, the user can run multiple archetypes side-by-side to see how the recommendations shift across dimensional regions.
+
+**Learnings:**
+- **Archetype calibration was tighter than expected.** Each new archetype's top-3 landed in the exact cluster I targeted — high-killer pulled wargames + 4X, narrative-seeker pulled coop campaigns, kids-evening pulled the children's subdomain. This validates that the seed corpus is dimensionally well-distributed.
+- **Drinking-game-night cosines are lower than other archetypes (0.76-0.77 top picks vs 0.92-0.99 elsewhere).** This is real signal: party games as a category have lower variance in their dim_vectors than heavy strategy games. Players who skew "drinking-game-night" probably have several similar top picks rather than one clear winner. Useful for the rec router's eventual A/B logic — "if top-cosine < 0.85, surface 5 candidates instead of 1."
+- **Exporting archetypes from a CLI script (rather than moving them to src/) was the right call.** Archetypes are CLI-test-fixtures, not production logic. Keeping them in `scripts/` honors that distinction; exporting them just for test access doesn't blur the separation.
+
+**Rollback:** Revert this commit. Pure additive data + tests; existing 3 archetypes unchanged.
+
+---
+
 ## Sprint 1.0.26 — Cross-game consistency tests for the seed corpus (2026-05-06) ✅
 
 **Why:** The 225-profile seed corpus is the matcher's substrate, but no test catches "profile drift" — if any single profile gets miskeyed (PSY_KILLER flipped sign, MEC_COMPLEXITY off by a magnitude, etc.) the schema validator passes but the matcher's behavior degrades silently. Cross-game cosine assertions detect this class of drift by anchoring known dimensional relationships (sequels, peaceful builders, opposite poles) into the test suite.

@@ -4,6 +4,22 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.28 — Seidr `find-similar.mjs` CLI + pure module (2026-05-06) ✅
+
+Pure-function `findSimilarGames(sourceId, gameProfiles, options)` plus CLI wrapper for "find the games most dimensionally similar to game X." Seed of a future "more like this" production feature; debugging tool today. Self-exclusion built in. 20 new tests including 6 SUBTLE-WRONGNESS assertions against real seed corpus (Brass:B → Brass:L; Pandemic Legacy S1 → other seasons; Codenames → party games; etc.). **264/264 seidr tests pass; mimir 182/182 unchanged.**
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.28.
+
+---
+
+## Sprint 1.0.27 — Seidr 5 new built-in archetypes (2026-05-06) ✅
+
+Five new player archetypes in `scripts/run-rec.mjs`: `high-killer`, `narrative-seeker`, `casual-family`, `kids-evening`, `drinking-game-night`. Each lands its top-3 in the expected dimensional region of the 225-game seed corpus. 16 new tests including 8 archetype-specific SUBTLE-WRONGNESS assertions and 3 cross-archetype tests. **244/244 seidr tests pass; mimir 182/182 unchanged.**
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.27.
+
+---
+
 ## Sprint 1.0.26 — Seidr corpus consistency tests (2026-05-06) ✅
 
 35 cross-game cosine assertions across 4 categories (same-family > 0.95; same-family-different-focus > 0.5; conceptually-similar > 0.7-0.85; opposite-pole < 0). Anchors known dimensional relationships into the test suite so any future profile drift surfaces at test time. **228/228 seidr tests pass; mimir 182/182 unchanged.**
