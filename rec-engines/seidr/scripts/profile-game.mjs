@@ -42,7 +42,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, basename, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
   generateProfile,
@@ -270,7 +270,7 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch(err => {
     console.error('profile-game.mjs failed:', err.message);
     process.exit(1);

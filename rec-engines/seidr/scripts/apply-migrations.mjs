@@ -32,7 +32,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -223,7 +223,7 @@ async function main() {
 }
 
 // Only invoke main() when run directly, not when imported by tests.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch(err => {
     console.error('Migration runner failed:', err.message);
     process.exit(1);
