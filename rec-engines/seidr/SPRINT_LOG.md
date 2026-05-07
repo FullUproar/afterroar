@@ -4,6 +4,50 @@ Per-sprint development history.
 
 ---
 
+## Sprint 1.0.30 — Deployment + tester-recruitment guide (2026-05-06) ✅
+
+**Why:** All the technical infra is now done — quiz UI deployable, matcher runnable, profile-diff calibrates drift, find-similar debugs neighborhoods. What's missing for tomorrow's user-facing real-user testing round is **operational** documentation: how to deploy the UI, how to recruit testers across dimensional clusters, what to ask testers, how to ingest their JSON, what to look for in their feedback, what failure modes to expect.
+
+**Goal:** A practical user-facing doc that walks through Phase 0 real-user testing end-to-end. Targeted at the user (or any future operator) running a 10–30-tester calibration round with friendly users.
+
+**What landed:**
+- `seidr/docs/deploying-and-testing.md` — ~250-line operational guide:
+  * Step 1: deploy the quiz UI (Vercel / Netlify / GitHub Pages / local options)
+  * Step 2: sanity-check the deployed UI before sharing
+  * Step 3: recruit testers across 8 dimensional clusters with a copy-pasteable recruitment template
+  * Step 4: receive JSON exports
+  * Step 5: generate recommendations per tester (single + batch examples)
+  * Step 6: structured feedback questions ("did top-3 feel wrong?", "any pleasant surprises?", "what's missing?") + diagnostic tools (`find-similar.mjs`, `profile-diff.mjs`) for when feedback is weird
+  * Step 7: commit-back loop (iterate question bank, refine profiles, extend corpus)
+  * Privacy posture (explicit about JSONs, retention, consent posture)
+  * Failure modes + debugging (blank screen, 404s, malformed paste, tester pairs with same recs)
+  * "After 10 testers — what success looks like" closing section
+
+**Acceptance criteria:**
+1. Doc references actual existing tools (`run-rec.mjs`, `find-similar.mjs`, `profile-diff.mjs`) — verified ✅
+2. Doc references actual existing data files (`seed-game-profiles.json`, `question-bank.json`, etc.) — verified ✅
+3. Doc walks through deploy → recruit → receive → run → feedback → iterate as a coherent narrative ✅
+4. No references to features that don't exist (no aspirational "future X") ✅
+5. Bash snippets are copy-pasteable; no placeholders that would break if executed ✅
+6. Privacy posture is explicit and honest ✅
+
+**Test plan:** Pure documentation — no test changes. Verified by:
+- Spot-checking that all referenced commands (npm test counts, CLI flags, output formats) match current code
+- Ensuring no test count or test name in the doc would diverge from actual current state
+- mimir 182/182 + seidr 283/283 (regression check, even though no code changed) ✅
+
+**Outcome:** Pushed in this commit. Tomorrow's laptop session has a step-by-step operational guide for the real-user testing round. The doc is intentionally "operational" rather than "feature documentation" — it tells you what to DO at each step, not just what features exist.
+
+**Learnings:**
+- **The deployment options don't all have equal friction.** Vercel ships in ~30 sec via CLI; Netlify drop is drag-and-drop; GitHub Pages requires repo plumbing; local serve is just-for-you. Documented all four because different operators will prefer different paths.
+- **Tester recruitment template is operational discipline.** Without a template, the user might either send testers TOO MUCH context (overwhelming) or TOO LITTLE (testers don't know what to expect). The 5-line template hits the right midpoint and is copy-pasteable.
+- **Diagnostic tool placement is intentional.** `find-similar.mjs` + `profile-diff.mjs` are mentioned in the "when feedback is weird" subsection rather than as primary tools. They're the second-line response to specific tester complaints, not first-pass usage.
+- **"What success looks like after 10 testers" is the closing because measurement matters.** Without an explicit success criterion, real-user testing rounds can drift indefinitely. The closing section gives the user permission to STOP after 10 productive testers per round.
+
+**Rollback:** Revert this commit. Pure additive documentation; no code changes; no other engines affected.
+
+---
+
 ## Sprint 1.0.29 — `profile-diff.mjs` + reference-vs-seed calibration anchor (2026-05-06) ✅
 
 **Why:** Tomorrow's API run (or any future LLM regeneration) needs a way to compare new profiles against the hand-authored seed corpus. Without diffing infrastructure, calibration drift would have to be eyeballed or hand-spreadsheeted. A pure-function diff tool catches drift mechanically. Also: the 7 reference profiles (Sprint 1.0.18) and the 225-profile seed corpus (Sprint 1.0.24) overlap on 6 games. Until now, no test asserted those 6 overlapping profiles match across the two files — silent drift between reference and seed would slip through.

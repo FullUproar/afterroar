@@ -4,6 +4,14 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.30 — Seidr deployment + tester-recruitment guide (2026-05-06) ✅
+
+Pure documentation sprint. New `seidr/docs/deploying-and-testing.md` walks through Phase 0 real-user testing end-to-end: deploy options (Vercel/Netlify/GH Pages/local), tester recruitment template, JSON ingestion, batch run-rec.mjs invocation, structured feedback questions, diagnostic tools (`find-similar.mjs`, `profile-diff.mjs`), failure modes, success criterion. **No code changes; both engines unchanged.**
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.30.
+
+---
+
 ## Sprint 1.0.29 — Seidr `profile-diff.mjs` + reference-vs-seed calibration anchor (2026-05-06) ✅
 
 Pure-function `diffProfile` and `diffCorpora` with CLI wrapper for offline use. Tomorrow's API run can compare new profiles vs hand-authored seed corpus to detect calibration drift. Plus an integration test that asserts the 7 reference profiles (Sprint 1.0.18) align with their counterparts in the 225-profile seed corpus (Sprint 1.0.24) — catches silent drift between the two profile sources. **283/283 seidr tests pass; mimir 182/182 unchanged.**

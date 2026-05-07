@@ -2,7 +2,7 @@
 
 **Purpose:** Cross-session context restoration. When you sit down at a laptop after working on mobile (or vice versa), read this + the active engine's `SPRINT_LOG.md` to restore full context.
 
-**Last updated:** 2026-05-06 (post Sprint 1.0.29, seidr `profile-diff.mjs` calibration tool + reference-vs-seed anchor)
+**Last updated:** 2026-05-06 (post Sprint 1.0.30, seidr deployment + tester-recruitment guide)
 
 ---
 
@@ -82,6 +82,10 @@ npm run fetch-bgg -- --file data/seed-bgg-ids.txt
 ### 3. Real-user quiz testing (offline; no API tokens needed)
 
 Seidr is fully runnable end-to-end against the **225-game seed corpus**.
+
+**📖 For the full operational walkthrough — deploy options, tester recruitment template, batch ingestion, feedback structure, failure modes — see [`seidr/docs/deploying-and-testing.md`](./seidr/docs/deploying-and-testing.md).** That doc is the canonical guide for tomorrow's testing round.
+
+Quick version:
 
 ```bash
 cd rec-engines/seidr
@@ -304,9 +308,10 @@ Adversarial harness tests (in suite + run interactively):
 
 ## Cumulative session footprint (mobile sessions ending 2026-05-06)
 
-29 sprints under TDD discipline. Most recent first:
+30 sprints under TDD discipline. Most recent first:
 
-- Sprint 1.0.29: seidr `profile-diff.mjs` + reference-vs-seed calibration anchor (current)
+- Sprint 1.0.30: seidr deployment + tester-recruitment guide (current)
+- Sprint 1.0.29: seidr `profile-diff.mjs` + reference-vs-seed calibration anchor
 - Sprint 1.0.28: seidr `find-similar.mjs` CLI + pure-function module
 - Sprint 1.0.27: seidr 5 new built-in archetypes (high-killer / narrative-seeker / casual-family / kids-evening / drinking-game-night)
 - Sprint 1.0.26: seidr cross-game consistency tests (35 cosine assertions over the seed corpus)
