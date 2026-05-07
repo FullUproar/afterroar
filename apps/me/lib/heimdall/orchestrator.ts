@@ -26,7 +26,20 @@
  * packages/heimdall/ later if cross-app callers need it.
  */
 
-import { match as seidrMatch } from '@afterroar/rec-engine-seidr/match';
+// Direct relative import of the seidr matcher source. We avoid the
+// @afterroar/rec-engine-seidr workspace-package import here because
+// Vercel's Next.js bundler (Turbopack) resolves it inconsistently
+// when build cache straddles workspace topology changes — the deploy
+// fails with a module-not-found even when local builds and tests
+// pass. The relative path is bulletproof against that.
+//
+// The rec-engines tree is included in the build context (sibling-to-
+// apps/me, same monorepo) — confirmed by the Prisma schema being
+// resolved at ../../packages/database/prisma/schema.prisma during the
+// same build.
+//
+// eslint-disable-next-line import/no-relative-packages
+import { match as seidrMatch } from '../../../../rec-engines/seidr/src/match.mjs';
 import {
   loadGameProfiles,
   loadPlayerProfile,
