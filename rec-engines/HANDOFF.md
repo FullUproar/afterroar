@@ -15,7 +15,7 @@ These three steps verify the repo is in the state this doc describes. If any tes
 cd <your-afterroar-checkout>
 git fetch origin claude/review-uoroar-platform-CuLMi
 git checkout claude/review-uoroar-platform-CuLMi
-git log -1 --oneline   # should be: 44c3c8b feat(rec-engines/seidr): Sprint 1.0.24 ...
+git log -1 --oneline   # most recent commit; the seed-corpus + doc-refresh sprints (1.0.24 + handoff polish)
 
 # 2. Verify mimir tests
 cd rec-engines/mimir
