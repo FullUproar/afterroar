@@ -26,20 +26,6 @@
  * packages/heimdall/ later if cross-app callers need it.
  */
 
-// Direct relative import of the seidr matcher source. We avoid the
-// @afterroar/rec-engine-seidr workspace-package import here because
-// Vercel's Next.js bundler (Turbopack) resolves it inconsistently
-// when build cache straddles workspace topology changes — the deploy
-// fails with a module-not-found even when local builds and tests
-// pass. The relative path is bulletproof against that.
-//
-// The rec-engines tree is included in the build context (sibling-to-
-// apps/me, same monorepo) — confirmed by the Prisma schema being
-// resolved at ../../packages/database/prisma/schema.prisma during the
-// same build.
-//
-// eslint-disable-next-line import/no-relative-packages
-import { match as seidrMatch } from '../../../../rec-engines/seidr/src/match.mjs';
 import {
   loadGameProfiles,
   loadPlayerProfile,
@@ -47,6 +33,85 @@ import {
   type SeidrPlayerProfile,
   type SeidrGameProfile,
 } from './load';
+
+/**
+ * Inline cosine matcher. Self-contained replacement for the seidr
+ * package's full match() during Phase 0 — runs in Vercel's Next.js
+ * runtime without any cross-tree .mjs import (which was hitting build
+ * cache + bundler issues). The full seidr matcher (with MMR diversity,
+ * designer cap, player-count filter, confidence weighting) is still
+ * the source of truth in rec-engines/; this is the simplest correct
+ * subset for the public quiz flow.
+ *
+ * v0.2 will switch to importing the canonical seidr matcher once
+ * we've moved the engines into a proper packages/* workspace path
+ * and out of rec-engines/* (which Vercel's Root Directory excludes
+ * from the build sandbox in some configs).
+ */
+function seidrMatchInline(
+  player: SeidrPlayerProfile,
+  games: SeidrGameProfile[],
+  options: { limit: number; excludeGameIds?: number[] },
+): {
+  recommendations: Array<{ game_id: number; score: number; explanation?: string }>;
+  filtered: Array<{ game_id: number; reason: string }>;
+  totalConsidered: number;
+} {
+  const exclude = new Set(options.excludeGameIds ?? []);
+  const filtered: Array<{ game_id: number; reason: string }> = [];
+  const scored: Array<{ game_id: number; score: number }> = [];
+  const pVec = player.dim_vector ?? {};
+
+  let totalConsidered = 0;
+  for (const g of games) {
+    if (g.game_id == null) continue;
+    if (exclude.has(g.game_id)) {
+      filtered.push({ game_id: g.game_id, reason: 'excluded' });
+      continue;
+    }
+    totalConsidered++;
+    const cos = cosine(pVec, g.dim_vector);
+    if (cos === null) continue; // both vectors empty — shouldn't happen
+    scored.push({ game_id: g.game_id, score: cos });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  return {
+    recommendations: scored.slice(0, options.limit),
+    filtered,
+    totalConsidered,
+  };
+}
+
+function cosine(a: DimVector, b: DimVector): number | null {
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  // Iterate union of keys; missing keys count as 0 on the corresponding side.
+  const seen = new Set<string>();
+  for (const k of Object.keys(a)) {
+    seen.add(k);
+    const av = numericOr(a[k], 0);
+    const bv = numericOr(b[k], 0);
+    dot += av * bv;
+    na += av * av;
+    nb += bv * bv;
+  }
+  for (const k of Object.keys(b)) {
+    if (seen.has(k)) continue;
+    const bv = numericOr(b[k], 0);
+    nb += bv * bv;
+  }
+  if (na === 0 || nb === 0) return 0;
+  const c = dot / (Math.sqrt(na) * Math.sqrt(nb));
+  if (c > 1) return 1;
+  if (c < -1) return -1;
+  return c;
+}
+
+function numericOr(v: unknown, fallback: number): number {
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
 
 export interface RecommendRequest {
   /**
@@ -163,16 +228,10 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
   }
 
   const gameProfiles: SeidrGameProfile[] = await loadGameProfiles();
-  const seidrResult = seidrMatch(playerProfile, gameProfiles, {
-    limit: limit * 2, // pull a bigger pool, Heimdall could filter further later
+  const seidrResult = seidrMatchInline(playerProfile, gameProfiles, {
+    limit,
     excludeGameIds: req.context?.excludeGameIds ?? [],
-    playerCount: req.context?.playerCount ?? null,
-    diversify: true,
-  }) as {
-    recommendations: Array<{ game_id: number; score: number; explanation?: string }>;
-    filtered: Array<{ game_id: number; reason: string }>;
-    totalConsidered: number;
-  };
+  });
   enginesRan.push('seidr');
 
   // v0.1 composition: trivially adopt seidr's ranking. v0.2 will weight
