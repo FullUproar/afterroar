@@ -4,6 +4,22 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.24 — Seidr seed corpus: 225 hand-authored game profiles (2026-05-06) ✅
+
+Hand-authored 225 24-dim game profiles for seidr's matcher corpus, spanning all 8 BGG subdomains (top-25-per-subdomain delivered by Manus). Profiles generated in-conversation by Claude (Opus 4.7) using the prompt-template.mjs reasoning pattern. **No API tokens burned.** The matcher now ranks against a 225-game corpus instead of 7 references.
+
+- `seidr/data/bgg-top25-bundle.json`: Manus's BGG metadata delivery (225 games across 8 subdomains)
+- `seidr/data/seed-game-profiles.json`: 225 validated 24-dim profiles
+- `seidr/tests/seed-game-profiles.test.mjs`: 7 tests including 4 SUBTLE-WRONGNESS assertions against the full corpus
+- 181/181 seidr tests pass (was 169; +12)
+- Mimir 182/182 regression-clean
+
+Validation: heavy-strategist → top picks are heavy Euros (TM, On Mars, Lisboa, Ark Nova). Party-extravert → top picks are Codenames + Monikers. Coop-puzzler → top picks are The Crew variants. All archetypes produce dimensionally-appropriate top-N.
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.24.
+
+---
+
 ## Sprint 1.0.22 — Seed taxonomy data + INSERT/DELETE/UPDATE detection in safety harness (2026-05-06) ✅
 
 **Why:** Two interlocking goals:
