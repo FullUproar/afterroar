@@ -192,8 +192,8 @@
   // -------------------- LOAD DATA --------------------
   try {
     [bank, dims] = await Promise.all([
-      fetch('./question-bank.json').then(r => r.json()),
-      fetch('./dimensions.json').then(r => r.json()),
+      fetch('/quiz/question-bank.json').then(r => r.json()),
+      fetch('/quiz/dimensions.json').then(r => r.json()),
     ]);
   } catch (err) {
     app.innerHTML = `<h1>Couldn’t load quiz data</h1>
