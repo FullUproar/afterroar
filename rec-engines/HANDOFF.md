@@ -4,6 +4,19 @@
 
 **Last updated:** 2026-05-06 (post Sprint 1.0.30, seidr deployment + tester-recruitment guide)
 
+## ✅ Mobile session ended cleanly — this is a stopping point
+
+The mobile session that produced Sprints 0.0 → 1.0.30 ended deliberately, not in the middle of a sprint. Test counts in this doc are the actual current state on the branch:
+- **mimir: 182/182** ✓
+- **seidr: 283/283** ✓
+- **branch tip:** `6764388` (`docs(rec-engines/seidr): Sprint 1.0.30 ...`)
+- **all 30 sprints pushed to** `claude/review-uoroar-platform-CuLMi`
+- **nothing uncommitted; working tree clean**
+
+If you sit down at the laptop and the test counts above don't match what `npm test` reports, something drifted between the mobile push and your laptop pull. **Stop and debug before proceeding.**
+
+The session reached a natural diminishing-returns point. Remaining work is laptop-only (apply migrations to Neon; optional API run; real-user testing) or premature (saga needs recap data, huginn needs ≥50 active users with edges). Pick this back up after you have real user feedback or real DB-applied state.
+
 ---
 
 ## ⏱️ First 5 minutes on the laptop — exact commands
