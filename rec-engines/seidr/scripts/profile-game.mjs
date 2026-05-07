@@ -29,8 +29,10 @@
 //     --apply
 //
 // CLI flags:
-//   --bgg-file <path>       single BGG JSON file
+//   --bgg-file <path>       single BGG JSON file (one game per file)
 //   --bgg-dir <path>        directory of BGG JSON files (one game per file)
+//   --bgg-bundle <path>     single JSON file containing an array of game
+//                           objects (e.g. Manus's bgg-top25-bundle.json)
 //   --dimensions <path>     dimensions.json path (default: ../data/dimensions.json)
 //   --model <name>          model identifier (default: claude-sonnet-4-6)
 //   --mock                  use the mock LLM that returns reference profiles
@@ -58,6 +60,7 @@ function parseArgs(argv) {
   const args = {
     bggFile: null,
     bggDir: null,
+    bggBundle: null,
     dimensions: resolve(__dirname, '..', 'data', 'dimensions.json'),
     model: 'claude-sonnet-4-6',
     mock: false,
@@ -68,6 +71,7 @@ function parseArgs(argv) {
     switch (a) {
       case '--bgg-file': args.bggFile = argv[++i]; break;
       case '--bgg-dir': args.bggDir = argv[++i]; break;
+      case '--bgg-bundle': args.bggBundle = argv[++i]; break;
       case '--dimensions': args.dimensions = argv[++i]; break;
       case '--model': args.model = argv[++i]; break;
       case '--mock': args.mock = true; break;
@@ -77,6 +81,39 @@ function parseArgs(argv) {
     }
   }
   return args;
+}
+
+/**
+ * Load BGG metadata from one of three sources. Returns array of game objects.
+ *
+ * --bgg-file: single JSON file containing one game object
+ * --bgg-dir: directory of JSON files, one game per file
+ * --bgg-bundle: single JSON file containing an array of game objects
+ *
+ * Exactly one of the three must be set; this function throws on misuse.
+ */
+export function loadGames(args) {
+  const sources = [args.bggFile, args.bggDir, args.bggBundle].filter(Boolean);
+  if (sources.length === 0) {
+    throw new Error('One of --bgg-file <path>, --bgg-dir <path>, or --bgg-bundle <path> is required');
+  }
+  if (sources.length > 1) {
+    throw new Error('Specify only ONE of --bgg-file, --bgg-dir, --bgg-bundle');
+  }
+
+  if (args.bggFile) {
+    return [JSON.parse(readFileSync(args.bggFile, 'utf8'))];
+  }
+  if (args.bggDir) {
+    const files = readdirSync(args.bggDir).filter(f => f.endsWith('.json'));
+    return files.map(f => JSON.parse(readFileSync(join(args.bggDir, f), 'utf8')));
+  }
+  // bgg-bundle: file is a single JSON array of game objects
+  const raw = JSON.parse(readFileSync(args.bggBundle, 'utf8'));
+  if (!Array.isArray(raw)) {
+    throw new Error(`--bgg-bundle file ${args.bggBundle} is not a JSON array (got ${typeof raw})`);
+  }
+  return raw;
 }
 
 // ----------------------------------------------------------------------------
@@ -192,23 +229,13 @@ async function writeProfilesToDb(profiles, connStr) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (!args.bggFile && !args.bggDir) {
-    throw new Error('Either --bgg-file <path> or --bgg-dir <path> is required');
-  }
 
   // Load dimensions
   const dimensions = JSON.parse(readFileSync(args.dimensions, 'utf8'));
 
-  // Load BGG metadata into an array of game objects
-  const games = [];
-  if (args.bggFile) {
-    games.push(JSON.parse(readFileSync(args.bggFile, 'utf8')));
-  } else {
-    const files = readdirSync(args.bggDir).filter(f => f.endsWith('.json'));
-    for (const f of files) {
-      games.push(JSON.parse(readFileSync(join(args.bggDir, f), 'utf8')));
-    }
-  }
+  // Load BGG metadata into an array of game objects (loadGames enforces
+  // exactly-one-source and validates bundle shape)
+  const games = loadGames(args);
   console.log(`Loaded ${games.length} game(s) for profiling.`);
 
   // Build LLM client

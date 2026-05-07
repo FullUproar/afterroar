@@ -2,7 +2,7 @@
 
 **Purpose:** Cross-session context restoration. When you sit down at a laptop after working on mobile (or vice versa), read this + the active engine's `SPRINT_LOG.md` to restore full context.
 
-**Last updated:** 2026-05-06 (post Sprint 1.0.24, seidr seed corpus of 225 hand-authored game profiles)
+**Last updated:** 2026-05-06 (post Sprint 1.0.26, seidr cross-game consistency tests + `--bgg-bundle` CLI support)
 
 ---
 
@@ -25,7 +25,7 @@ npm test               # EXPECT 182/182 PASS
 # 3. Verify seidr tests
 cd ../seidr
 npm install --silent
-npm test               # EXPECT 181/181 PASS
+npm test               # EXPECT 228/228 PASS (was 181 pre-Sprint-1.0.25)
 ```
 
 If both pass, you're in sync with this doc and can proceed with the laptop-only work below.
@@ -126,7 +126,7 @@ Note: the pipeline currently expects one BGG JSON file per game (or `--bgg-dir`)
 |---|---|---|---|
 | `mimir` | Phase 0 — end-to-end validated against local Postgres + real fixture data | **182/182** | Sprint 1.0.22 — seed taxonomies + parser detects INSERT/DELETE/UPDATE |
 | `huginn` | Phase 0 scaffold-only; deferred to Phase 1+ (≥50 active users with real edges) | scaffold | Sprint 1.0.12 |
-| `seidr` | Phase 0 — research + quiz UI + LLM pipeline + 225-game seed corpus + cosine matcher + explanation generator + offline CLI runner; **end-to-end runnable** | **181/181** | Sprint 1.0.24 |
+| `seidr` | Phase 0 — research + quiz UI + LLM pipeline + 225-game seed corpus + cosine matcher + explanation generator + offline CLI runner + corpus consistency suite; **end-to-end runnable** | **228/228** | Sprint 1.0.26 |
 | `saga` | Phase 0 — architecture locked in 3 design docs; implementation deferred until graduation thresholds met (≥3000 recap records, ~12-18mo post-launch) | scaffold + architecture | Sprint 1.0.17 |
 
 **Schema state:** 23 `rec_*` tables defined across 4 migrations (3 in mimir, 1 in seidr). 42 seed-taxonomy rows. Sandbox-validated against Postgres 16 in this datacenter. Not yet on user's Neon.
@@ -172,7 +172,7 @@ A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, 
 
 ## What's in seidr/ right now
 
-End-to-end profile-driven recommendation engine, runnable today against a 225-game corpus. **181/181 tests pass.**
+End-to-end profile-driven recommendation engine, runnable today against a 225-game corpus. **228/228 tests pass.**
 
 **Schema:**
 - `migrations/0001_seidr_tables.sql` — 3 engine-specific tables (`rec_seidr_player_profile`, `rec_seidr_game_profile`, `rec_seidr_response`). Sandbox-validated in Sprint 1.0.18.
@@ -262,7 +262,9 @@ Adversarial harness tests (in suite + run interactively):
 
 24 sprints under TDD discipline. Most recent first:
 
-- Sprint 1.0.24: seidr seed corpus of 225 hand-authored game profiles (`44c3c8b`) — current
+- Sprint 1.0.26: seidr cross-game consistency tests (35 cosine assertions over the seed corpus) — current
+- Sprint 1.0.25: seidr `--bgg-bundle` CLI support (load Manus bundles directly)
+- Sprint 1.0.24: seidr seed corpus of 225 hand-authored game profiles (`44c3c8b`)
 - Sprint 1.0.23: rec-engines QUICKSTART.md (`3d30992`)
 - Sprint 1.0.22: mimir 0003 seed taxonomies + parser detects INSERT/DELETE/UPDATE (`d0bc3fa`)
 - Sprint 1.0.21: seidr quiz-UI-export interop in CLI loader (`587a603`)
@@ -291,4 +293,4 @@ Adversarial harness tests (in suite + run interactively):
 - Sprint 0.1: first migration file (`9b1b383`)
 - Sprint 0.0.2 / 0.0.1 / 0.0: silo scaffold + Norse rename + design doc
 
-~5.7k lines of source code, ~12k+ lines of tests + docs + data. End-state: mimir **182/182**, seidr **181/181**; migration runners validated against real Postgres; four engines registered (mimir running with seeded taxonomies, huginn scaffold, seidr end-to-end with 225-game corpus, saga architecture-locked); **23 rec_* tables in schema with 42 seed-taxonomy rows**, sandbox-validated, not yet on user's Neon. **Seidr fully runnable end-to-end via `scripts/run-rec.mjs --game-profiles data/seed-game-profiles.json`.**
+~5.8k lines of source code, ~13k+ lines of tests + docs + data. End-state: mimir **182/182**, seidr **228/228**; migration runners validated against real Postgres; four engines registered (mimir running with seeded taxonomies, huginn scaffold, seidr end-to-end with 225-game corpus, saga architecture-locked); **23 rec_* tables in schema with 42 seed-taxonomy rows**, sandbox-validated, not yet on user's Neon. **Seidr fully runnable end-to-end via `scripts/run-rec.mjs --game-profiles data/seed-game-profiles.json`.**

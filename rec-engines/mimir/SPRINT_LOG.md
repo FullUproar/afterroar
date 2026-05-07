@@ -4,6 +4,22 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.26 — Seidr corpus consistency tests (2026-05-06) ✅
+
+35 cross-game cosine assertions across 4 categories (same-family > 0.95; same-family-different-focus > 0.5; conceptually-similar > 0.7-0.85; opposite-pole < 0). Anchors known dimensional relationships into the test suite so any future profile drift surfaces at test time. **228/228 seidr tests pass; mimir 182/182 unchanged.**
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.26.
+
+---
+
+## Sprint 1.0.25 — Seidr `--bgg-bundle` support in profile-game.mjs (2026-05-06) ✅
+
+CLI now accepts Manus's single-array bundle format directly via `--bgg-bundle <path>`, alongside existing `--bgg-file` and `--bgg-dir` modes. Smooths tomorrow's laptop run. 12 new tests including integration against the real 225-entry bundle.
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.25.
+
+---
+
 ## Sprint 1.0.24 — Seidr seed corpus: 225 hand-authored game profiles (2026-05-06) ✅
 
 Hand-authored 225 24-dim game profiles for seidr's matcher corpus, spanning all 8 BGG subdomains (top-25-per-subdomain delivered by Manus). Profiles generated in-conversation by Claude (Opus 4.7) using the prompt-template.mjs reasoning pattern. **No API tokens burned.** The matcher now ranks against a 225-game corpus instead of 7 references.

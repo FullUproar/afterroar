@@ -4,6 +4,87 @@ Per-sprint development history.
 
 ---
 
+## Sprint 1.0.26 — Cross-game consistency tests for the seed corpus (2026-05-06) ✅
+
+**Why:** The 225-profile seed corpus is the matcher's substrate, but no test catches "profile drift" — if any single profile gets miskeyed (PSY_KILLER flipped sign, MEC_COMPLEXITY off by a magnitude, etc.) the schema validator passes but the matcher's behavior degrades silently. Cross-game cosine assertions detect this class of drift by anchoring known dimensional relationships (sequels, peaceful builders, opposite poles) into the test suite.
+
+**Goal:** A test file that asserts expected cosine relationships for known game pairs, with margin-protected thresholds calibrated to the current corpus.
+
+**What landed:**
+- `tests/corpus-consistency.test.mjs` — 35 tests across 4 categories:
+  * **Category 1 — same-family pairs (cosine > 0.95):** 15 sequels and revised editions (Brass: B/L, GH/Frosthaven, PandLeg S1/S2, WotR/2E, Agricola/Rev, X-Wing 1/2, GWT/2E, Arkham LCG/R, Hannibal RvC/H&H, HIS/HIS500, Combat Cmdr Eu/Pa, Telestrations/12P, Wingspan/Asia, Azul/Summer P)
+  * **Category 2 — same-family/different-focus pairs (cosine > 0.5):** 2 (Codenames/Duet — 2P-coop variant; 7W/Duel — 2P-only variant). Threshold relaxed because the design pivot legitimately damps the cosine.
+  * **Category 3 — conceptually-similar pairs (cosine > 0.7-0.85):** 12 (peaceful-builder cluster: Wingspan×Cascadia, Cascadia×Calico, Cascadia×Harmonies; heavy-economic-Euro cluster: Brass:B×TM, Brass:B×Gaia, TM×Gaia; heavy thematic war: TI4×WotR2E; coop: PandLeg×Spirit Island, Codenames×Just One; hidden role: Avalon×SH, Avalon×BotC)
+  * **Category 4 — opposite-pole pairs (cosine < 0):** 5 (TI4×Codenames, GH×Codenames, WotR2E×Codenames, ASL×SoClover, MTG×Concept Kids). Asserts the matcher recognizes dimensional opposition.
+  * **1 diagnostic test** that prints all consistency-pair cosines on demand for retuning after corpus refresh.
+
+**Threshold calibration:** all thresholds set with ≥ 0.05 margin below the actual cosine in the corpus at authorship time. Actual values measured via inline node script before threshold-setting; e.g., Brass:B × Brass:L = 0.985 → assert > 0.95 (0.035 margin).
+
+**Acceptance criteria:**
+1. All 35 assertions pass against current `seed-game-profiles.json` ✅
+2. Thresholds carry margin so trivial corpus tweaks don't break tests ✅
+3. Failing assertion message includes actual cosine for diagnosis ✅
+4. Diagnostic test prints all pairs for retuning ✅
+
+**Test plan (executed BEFORE push):**
+- `npm test` → 228/228 (was 193 after 1.0.25; +35 from this sprint) ✅
+
+**Outcome:** Pushed in this commit. The corpus is now anchored against its own dimensional structure. Any future profile refactor (LLM regeneration, hand-edit, top-500 expansion) that breaks an expected relationship will fail one of these assertions and surface immediately.
+
+**Learnings:**
+- **Cosine values were sharper than expected.** Same-family pairs cluster at 0.99+ rather than the 0.85-0.90 I would have estimated — because the in-conversation profile authoring process used the same dimensional priors for sibling games (e.g., when authoring Brass: Lancashire, I directly leveraged Brass: Birmingham's mental model). This is honest provenance: the high cosines reflect coupled authorship, not independent corroboration.
+- **The opposite-pole pairs all yielded NEGATIVE cosines, not just low ones.** TI4 vs Codenames at -0.397 confirms the dimensional space separates them — the matcher will ACTIVELY DEMOTE Codenames for a TI4-loving player, not just rank it below others. That's stronger than I'd expected and is real signal.
+- **Diagnostic tests are valuable.** The `diagnostic:` test that prints all cosines is hand-runnable but adds no automation noise. Useful for retuning when the corpus changes.
+
+**Rollback:** Revert this commit. Pure additive tests; no code or data changes.
+
+---
+
+## Sprint 1.0.25 — `--bgg-bundle` support in profile-game.mjs (2026-05-06) ✅
+
+**Why:** Manus delivers BGG metadata as a single JSON array (e.g. `data/bgg-top25-bundle.json`, 225 games). The pipeline's CLI accepted single-game `--bgg-file` or directory `--bgg-dir` but not bundles, forcing a manual split step. Tomorrow's laptop work would benefit from feeding the bundle directly.
+
+**Goal:** Add `--bgg-bundle <path>` flag. Detect single-array JSON and iterate entries through the existing pipeline. Tests + integration test against the real bundle.
+
+**What landed:**
+- `scripts/profile-game.mjs`:
+  * New `loadGames(args)` exported function that resolves the three input modes (file / dir / bundle) with mutual-exclusion enforcement
+  * Validates that `--bgg-bundle` file is a JSON array (rejects objects/strings with helpful error)
+  * Updated CLI help text and main() to use the unified loader
+- `tests/profile-game-cli.test.mjs` — 12 new tests:
+  * 3 argument-validation tests (no source / multiple sources / all three)
+  * 1 `--bgg-file` mode test
+  * 2 `--bgg-dir` mode tests (multi-file + empty directory + non-JSON ignored)
+  * 4 `--bgg-bundle` mode tests (small array, 225-entry stress, empty array, non-array rejection × 2)
+  * 1 integration test against real `data/bgg-top25-bundle.json` (loads 225 games, spot-checks Brass: Birmingham)
+
+**Acceptance criteria:**
+1. `--bgg-file <path>` continues to work (regression-clean) ✅
+2. `--bgg-dir <path>` continues to work ✅
+3. `--bgg-bundle <path>` loads a JSON array of game objects ✅
+4. Mutually-exclusive flags rejected with helpful error ✅
+5. Non-array `--bgg-bundle` files rejected with helpful error ✅
+6. Integration test loads real 225-entry bundle and spot-checks contents ✅
+7. seidr 193/193 tests pass (was 181; +12 from this sprint) ✅
+8. Mimir 182/182 regression-clean ✅
+
+**Test plan (executed BEFORE push):**
+- `npm test` → 193/193 ✅
+- `cd ../mimir && npm test` → 182/182 ✅
+- CLI smoke: `node scripts/profile-game.mjs --bgg-bundle data/bgg-top25-bundle.json --mock` → "Loaded 225 game(s) for profiling" ✅
+- CLI error path: malformed bundle → "is not a JSON array" ✅
+- CLI error path: multiple sources → "Specify only ONE" ✅
+
+**Outcome:** Pushed in this commit. Tomorrow's laptop work can feed Manus's bundle directly via `--bgg-bundle`; no manual split needed. The integration test verifies the path against the actual bundle, so any future Manus delivery shape change gets caught at test time.
+
+**Learnings:**
+- **Three input modes were the right factoring.** `--bgg-file` for single-game smoke-tests; `--bgg-dir` for the file-per-game format `mimir/scripts/fetch-bgg.mjs` produces; `--bgg-bundle` for batched deliveries. Each has a real use case; the loader keeps them mutually-exclusive to prevent ambiguity.
+- **Exporting `loadGames` for testing was worth it.** The original main() inlined the file-loading logic; pulling it out to an exported function let me unit-test edge cases (empty bundle, malformed bundle, mutual exclusion) without spawning the CLI. ~30 lines of code, +12 tests of coverage.
+
+**Rollback:** Revert this commit. Pure additive code + tests; existing flags unchanged.
+
+---
+
 ## Sprint 1.0.24 — Seed corpus of 225 hand-authored game profiles (2026-05-06) ✅
 
 **Why:** Manus AI delivered top-25-per-subdomain BGG metadata (225 games across 8 subdomains, ~$0 of Manus credits). Per user direction, generating profiles for these in-conversation rather than via API calls keeps API token cost at $0 for this sprint while extending the matcher's corpus from 7 reference profiles → 225 production profiles. The corpus seeds the matcher today; the eventual top-500 LLM-API run validates against it for calibration drift.
