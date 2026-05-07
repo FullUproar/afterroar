@@ -4,6 +4,14 @@ Per-sprint development history. Most recent at top.
 
 ---
 
+## Sprint 1.0.29 — Seidr `profile-diff.mjs` + reference-vs-seed calibration anchor (2026-05-06) ✅
+
+Pure-function `diffProfile` and `diffCorpora` with CLI wrapper for offline use. Tomorrow's API run can compare new profiles vs hand-authored seed corpus to detect calibration drift. Plus an integration test that asserts the 7 reference profiles (Sprint 1.0.18) align with their counterparts in the 225-profile seed corpus (Sprint 1.0.24) — catches silent drift between the two profile sources. **283/283 seidr tests pass; mimir 182/182 unchanged.**
+
+Full sprint detail in `seidr/SPRINT_LOG.md` § Sprint 1.0.29.
+
+---
+
 ## Sprint 1.0.28 — Seidr `find-similar.mjs` CLI + pure module (2026-05-06) ✅
 
 Pure-function `findSimilarGames(sourceId, gameProfiles, options)` plus CLI wrapper for "find the games most dimensionally similar to game X." Seed of a future "more like this" production feature; debugging tool today. Self-exclusion built in. 20 new tests including 6 SUBTLE-WRONGNESS assertions against real seed corpus (Brass:B → Brass:L; Pandemic Legacy S1 → other seasons; Codenames → party games; etc.). **264/264 seidr tests pass; mimir 182/182 unchanged.**

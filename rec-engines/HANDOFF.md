@@ -2,7 +2,7 @@
 
 **Purpose:** Cross-session context restoration. When you sit down at a laptop after working on mobile (or vice versa), read this + the active engine's `SPRINT_LOG.md` to restore full context.
 
-**Last updated:** 2026-05-06 (post Sprint 1.0.28, seidr `find-similar.mjs` CLI + 5 new archetypes)
+**Last updated:** 2026-05-06 (post Sprint 1.0.29, seidr `profile-diff.mjs` calibration tool + reference-vs-seed anchor)
 
 ---
 
@@ -25,7 +25,7 @@ npm test               # EXPECT 182/182 PASS
 # 3. Verify seidr tests
 cd ../seidr
 npm install --silent
-npm test               # EXPECT 264/264 PASS
+npm test               # EXPECT 283/283 PASS
 ```
 
 If both pass, you're in sync with this doc and can proceed with the laptop-only work below.
@@ -139,6 +139,29 @@ node scripts/find-similar.mjs 224517 --limit 20 --json
 
 Useful for debugging why the matcher recommended a particular game ("because it's dimensionally close to game X you loved"), or for sanity-checking that the corpus places dimensionally-similar games near each other.
 
+### 6. Optional: detect calibration drift with `profile-diff.mjs`
+
+If/when you regenerate profiles via the API run, diff against the current seed corpus to surface what changed:
+
+```bash
+# Corpus diff: shows top-20 most-drifted games
+node scripts/profile-diff.mjs \
+  --from data/seed-game-profiles.json \
+  --to /path/to/api-generated-profiles.json
+
+# Stricter threshold + more results
+node scripts/profile-diff.mjs --from data/seed-game-profiles.json --to new.json \
+  --threshold 0.10 --top 50
+
+# Single-game diff (each side a single profile)
+node scripts/profile-diff.mjs --from old.json --to new.json --single
+
+# JSON output for piping
+node scripts/profile-diff.mjs --from a.json --to b.json --json
+```
+
+Anything with L2 distance > 0.5 is a flag for prompt-iteration. The integration test at `tests/profile-diff.test.mjs` asserts the 6 overlapping reference profiles match seed-corpus equivalents within tolerance — so any future drift between those two sources surfaces at test time.
+
 ---
 
 ## Current state (high level)
@@ -147,7 +170,7 @@ Useful for debugging why the matcher recommended a particular game ("because it'
 |---|---|---|---|
 | `mimir` | Phase 0 — end-to-end validated against local Postgres + real fixture data | **182/182** | Sprint 1.0.22 — seed taxonomies + parser detects INSERT/DELETE/UPDATE |
 | `huginn` | Phase 0 scaffold-only; deferred to Phase 1+ (≥50 active users with real edges) | scaffold | Sprint 1.0.12 |
-| `seidr` | Phase 0 — research + quiz UI + LLM pipeline + 225-game seed corpus + cosine matcher + explanation generator + offline CLI runner + corpus consistency suite; **end-to-end runnable** | **264/264** | Sprint 1.0.28 |
+| `seidr` | Phase 0 — research + quiz UI + LLM pipeline + 225-game seed corpus + cosine matcher + explanation generator + offline CLI runner + corpus consistency suite; **end-to-end runnable** | **283/283** | Sprint 1.0.29 |
 | `saga` | Phase 0 — architecture locked in 3 design docs; implementation deferred until graduation thresholds met (≥3000 recap records, ~12-18mo post-launch) | scaffold + architecture | Sprint 1.0.17 |
 
 **Schema state:** 23 `rec_*` tables defined across 4 migrations (3 in mimir, 1 in seidr). 42 seed-taxonomy rows. Sandbox-validated against Postgres 16 in this datacenter. Not yet on user's Neon.
@@ -193,7 +216,7 @@ A full Phase 0 v0 content-similarity recommender, all in plain Node ES modules, 
 
 ## What's in seidr/ right now
 
-End-to-end profile-driven recommendation engine, runnable today against a 225-game corpus. **264/264 tests pass.**
+End-to-end profile-driven recommendation engine, runnable today against a 225-game corpus. **283/283 tests pass.**
 
 **Schema:**
 - `migrations/0001_seidr_tables.sql` — 3 engine-specific tables (`rec_seidr_player_profile`, `rec_seidr_game_profile`, `rec_seidr_response`). Sandbox-validated in Sprint 1.0.18.
@@ -281,9 +304,10 @@ Adversarial harness tests (in suite + run interactively):
 
 ## Cumulative session footprint (mobile sessions ending 2026-05-06)
 
-28 sprints under TDD discipline. Most recent first:
+29 sprints under TDD discipline. Most recent first:
 
-- Sprint 1.0.28: seidr `find-similar.mjs` CLI + pure-function module (current)
+- Sprint 1.0.29: seidr `profile-diff.mjs` + reference-vs-seed calibration anchor (current)
+- Sprint 1.0.28: seidr `find-similar.mjs` CLI + pure-function module
 - Sprint 1.0.27: seidr 5 new built-in archetypes (high-killer / narrative-seeker / casual-family / kids-evening / drinking-game-night)
 - Sprint 1.0.26: seidr cross-game consistency tests (35 cosine assertions over the seed corpus)
 - Sprint 1.0.25: seidr `--bgg-bundle` CLI support (load Manus bundles directly)
@@ -316,4 +340,4 @@ Adversarial harness tests (in suite + run interactively):
 - Sprint 0.1: first migration file (`9b1b383`)
 - Sprint 0.0.2 / 0.0.1 / 0.0: silo scaffold + Norse rename + design doc
 
-~6k lines of source code, ~14k+ lines of tests + docs + data. End-state: mimir **182/182**, seidr **264/264**; migration runners validated against real Postgres; four engines registered (mimir running with seeded taxonomies, huginn scaffold, seidr end-to-end with 225-game corpus + 8 archetypes + corpus-consistency suite + find-similar tool, saga architecture-locked); **23 rec_* tables in schema with 42 seed-taxonomy rows**, sandbox-validated, not yet on user's Neon. **Seidr fully runnable end-to-end via `scripts/run-rec.mjs --game-profiles data/seed-game-profiles.json` and `scripts/find-similar.mjs <game_id>`.**
+~6k lines of source code, ~14k+ lines of tests + docs + data. End-state: mimir **182/182**, seidr **283/283**; migration runners validated against real Postgres; four engines registered (mimir running with seeded taxonomies, huginn scaffold, seidr end-to-end with 225-game corpus + 8 archetypes + corpus-consistency suite + find-similar tool, saga architecture-locked); **23 rec_* tables in schema with 42 seed-taxonomy rows**, sandbox-validated, not yet on user's Neon. **Seidr fully runnable end-to-end via `scripts/run-rec.mjs --game-profiles data/seed-game-profiles.json` and `scripts/find-similar.mjs <game_id>`.**

@@ -4,6 +4,67 @@ Per-sprint development history.
 
 ---
 
+## Sprint 1.0.29 — `profile-diff.mjs` + reference-vs-seed calibration anchor (2026-05-06) ✅
+
+**Why:** Tomorrow's API run (or any future LLM regeneration) needs a way to compare new profiles against the hand-authored seed corpus. Without diffing infrastructure, calibration drift would have to be eyeballed or hand-spreadsheeted. A pure-function diff tool catches drift mechanically. Also: the 7 reference profiles (Sprint 1.0.18) and the 225-profile seed corpus (Sprint 1.0.24) overlap on 6 games. Until now, no test asserted those 6 overlapping profiles match across the two files — silent drift between reference and seed would slip through.
+
+**Goal:** Pure-function `diffProfile(a, b)` and `diffCorpora(corpusA, corpusB)`. CLI wrapper for offline use. Tests covering arg validation, identity case, drift detection, threshold tuning, and an integration test that asserts reference-vs-seed alignment.
+
+**What landed:**
+- `src/profile-diff.mjs` — pure functions, no I/O:
+  * `diffProfile(profileA, profileB, options)` — per-dim deltas + L2 distance + significant-dims list (sorted by |delta|, threshold-filtered)
+  * `diffCorpora(corpusA, corpusB, options)` — aligns by game_id, separates only-in-A / only-in-B, summary stats (mean/max L2, drift count)
+  * Strict shape enforcement: throws on game_id mismatch, throws on dim-key asymmetry
+- `scripts/profile-diff.mjs` — CLI wrapper (~150 lines):
+  * `--from <path>` and `--to <path>` (required)
+  * `--single` for single-profile diffs (else: corpus diff)
+  * `--threshold <n>` (default 0.15) for significant-delta cutoff
+  * `--top <n>` shows top-N most-drifted games (default 20)
+  * `--json` for piping
+- `tests/profile-diff.test.mjs` — 19 new tests:
+  * 4 arg-validation tests
+  * 6 diffProfile core tests (identity, directional deltas, L2 math, threshold filtering, sort order)
+  * 7 diffCorpora tests (identity, only-in-A/B, disjoint, drift count, L2-sorted output)
+  * **2 CALIBRATION ANCHOR integration tests:**
+    1. **Reference profiles ↔ seed corpus**: every overlapping profile (6 games) must have L2 distance < 0.05. This catches drift between the two profile sources — if anyone re-authors the seed corpus and breaks reference parity, this test surfaces it.
+    2. **Documented gap**: Pandemic (30549) is in references but not in seed corpus (only Pandemic Legacy variants are top-25 BGG). The test asserts this gap is the ONLY difference — any new gap would be undocumented drift.
+
+**Smoke verification (this sprint):**
+```
+$ node scripts/profile-diff.mjs --from data/seed-game-profiles.json \
+                                --to data/seed-game-profiles.json
+Games in both corpora: 225
+Mean L2 distance: 0.0000
+Max L2 distance:  0.0000
+Games with significant drift: 0 / 225  ← identity diff is clean
+```
+
+**Acceptance criteria:**
+1. Pure functions — no I/O, deterministic ✅
+2. Identity diff yields zero L2 ✅
+3. Asymmetric dim keys throw with helpful errors ✅
+4. only_in_a / only_in_b populated correctly ✅
+5. Top-N drifted games sorted by L2 desc ✅
+6. **CALIBRATION ANCHOR**: reference-vs-seed alignment for 6 overlapping games (L2 < 0.05) ✅
+7. **CALIBRATION ANCHOR**: documented Pandemic-only-in-reference gap ✅
+8. seidr 283/283 tests pass (was 264; +19 from this sprint) ✅
+9. Mimir 182/182 regression-clean ✅
+
+**Test plan (executed BEFORE push):**
+- `npm test` → 283/283 ✅
+- CLI smoke: identity diff (seed × seed) → zero L2 across all 225 games ✅
+
+**Outcome:** Pushed in this commit. Tomorrow's laptop session has a calibration-drift detector. When the API run regenerates profiles, run `profile-diff.mjs --from data/seed-game-profiles.json --to <new-profiles.json>` and the top-20 drifted games surface immediately. Anything with L2 > 0.5 is a flag for prompt iteration.
+
+**Learnings:**
+- **The reference-vs-seed integration test caught a real expectation gap.** Initial threshold of L2 < 0.01 failed for all 6 overlapping games — they have small but non-zero deltas because Sprint 1.0.24's hand-authored seed used the reference profiles as starting points but adjusted slightly during batch authoring (different mental cluster context). Adjusted threshold to 0.05 and clarified in the test name that "match within tolerance" is the correct framing — they aren't expected to be byte-identical, just close enough that the matcher's behavior is consistent across both sources.
+- **The Pandemic-only-in-reference gap was discovered, not designed.** When writing the integration test I noticed Pandemic (30549) was missing from `only_in_a`. Confirmed: Pandemic itself isn't in the BGG top-25 bundle Manus delivered (only Pandemic Legacy variants 161936/221107/314040). Documented this as the expected behavior with an explicit assertion. If anyone in the future regenerates BGG metadata and Pandemic returns to top-25, the test will fail — surfacing the change.
+- **L2 distance vs cosine: different lenses on the same problem.** L2 measures absolute deltas in the dim space; cosine measures directional alignment. Two profiles with L2 = 0.5 and cosine = 0.99 are the same DIRECTION but slightly different MAGNITUDE (e.g., a regenerated profile with all dims scaled by 0.95). For matcher behavior, cosine is what counts. For calibration drift detection, L2 is what catches "the dimensions are sliding" before cosine alone would. Both tools complement each other.
+
+**Rollback:** Revert this commit. Pure additive code + tests; no schema changes; no other engines affected.
+
+---
+
 ## Sprint 1.0.28 — `find-similar.mjs` CLI + pure-function module (2026-05-06) ✅
 
 **Why:** Given a game the player loves, what other games in the corpus share its dimensional fingerprint? This is the seed of a future "more like this" production feature, and a useful debugging tool today. ("Why did the matcher recommend X for this player?" → often: because X is dimensionally close to a game they loved.)
