@@ -236,6 +236,68 @@ export async function deleteUserGameSignal(input: {
 }
 
 /**
+ * Migrate all rec_seidr_* rows tagged with an anon_session_id over to a
+ * passport_id. Called when a previously-anonymous quiz taker signs in
+ * (or signs up), so their accumulated signals + rec event log + saved
+ * profile follow them into their Passport.
+ *
+ * Idempotent and safe to call repeatedly: the WHERE clause filters to
+ * rows that still have the anon id and lack a passport. If the user
+ * tagged the same game while signed in AND while anonymous (rare but
+ * possible if they cleared cookies), we use a per-kind precedence:
+ * passport rows win — anon rows are dropped (the signed-in tag is the
+ * later, intentional one). For event rows there's no conflict — they're
+ * append-only history.
+ *
+ * Returns counts so the caller can surface "we found N games you tagged
+ * before — they're now on your Passport."
+ */
+export async function claimAnonRowsForPassport(args: {
+  passportId: string;
+  anonSessionId: string;
+}): Promise<{ events: number; signals: number; signalsDropped: number }> {
+  const { passportId, anonSessionId } = args;
+
+  // Reassign event rows. Append-only, no conflict resolution needed.
+  const eventResult = await prisma.$executeRaw`
+    UPDATE rec_seidr_recommendation_event
+    SET passport_id = ${passportId},
+        anon_session_id = NULL
+    WHERE anon_session_id = ${anonSessionId}
+      AND passport_id IS NULL
+  `;
+
+  // For signals: drop any anon row that conflicts with an existing
+  // passport row on the same (game_id, kind). The partial unique index
+  // would reject the UPDATE otherwise, so we delete first then update.
+  const droppedResult = await prisma.$executeRaw`
+    DELETE FROM rec_seidr_user_game_signal anon
+    WHERE anon.anon_session_id = ${anonSessionId}
+      AND EXISTS (
+        SELECT 1 FROM rec_seidr_user_game_signal pp
+        WHERE pp.passport_id = ${passportId}
+          AND pp.game_id = anon.game_id
+          AND pp.kind = anon.kind
+      )
+  `;
+
+  const signalResult = await prisma.$executeRaw`
+    UPDATE rec_seidr_user_game_signal
+    SET passport_id = ${passportId},
+        anon_session_id = NULL,
+        updated_at = now()
+    WHERE anon_session_id = ${anonSessionId}
+      AND passport_id IS NULL
+  `;
+
+  return {
+    events: Number(eventResult),
+    signals: Number(signalResult),
+    signalsDropped: Number(droppedResult),
+  };
+}
+
+/**
  * Fetch all of a passport's signals (used to render thumbs state on rec
  * cards when a signed-in user revisits). Anon equivalents need to be
  * fetched per session via the anon_session_id branch.

@@ -1260,6 +1260,53 @@
     }
   };
 
+  // Anonymous → signed-in claim. When a user takes the quiz anonymously
+  // and later signs in, we want their existing tags + rec history to
+  // follow them onto their Passport. Fire the claim once per
+  // (anon_session_id, session) pair — the marker is stored in
+  // localStorage so we don't pound the endpoint on every page load.
+  // Idempotent server-side either way.
+  if (window.__authState && window.__authState.signedIn) {
+    try {
+      const anonId = window.__getAnonSessionId();
+      const claimedKey = 'seidr_claimed_for_' + (window.__authState.userId || 'unknown');
+      const alreadyClaimed = localStorage.getItem(claimedKey) === anonId;
+      if (!alreadyClaimed) {
+        // Best-effort: include the latest in-browser profile + responses
+        // so the server can rescue an unsaved profile from the anon
+        // session. window.__profile + window.__exportJson land after
+        // results render — at this point in page lifecycle they're
+        // typically null, but a re-claim after results would carry them.
+        const body = { anon_session_id: anonId };
+        if (window.__profile && bank && bank.metadata && responses && responses.length > 0) {
+          body.profile = window.__profile;
+          body.confidence = (typeof computeProfile === 'function')
+            ? computeProfile().confidence
+            : {};
+          body.question_set_version = bank.metadata.version || 'unknown';
+          body.questions_answered = responses.length;
+        }
+        fetch('/api/quiz/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+          .then((r) => r.ok ? r.json() : null)
+          .then((data) => {
+            if (!data) return;
+            try { localStorage.setItem(claimedKey, anonId); } catch {}
+            const total = (data.events_migrated || 0) + (data.signals_migrated || 0);
+            if (total > 0 || data.profile_migrated) {
+              // Light surfacing — most users won't have anything to claim;
+              // when they do, a console line is fine for now.
+              console.info(`[seidr] claim: ${data.events_migrated} events + ${data.signals_migrated} signals migrated, ${data.signals_dropped} dropped, profile ${data.profile_migrated ? 'migrated' : 'kept'}.`);
+            }
+          })
+          .catch(() => { /* silent — server logs the failure */ });
+      }
+    } catch { /* silent */ }
+  }
+
   // Hydrate signal state from the DB so prior tags survive a fresh
   // device or a localStorage wipe. Merges with whatever's already in
   // local — the DB is authoritative for cross-device truth, but local
