@@ -29,11 +29,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { recommendGames } from '@/lib/heimdall/orchestrator';
-import { recordRecommendationEvent } from '@/lib/heimdall/persist';
+import { recordRecommendationEvent, loadUserGameSignals } from '@/lib/heimdall/persist';
 import { auth } from '@/lib/auth-config';
 import gameMeta from '@/lib/heimdall/game-meta.json';
 
 const ANON_SESSION_ID_RE = /^[0-9a-f-]{8,64}$/i;
+
+// Signal kinds that should hide a game from future recs:
+//   - owned: they have it; recommending it is wasted slot
+//   - tried_disliked: they've tried it and it didn't land
+//   - thumbs_down: they've explicitly told us this rec was off
+// 'never_heard_of' is intentionally NOT here — it's a positive surfacing
+// signal (we should show it again, maybe with more confidence).
+const EXCLUDE_KINDS = new Set(['owned', 'tried_disliked', 'thumbs_down']);
 
 const MAX_LIMIT = 24;
 
@@ -153,6 +161,33 @@ export async function POST(request: NextRequest) {
 
   const effectiveProfile = applyMoodDelta(b.profile, b.mood_delta);
 
+  // Identity resolution — earlier than the previous version, since we now
+  // need it BEFORE calling the orchestrator (to pull the user's prior
+  // signals and exclude their owned/disliked games from the candidate pool).
+  const session = await auth().catch(() => null);
+  const passportId = session?.user?.id ?? null;
+  const anonSessionId =
+    !passportId && typeof b.anon_session_id === 'string' && ANON_SESSION_ID_RE.test(b.anon_session_id)
+      ? b.anon_session_id
+      : null;
+
+  // Pull signal-based exclusions. Best-effort — if the lookup fails the
+  // recs still go through (just without signal-aware filtering).
+  let excludeGameIds: number[] = [];
+  if (passportId || anonSessionId) {
+    try {
+      const signals = await loadUserGameSignals({ passportId, anonSessionId });
+      const excluded = new Set<number>();
+      for (const s of signals) {
+        if (EXCLUDE_KINDS.has(s.kind)) excluded.add(s.game_id);
+      }
+      excludeGameIds = Array.from(excluded);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[quiz-recommend] signal lookup failed (non-fatal)', { message });
+    }
+  }
+
   let result;
   try {
     result = await recommendGames({
@@ -165,6 +200,7 @@ export async function POST(request: NextRequest) {
             subdomains: b.filters.subdomains,
           }
         : undefined,
+      context: excludeGameIds.length > 0 ? { excludeGameIds } : undefined,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -175,16 +211,6 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-
-  // Resolve identity for event logging. Signed-in users get a passport
-  // id from the session; anon users may pass an anon_session_id from
-  // localStorage. Either is fine; if neither, we skip logging.
-  const session = await auth().catch(() => null);
-  const passportId = session?.user?.id ?? null;
-  const anonSessionId =
-    !passportId && typeof b.anon_session_id === 'string' && ANON_SESSION_ID_RE.test(b.anon_session_id)
-      ? b.anon_session_id
-      : null;
 
   // Build the rec list once so the same array goes into the response
   // body and the persisted event log.
@@ -234,6 +260,7 @@ export async function POST(request: NextRequest) {
       engines_ran: result.enginesRan,
       engines_skipped: result.enginesSkipped,
       candidates_considered: result.candidatesConsidered,
+      excluded_by_signals: excludeGameIds.length,
       recommendation_event_id: recommendationEventId,
     });
   } catch (err) {
