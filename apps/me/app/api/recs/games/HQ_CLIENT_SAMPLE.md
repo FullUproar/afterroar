@@ -96,10 +96,84 @@ If the response has empty `recommendations` and `engines_skipped` says
 hasn't taken the quiz yet. Surface a "Take the 5-minute quiz" link
 to `https://www.afterroar.me/quiz` in the UI.
 
+## Group mode (game night picks)
+
+Pass `player_ids: string[]` instead of `player_id` / `player_profile`
+and the route switches to **group recommendation**. Each candidate game
+is scored against every player's saved profile independently, then
+aggregated cross-player. Default aggregation is `min` (egalitarian —
+find the game where the *least-happy* player is happiest); `mean` is
+exposed but it's the classic trap (averages hide preferences and serve
+"neutral on combat" euros to wargamers + wargame-haters).
+
+Player-count filter defaults to `player_ids.length`, so a group of 4
+automatically drops games that can't be played 4-player. Players who
+haven't saved a profile yet come back in `players_skipped` — UI
+should prompt them to take the quiz.
+
+Each rec carries the per-player breakdown so HQ can render the floor
+visually:
+
+```ts
+interface GroupRecsRequest {
+  playerIds: string[];                       // Passport user ids
+  aggregation?: 'min' | 'mean';              // default 'min' — keep it
+  context?: { playerCount?: number; excludeGameIds?: number[] };
+  limit?: number;
+}
+
+interface GroupRecsResponse {
+  mode: 'group';
+  aggregation: 'min' | 'mean';
+  recommendations: Array<{
+    // ...all the single-mode fields (game_name, year, subdomain, etc), plus:
+    per_player_scores: Array<{ playerId: string; score: number }>;
+    group_aggregate_score: number;           // min or mean per `aggregation`
+    score_spread: number;                    // max - min — high = polarizing
+  }>;
+  players_resolved: string[];
+  players_skipped: Array<{ playerId: string; reason: string }>;
+  engines_ran: string[];
+  engines_skipped: Array<{ name: string; reason: string }>;
+  candidates_considered: number;
+}
+
+// Tie-break ranks lower-spread first within the same aggregate score —
+// so two equal "min = 0.7" picks favor the one where everyone's actually
+// near 0.7 over the one where one player's at 0.95 and another at 0.7.
+//
+// UI tip: surface score_spread as a visual cue ("everyone's into this"
+// for low spread vs "polarizing — Bob will sulk" for high spread).
+```
+
+Sample group call:
+
+```ts
+const groupRecs = await fetch('https://www.afterroar.me/api/recs/games', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+  body: JSON.stringify({
+    player_ids: ['alice-passport-id', 'bob-passport-id', 'carol-passport-id'],
+    // aggregation defaults to 'min' — don't pass 'mean' unless you mean it
+    limit: 8,
+  }),
+});
+```
+
 ## What's not in this endpoint (yet)
 
 - Mood deltas / hard filters / signal exclusions — those are quiz-only
   via `/api/quiz/recommend`. Server-to-server callers requesting them
   is a v0.2 add (the orchestrator already supports them; just not
   plumbed through this route). Tell us when HQ wants them.
+- **Saga simulation** — proper group dynamics ("Alice will table-talk
+  her way through; Bob will go quiet and resent the betrayal mechanic")
+  is phase-2. Needs ≥3000 recap rows for the per-player fun model.
+  Until then, group mode is "minmax cosine" — 80% as good as the fancy
+  version, available now. Limitation to surface honestly in UI: "We
+  pick for whoever would dislike it most, not for the most-fun group
+  *dynamic*."
+- Group affinity weighting — currently each player contributes equally
+  to the min/mean. Future: weight by recency (active players matter
+  more) or hosting status (the host's preference breaks ties).
 - Game search — separate `/api/recs/games/search?q=...&limit=10` (no auth).

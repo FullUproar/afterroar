@@ -40,6 +40,8 @@ interface GameMetaEntry {
   year?: number | null;
   subdomain?: string | null;
   categories?: string[];
+  minPlayers?: number | null;
+  maxPlayers?: number | null;
 }
 
 /**
@@ -140,7 +142,7 @@ function applyFilters(
 //   - Confidence-weighted cosine (low-confidence dims contribute less)
 //   - Player-count filtering when bggMetadata is supplied
 //
-import { match as canonicalSeidrMatch, gameGameSimilarity } from './seidr-match.mjs';
+import { match as canonicalSeidrMatch, gameGameSimilarity, scoreAll as canonicalSeidrScoreAll } from './seidr-match.mjs';
 /**
  * One contributing dimension's role in the cosine score. The contribution
  * is the un-normalized term that adds to the dot product (player × game).
@@ -454,5 +456,278 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
     enginesRan,
     enginesSkipped,
     candidatesConsidered: seidrResult.totalConsidered,
+  };
+}
+
+// ---------------------------------------------------------------------
+// Group recommendations
+// ---------------------------------------------------------------------
+//
+// Picks a game for a group of N players. The naive approach — average
+// everyone's profile into one and run single-player recs — destroys
+// information at the extremes: 2 wargamers + 2 wargame-haters average
+// to "neutral on combat," and the matcher serves a euro that disappoints
+// both halves.
+//
+// Instead: score every candidate game against every player's profile
+// independently, then aggregate per-game across players. Default
+// aggregation is **min** (egalitarian — find the game where the
+// least-happy player is happiest). 'mean' is exposed for callers that
+// want the utilitarian view (it's the trap, but documented).
+//
+// Honors filters and exclusions like single-player. Excludes any game
+// owned by ANY player (no point recommending what one of them already
+// has). Affinity anchors are unioned across all players (max-per-game
+// behavior preserved).
+//
+// MMR diversification is skipped in this v1 — the group case usually
+// returns a small list (often just 5-10 picks) and the user picks one,
+// so over-similar adjacent picks aren't the failure mode that drove
+// MMR for single-player. Easy to layer in later.
+
+export interface GroupRecommendRequest {
+  /**
+   * Passport user ids of every player at the table. We resolve each to
+   * their saved seidr profile; players without a saved profile are
+   * skipped (returned in `playersSkipped`) — the rec runs on whoever's
+   * left. Group of 1 degenerates to single-player and is allowed.
+   */
+  playerIds: string[];
+  /**
+   * Same shape as RecommendRequest.context. `playerCount` defaults to
+   * `playerIds.length` if omitted (the typical case — group of 4 wants
+   * games that play 4). Pass an explicit value to override (e.g. group
+   * size doesn't match the rec target).
+   */
+  context?: {
+    playerCount?: number;
+    excludeGameIds?: number[];
+  };
+  filters?: RecommendRequest['filters'];
+  limit?: number;
+  affinityAnchors?: AffinityAnchor[];
+  /**
+   * Per-game cross-player aggregation:
+   *   - 'min' (default): worst-off player's score. Egalitarian. The right
+   *     default for group game-night picks — nobody having a bad time
+   *     matters more than everyone having a slightly-better-than-average
+   *     time.
+   *   - 'mean': average across all players. Documented for
+   *     completeness; surfaces "broadly liked but might leave outliers
+   *     stranded" picks. Don't use this without thought.
+   */
+  aggregation?: 'min' | 'mean';
+}
+
+export interface GroupRecommendedGame extends RecommendedGame {
+  /**
+   * Per-player score breakdown — lets the UI surface "Alice 0.7, Bob
+   * 0.6, Carol 0.4 → group min = 0.4" so the floor is visible.
+   */
+  perPlayerScores: Array<{ playerId: string; score: number }>;
+  /**
+   * The aggregate value used for ranking (min or mean per the request's
+   * aggregation strategy). Same as `score` on this object — duplicated
+   * for clarity at the consumer.
+   */
+  groupAggregateScore: number;
+  /**
+   * Spread = max - min across players. Useful for surfacing "everyone
+   * loves this" (low spread, high min) vs "polarizing" (high spread).
+   */
+  scoreSpread: number;
+}
+
+export interface GroupRecommendResponse {
+  recommendations: GroupRecommendedGame[];
+  enginesRan: RecommendResponse['enginesRan'];
+  enginesSkipped: RecommendResponse['enginesSkipped'];
+  candidatesConsidered: number;
+  /** Players whose profiles were loaded and used in scoring. */
+  playersResolved: string[];
+  /**
+   * Players we couldn't include — usually because they haven't taken
+   * the quiz. UI should prompt them to take it before re-running.
+   */
+  playersSkipped: Array<{ playerId: string; reason: string }>;
+  /** The aggregation strategy that was applied. */
+  aggregation: 'min' | 'mean';
+}
+
+interface SeidrScoredGame {
+  game_id: number;
+  score: number;
+}
+
+export async function recommendForGroup(
+  req: GroupRecommendRequest,
+): Promise<GroupRecommendResponse> {
+  const limit = req.limit ?? DEFAULT_LIMIT;
+  const aggregation = req.aggregation ?? 'min';
+  const enginesRan: RecommendResponse['enginesRan'] = [];
+  const enginesSkipped: RecommendResponse['enginesSkipped'] = [];
+
+  // Same eligibility skips as single-player — keep the response shape
+  // self-describing about which engines ran.
+  enginesSkipped.push({ name: 'mimir', reason: 'rec_game not yet populated' });
+  enginesSkipped.push({ name: 'huginn', reason: 'phase-1 — not yet implemented' });
+  enginesSkipped.push({ name: 'saga', reason: 'phase-2 — needs ≥3000 recaps' });
+
+  if (!Array.isArray(req.playerIds) || req.playerIds.length === 0) {
+    enginesSkipped.push({ name: 'seidr', reason: 'no players in group' });
+    return {
+      recommendations: [],
+      enginesRan,
+      enginesSkipped,
+      candidatesConsidered: 0,
+      playersResolved: [],
+      playersSkipped: [],
+      aggregation,
+    };
+  }
+
+  // Load every player's profile. Players without a saved profile are
+  // skipped — the rec runs on whoever's left.
+  const profilePairs = await Promise.all(
+    req.playerIds.map(async (playerId) => ({
+      playerId,
+      profile: await loadPlayerProfile(playerId),
+    })),
+  );
+
+  const resolved: Array<{ playerId: string; profile: SeidrPlayerProfile }> = [];
+  const playersSkipped: GroupRecommendResponse['playersSkipped'] = [];
+  for (const p of profilePairs) {
+    if (p.profile) resolved.push({ playerId: p.playerId, profile: p.profile });
+    else playersSkipped.push({ playerId: p.playerId, reason: 'no saved profile (take the quiz)' });
+  }
+
+  if (resolved.length === 0) {
+    enginesSkipped.push({ name: 'seidr', reason: 'no players in group have a saved profile' });
+    return {
+      recommendations: [],
+      enginesRan,
+      enginesSkipped,
+      candidatesConsidered: 0,
+      playersResolved: [],
+      playersSkipped,
+      aggregation,
+    };
+  }
+
+  const allProfiles: SeidrGameProfile[] = await loadGameProfiles();
+
+  // Default playerCount to the group size — almost always what callers
+  // mean when they pass a group. Caller can override.
+  const playerCount = req.context?.playerCount ?? req.playerIds.length;
+  const excludeIds = new Set<number>(req.context?.excludeGameIds ?? []);
+
+  // Apply filters (year, subdomain) once on the candidate pool.
+  let candidates = applyFilters(allProfiles, req.filters);
+  // Apply player-count filter via game-meta — drop games that can't
+  // physically be played by this group size.
+  if (playerCount && playerCount > 0) {
+    candidates = candidates.filter((g) => {
+      const m = (gameMeta as Record<string, GameMetaEntry>)[String(g.game_id)];
+      if (!m) return true;
+      if (typeof m.minPlayers === 'number' && playerCount < m.minPlayers) return false;
+      if (typeof m.maxPlayers === 'number' && playerCount > m.maxPlayers) return false;
+      return true;
+    });
+  }
+  // Apply hard exclusions.
+  if (excludeIds.size > 0) {
+    candidates = candidates.filter((g) => !excludeIds.has(g.game_id));
+  }
+  const totalConsidered = candidates.length;
+
+  // Score every candidate against every resolved player.
+  // perGameScores: game_id → { playerId: score }
+  const perGameScores = new Map<number, Map<string, number>>();
+  for (const { playerId, profile } of resolved) {
+    const scored = canonicalSeidrScoreAll(profile, candidates) as SeidrScoredGame[];
+    for (const s of scored) {
+      let m = perGameScores.get(s.game_id);
+      if (!m) {
+        m = new Map();
+        perGameScores.set(s.game_id, m);
+      }
+      m.set(playerId, s.score);
+    }
+  }
+
+  // Aggregate per-game across players using the selected strategy.
+  // Build a ranked list of GroupRecommendedGame (light shape, no
+  // top-dim contributions yet — those are single-player concepts;
+  // future v1.1 will compute "the dim that pulled the floor down" for
+  // the worst-off player as the natural group-version of explainability).
+  const aggregated: GroupRecommendedGame[] = [];
+  for (const [gameId, playerScoreMap] of perGameScores) {
+    const playerScores = resolved.map(({ playerId }) => ({
+      playerId,
+      score: playerScoreMap.get(playerId) ?? 0,
+    }));
+    const scores = playerScores.map((p) => p.score);
+    const minScore = Math.min(...scores);
+    const maxScore = Math.max(...scores);
+    const sumScore = scores.reduce((a, b) => a + b, 0);
+    const meanScore = sumScore / scores.length;
+    const aggregateScore = aggregation === 'mean' ? meanScore : minScore;
+    aggregated.push({
+      gameId,
+      score: aggregateScore,
+      contributions: { seidr: aggregateScore },
+      perPlayerScores: playerScores,
+      groupAggregateScore: aggregateScore,
+      scoreSpread: maxScore - minScore,
+    });
+  }
+
+  // Apply affinity boost across the union of all players' anchors —
+  // one strong "loved" pulls the group the same way a single-player one
+  // would. Per-game boost is still max (not sum) so a game similar to
+  // *any* anchor gets the lift, but multi-anchor matches don't compound.
+  const anchors = req.affinityAnchors ?? [];
+  const AFFINITY_ALPHA = 0.5;
+  const boosted = applyAffinityBoost(
+    aggregated.map((g) => ({
+      game_id: g.gameId,
+      score: g.score,
+      topContributions: [],
+      allContributions: [],
+    })),
+    candidates,
+    anchors,
+    AFFINITY_ALPHA,
+  );
+
+  // Splice the boosted scores back onto the aggregated entries.
+  const boostedByGame = new Map(boosted.map((b) => [b.game_id, b.score]));
+  for (const g of aggregated) {
+    const newScore = boostedByGame.get(g.gameId);
+    if (typeof newScore === 'number') {
+      g.score = newScore;
+      g.groupAggregateScore = newScore;
+      g.contributions = { seidr: newScore };
+    }
+  }
+
+  // Final ranking + slice to limit. Sort by aggregate desc; tie-break
+  // on lower spread (less polarizing wins ties).
+  aggregated.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.scoreSpread - b.scoreSpread;
+  });
+
+  enginesRan.push('seidr');
+
+  return {
+    recommendations: aggregated.slice(0, limit),
+    enginesRan,
+    enginesSkipped,
+    candidatesConsidered: totalConsidered,
+    playersResolved: resolved.map((r) => r.playerId),
+    playersSkipped,
+    aggregation,
   };
 }
