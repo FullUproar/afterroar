@@ -490,10 +490,21 @@
     container.innerHTML = '';
 
     try {
+      // Mood deltas are computed on each call. They don't persist —
+      // a page reload clears them and recs go back to the pure profile.
+      const moodDelta = (typeof window.__computeMoodDelta === 'function')
+        ? window.__computeMoodDelta()
+        : {};
+      const hasMoodDelta = Object.keys(moodDelta).length > 0;
+
       const res = await fetch('/api/quiz/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile: window.__profile, limit: 12 }),
+        body: JSON.stringify({
+          profile: window.__profile,
+          limit: 12,
+          ...(hasMoodDelta ? { mood_delta: moodDelta } : {}),
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -547,22 +558,126 @@
         </span>`;
       }
 
+      // Mood cards: paired axes that nudge specific dims. Each card
+      // pair shares an axis; tapping one side adds delta, tapping the
+      // other side subtracts. Tapping the same side again clears the
+      // mood. Re-fetches recs each time. Stable IDs let us track which
+      // are active across re-renders.
+      const moodAxes = [
+        {
+          id: 'cooperation',
+          dim: 'SOC_COOP_COMP',
+          step: 0.6,
+          left:  { id: 'spicy',    label: 'Spicy & competitive', emoji: '🌶️', signSign: -1 },
+          right: { id: 'cozy',     label: 'Cozy & cooperative',  emoji: '🤝', signSign: +1 },
+        },
+        {
+          id: 'narrative',
+          dim: 'AES_NARRATIVE',
+          step: 0.5,
+          left:  { id: 'numbers',  label: 'Numbers-driven',      emoji: '🧮', signSign: -1 },
+          right: { id: 'story',    label: 'Story-driven',        emoji: '🎭', signSign: +1 },
+        },
+        {
+          id: 'length',
+          dim: 'CTX_SESSION_LENGTH',
+          step: 0.6,
+          left:  { id: 'quick',    label: 'Quick punch',          emoji: '⚡', signSign: -1 },
+          right: { id: 'epic',     label: 'Epic journey',         emoji: '🌌', signSign: +1 },
+        },
+        {
+          id: 'complexity',
+          dim: 'MEC_COMPLEXITY',
+          step: 0.5,
+          left:  { id: 'breezy',   label: 'Breezy & light',       emoji: '🪶', signSign: -1 },
+          right: { id: 'crunchy',  label: 'Crunchy & deep',       emoji: '🧠', signSign: +1 },
+        },
+        {
+          id: 'humor',
+          dim: 'EMO_HUMOR',
+          step: 0.5,
+          left:  { id: 'serious',  label: 'Serious vibe',         emoji: '🎯', signSign: -1 },
+          right: { id: 'silly',    label: 'Silly vibe',           emoji: '😂', signSign: +1 },
+        },
+      ];
+
+      function buildMoodCardsHtml() {
+        const active = window.__moodActive || {}; // axisId → 'left' | 'right'
+        return moodAxes.map(axis => {
+          const isLeft = active[axis.id] === 'left';
+          const isRight = active[axis.id] === 'right';
+          const cardStyle = (on) => `flex:1; padding:8px 10px; background:${on ? 'rgba(255,130,0,0.18)' : 'rgba(255,255,255,0.04)'}; border:1px solid ${on ? '#FF8200' : 'rgba(255,255,255,0.08)'}; border-radius:8px; cursor:pointer; text-align:center; transition: all 120ms; font-size: 0.82rem; color: ${on ? '#FBDB65' : '#e2e8f0'};`;
+          return `<div style="display:flex; gap:6px; margin-bottom:6px;">
+            <div onclick="window.__moodTap('${axis.id}', 'left')" style="${cardStyle(isLeft)}">
+              <span style="font-size:1.05rem;">${axis.left.emoji}</span> ${axis.left.label}
+            </div>
+            <div onclick="window.__moodTap('${axis.id}', 'right')" style="${cardStyle(isRight)}">
+              <span style="font-size:1.05rem;">${axis.right.emoji}</span> ${axis.right.label}
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      // Compute the delta from active mood selections.
+      window.__computeMoodDelta = () => {
+        const active = window.__moodActive || {};
+        const delta = {};
+        for (const axis of moodAxes) {
+          const side = active[axis.id];
+          if (!side) continue;
+          const sign = axis[side].signSign;
+          delta[axis.dim] = (delta[axis.dim] || 0) + sign * axis.step;
+        }
+        return delta;
+      };
+
+      // Tap a card. Same-side tap clears; opposite-side tap flips.
+      window.__moodTap = (axisId, side) => {
+        if (!window.__moodActive) window.__moodActive = {};
+        if (window.__moodActive[axisId] === side) {
+          delete window.__moodActive[axisId];
+        } else {
+          window.__moodActive[axisId] = side;
+        }
+        window.__getRecs(); // re-fetch with new mood
+      };
+
       const items = data.recommendations.map((r, i) => {
         const name = r.game_name || `Game #${r.game_id}`;
         const score = (r.score * 100).toFixed(0);
         const bggUrl = `https://boardgamegeek.com/boardgame/${r.game_id}`;
         const contribs = (r.top_dim_contributions || []).map(chipForContribution).join('');
+
+        // Metadata line: year · subdomain · top categories
+        const metaParts = [];
+        if (r.year) metaParts.push(String(r.year));
+        if (r.subdomain) metaParts.push(escapeHtml(r.subdomain));
+        const cats = (r.categories || []).slice(0, 2);
+        if (cats.length > 0) metaParts.push(cats.map(escapeHtml).join(' · '));
+        const metaLine = metaParts.length
+          ? `<div style="font-size:0.74rem; opacity:0.55; margin-top:1px;">${metaParts.join(' &middot; ')}</div>`
+          : '';
+
         return `<div style="display:flex; align-items:flex-start; gap:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
           <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:rgba(255,130,0,0.2); color:#FF8200; display:flex; align-items:center; justify-content:center; font-weight:700; margin-top:2px;">${i + 1}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:600; color:#f8fafc;">${escapeHtml(name)}</div>
-            <div style="font-size:0.78rem; opacity:0.6; margin-top:2px;">match ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a></div>
+            ${metaLine}
+            <div style="font-size:0.78rem; opacity:0.6; margin-top:4px;">match ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a></div>
             ${contribs ? `<div style="margin-top:6px; line-height:1.6;">${contribs}</div>` : ''}
           </div>
         </div>`;
       }).join('');
 
+      const activeMoodCount = Object.keys(window.__moodActive || {}).length;
+      const moodSummary = activeMoodCount === 0
+        ? '<small style="opacity: 0.6;">Tap to nudge your recommendations toward a mood without re-taking the quiz.</small>'
+        : `<small style="opacity: 0.7;">${activeMoodCount} mood nudge${activeMoodCount === 1 ? '' : 's'} active. Tap again to clear.</small>`;
+
       container.innerHTML = `
+        <h2 style="color: #FBDB65; margin: 24px 0 8px;">Tonight's mood</h2>
+        ${moodSummary}
+        <div style="margin: 12px 0 24px;">${buildMoodCardsHtml()}</div>
         <h2 style="color: #FBDB65; margin: 24px 0 12px;">Top 12 recommendations</h2>
         <div>${items}</div>
         <p style="margin-top: 16px; opacity: 0.6; font-size: 0.85rem;">Considered ${data.candidates_considered} candidates. Engines that ran: ${(data.engines_ran || []).join(', ')}.</p>

@@ -29,7 +29,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { recommendGames } from '@/lib/heimdall/orchestrator';
-import gameNames from '@/lib/heimdall/game-names.json';
+import gameMeta from '@/lib/heimdall/game-meta.json';
 
 const MAX_LIMIT = 24;
 
@@ -37,10 +37,41 @@ interface RawBody {
   profile?: Record<string, number>;
   confidence?: Record<string, number>;
   limit?: number;
+  /**
+   * Optional ephemeral profile delta. Keys are dim ids; values added to
+   * the base profile before matching. Used by the "mood" cards in the
+   * quiz UI: tap "🌶️ Spicy" → delta {SOC_COOP_COMP: -0.4} → recs lean
+   * competitive without re-taking the quiz. Per-call only — we don't
+   * persist deltas.
+   */
+  mood_delta?: Record<string, number>;
 }
 
-function nameFor(gameId: number): string | null {
-  return (gameNames as Record<string, string>)[String(gameId)] ?? null;
+interface GameMetaEntry {
+  name: string;
+  year?: number | null;
+  subdomain?: string | null;
+  categories?: string[];
+}
+
+function metaFor(gameId: number): GameMetaEntry {
+  const m = (gameMeta as Record<string, GameMetaEntry>)[String(gameId)];
+  return m ?? { name: `Game #${gameId}` };
+}
+
+function applyMoodDelta(
+  base: Record<string, number>,
+  delta: Record<string, number> | undefined,
+): Record<string, number> {
+  if (!delta) return base;
+  const out: Record<string, number> = { ...base };
+  for (const [k, v] of Object.entries(delta)) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+    const next = (out[k] ?? 0) + v;
+    // Clamp to [-1, 1] — dim values live in that range.
+    out[k] = Math.max(-1, Math.min(1, next));
+  }
+  return out;
 }
 
 export async function POST(request: NextRequest) {
@@ -63,15 +94,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `profile.${k} must be a finite number.` }, { status: 400 });
     }
   }
+  if (b.mood_delta !== undefined) {
+    if (typeof b.mood_delta !== 'object' || b.mood_delta === null) {
+      return NextResponse.json({ error: 'mood_delta must be an object.' }, { status: 400 });
+    }
+    for (const [k, v] of Object.entries(b.mood_delta)) {
+      if (typeof v !== 'number' || !Number.isFinite(v)) {
+        return NextResponse.json({ error: `mood_delta.${k} must be a finite number.` }, { status: 400 });
+      }
+    }
+  }
   const limit =
     typeof b.limit === 'number' && Number.isInteger(b.limit) && b.limit > 0 && b.limit <= MAX_LIMIT
       ? b.limit
       : 12;
 
+  const effectiveProfile = applyMoodDelta(b.profile, b.mood_delta);
+
   let result;
   try {
     result = await recommendGames({
-      playerProfile: b.profile,
+      playerProfile: effectiveProfile,
       limit,
     });
   } catch (err) {
@@ -86,14 +129,20 @@ export async function POST(request: NextRequest) {
 
   try {
     return NextResponse.json({
-      recommendations: result.recommendations.map((r) => ({
-        game_id: r.gameId,
-        game_name: nameFor(r.gameId),
-        score: r.score,
-        contributions: r.contributions,
-        top_dim_contributions: r.topDimContributions,
-        explanation: r.explanation,
-      })),
+      recommendations: result.recommendations.map((r) => {
+        const m = metaFor(r.gameId);
+        return {
+          game_id: r.gameId,
+          game_name: m.name,
+          year: m.year ?? null,
+          subdomain: m.subdomain ?? null,
+          categories: m.categories ?? [],
+          score: r.score,
+          contributions: r.contributions,
+          top_dim_contributions: r.topDimContributions,
+          explanation: r.explanation,
+        };
+      }),
       engines_ran: result.enginesRan,
       engines_skipped: result.enginesSkipped,
       candidates_considered: result.candidatesConsidered,

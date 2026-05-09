@@ -1,0 +1,2175 @@
+{
+  "91": {
+    "name": "Paths of Glory",
+    "year": 1999,
+    "subdomain": "Wargames",
+    "categories": [
+      "Wargame",
+      "World War I"
+    ]
+  },
+  "150": {
+    "name": "PitchCar",
+    "year": 1995,
+    "subdomain": "Customizable",
+    "categories": [
+      "Action / Dexterity",
+      "Children's Game",
+      "Party Game"
+    ]
+  },
+  "188": {
+    "name": "Go",
+    "year": -2200,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "234": {
+    "name": "Hannibal: Rome vs. Carthage",
+    "year": 1996,
+    "subdomain": "Wargames",
+    "categories": [
+      "Ancient",
+      "Political",
+      "Wargame"
+    ]
+  },
+  "243": {
+    "name": "Advanced Squad Leader",
+    "year": 1985,
+    "subdomain": "Wargames",
+    "categories": [
+      "Wargame",
+      "World War II"
+    ]
+  },
+  "463": {
+    "name": "Magic: The Gathering",
+    "year": 1993,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Collectible Components",
+      "Fantasy"
+    ]
+  },
+  "503": {
+    "name": "Through the Desert",
+    "year": 1998,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Animals",
+      "Arabian"
+    ]
+  },
+  "521": {
+    "name": "Crokinole",
+    "year": 1876,
+    "subdomain": "Family",
+    "categories": [
+      "Action / Dexterity"
+    ]
+  },
+  "528": {
+    "name": "ZÈRTZ",
+    "year": 1999,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "2346": {
+    "name": "DVONN",
+    "year": 2001,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "2651": {
+    "name": "Power Grid",
+    "year": 2004,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Industry / Manufacturing"
+    ]
+  },
+  "2655": {
+    "name": "Hive",
+    "year": 2001,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Animals"
+    ]
+  },
+  "3076": {
+    "name": "Puerto Rico",
+    "year": 2002,
+    "subdomain": "Strategy",
+    "categories": [
+      "City Building",
+      "Economic",
+      "Farming"
+    ]
+  },
+  "7854": {
+    "name": "YINSH",
+    "year": 2003,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "9609": {
+    "name": "War of the Ring",
+    "year": 2004,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "11825": {
+    "name": "Empire of the Sun: The Pacific War 1941-1945",
+    "year": 2005,
+    "subdomain": "Wargames",
+    "categories": [
+      "Nautical",
+      "Wargame",
+      "World War II"
+    ]
+  },
+  "12333": {
+    "name": "Twilight Struggle",
+    "year": 2005,
+    "subdomain": "Strategy",
+    "categories": [
+      "Modern Warfare",
+      "Political",
+      "Wargame"
+    ]
+  },
+  "14105": {
+    "name": "Commands & Colors: Ancients",
+    "year": 2006,
+    "subdomain": "Wargames",
+    "categories": [
+      "Ancient",
+      "Wargame"
+    ]
+  },
+  "17392": {
+    "name": "Here I Stand",
+    "year": 2006,
+    "subdomain": "Wargames",
+    "categories": [
+      "Negotiation",
+      "Pike and Shot",
+      "Political"
+    ]
+  },
+  "18098": {
+    "name": "Napoleon's Triumph",
+    "year": 2007,
+    "subdomain": "Wargames",
+    "categories": [
+      "Napoleonic",
+      "Wargame"
+    ]
+  },
+  "21050": {
+    "name": "Combat Commander: Europe",
+    "year": 2006,
+    "subdomain": "Wargames",
+    "categories": [
+      "Wargame",
+      "World War II"
+    ]
+  },
+  "25021": {
+    "name": "Sekigahara: The Unification of Japan",
+    "year": 2011,
+    "subdomain": "Wargames",
+    "categories": [
+      "Civil War",
+      "Pike and Shot",
+      "Wargame"
+    ]
+  },
+  "27976": {
+    "name": "Heroscape Master Set: Swarm of the Marro",
+    "year": 2007,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "28143": {
+    "name": "Race for the Galaxy",
+    "year": 2007,
+    "subdomain": "Strategy",
+    "categories": [
+      "Card Game",
+      "Civilization",
+      "Economic"
+    ]
+  },
+  "28181": {
+    "name": "Combat Commander: Pacific",
+    "year": 2008,
+    "subdomain": "Wargames",
+    "categories": [
+      "Wargame",
+      "World War II"
+    ]
+  },
+  "28720": {
+    "name": "Brass: Lancashire",
+    "year": 2007,
+    "subdomain": "Strategy",
+    "categories": [
+      "Age of Reason",
+      "Economic",
+      "Educational"
+    ]
+  },
+  "29603": {
+    "name": "D-Day at Omaha Beach",
+    "year": 2009,
+    "subdomain": "Wargames",
+    "categories": [
+      "Wargame",
+      "World War II"
+    ]
+  },
+  "31260": {
+    "name": "Agricola",
+    "year": 2007,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Economic",
+      "Farming"
+    ]
+  },
+  "31999": {
+    "name": "TZAAR",
+    "year": 2007,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "35677": {
+    "name": "Le Havre",
+    "year": 2008,
+    "subdomain": "Strategy",
+    "categories": [
+      "City Building",
+      "Economic",
+      "Industry / Manufacturing"
+    ]
+  },
+  "36553": {
+    "name": "Time's Up! Title Recall!",
+    "year": 2008,
+    "subdomain": "Party",
+    "categories": [
+      "Humor",
+      "Movies / TV / Radio theme",
+      "Party Game"
+    ]
+  },
+  "36648": {
+    "name": "Pyramid of Pengqueen",
+    "year": 2008,
+    "subdomain": "Children's",
+    "categories": [
+      "Children's Game",
+      "Deduction",
+      "Maze"
+    ]
+  },
+  "40354": {
+    "name": "Maria",
+    "year": 2009,
+    "subdomain": "Wargames",
+    "categories": [
+      "Age of Reason",
+      "Bluffing",
+      "Negotiation"
+    ]
+  },
+  "41066": {
+    "name": "Virgin Queen",
+    "year": 2012,
+    "subdomain": "Wargames",
+    "categories": [
+      "Negotiation",
+      "Pike and Shot",
+      "Political"
+    ]
+  },
+  "41916": {
+    "name": "The Magic Labyrinth",
+    "year": 2009,
+    "subdomain": "Children's",
+    "categories": [
+      "Children's Game",
+      "Fantasy",
+      "Maze"
+    ]
+  },
+  "46213": {
+    "name": "Telestrations",
+    "year": 2009,
+    "subdomain": "Party",
+    "categories": [
+      "Humor",
+      "Party Game",
+      "Real-time"
+    ]
+  },
+  "55690": {
+    "name": "Kingdom Death: Monster",
+    "year": 2015,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "62222": {
+    "name": "Commands & Colors: Napoleonics",
+    "year": 2010,
+    "subdomain": "Wargames",
+    "categories": [
+      "Napoleonic",
+      "Wargame"
+    ]
+  },
+  "68448": {
+    "name": "7 Wonders",
+    "year": 2010,
+    "subdomain": "Family",
+    "categories": [
+      "Ancient",
+      "Card Game",
+      "City Building"
+    ]
+  },
+  "77423": {
+    "name": "The Lord of the Rings: The Card Game",
+    "year": 2011,
+    "subdomain": "Customizable",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Collectible Components"
+    ]
+  },
+  "82420": {
+    "name": "Summoner Wars: Guild Dwarves vs Cave Goblins",
+    "year": 2009,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "82421": {
+    "name": "Summoner Wars: Phoenix Elves vs Tundra Orcs",
+    "year": 2009,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "84876": {
+    "name": "The Castles of Burgundy",
+    "year": 2011,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Dice",
+      "Medieval"
+    ]
+  },
+  "91514": {
+    "name": "Rhino Hero",
+    "year": 2011,
+    "subdomain": "Children's",
+    "categories": [
+      "Action / Dexterity",
+      "Animals",
+      "Card Game"
+    ]
+  },
+  "92828": {
+    "name": "Dixit: Odyssey",
+    "year": 2011,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Humor",
+      "Party Game"
+    ]
+  },
+  "93260": {
+    "name": "Summoner Wars: Master Set",
+    "year": 2011,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "96848": {
+    "name": "Mage Knight Board Game",
+    "year": 2011,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ]
+  },
+  "101721": {
+    "name": "Mage Wars Arena",
+    "year": 2012,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "102794": {
+    "name": "Caverna: The Cave Farmers",
+    "year": 2013,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Economic",
+      "Fantasy"
+    ]
+  },
+  "103885": {
+    "name": "Star Wars: X-Wing Miniatures Game",
+    "year": 2012,
+    "subdomain": "Customizable",
+    "categories": [
+      "Aviation / Flight",
+      "Bluffing",
+      "Collectible Components"
+    ]
+  },
+  "115746": {
+    "name": "War of the Ring: Second Edition",
+    "year": 2011,
+    "subdomain": "Thematic",
+    "categories": [
+      "Fantasy",
+      "Fighting",
+      "Novel-based"
+    ]
+  },
+  "120677": {
+    "name": "Terra Mystica",
+    "year": 2012,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Fantasy"
+    ]
+  },
+  "124361": {
+    "name": "Concordia",
+    "year": 2013,
+    "subdomain": "Strategy",
+    "categories": [
+      "Ancient",
+      "Economic",
+      "Nautical"
+    ]
+  },
+  "124742": {
+    "name": "Android: Netrunner",
+    "year": 2012,
+    "subdomain": "Customizable",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Collectible Components"
+    ]
+  },
+  "125153": {
+    "name": "The Gallerist",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic"
+    ]
+  },
+  "126163": {
+    "name": "Tzolk'in: The Mayan Calendar",
+    "year": 2012,
+    "subdomain": "Strategy",
+    "categories": [
+      "Ancient",
+      "Civilization",
+      "Economic"
+    ]
+  },
+  "128882": {
+    "name": "The Resistance: Avalon",
+    "year": 2012,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Deduction"
+    ]
+  },
+  "130960": {
+    "name": "Triumph & Tragedy: European Balance of Power 1936-1945",
+    "year": 2015,
+    "subdomain": "Wargames",
+    "categories": [
+      "Economic",
+      "Negotiation",
+      "Political"
+    ]
+  },
+  "144189": {
+    "name": "Fire in the Lake",
+    "year": 2014,
+    "subdomain": "Wargames",
+    "categories": [
+      "Civil War",
+      "Modern Warfare",
+      "Political"
+    ]
+  },
+  "145639": {
+    "name": "Coconuts",
+    "year": 2013,
+    "subdomain": "Children's",
+    "categories": [
+      "Action / Dexterity",
+      "Animals",
+      "Children's Game"
+    ]
+  },
+  "146312": {
+    "name": "Ghost Fightin' Treasure Hunters",
+    "year": 2013,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Children's Game",
+      "Fantasy"
+    ]
+  },
+  "153016": {
+    "name": "Telestrations: 12 Player Party Pack",
+    "year": 2011,
+    "subdomain": "Party",
+    "categories": [
+      "Humor",
+      "Party Game",
+      "Real-time"
+    ]
+  },
+  "156129": {
+    "name": "Deception: Murder in Hong Kong",
+    "year": 2014,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Deduction",
+      "Murder / Mystery"
+    ]
+  },
+  "156546": {
+    "name": "Monikers",
+    "year": 2015,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Humor",
+      "Mature / Adult"
+    ]
+  },
+  "157354": {
+    "name": "Five Tribes: The Djinns of Naqala",
+    "year": 2014,
+    "subdomain": "Strategy",
+    "categories": [
+      "Arabian",
+      "Fantasy",
+      "Mythology"
+    ]
+  },
+  "158889": {
+    "name": "Summoner Wars: Alliances Master Set",
+    "year": 2014,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "160477": {
+    "name": "Onitama",
+    "year": 2014,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "161533": {
+    "name": "Lisboa",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "City Building",
+      "Economic",
+      "Industry / Manufacturing"
+    ]
+  },
+  "161936": {
+    "name": "Pandemic Legacy: Season 1",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Environmental",
+      "Medical"
+    ]
+  },
+  "162886": {
+    "name": "Spirit Island",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Environmental",
+      "Fantasy",
+      "Mythology"
+    ]
+  },
+  "163412": {
+    "name": "Patchwork",
+    "year": 2014,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Economic",
+      "Puzzle"
+    ]
+  },
+  "164153": {
+    "name": "Star Wars: Imperial Assault",
+    "year": 2014,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fighting"
+    ]
+  },
+  "164928": {
+    "name": "Orléans",
+    "year": 2014,
+    "subdomain": "Strategy",
+    "categories": [
+      "Medieval",
+      "Religious",
+      "Travel"
+    ]
+  },
+  "165722": {
+    "name": "KLASK",
+    "year": 2014,
+    "subdomain": "Family",
+    "categories": [
+      "Action / Dexterity",
+      "Real-time"
+    ]
+  },
+  "167355": {
+    "name": "Nemesis",
+    "year": 2018,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Horror",
+      "Miniatures"
+    ]
+  },
+  "167791": {
+    "name": "Terraforming Mars",
+    "year": 2016,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Environmental"
+    ]
+  },
+  "169255": {
+    "name": "A Game of Thrones: The Card Game (Second Edition)",
+    "year": 2015,
+    "subdomain": "Customizable",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Collectible Components"
+    ]
+  },
+  "169786": {
+    "name": "Scythe",
+    "year": 2016,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Fighting",
+      "Science Fiction"
+    ]
+  },
+  "170216": {
+    "name": "Blood Rage",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Fantasy",
+      "Fighting",
+      "Miniatures"
+    ]
+  },
+  "171131": {
+    "name": "Captain Sonar",
+    "year": 2016,
+    "subdomain": "Party",
+    "categories": [
+      "Deduction",
+      "Fighting",
+      "Modern Warfare"
+    ]
+  },
+  "172931": {
+    "name": "Outfoxed!",
+    "year": 2014,
+    "subdomain": "Children's",
+    "categories": [
+      "Animals",
+      "Children's Game",
+      "Deduction"
+    ]
+  },
+  "173346": {
+    "name": "7 Wonders Duel",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Ancient",
+      "Card Game",
+      "City Building"
+    ]
+  },
+  "174430": {
+    "name": "Gloomhaven",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ]
+  },
+  "175914": {
+    "name": "Food Chain Magnate",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Industry / Manufacturing"
+    ]
+  },
+  "177736": {
+    "name": "A Feast for Odin",
+    "year": 2016,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Farming",
+      "Industry / Manufacturing"
+    ]
+  },
+  "178900": {
+    "name": "Codenames",
+    "year": 2015,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Party Game"
+    ]
+  },
+  "182028": {
+    "name": "Through the Ages: A New Story of Civilization",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Card Game",
+      "Civilization",
+      "Economic"
+    ]
+  },
+  "182874": {
+    "name": "Grand Austria Hotel",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic"
+    ]
+  },
+  "183394": {
+    "name": "Viticulture Essential Edition",
+    "year": 2015,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Farming"
+    ]
+  },
+  "183562": {
+    "name": "Star Wars: X-Wing Miniatures Game – The Force Awakens Core Set",
+    "year": 2015,
+    "subdomain": "Customizable",
+    "categories": [
+      "Aviation / Flight",
+      "Collectible Components",
+      "Miniatures"
+    ]
+  },
+  "184267": {
+    "name": "On Mars",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "City Building",
+      "Economic",
+      "Exploration"
+    ]
+  },
+  "185343": {
+    "name": "Anachrony",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Science Fiction"
+    ]
+  },
+  "187645": {
+    "name": "Star Wars: Rebellion",
+    "year": 2016,
+    "subdomain": "Thematic",
+    "categories": [
+      "Civil War",
+      "Movies / TV / Radio theme",
+      "Science Fiction"
+    ]
+  },
+  "188834": {
+    "name": "Secret Hitler",
+    "year": 2016,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Deduction"
+    ]
+  },
+  "192135": {
+    "name": "Too Many Bones",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Dice",
+      "Fantasy"
+    ]
+  },
+  "193042": {
+    "name": "Junk Art",
+    "year": 2016,
+    "subdomain": "Customizable",
+    "categories": [
+      "Action / Dexterity",
+      "Party Game"
+    ]
+  },
+  "193738": {
+    "name": "Great Western Trail",
+    "year": 2016,
+    "subdomain": "Strategy",
+    "categories": [
+      "American West",
+      "Animals"
+    ]
+  },
+  "194655": {
+    "name": "Santorini",
+    "year": 2016,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Ancient",
+      "Mythology"
+    ]
+  },
+  "199561": {
+    "name": "Sagrada",
+    "year": 2017,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Dice",
+      "Puzzle"
+    ]
+  },
+  "199792": {
+    "name": "Everdell",
+    "year": 2018,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "City Building"
+    ]
+  },
+  "200680": {
+    "name": "Agricola (Revised Edition)",
+    "year": 2016,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Economic",
+      "Farming"
+    ]
+  },
+  "201808": {
+    "name": "Clank!: A Deck-Building Adventure",
+    "year": 2016,
+    "subdomain": "Family",
+    "categories": [
+      "Adventure",
+      "Fantasy"
+    ]
+  },
+  "205059": {
+    "name": "Mansions of Madness: Second Edition",
+    "year": 2016,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ]
+  },
+  "205637": {
+    "name": "Arkham Horror: The Card Game",
+    "year": 2016,
+    "subdomain": "Customizable",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Collectible Components"
+    ]
+  },
+  "206480": {
+    "name": "Imperial Struggle",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Age of Reason",
+      "American Revolutionary War",
+      "Wargame"
+    ]
+  },
+  "209010": {
+    "name": "Mechs vs. Minions",
+    "year": 2016,
+    "subdomain": "Strategy",
+    "categories": [
+      "Fantasy",
+      "Fighting",
+      "Miniatures"
+    ]
+  },
+  "216132": {
+    "name": "Clans of Caledonia",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Farming"
+    ]
+  },
+  "217083": {
+    "name": "LYNGK",
+    "year": 2017,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "217372": {
+    "name": "The Quest for El Dorado",
+    "year": 2017,
+    "subdomain": "Family",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Racing"
+    ]
+  },
+  "218208": {
+    "name": "Ticket to Ride: First Journey (Europe)",
+    "year": 2017,
+    "subdomain": "Children's",
+    "categories": [
+      "Children's Game",
+      "Trains"
+    ]
+  },
+  "218333": {
+    "name": "Rhino Hero: Super Battle",
+    "year": 2017,
+    "subdomain": "Children's",
+    "categories": [
+      "Action / Dexterity",
+      "Animals",
+      "Children's Game"
+    ]
+  },
+  "220308": {
+    "name": "Gaia Project",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Science Fiction"
+    ]
+  },
+  "221107": {
+    "name": "Pandemic Legacy: Season 2",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Environmental",
+      "Exploration",
+      "Medical"
+    ]
+  },
+  "224037": {
+    "name": "Codenames: Duet",
+    "year": 2017,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Spies / Secret Agents"
+    ]
+  },
+  "224517": {
+    "name": "Brass: Birmingham",
+    "year": 2018,
+    "subdomain": "Strategy",
+    "categories": [
+      "Age of Reason",
+      "Economic",
+      "Industry / Manufacturing"
+    ]
+  },
+  "225694": {
+    "name": "Decrypto",
+    "year": 2018,
+    "subdomain": "Party",
+    "categories": [
+      "Deduction",
+      "Party Game",
+      "Spies / Secret Agents"
+    ]
+  },
+  "227460": {
+    "name": "Hannibal & Hamilcar",
+    "year": 2018,
+    "subdomain": "Wargames",
+    "categories": [
+      "Ancient",
+      "Political",
+      "Wargame"
+    ]
+  },
+  "230802": {
+    "name": "Azul",
+    "year": 2017,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Renaissance"
+    ]
+  },
+  "230889": {
+    "name": "Aristeia!",
+    "year": 2017,
+    "subdomain": "Customizable",
+    "categories": [
+      "Fighting",
+      "Miniatures",
+      "Science Fiction"
+    ]
+  },
+  "231733": {
+    "name": "Obsession",
+    "year": 2018,
+    "subdomain": "Strategy",
+    "categories": [
+      "Post-Napoleonic"
+    ]
+  },
+  "233078": {
+    "name": "Twilight Imperium: Fourth Edition",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Exploration"
+    ]
+  },
+  "233371": {
+    "name": "Clank! In! Space!: A Deck-Building Adventure",
+    "year": 2017,
+    "subdomain": "Family",
+    "categories": [
+      "Science Fiction"
+    ]
+  },
+  "233571": {
+    "name": "Star Wars: Legion",
+    "year": 2018,
+    "subdomain": "Customizable",
+    "categories": [
+      "Miniatures",
+      "Movies / TV / Radio theme",
+      "Science Fiction"
+    ]
+  },
+  "235802": {
+    "name": "Too Many Bones: Undertow",
+    "year": 2018,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Dice",
+      "Fantasy"
+    ]
+  },
+  "237182": {
+    "name": "Root",
+    "year": 2018,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Fantasy",
+      "Negotiation"
+    ]
+  },
+  "240980": {
+    "name": "Blood on the Clocktower",
+    "year": 2022,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Deduction",
+      "Murder / Mystery"
+    ]
+  },
+  "241477": {
+    "name": "Karak",
+    "year": 2017,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Children's Game",
+      "Exploration"
+    ]
+  },
+  "242722": {
+    "name": "Here I Stand: 500th Anniversary Edition",
+    "year": 2017,
+    "subdomain": "Wargames",
+    "categories": [
+      "Negotiation",
+      "Pike and Shot",
+      "Political"
+    ]
+  },
+  "244513": {
+    "name": "ICECOOL2",
+    "year": 2018,
+    "subdomain": "Children's",
+    "categories": [
+      "Action / Dexterity",
+      "Animals",
+      "Children's Game"
+    ]
+  },
+  "244521": {
+    "name": "Quacks",
+    "year": 2018,
+    "subdomain": "Family",
+    "categories": [
+      "Fantasy",
+      "Medieval"
+    ]
+  },
+  "246900": {
+    "name": "Eclipse: Second Dawn for the Galaxy",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Exploration",
+      "Science Fiction"
+    ]
+  },
+  "247314": {
+    "name": "Concept Kids: Animals",
+    "year": 2018,
+    "subdomain": "Children's",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "Children's Game"
+    ]
+  },
+  "247763": {
+    "name": "Underwater Cities",
+    "year": 2018,
+    "subdomain": "Strategy",
+    "categories": [
+      "Card Game",
+      "City Building",
+      "Industry / Manufacturing"
+    ]
+  },
+  "249259": {
+    "name": "War Chest",
+    "year": 2018,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Medieval",
+      "Wargame"
+    ]
+  },
+  "251247": {
+    "name": "Barrage",
+    "year": 2019,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Environmental",
+      "Industry / Manufacturing"
+    ]
+  },
+  "251661": {
+    "name": "Oathsworn: Into the Deepwood",
+    "year": 2022,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Dice"
+    ]
+  },
+  "252328": {
+    "name": "Star Wars: X-Wing (Second Edition)",
+    "year": 2018,
+    "subdomain": "Customizable",
+    "categories": [
+      "Aviation / Flight",
+      "Bluffing",
+      "Collectible Components"
+    ]
+  },
+  "253344": {
+    "name": "Cthulhu: Death May Die",
+    "year": 2019,
+    "subdomain": "Thematic",
+    "categories": [
+      "Fantasy",
+      "Fighting",
+      "Horror"
+    ]
+  },
+  "254640": {
+    "name": "Just One",
+    "year": 2018,
+    "subdomain": "Party",
+    "categories": [
+      "Deduction",
+      "Party Game",
+      "Word Game"
+    ]
+  },
+  "255984": {
+    "name": "Sleeping Gods",
+    "year": 2021,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ]
+  },
+  "256226": {
+    "name": "Azul: Stained Glass of Sintra",
+    "year": 2018,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Puzzle",
+      "Renaissance"
+    ]
+  },
+  "256952": {
+    "name": "Zombie Kidz Evolution",
+    "year": 2018,
+    "subdomain": "Children's",
+    "categories": [
+      "Children's Game",
+      "Fighting",
+      "Horror"
+    ]
+  },
+  "256960": {
+    "name": "Pax Pamir: Second Edition",
+    "year": 2019,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Educational",
+      "Negotiation"
+    ]
+  },
+  "258779": {
+    "name": "Planet Unknown",
+    "year": 2022,
+    "subdomain": "Family",
+    "categories": [
+      "City Building",
+      "Industry / Manufacturing",
+      "Puzzle"
+    ]
+  },
+  "260180": {
+    "name": "Project L",
+    "year": 2020,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Puzzle",
+      "Video Game Theme"
+    ]
+  },
+  "260605": {
+    "name": "Camel Up (Second Edition)",
+    "year": 2018,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Arabian",
+      "Dice"
+    ]
+  },
+  "264241": {
+    "name": "Mandala",
+    "year": 2019,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Card Game"
+    ]
+  },
+  "266192": {
+    "name": "Wingspan",
+    "year": 2019,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "Educational"
+    ]
+  },
+  "266507": {
+    "name": "Clank! Legacy: Acquisitions Incorporated",
+    "year": 2019,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Fantasy"
+    ]
+  },
+  "266810": {
+    "name": "Paladins of the West Kingdom",
+    "year": 2019,
+    "subdomain": "Strategy",
+    "categories": [
+      "Medieval"
+    ]
+  },
+  "271601": {
+    "name": "Feed the Kraken",
+    "year": 2022,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Deduction",
+      "Fantasy"
+    ]
+  },
+  "272380": {
+    "name": "SHŌBU",
+    "year": 2019,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy"
+    ]
+  },
+  "276025": {
+    "name": "Maracaibo",
+    "year": 2019,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Exploration",
+      "Nautical"
+    ]
+  },
+  "277085": {
+    "name": "Love Letter",
+    "year": 2019,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Renaissance"
+    ]
+  },
+  "277659": {
+    "name": "Final Girl",
+    "year": 2021,
+    "subdomain": "Thematic",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Horror"
+    ]
+  },
+  "283155": {
+    "name": "Calico",
+    "year": 2020,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Animals",
+      "Puzzle"
+    ]
+  },
+  "284083": {
+    "name": "The Crew: The Quest for Planet Nine",
+    "year": 2019,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Science Fiction",
+      "Space Exploration"
+    ]
+  },
+  "284378": {
+    "name": "Kanban EV",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Industry / Manufacturing"
+    ]
+  },
+  "284435": {
+    "name": "Nova Luna",
+    "year": 2019,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Puzzle"
+    ]
+  },
+  "285774": {
+    "name": "Marvel Champions: The Card Game",
+    "year": 2019,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Collectible Components",
+      "Comic Book / Strip"
+    ]
+  },
+  "287954": {
+    "name": "Azul: Summer Pavilion",
+    "year": 2019,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Puzzle"
+    ]
+  },
+  "291453": {
+    "name": "SCOUT",
+    "year": 2019,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game"
+    ]
+  },
+  "291457": {
+    "name": "Gloomhaven: Jaws of the Lion",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ]
+  },
+  "295488": {
+    "name": "Andor: The Family Fantasy Game",
+    "year": 2020,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Fantasy",
+      "Fighting"
+    ]
+  },
+  "295770": {
+    "name": "Frosthaven",
+    "year": 2022,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ]
+  },
+  "295947": {
+    "name": "Cascadia",
+    "year": 2021,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Environmental"
+    ]
+  },
+  "300010": {
+    "name": "Dragomino",
+    "year": 2020,
+    "subdomain": "Children's",
+    "categories": [
+      "Children's Game",
+      "Fantasy",
+      "Territory Building"
+    ]
+  },
+  "310448": {
+    "name": "Zombie Teenz Evolution",
+    "year": 2020,
+    "subdomain": "Children's",
+    "categories": [
+      "Children's Game",
+      "Zombies"
+    ]
+  },
+  "310789": {
+    "name": "Catapult Feud",
+    "year": 2021,
+    "subdomain": "Children's",
+    "categories": [
+      "Action / Dexterity",
+      "Children's Game",
+      "Medieval"
+    ]
+  },
+  "312484": {
+    "name": "Lost Ruins of Arnak",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Exploration"
+    ]
+  },
+  "314040": {
+    "name": "Pandemic Legacy: Season 0",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Medical",
+      "Spies / Secret Agents"
+    ]
+  },
+  "316554": {
+    "name": "Dune: Imperium",
+    "year": 2020,
+    "subdomain": "Strategy",
+    "categories": [
+      "Movies / TV / Radio theme",
+      "Novel-based",
+      "Political"
+    ]
+  },
+  "318243": {
+    "name": "Hitster",
+    "year": 2022,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Music",
+      "Party Game"
+    ]
+  },
+  "318546": {
+    "name": "CoraQuest",
+    "year": 2021,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Children's Game",
+      "Exploration"
+    ]
+  },
+  "319910": {
+    "name": "Pagan: Fate of Roanoke",
+    "year": 2022,
+    "subdomain": "Customizable",
+    "categories": [
+      "Adventure",
+      "Bluffing",
+      "Card Game"
+    ]
+  },
+  "321608": {
+    "name": "Hegemony: Lead Your Class to Victory",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Educational",
+      "Negotiation"
+    ]
+  },
+  "322289": {
+    "name": "Darwin's Journey",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Exploration",
+      "Travel"
+    ]
+  },
+  "324856": {
+    "name": "The Crew: Mission Deep Sea",
+    "year": 2021,
+    "subdomain": "Family",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Mythology"
+    ]
+  },
+  "327056": {
+    "name": "Unlock! Kids: Detective Stories",
+    "year": 2021,
+    "subdomain": "Children's",
+    "categories": [
+      "Card Game",
+      "Children's Game",
+      "Exploration"
+    ]
+  },
+  "329839": {
+    "name": "So Clover!",
+    "year": 2021,
+    "subdomain": "Party",
+    "categories": [
+      "Party Game",
+      "Word Game"
+    ]
+  },
+  "332772": {
+    "name": "Revive",
+    "year": 2022,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Exploration",
+      "Industry / Manufacturing"
+    ]
+  },
+  "337627": {
+    "name": "Voidfall",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Science Fiction"
+    ]
+  },
+  "338960": {
+    "name": "Slay the Spire: The Board Game",
+    "year": 2024,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Fantasy"
+    ]
+  },
+  "340288": {
+    "name": "Kids Chronicles: Quest for the Moon Stones",
+    "year": 2021,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Children's Game",
+      "Exploration"
+    ]
+  },
+  "341169": {
+    "name": "Great Western Trail: Second Edition",
+    "year": 2021,
+    "subdomain": "Strategy",
+    "categories": [
+      "American West",
+      "Animals"
+    ]
+  },
+  "342900": {
+    "name": "Earthborne Rangers",
+    "year": 2023,
+    "subdomain": "Customizable",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Environmental"
+    ]
+  },
+  "342942": {
+    "name": "Ark Nova",
+    "year": 2021,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "Environmental"
+    ]
+  },
+  "344254": {
+    "name": "Yummy Yummy Monster Tummy",
+    "year": 2021,
+    "subdomain": "Children's",
+    "categories": [
+      "Card Game",
+      "Children's Game",
+      "Humor"
+    ]
+  },
+  "345976": {
+    "name": "System Gateway (fan expansion for Android: Netrunner)",
+    "year": 2021,
+    "subdomain": "Customizable",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Fan Expansion"
+    ]
+  },
+  "346965": {
+    "name": "Azul: Queen's Garden",
+    "year": 2021,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Puzzle",
+      "Renaissance"
+    ]
+  },
+  "347137": {
+    "name": "Chronicles of Avel",
+    "year": 2021,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Children's Game",
+      "Exploration"
+    ]
+  },
+  "349067": {
+    "name": "The Lord of the Rings: The Card Game – Revised Core Set",
+    "year": 2022,
+    "subdomain": "Customizable",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Collectible Components"
+    ]
+  },
+  "351040": {
+    "name": "Ready Set Bet",
+    "year": 2022,
+    "subdomain": "Party",
+    "categories": [
+      "Animals",
+      "Party Game",
+      "Racing"
+    ]
+  },
+  "354570": {
+    "name": "Undaunted: Stalingrad",
+    "year": 2022,
+    "subdomain": "Wargames",
+    "categories": [
+      "Wargame",
+      "World War II"
+    ]
+  },
+  "354886": {
+    "name": "Quacks & Co.: Quedlinburg Dash",
+    "year": 2022,
+    "subdomain": "Children's",
+    "categories": [
+      "Animals",
+      "Children's Game",
+      "Medieval"
+    ]
+  },
+  "356080": {
+    "name": "The Elder Scrolls: Betrayal of the Second Era",
+    "year": 2025,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Dice",
+      "Exploration"
+    ]
+  },
+  "359609": {
+    "name": "Arkham Horror: The Card Game (Revised Core Set)",
+    "year": 2021,
+    "subdomain": "Customizable",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Collectible Components"
+    ]
+  },
+  "363247": {
+    "name": "Azul: Master Chocolatier",
+    "year": 2022,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Puzzle"
+    ]
+  },
+  "364073": {
+    "name": "Splendor Duel",
+    "year": 2022,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Economic",
+      "Renaissance"
+    ]
+  },
+  "365717": {
+    "name": "Clank!: Catacombs",
+    "year": 2022,
+    "subdomain": "Family",
+    "categories": [
+      "Adventure",
+      "Fantasy"
+    ]
+  },
+  "366013": {
+    "name": "Heat: Pedal to the Metal",
+    "year": 2022,
+    "subdomain": "Family",
+    "categories": [
+      "Racing",
+      "Sports"
+    ]
+  },
+  "366161": {
+    "name": "Wingspan Asia",
+    "year": 2022,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals",
+      "Economic",
+      "Educational"
+    ]
+  },
+  "367150": {
+    "name": "Dune: War for Arrakis",
+    "year": 2024,
+    "subdomain": "Thematic",
+    "categories": [
+      "Dice",
+      "Movies / TV / Radio theme",
+      "Novel-based"
+    ]
+  },
+  "367966": {
+    "name": "Endeavor: Deep Sea",
+    "year": 2024,
+    "subdomain": "Strategy",
+    "categories": [
+      "Environmental",
+      "Exploration",
+      "Nautical"
+    ]
+  },
+  "371942": {
+    "name": "The White Castle",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Dice",
+      "Economic",
+      "Medieval"
+    ]
+  },
+  "373106": {
+    "name": "Sky Team",
+    "year": 2023,
+    "subdomain": "Family",
+    "categories": [
+      "Aviation / Flight",
+      "Dice"
+    ]
+  },
+  "375852": {
+    "name": "Welcome to Everdell",
+    "year": 2022,
+    "subdomain": "Children's",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "Children's Game"
+    ]
+  },
+  "380607": {
+    "name": "Great Western Trail: New Zealand",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Animals"
+    ]
+  },
+  "383179": {
+    "name": "Age of Innovation",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Fantasy"
+    ]
+  },
+  "386166": {
+    "name": "Santorini: Pantheon Edition",
+    "year": 2025,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Ancient",
+      "Mythology"
+    ]
+  },
+  "387866": {
+    "name": "Star Wars: Unlimited",
+    "year": 2024,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Collectible Components",
+      "Movies / TV / Radio theme"
+    ]
+  },
+  "390092": {
+    "name": "Ticket to Ride Legacy: Legends of the West",
+    "year": 2023,
+    "subdomain": "Family",
+    "categories": [
+      "American West",
+      "Trains"
+    ]
+  },
+  "391163": {
+    "name": "Forest Shuffle",
+    "year": 2023,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "Educational"
+    ]
+  },
+  "397598": {
+    "name": "Dune: Imperium – Uprising",
+    "year": 2023,
+    "subdomain": "Strategy",
+    "categories": [
+      "Movies / TV / Radio theme",
+      "Novel-based",
+      "Science Fiction"
+    ]
+  },
+  "406652": {
+    "name": "Compile: Main 1",
+    "year": 2024,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Science Fiction"
+    ]
+  },
+  "413246": {
+    "name": "Bomb Busters",
+    "year": 2024,
+    "subdomain": "Family",
+    "categories": [
+      "Deduction"
+    ]
+  },
+  "414317": {
+    "name": "Harmonies",
+    "year": 2024,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Animals",
+      "Environmental"
+    ]
+  },
+  "417403": {
+    "name": "Toriki: The Castaway Island",
+    "year": 2024,
+    "subdomain": "Children's",
+    "categories": [
+      "Adventure",
+      "Children's Game",
+      "Exploration"
+    ]
+  },
+  "418059": {
+    "name": "SETI: Search for Extraterrestrial Intelligence",
+    "year": 2024,
+    "subdomain": "Strategy",
+    "categories": [
+      "Science Fiction",
+      "Space Exploration"
+    ]
+  },
+  "421006": {
+    "name": "The Lord of the Rings: Duel for Middle-earth",
+    "year": 2024,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Fantasy",
+      "Novel-based"
+    ]
+  },
+  "429293": {
+    "name": "The Lord of the Rings: The Fellowship of the Ring – Trick-Taking Game",
+    "year": 2025,
+    "subdomain": "Family",
+    "categories": [
+      "Adventure",
+      "Card Game",
+      "Fantasy"
+    ]
+  },
+  "436217": {
+    "name": "The Lord of the Rings: Fate of the Fellowship",
+    "year": 2025,
+    "subdomain": "Thematic",
+    "categories": [
+      "Fantasy",
+      "Novel-based"
+    ]
+  },
+  "446497": {
+    "name": "Hot Streak",
+    "year": 2025,
+    "subdomain": "Party",
+    "categories": [
+      "Party Game",
+      "Racing"
+    ]
+  },
+  "454103": {
+    "name": "Magical Athlete",
+    "year": 2025,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Dice",
+      "Racing"
+    ]
+  },
+  "463126": {
+    "name": "Arkham Horror: The Card Game",
+    "year": 2026,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Exploration",
+      "Horror"
+    ]
+  }
+}
