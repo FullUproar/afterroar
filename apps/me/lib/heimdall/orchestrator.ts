@@ -26,6 +26,7 @@
  * packages/heimdall/ later if cross-app callers need it.
  */
 
+import { prisma } from '@/lib/prisma';
 import {
   loadGameProfiles,
   loadPlayerProfile,
@@ -34,6 +35,49 @@ import {
   type SeidrGameProfile,
 } from './load';
 import gameMeta from './game-meta.json';
+
+/**
+ * Saga eligibility check via the engine's exported helper. Wraps prisma's
+ * $queryRawUnsafe in a thin pg-client-shaped adapter so the engine code
+ * stays db-driver-agnostic. Cached for 60s — checking on every recs
+ * request is wasteful given the underlying counts move slowly (recap
+ * ingestion is the only writer, at human-game-night cadence).
+ */
+let sagaEligibilityCache: { result: SagaEligibility; expiresAt: number } | null = null;
+const SAGA_ELIGIBILITY_TTL_MS = 60_000;
+interface SagaEligibility {
+  eligible: boolean;
+  reason: string | null;
+  counts?: { observations: number; uniquePlayers: number; spanDays: number };
+  thresholds?: { observations: number; uniquePlayers: number; spanDays: number };
+}
+async function checkSagaEligibilityCached(): Promise<SagaEligibility> {
+  const now = Date.now();
+  if (sagaEligibilityCache && sagaEligibilityCache.expiresAt > now) {
+    return sagaEligibilityCache.result;
+  }
+  try {
+    // Lazy import — saga is in a sibling workspace; we keep the import
+    // out of the module-load critical path so a missing/broken saga
+    // doesn't break the rest of the orchestrator at import time.
+    const { checkSagaEligibility } = await import('@afterroar/rec-engine-saga/eligibility');
+    const adapter = {
+      query: async (sql: string) => {
+        const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(sql);
+        return { rows };
+      },
+    };
+    const result = (await checkSagaEligibility(adapter)) as SagaEligibility;
+    sagaEligibilityCache = { result, expiresAt: now + SAGA_ELIGIBILITY_TTL_MS };
+    return result;
+  } catch (err) {
+    // If the saga tables don't exist yet (or the import failed), report
+    // ineligible with the error visible. Don't poison the cache so a
+    // fixed deploy refreshes immediately.
+    const message = err instanceof Error ? err.message : String(err);
+    return { eligible: false, reason: `saga eligibility probe failed: ${message}` };
+  }
+}
 
 interface GameMetaEntry {
   name: string;
@@ -396,8 +440,14 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
   // exercise it until huginn's matcher is implemented.
   enginesSkipped.push({ name: 'huginn', reason: 'phase-1 — not yet implemented' });
 
-  // Saga eligibility: needs ≥3000 recap rows for the per-player fun model.
-  enginesSkipped.push({ name: 'saga', reason: 'phase-2 — needs ≥3000 recaps' });
+  // Saga eligibility: real DB-backed check via the engine's exported
+  // gate. Reason text reflects the specific threshold not yet met
+  // (observations / unique players / time span) so operators can see
+  // how close we are. Cached for 60s to keep it cheap on hot paths.
+  const sagaCheck = await checkSagaEligibilityCached();
+  if (!sagaCheck.eligible) {
+    enginesSkipped.push({ name: 'saga', reason: sagaCheck.reason ?? 'phase-2 — not yet active' });
+  }
 
   // Seidr is the only engine with both code and data today. Skip when
   // there's no player profile to match against — seidr has no cold-start
