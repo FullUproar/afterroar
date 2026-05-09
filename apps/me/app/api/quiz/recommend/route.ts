@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
         game_name: nameFor(r.gameId),
         score: r.score,
         contributions: r.contributions,
+        top_dim_contributions: r.topDimContributions,
         explanation: r.explanation,
       })),
       engines_ran: result.enginesRan,

@@ -507,15 +507,57 @@
         return;
       }
 
+      // Build a dim-id → {low, high} label lookup from dimensions.json
+      // (already loaded for the quiz). Lets us turn "PSY_ACHIEVEMENT,
+      // agree_high" into "Mastery/Optimization" for the chips below.
+      const dimMeta = {};
+      for (const d of (dims.dimensions || [])) {
+        dimMeta[d.id] = { low: d.low, high: d.high };
+      }
+
+      function chipForContribution(c) {
+        const meta = dimMeta[c.dim] || { low: c.dim, high: c.dim };
+        let label, bg, color, prefix;
+        if (c.kind === 'agree_high') {
+          label = meta.high;
+          bg = 'rgba(16, 185, 129, 0.14)';
+          color = '#10b981';
+          prefix = 'both like';
+        } else if (c.kind === 'agree_low') {
+          label = meta.low;
+          bg = 'rgba(16, 185, 129, 0.14)';
+          color = '#10b981';
+          prefix = 'both prefer';
+        } else if (c.kind === 'disagree') {
+          // Player and game are on opposite sides — shows up rarely in
+          // top-3 of a high-scoring rec, but worth flagging when it does.
+          label = c.player > 0 ? meta.high : meta.low;
+          bg = 'rgba(239, 68, 68, 0.14)';
+          color = '#ef4444';
+          prefix = 'gap';
+        } else {
+          label = c.dim;
+          bg = 'rgba(255,255,255,0.06)';
+          color = 'rgba(255,255,255,0.6)';
+          prefix = '';
+        }
+        return `<span style="display:inline-flex; gap:6px; align-items:baseline; padding:3px 8px; background:${bg}; color:${color}; border-radius:999px; font-size:0.74rem; font-weight:600; margin-right:6px; margin-top:4px;">
+          <span style="opacity:0.7; text-transform:uppercase; letter-spacing:0.04em; font-size:0.62rem;">${prefix}</span>
+          ${escapeHtml(label)}
+        </span>`;
+      }
+
       const items = data.recommendations.map((r, i) => {
         const name = r.game_name || `Game #${r.game_id}`;
         const score = (r.score * 100).toFixed(0);
         const bggUrl = `https://boardgamegeek.com/boardgame/${r.game_id}`;
-        return `<div style="display:flex; align-items:center; gap:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
-          <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:rgba(255,130,0,0.2); color:#FF8200; display:flex; align-items:center; justify-content:center; font-weight:700;">${i + 1}</div>
+        const contribs = (r.top_dim_contributions || []).map(chipForContribution).join('');
+        return `<div style="display:flex; align-items:flex-start; gap:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
+          <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:rgba(255,130,0,0.2); color:#FF8200; display:flex; align-items:center; justify-content:center; font-weight:700; margin-top:2px;">${i + 1}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:600; color:#f8fafc;">${escapeHtml(name)}</div>
-            <div style="font-size:0.78rem; opacity:0.6; margin-top:2px;">match score ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a></div>
+            <div style="font-size:0.78rem; opacity:0.6; margin-top:2px;">match ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a></div>
+            ${contribs ? `<div style="margin-top:6px; line-height:1.6;">${contribs}</div>` : ''}
           </div>
         </div>`;
       }).join('');

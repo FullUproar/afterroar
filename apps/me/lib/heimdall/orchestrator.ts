@@ -48,18 +48,51 @@ import {
  * and out of rec-engines/* (which Vercel's Root Directory excludes
  * from the build sandbox in some configs).
  */
+/**
+ * One contributing dimension's role in the cosine score. The contribution
+ * is the un-normalized term that adds to the dot product (player × game).
+ *
+ * `kind` tells the UI how to phrase it:
+ *   - `agree_high`: both player AND game are positive on this dim ("you both like X")
+ *   - `agree_low`: both player AND game are negative ("you both avoid X")
+ *   - `disagree`:  player + game are on opposite sides (negative term — drags the score down)
+ *   - `neutral`:   one or both are near zero (small term either way)
+ */
+export interface DimContribution {
+  dim: string;
+  contribution: number;
+  player: number;
+  game: number;
+  kind: 'agree_high' | 'agree_low' | 'disagree' | 'neutral';
+}
+
+function classifyContribution(player: number, game: number): DimContribution['kind'] {
+  const NEAR_ZERO = 0.15;
+  if (Math.abs(player) < NEAR_ZERO || Math.abs(game) < NEAR_ZERO) return 'neutral';
+  if (player > 0 && game > 0) return 'agree_high';
+  if (player < 0 && game < 0) return 'agree_low';
+  return 'disagree';
+}
+
+interface InlineRecommendation {
+  game_id: number;
+  score: number;
+  topContributions: DimContribution[];
+}
+
 function seidrMatchInline(
   player: SeidrPlayerProfile,
   games: SeidrGameProfile[],
-  options: { limit: number; excludeGameIds?: number[] },
+  options: { limit: number; excludeGameIds?: number[]; topDims?: number },
 ): {
-  recommendations: Array<{ game_id: number; score: number; explanation?: string }>;
+  recommendations: InlineRecommendation[];
   filtered: Array<{ game_id: number; reason: string }>;
   totalConsidered: number;
 } {
   const exclude = new Set(options.excludeGameIds ?? []);
+  const topDims = options.topDims ?? 3;
   const filtered: Array<{ game_id: number; reason: string }> = [];
-  const scored: Array<{ game_id: number; score: number }> = [];
+  const scored: InlineRecommendation[] = [];
   const pVec = player.dim_vector ?? {};
 
   let totalConsidered = 0;
@@ -70,9 +103,18 @@ function seidrMatchInline(
       continue;
     }
     totalConsidered++;
-    const cos = cosine(pVec, g.dim_vector);
-    if (cos === null) continue; // both vectors empty — shouldn't happen
-    scored.push({ game_id: g.game_id, score: cos });
+    const result = cosineWithContributions(pVec, g.dim_vector);
+    if (result === null) continue;
+    scored.push({
+      game_id: g.game_id,
+      score: result.cosine,
+      topContributions: result.contributions
+        // Filter out neutrals so the UI explanation prioritizes
+        // dimensions where both sides actually had a stake.
+        .filter((c) => c.kind !== 'neutral')
+        .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
+        .slice(0, topDims),
+    });
   }
 
   scored.sort((a, b) => b.score - a.score);
@@ -83,30 +125,46 @@ function seidrMatchInline(
   };
 }
 
-function cosine(a: DimVector, b: DimVector): number | null {
+function cosineWithContributions(
+  a: DimVector,
+  b: DimVector,
+): { cosine: number; contributions: DimContribution[] } | null {
   let dot = 0;
   let na = 0;
   let nb = 0;
-  // Iterate union of keys; missing keys count as 0 on the corresponding side.
+  const contributions: DimContribution[] = [];
   const seen = new Set<string>();
+
   for (const k of Object.keys(a)) {
     seen.add(k);
     const av = numericOr(a[k], 0);
     const bv = numericOr(b[k], 0);
-    dot += av * bv;
+    const term = av * bv;
+    dot += term;
     na += av * av;
     nb += bv * bv;
+    if (term !== 0) {
+      contributions.push({
+        dim: k,
+        contribution: term,
+        player: av,
+        game: bv,
+        kind: classifyContribution(av, bv),
+      });
+    }
   }
   for (const k of Object.keys(b)) {
     if (seen.has(k)) continue;
     const bv = numericOr(b[k], 0);
     nb += bv * bv;
   }
-  if (na === 0 || nb === 0) return 0;
-  const c = dot / (Math.sqrt(na) * Math.sqrt(nb));
-  if (c > 1) return 1;
-  if (c < -1) return -1;
-  return c;
+  if (na === 0 || nb === 0) {
+    return { cosine: 0, contributions };
+  }
+  let c = dot / (Math.sqrt(na) * Math.sqrt(nb));
+  if (c > 1) c = 1;
+  if (c < -1) c = -1;
+  return { cosine: c, contributions };
 }
 
 function numericOr(v: unknown, fallback: number): number {
@@ -158,6 +216,14 @@ export interface RecommendedGame {
     huginn?: number;
     saga?: number;
   };
+  /**
+   * Top dimensions that drove the seidr match. Lets the UI explain
+   * "why this game" without needing the user to know the game
+   * itself — they can grade the *logic* by seeing which dimensions
+   * aligned. Empty when no engine that produces dim contributions
+   * ran.
+   */
+  topDimContributions?: DimContribution[];
   /**
    * Optional human-readable explanation. Future: aggregate of per-engine
    * explanations.
@@ -231,6 +297,7 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
   const seidrResult = seidrMatchInline(playerProfile, gameProfiles, {
     limit,
     excludeGameIds: req.context?.excludeGameIds ?? [],
+    topDims: 3,
   });
   enginesRan.push('seidr');
 
@@ -242,7 +309,7 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
       gameId: r.game_id,
       score: r.score,
       contributions: { seidr: r.score },
-      explanation: r.explanation,
+      topDimContributions: r.topContributions,
     }));
 
   return {
