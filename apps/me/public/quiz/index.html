@@ -759,6 +759,15 @@
         }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
+      // Hint that recs may be stale now (a tag changes the exclusion
+      // and affinity-anchor inputs to the next /recommend call). The
+      // recs button is always visible after the first fetch; flip its
+      // label to nudge the user to re-fetch.
+      const recBtn = document.getElementById('recs-btn');
+      if (recBtn && recBtn.textContent !== 'Refresh with new tags') {
+        recBtn.textContent = 'Refresh with new tags';
+        recBtn.style.background = '#FBDB65';
+      }
     } catch (err) {
       // Revert on failure.
       if (wasOn) set.add(kind); else set.delete(kind);
@@ -1250,6 +1259,35 @@
       el.style.display = 'none';
     }
   };
+
+  // Hydrate signal state from the DB so prior tags survive a fresh
+  // device or a localStorage wipe. Merges with whatever's already in
+  // local — the DB is authoritative for cross-device truth, but local
+  // may have un-synced toggles (rare with optimistic UI but possible
+  // on a network failure). We take the union: any tag in either source
+  // wins. Best-effort — failures leave the local-only state intact.
+  (async () => {
+    try {
+      const anonId = window.__getAnonSessionId();
+      const url = '/api/recs/feedback?anon_session_id=' + encodeURIComponent(anonId);
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data.signals)) return;
+      for (const s of data.signals) {
+        const key = String(s.game_id);
+        if (!window.__signals[key]) window.__signals[key] = new Set();
+        window.__signals[key].add(s.kind);
+      }
+      window.__saveLocalSignals();
+      // Re-paint any feedback bars currently on screen so the hydration
+      // is visible. (No-op when no rec cards have rendered yet.)
+      document.querySelectorAll('[id^="rec-fb-"]').forEach((el) => {
+        const m = /^rec-fb-(\d+)$/.exec(el.id);
+        if (m) el.outerHTML = window.__buildFeedbackBar(Number(m[1]));
+      });
+    } catch { /* silent — local state remains valid */ }
+  })();
 
   // Probe for a saved profile when signed in. Renders the intro twice
   // in the worst case: once immediately (so the page never feels stuck),

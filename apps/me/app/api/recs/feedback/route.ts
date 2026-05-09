@@ -24,6 +24,7 @@ import { auth } from '@/lib/auth-config';
 import {
   recordUserGameSignal,
   deleteUserGameSignal,
+  loadUserGameSignals,
   SIGNAL_KINDS,
   type SignalKind,
 } from '@/lib/heimdall/persist';
@@ -82,6 +83,50 @@ async function parseAndValidate(req: NextRequest): Promise<
     identity: { passportId, anonSessionId },
     body: { ...b, game_id: b.game_id, kind: b.kind as SignalKind },
   };
+}
+
+/**
+ * GET /api/recs/feedback?anon_session_id=...
+ *
+ * Returns all of the caller's signals — used by the quiz UI to hydrate
+ * the feedback button state on a fresh page load (so previously-tagged
+ * games show their tags filled in, even on a different device).
+ *
+ * Identity: signed-in users get their passport_id automatically.
+ * Anonymous users must pass anon_session_id (the same uuid the browser
+ * stores in localStorage for the POST/DELETE flow).
+ */
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const anonParam = url.searchParams.get('anon_session_id');
+
+  const session = await auth();
+  const passportId = session?.user?.id ?? null;
+
+  let anonSessionId: string | null = null;
+  if (!passportId) {
+    if (!anonParam || !ANON_SESSION_ID_RE.test(anonParam)) {
+      return NextResponse.json({ error: 'anon_session_id required when not signed in.' }, { status: 400 });
+    }
+    anonSessionId = anonParam;
+  }
+
+  try {
+    const signals = await loadUserGameSignals({ passportId, anonSessionId });
+    return NextResponse.json({
+      signals: signals.map((s) => ({
+        game_id: s.game_id,
+        kind: s.kind,
+        recommendation_event_id: s.recommendation_event_id
+          ? s.recommendation_event_id.toString()
+          : null,
+      })),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[recs-feedback] list failed', { message });
+    return NextResponse.json({ error: 'feedback_list_failed', detail: message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
