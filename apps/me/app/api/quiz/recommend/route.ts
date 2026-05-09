@@ -29,7 +29,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { recommendGames } from '@/lib/heimdall/orchestrator';
+import { recordRecommendationEvent } from '@/lib/heimdall/persist';
+import { auth } from '@/lib/auth-config';
 import gameMeta from '@/lib/heimdall/game-meta.json';
+
+const ANON_SESSION_ID_RE = /^[0-9a-f-]{8,64}$/i;
 
 const MAX_LIMIT = 24;
 
@@ -54,6 +58,13 @@ interface RawBody {
     max_year?: number;
     subdomains?: string[];
   };
+  /**
+   * Anonymous session id (uuid generated in the browser, persisted in
+   * localStorage). Used to log recommendation events for not-signed-in
+   * quiz takers so their thumbs-up/down can be migrated to a Passport
+   * later when they claim one. Ignored when the request is signed in.
+   */
+  anon_session_id?: string;
 }
 
 interface GameMetaEntry {
@@ -165,25 +176,65 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Resolve identity for event logging. Signed-in users get a passport
+  // id from the session; anon users may pass an anon_session_id from
+  // localStorage. Either is fine; if neither, we skip logging.
+  const session = await auth().catch(() => null);
+  const passportId = session?.user?.id ?? null;
+  const anonSessionId =
+    !passportId && typeof b.anon_session_id === 'string' && ANON_SESSION_ID_RE.test(b.anon_session_id)
+      ? b.anon_session_id
+      : null;
+
+  // Build the rec list once so the same array goes into the response
+  // body and the persisted event log.
+  const recommendations = result.recommendations.map((r, idx) => {
+    const m = metaFor(r.gameId);
+    return {
+      game_id: r.gameId,
+      game_name: m.name,
+      year: m.year ?? null,
+      subdomain: m.subdomain ?? null,
+      categories: m.categories ?? [],
+      score: r.score,
+      rank: idx + 1,
+      contributions: r.contributions,
+      top_dim_contributions: r.topDimContributions,
+      explanation: r.explanation,
+    };
+  });
+
+  // Best-effort logging — never block the response on it.
+  let recommendationEventId: string | null = null;
+  if (passportId || anonSessionId) {
+    try {
+      const id = await recordRecommendationEvent({
+        passportId,
+        anonSessionId,
+        source: 'quiz',
+        profileSnapshot: effectiveProfile,
+        moodDelta: b.mood_delta,
+        filters: b.filters as Record<string, unknown> | undefined,
+        candidatesConsidered: result.candidatesConsidered,
+        enginesRan: result.enginesRan,
+        enginesSkipped: result.enginesSkipped,
+        recommendations,
+      });
+      // bigint isn't JSON-serializable, so stringify for the wire.
+      recommendationEventId = id ? id.toString() : null;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[quiz-recommend] event log failed (non-fatal)', { message });
+    }
+  }
+
   try {
     return NextResponse.json({
-      recommendations: result.recommendations.map((r) => {
-        const m = metaFor(r.gameId);
-        return {
-          game_id: r.gameId,
-          game_name: m.name,
-          year: m.year ?? null,
-          subdomain: m.subdomain ?? null,
-          categories: m.categories ?? [],
-          score: r.score,
-          contributions: r.contributions,
-          top_dim_contributions: r.topDimContributions,
-          explanation: r.explanation,
-        };
-      }),
+      recommendations,
       engines_ran: result.enginesRan,
       engines_skipped: result.enginesSkipped,
       candidates_considered: result.candidatesConsidered,
+      recommendation_event_id: recommendationEventId,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

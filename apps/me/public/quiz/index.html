@@ -542,6 +542,120 @@
     window.__edited = new Set();
   }
 
+  // ----- Anon session id + per-game feedback signals -----
+  // Browser-generated uuid stored in localStorage so anon quiz takers
+  // can leave thumbs-up/down on recs and have those persist across
+  // page reloads. When the user later signs in + claims a Passport,
+  // we can migrate signals over by anon_session_id.
+  window.__getAnonSessionId = () => {
+    try {
+      let id = localStorage.getItem('seidr_anon_id');
+      if (!id) {
+        // crypto.randomUUID is widely supported; fall back to a simple
+        // hex-string for very old browsers.
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          id = window.crypto.randomUUID();
+        } else {
+          id = 'anon-' + Date.now().toString(16) + '-' + Math.random().toString(16).slice(2, 10);
+        }
+        localStorage.setItem('seidr_anon_id', id);
+      }
+      return id;
+    } catch (e) {
+      // Private browsing or storage disabled — generate ephemeral id
+      // that lives only for this page lifetime.
+      if (!window.__ephemeralAnonId) {
+        window.__ephemeralAnonId = 'anon-eph-' + Math.random().toString(16).slice(2, 10);
+      }
+      return window.__ephemeralAnonId;
+    }
+  };
+
+  // Active signal state (game_id → Set of kinds). Persisted to localStorage
+  // so reloads + back-navigation don't lose the user's reactions.
+  window.__loadLocalSignals = () => {
+    try {
+      const raw = localStorage.getItem('seidr_signals');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      const out = {};
+      for (const [k, arr] of Object.entries(parsed || {})) {
+        if (Array.isArray(arr)) out[k] = new Set(arr);
+      }
+      return out;
+    } catch { return {}; }
+  };
+  window.__saveLocalSignals = () => {
+    try {
+      const out = {};
+      for (const [k, set] of Object.entries(window.__signals || {})) {
+        out[k] = Array.from(set);
+      }
+      localStorage.setItem('seidr_signals', JSON.stringify(out));
+    } catch {}
+  };
+  window.__signals = window.__loadLocalSignals();
+
+  // Three primary action buttons per rec. Any kind from the API is
+  // valid, but UI surface is intentionally narrow — extra kinds (loved,
+  // tried_disliked) are reserved for a future "I've played this"
+  // affordance where the user can rate a game they specifically know.
+  window.__buildFeedbackBar = (gameId) => {
+    const set = window.__signals[String(gameId)] || new Set();
+    const btn = (kind, label, activeColor) => {
+      const on = set.has(kind);
+      const bg = on ? activeColor : 'rgba(255,255,255,0.04)';
+      const color = on ? '#0a0a0a' : 'rgba(255,255,255,0.7)';
+      const border = on ? activeColor : 'rgba(255,255,255,0.12)';
+      return `<button onclick="event.stopPropagation(); window.__toggleSignal(${gameId}, '${kind}')"
+        style="padding:4px 10px; font-size:0.72rem; font-weight:600;
+        background:${bg}; color:${color}; border:1px solid ${border};
+        border-radius:14px; margin-right:5px; cursor:pointer;">${label}</button>`;
+    };
+    return `<div id="rec-fb-${gameId}" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:0;">
+      ${btn('thumbs_up', '👍 Good rec', '#10b981')}
+      ${btn('thumbs_down', '👎 Off', '#ef4444')}
+      ${btn('owned', '📦 I own this', '#FBDB65')}
+      ${btn('never_heard_of', '👀 New to me', '#7D55C7')}
+    </div>`;
+  };
+
+  // Toggle a signal: if not set, POST + add to local state; if set,
+  // DELETE + remove. Optimistic UI — reverts on error.
+  window.__toggleSignal = async (gameId, kind) => {
+    const key = String(gameId);
+    if (!window.__signals[key]) window.__signals[key] = new Set();
+    const set = window.__signals[key];
+    const wasOn = set.has(kind);
+
+    // Optimistic flip + repaint.
+    if (wasOn) set.delete(kind); else set.add(kind);
+    window.__saveLocalSignals();
+    const bar = document.getElementById('rec-fb-' + gameId);
+    if (bar) bar.outerHTML = window.__buildFeedbackBar(gameId);
+
+    try {
+      const res = await fetch('/api/recs/feedback', {
+        method: wasOn ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          anon_session_id: window.__getAnonSessionId(),
+          game_id: gameId,
+          kind,
+          ...(window.__lastRecEventId ? { recommendation_event_id: Number(window.__lastRecEventId) } : {}),
+        }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+    } catch (err) {
+      // Revert on failure.
+      if (wasOn) set.add(kind); else set.delete(kind);
+      window.__saveLocalSignals();
+      const bar2 = document.getElementById('rec-fb-' + gameId);
+      if (bar2) bar2.outerHTML = window.__buildFeedbackBar(gameId);
+      console.warn('feedback save failed:', err);
+    }
+  };
+
   // Tracks dim ids the user has manually edited via the slider editor.
   // Used to render the "edited" badge + tint and to make the warning
   // about resetting only show when there's something to reset.
@@ -648,12 +762,14 @@
         : {};
       const hasFilters = Object.keys(filters).length > 0;
 
+      const anonId = window.__getAnonSessionId();
       const res = await fetch('/api/quiz/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profile: window.__profile,
           limit: 12,
+          anon_session_id: anonId,
           ...(hasMoodDelta ? { mood_delta: moodDelta } : {}),
           ...(hasFilters ? { filters } : {}),
         }),
@@ -794,6 +910,9 @@
         window.__getRecs(); // re-fetch with new mood
       };
 
+      // Stash the rec event id so feedback button clicks can attach to it.
+      window.__lastRecEventId = data.recommendation_event_id || null;
+
       const items = data.recommendations.map((r, i) => {
         const name = r.game_name || `Game #${r.game_id}`;
         const score = (r.score * 100).toFixed(0);
@@ -810,13 +929,16 @@
           ? `<div style="font-size:0.74rem; opacity:0.55; margin-top:1px;">${metaParts.join(' &middot; ')}</div>`
           : '';
 
-        return `<div style="display:flex; align-items:flex-start; gap:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
+        const fb = window.__buildFeedbackBar(r.game_id);
+
+        return `<div id="rec-card-${r.game_id}" style="display:flex; align-items:flex-start; gap:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
           <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:rgba(255,130,0,0.2); color:#FF8200; display:flex; align-items:center; justify-content:center; font-weight:700; margin-top:2px;">${i + 1}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:600; color:#f8fafc;">${escapeHtml(name)}</div>
             ${metaLine}
             <div style="font-size:0.78rem; opacity:0.6; margin-top:4px;">match ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a></div>
             ${contribs ? `<div style="margin-top:6px; line-height:1.6;">${contribs}</div>` : ''}
+            ${fb}
           </div>
         </div>`;
       }).join('');
