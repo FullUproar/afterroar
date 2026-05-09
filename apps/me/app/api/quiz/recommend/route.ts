@@ -43,6 +43,15 @@ const ANON_SESSION_ID_RE = /^[0-9a-f-]{8,64}$/i;
 // signal (we should show it again, maybe with more confidence).
 const EXCLUDE_KINDS = new Set(['owned', 'tried_disliked', 'thumbs_down']);
 
+// Signal kinds that BOOST similar games via the affinity-anchor path.
+// 'loved' pulls hardest because it's an explicit "this is my taste";
+// 'thumbs_up' is a softer "this rec was good." Weights tune the per-
+// anchor pull on the cosine-similarity boost in the orchestrator.
+const AFFINITY_WEIGHTS: Record<string, number> = {
+  loved: 1.0,
+  thumbs_up: 0.5,
+};
+
 const MAX_LIMIT = 24;
 
 interface RawBody {
@@ -171,17 +180,40 @@ export async function POST(request: NextRequest) {
       ? b.anon_session_id
       : null;
 
-  // Pull signal-based exclusions. Best-effort — if the lookup fails the
-  // recs still go through (just without signal-aware filtering).
+  // Pull signals once and split into:
+  //   - exclusions (owned/disliked/thumbs_down): drop from candidate pool
+  //   - affinity anchors (loved/thumbs_up): boost similar games
+  // Best-effort — a lookup failure leaves both empty and recs proceed.
   let excludeGameIds: number[] = [];
+  let affinityAnchors: Array<{ gameId: number; weight: number }> = [];
   if (passportId || anonSessionId) {
     try {
       const signals = await loadUserGameSignals({ passportId, anonSessionId });
       const excluded = new Set<number>();
+      // Per-game max weight: a single game tagged loved + thumbs_up gets
+      // weight 1.0 (loved wins), not 1.5. Avoids double-counting.
+      const anchorWeights = new Map<number, number>();
       for (const s of signals) {
-        if (EXCLUDE_KINDS.has(s.kind)) excluded.add(s.game_id);
+        if (EXCLUDE_KINDS.has(s.kind)) {
+          excluded.add(s.game_id);
+        }
+        const w = AFFINITY_WEIGHTS[s.kind];
+        if (typeof w === 'number') {
+          const prev = anchorWeights.get(s.game_id) ?? 0;
+          if (w > prev) anchorWeights.set(s.game_id, w);
+        }
       }
+      // An excluded game shouldn't simultaneously anchor — even though
+      // it's already filtered out of the candidate pool, including it
+      // as an anchor would still boost similar games (which is fine),
+      // but the user's intent here is murky (why would you love + own
+      // a game?). Leave it as anchor — owning + loving Catan should
+      // still pull other Catan-likes.
       excludeGameIds = Array.from(excluded);
+      affinityAnchors = Array.from(anchorWeights.entries()).map(([gameId, weight]) => ({
+        gameId,
+        weight,
+      }));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('[quiz-recommend] signal lookup failed (non-fatal)', { message });
@@ -201,6 +233,7 @@ export async function POST(request: NextRequest) {
           }
         : undefined,
       context: excludeGameIds.length > 0 ? { excludeGameIds } : undefined,
+      affinityAnchors: affinityAnchors.length > 0 ? affinityAnchors : undefined,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -261,6 +294,7 @@ export async function POST(request: NextRequest) {
       engines_skipped: result.enginesSkipped,
       candidates_considered: result.candidatesConsidered,
       excluded_by_signals: excludeGameIds.length,
+      affinity_anchors: affinityAnchors.length,
       recommendation_event_id: recommendationEventId,
     });
   } catch (err) {

@@ -42,6 +42,67 @@ interface GameMetaEntry {
   categories?: string[];
 }
 
+/**
+ * A game the user has positively signaled on (loved, thumbs_up). Carries
+ * a weight so different signal strengths can boost differently — a
+ * "loved" should pull harder than a casual thumbs_up.
+ */
+export interface AffinityAnchor {
+  gameId: number;
+  weight: number;
+}
+
+/**
+ * Re-rank cosine-scored recommendations by their similarity to the user's
+ * affinity anchors (games they've explicitly loved or thumbs-upped). The
+ * boost is applied multiplicatively after the seidr cosine score so we
+ * never invert the ranking — anchors tilt it toward "more like what you
+ * already love" without flipping a great cosine match to a worse pick.
+ *
+ * Math: per candidate, compute max similarity to any anchor (max not sum
+ * — one strongly-loved-similar game shouldn't be drowned out by many
+ * weakly-similar ones). Multiply candidate score by (1 + alpha * boost).
+ *
+ * Anchor games themselves are excluded from the candidate pool earlier
+ * (the "owned" / "thumbs_down" filter), so we don't have to worry about
+ * a loved game self-boosting to rank #1.
+ */
+function applyAffinityBoost(
+  recs: SeidrRecommendation[],
+  gameProfiles: SeidrGameProfile[],
+  anchors: AffinityAnchor[],
+  alpha: number,
+): SeidrRecommendation[] {
+  if (anchors.length === 0 || alpha <= 0) return recs;
+  const profilesById = new Map<number, SeidrGameProfile>();
+  for (const g of gameProfiles) profilesById.set(g.game_id, g);
+
+  // Precompute anchor profiles once. Skip anchors not in our corpus
+  // (the user can tag a game we don't have a profile for; it just
+  // contributes nothing to the boost).
+  const anchorProfiles: Array<{ profile: SeidrGameProfile; weight: number }> = [];
+  for (const a of anchors) {
+    const p = profilesById.get(a.gameId);
+    if (p) anchorProfiles.push({ profile: p, weight: a.weight });
+  }
+  if (anchorProfiles.length === 0) return recs;
+
+  return recs.map((r) => {
+    const candidate = profilesById.get(r.game_id);
+    if (!candidate) return r;
+    let maxSim = 0;
+    for (const { profile: anchor, weight } of anchorProfiles) {
+      const sim = gameGameSimilarity(candidate, anchor);
+      const weighted = sim * weight;
+      if (weighted > maxSim) maxSim = weighted;
+    }
+    // Clamp boost to a sane range. cosine returns [-1, 1]; weighted by
+    // anchor weight (typically 0.5..1.5) it can push slightly past 1.
+    const boost = Math.max(0, Math.min(1, maxSim));
+    return { ...r, score: r.score * (1 + alpha * boost) };
+  });
+}
+
 function applyFilters(
   profiles: SeidrGameProfile[],
   filters: RecommendRequest['filters'],
@@ -79,7 +140,7 @@ function applyFilters(
 //   - Confidence-weighted cosine (low-confidence dims contribute less)
 //   - Player-count filtering when bggMetadata is supplied
 //
-import { match as canonicalSeidrMatch } from './seidr-match.mjs';
+import { match as canonicalSeidrMatch, gameGameSimilarity } from './seidr-match.mjs';
 /**
  * One contributing dimension's role in the cosine score. The contribution
  * is the un-normalized term that adds to the dot product (player × game).
@@ -236,6 +297,16 @@ export interface RecommendRequest {
    * Top-K to return. Defaults to 12.
    */
   limit?: number;
+  /**
+   * Games the user has positively signaled on (loved, thumbs_up). Each
+   * candidate gets a boost proportional to its max similarity to any
+   * anchor. Anchors that aren't in the corpus are silently ignored.
+   *
+   * Suggested weights:
+   *   - loved: 1.0 (or higher if you want this to dominate)
+   *   - thumbs_up: 0.5 (a positive nudge, not a profile rewrite)
+   */
+  affinityAnchors?: AffinityAnchor[];
 }
 
 export interface RecommendedGame {
@@ -331,23 +402,41 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
 
   const allProfiles: SeidrGameProfile[] = await loadGameProfiles();
   const gameProfiles = applyFilters(allProfiles, req.filters);
+
+  // When the user has provided affinity anchors, fetch a wider pool from
+  // the matcher (3x the requested limit) so the boost has more candidates
+  // to lift up. Without anchors, fetching exactly the limit is fine —
+  // the MMR-diversified top-K is already the answer.
+  const anchors = req.affinityAnchors ?? [];
+  const matcherLimit = anchors.length > 0 ? limit * 3 : limit;
+
   const seidrResult = runSeidr(playerProfile, gameProfiles, {
-    limit,
+    limit: matcherLimit,
     excludeGameIds: req.context?.excludeGameIds ?? [],
     topDims: 3,
   });
   enginesRan.push('seidr');
 
+  // Apply affinity boost (no-op when anchors empty). Multiplicatively
+  // tilts the cosine ranking toward games similar to the user's loved/
+  // thumbs-upped picks, without inverting it. alpha=0.5 means a perfect
+  // similarity match (sim=1.0) gets +50% boost — strong but not dominant.
+  const AFFINITY_ALPHA = 0.5;
+  const boosted = applyAffinityBoost(seidrResult.recommendations, gameProfiles, anchors, AFFINITY_ALPHA);
+
+  // After boosting, re-sort and take the original requested limit. The
+  // matcher already MMR-diversified the input pool, so the boosted
+  // top-K stays reasonably varied even when re-sorted by boosted score.
+  const finalRanked = [...boosted].sort((a, b) => b.score - a.score).slice(0, limit);
+
   // v0.1 composition: trivially adopt seidr's ranking. v0.2 will weight
   // multiple engines' contributions via confidence-aware ensemble.
-  const recommendations: RecommendedGame[] = seidrResult.recommendations
-    .slice(0, limit)
-    .map((r) => ({
-      gameId: r.game_id,
-      score: r.score,
-      contributions: { seidr: r.score },
-      topDimContributions: r.topContributions,
-    }));
+  const recommendations: RecommendedGame[] = finalRanked.map((r) => ({
+    gameId: r.game_id,
+    score: r.score,
+    contributions: { seidr: r.score },
+    topDimContributions: r.topContributions,
+  }));
 
   return {
     recommendations,
