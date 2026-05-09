@@ -68,21 +68,41 @@ export async function POST(request: NextRequest) {
       ? b.limit
       : 12;
 
-  const result = await recommendGames({
-    playerProfile: b.profile,
-    limit,
-  });
+  let result;
+  try {
+    result = await recommendGames({
+      playerProfile: b.profile,
+      limit,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error('[quiz-recommend] orchestrator threw', { message, stack });
+    return NextResponse.json(
+      { error: 'recommendation_failed', detail: message },
+      { status: 500 },
+    );
+  }
 
-  return NextResponse.json({
-    recommendations: result.recommendations.map((r) => ({
-      game_id: r.gameId,
-      game_name: nameFor(r.gameId),
-      score: r.score,
-      contributions: r.contributions,
-      explanation: r.explanation,
-    })),
-    engines_ran: result.enginesRan,
-    engines_skipped: result.enginesSkipped,
-    candidates_considered: result.candidatesConsidered,
-  });
+  try {
+    return NextResponse.json({
+      recommendations: result.recommendations.map((r) => ({
+        game_id: r.gameId,
+        game_name: nameFor(r.gameId),
+        score: r.score,
+        contributions: r.contributions,
+        explanation: r.explanation,
+      })),
+      engines_ran: result.enginesRan,
+      engines_skipped: result.enginesSkipped,
+      candidates_considered: result.candidatesConsidered,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[quiz-recommend] response serialization threw', { message });
+    return NextResponse.json(
+      { error: 'serialization_failed', detail: message },
+      { status: 500 },
+    );
+  }
 }
