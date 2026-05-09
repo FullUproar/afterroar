@@ -15,6 +15,68 @@
 import { prisma } from '@/lib/prisma';
 import type { DimVector } from './load';
 
+export interface SavePlayerProfileInput {
+  passportId: string;
+  dimVector: DimVector;
+  confidenceVector: DimVector;
+  questionSetVersion: string;
+  questionsAnswered: number;
+  source?: string;
+  notes?: string;
+}
+
+/**
+ * Persist a player's quiz-derived profile. Auto-bumps profile_version
+ * when the player has prior rows (so a retake creates v2, v3, ... while
+ * keeping the audit trail). Caller must supply a non-null passportId —
+ * anonymous quiz takers don't get persisted profiles (they keep their
+ * profile in the browser; promoting it on Passport claim is a separate
+ * future migration step).
+ *
+ * Returns the new row's id and version. Idempotent in the loose sense:
+ * re-saving a *different* profile increments the version (each save
+ * is its own row); re-saving the *exact same* profile would still create
+ * a new row, which is fine — the version trail is a feature, not a bug.
+ * If we want true idempotency later, hash the dim_vector and skip when
+ * the most-recent version matches.
+ */
+export async function savePlayerProfile(
+  input: SavePlayerProfileInput,
+): Promise<{ id: bigint; version: number }> {
+  // Find the existing max version for this passport (defaulting to 0
+  // when the player has no rows yet, so the new row becomes v1).
+  const existing = await prisma.$queryRaw<Array<{ max_version: number | null }>>`
+    SELECT MAX(profile_version) AS max_version
+    FROM rec_seidr_player_profile
+    WHERE player_id = ${input.passportId}
+  `;
+  const nextVersion = (existing[0]?.max_version ?? 0) + 1;
+
+  const rows = await prisma.$queryRaw<Array<{ id: bigint }>>`
+    INSERT INTO rec_seidr_player_profile (
+      player_id,
+      profile_version,
+      dim_vector,
+      confidence_vector,
+      question_set_version,
+      questions_answered,
+      source,
+      notes
+    ) VALUES (
+      ${input.passportId},
+      ${nextVersion},
+      ${JSON.stringify(input.dimVector)}::jsonb,
+      ${JSON.stringify(input.confidenceVector)}::jsonb,
+      ${input.questionSetVersion},
+      ${input.questionsAnswered},
+      ${input.source ?? 'quiz'},
+      ${input.notes ?? null}
+    )
+    RETURNING id
+  `;
+  return { id: rows[0].id, version: nextVersion };
+}
+
 export interface RecommendationEventInput {
   passportId: string | null;
   anonSessionId: string | null;

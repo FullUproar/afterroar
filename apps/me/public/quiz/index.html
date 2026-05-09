@@ -235,14 +235,28 @@
 
   // -------------------- LOAD DATA --------------------
   let gameInfo = {};
+  // Probed once at load — null until we know, then {signedIn: bool, userId?: string}.
+  // Used to decide whether to auto-save the profile after results render
+  // and to show "Sign in to save" vs "Saved to your Passport" affordances.
+  window.__authState = null;
   try {
-    [bank, dims, gameInfo] = await Promise.all([
+    const [bankR, dimsR, gameInfoR, sessionR] = await Promise.all([
       fetch('/quiz/question-bank.json').then(r => r.json()),
       fetch('/quiz/dimensions.json').then(r => r.json()),
       // Game info for this-or-that questions. Best-effort — quiz works
       // without it; the info-expand buttons just won't have content.
       fetch('/quiz/game-info.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      // NextAuth session probe. Anonymous = empty/{}, signed-in = {user: {...}}.
+      // Best-effort — failing here just falls through to the anon path.
+      fetch('/api/auth/session').then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
+    bank = bankR;
+    dims = dimsR;
+    gameInfo = gameInfoR || {};
+    window.__authState = {
+      signedIn: !!(sessionR && sessionR.user && sessionR.user.id),
+      userId: sessionR && sessionR.user ? sessionR.user.id : null,
+    };
   } catch (err) {
     app.innerHTML = `<h1>Couldn’t load quiz data</h1>
       <p>This page needs <code>question-bank.json</code> and <code>dimensions.json</code> next to <code>index.html</code>.</p>
@@ -512,10 +526,17 @@
     };
     const exportJson = JSON.stringify(exportData, null, 2);
 
+    // Save-status banner placeholder — auto-save kicks off below and
+    // updates the banner asynchronously without re-rendering the rest.
+    const saveBanner = window.__authState && window.__authState.signedIn
+      ? `<div id="save-banner" style="margin: 16px 0; padding: 10px 14px; background: rgba(125,85,199,0.12); border: 1px solid rgba(125,85,199,0.4); border-radius: 8px; font-size: 0.86rem; color: #cbd5e1;">⏳ Saving your profile to your Passport…</div>`
+      : `<div style="margin: 16px 0; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; font-size: 0.86rem; color: #94a3b8;">Anonymous mode — your profile lives in this browser only. <a href="/login?callbackUrl=/quiz" style="color:#FBDB65;">Sign in</a> next time to save it to your Passport.</div>`;
+
     app.innerHTML = `
       <div class="progress-track"><div class="progress-fill" style="width: 100%"></div></div>
       <h1>Your tabletop profile</h1>
       <div class="results-narrative"><p>${escapeHtml(narrative)}</p></div>
+      ${saveBanner}
       <p style="margin-bottom: 24px;"><small>The bars show where you sit on each dimension. Bars at low opacity got fewer questions — take the quiz again for sharper signal there.</small></p>
       ${clustersHtml}
       <div style="margin: 32px 0; padding: 24px; background: rgba(255, 130, 0, 0.08); border: 1px solid rgba(255, 130, 0, 0.4); border-radius: 12px; text-align: center;">
@@ -540,6 +561,44 @@
     // mutated in place by the editor; baseline must be a copy.
     window.__profileBaseline = { ...profile };
     window.__edited = new Set();
+
+    // Auto-save the freshly-computed profile when signed in. Best-effort —
+    // a save failure leaves the banner showing the error but doesn't
+    // block the user from getting recs (which work fine on an in-memory
+    // profile).
+    if (window.__authState && window.__authState.signedIn) {
+      (async () => {
+        const banner = document.getElementById('save-banner');
+        try {
+          const res = await fetch('/api/quiz/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              profile,
+              confidence,
+              question_set_version: bank.metadata?.version || 'unknown',
+              questions_answered: responses.length,
+            }),
+          });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error || `HTTP ${res.status}`);
+          }
+          const saved = await res.json();
+          if (banner) {
+            banner.innerHTML = `✓ Saved as profile v${saved.profile_version} on your Passport. Come back to <a href="/quiz" style="color:#FBDB65;">/quiz</a> any time to get fresh recs.`;
+            banner.style.background = 'rgba(16,185,129,0.10)';
+            banner.style.borderColor = 'rgba(16,185,129,0.4)';
+          }
+        } catch (err) {
+          if (banner) {
+            banner.innerHTML = `⚠ Save failed: ${escapeHtml(String(err.message || err))}. Your profile is still in this browser.`;
+            banner.style.background = 'rgba(239,68,68,0.10)';
+            banner.style.borderColor = 'rgba(239,68,68,0.4)';
+          }
+        }
+      })();
+    }
   }
 
   // ----- Anon session id + per-game feedback signals -----

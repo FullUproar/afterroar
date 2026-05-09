@@ -67,30 +67,28 @@ export async function loadGameProfiles(): Promise<SeidrGameProfile[]> {
 }
 
 /**
- * Look up a player's most recent active seidr profile by their User id
- * (mapped to rec_player.passport_id). Returns null when the player
- * hasn't taken the quiz.
+ * Look up a player's most recent seidr profile by their Passport user id.
+ * Returns null when the player hasn't taken (or saved) the quiz yet.
  *
- * The double indirection (User → rec_player → rec_seidr_player_profile)
- * exists because the rec_* schema deliberately has its own thin shadow
- * of Player nodes — see mimir/migrations/0001 design notes.
+ * rec_seidr_player_profile.player_id stores the Passport user id directly
+ * (the planned indirection through rec_player was never built — passport_id
+ * is the natural key for player profiles in the seidr engine). Picks the
+ * highest profile_version (latest retake) by completed_at as tiebreaker.
  */
-export async function loadPlayerProfile(userId: string): Promise<SeidrPlayerProfile | null> {
+export async function loadPlayerProfile(passportId: string): Promise<SeidrPlayerProfile | null> {
   const rows = await prisma.$queryRaw<
-    Array<{ dim_vector: DimVector; confidence_per_dim: DimVector | null }>
+    Array<{ dim_vector: DimVector; confidence_vector: DimVector }>
   >`
-    SELECT spp.dim_vector, spp.confidence_per_dim
-    FROM rec_seidr_player_profile spp
-    JOIN rec_player rp ON rp.id = spp.player_id
-    WHERE rp.passport_id = ${userId}
-      AND NOT spp.superseded
-    ORDER BY spp.generated_at DESC
+    SELECT dim_vector, confidence_vector
+    FROM rec_seidr_player_profile
+    WHERE player_id = ${passportId}
+    ORDER BY profile_version DESC, completed_at DESC
     LIMIT 1
   `;
   if (rows.length === 0) return null;
   return {
     dim_vector: rows[0].dim_vector,
-    confidence_vector: rows[0].confidence_per_dim ?? undefined,
+    confidence_vector: rows[0].confidence_vector,
   };
 }
 
