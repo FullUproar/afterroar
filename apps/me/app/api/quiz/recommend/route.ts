@@ -31,7 +31,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recommendGames } from '@/lib/heimdall/orchestrator';
 import { recordRecommendationEvent, loadUserGameSignals } from '@/lib/heimdall/persist';
 import { auth } from '@/lib/auth-config';
-import gameMeta from '@/lib/heimdall/game-meta.json';
+import { enrichRecs } from '@/lib/heimdall/enrich';
 
 const ANON_SESSION_ID_RE = /^[0-9a-f-]{8,64}$/i;
 
@@ -82,18 +82,6 @@ interface RawBody {
    * later when they claim one. Ignored when the request is signed in.
    */
   anon_session_id?: string;
-}
-
-interface GameMetaEntry {
-  name: string;
-  year?: number | null;
-  subdomain?: string | null;
-  categories?: string[];
-}
-
-function metaFor(gameId: number): GameMetaEntry {
-  const m = (gameMeta as Record<string, GameMetaEntry>)[String(gameId)];
-  return m ?? { name: `Game #${gameId}` };
 }
 
 function applyMoodDelta(
@@ -245,24 +233,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Build the rec list once so the same array goes into the response
+  // Build the rec list once via the shared enricher so quiz + API-key
+  // endpoints can't drift on shape. The same array goes into the response
   // body and the persisted event log.
-  const recommendations = result.recommendations.map((r, idx) => {
-    const m = metaFor(r.gameId);
-    return {
-      game_id: r.gameId,
-      game_name: m.name,
-      year: m.year ?? null,
-      subdomain: m.subdomain ?? null,
-      categories: m.categories ?? [],
-      score: r.score,
-      rank: idx + 1,
-      contributions: r.contributions,
-      top_dim_contributions: r.topDimContributions,
-      all_dim_contributions: r.allDimContributions,
-      explanation: r.explanation,
-    };
-  });
+  const recommendations = enrichRecs(result.recommendations);
 
   // Best-effort logging — never block the response on it.
   let recommendationEventId: string | null = null;

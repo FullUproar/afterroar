@@ -18,7 +18,11 @@
  * }
  *
  * Response: {
- *   recommendations: [{ game_id, score, contributions, explanation? }],
+ *   recommendations: [{
+ *     game_id, game_name, year, subdomain, categories, description,
+ *     min_players, max_players, playing_time, score, rank,
+ *     contributions, top_dim_contributions, all_dim_contributions, explanation?
+ *   }],
  *   engines_ran: [...],
  *   engines_skipped: [{ name, reason }],
  *   candidates_considered: number
@@ -33,6 +37,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiKey } from '@/lib/api-middleware';
 import { recommendGames, type RecommendRequest } from '@/lib/heimdall/orchestrator';
+import { enrichRecs } from '@/lib/heimdall/enrich';
 
 const MAX_LIMIT = 50;
 
@@ -117,13 +122,11 @@ export const POST = withApiKey<Record<string, never>>(async (req: NextRequest) =
 
   const result = await recommendGames(v.req);
 
+  // Same enriched shape as the public quiz endpoint — the API-key path
+  // shouldn't have to do its own BGG lookup. game_name + year + subdomain
+  // + categories + per-dim contributions + explanation all included.
   return NextResponse.json({
-    recommendations: result.recommendations.map((r) => ({
-      game_id: r.gameId,
-      score: r.score,
-      contributions: r.contributions,
-      explanation: r.explanation,
-    })),
+    recommendations: enrichRecs(result.recommendations),
     engines_ran: result.enginesRan,
     engines_skipped: result.enginesSkipped,
     candidates_considered: result.candidatesConsidered,
