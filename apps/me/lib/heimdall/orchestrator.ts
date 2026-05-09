@@ -180,6 +180,8 @@ interface SeidrRecommendation {
   game_id: number;
   score: number;
   topContributions: DimContribution[];
+  /** Full ranked contribution list (including neutrals) for the "why this rec" view. */
+  allContributions: DimContribution[];
 }
 
 interface SeidrCanonicalRecommendation {
@@ -235,6 +237,7 @@ function runSeidr(
       game_id: r.game_id,
       score: r.score,
       topContributions: enriched.filter((c) => c.kind !== 'neutral').slice(0, topDims),
+      allContributions: enriched,
     };
   });
 
@@ -331,6 +334,13 @@ export interface RecommendedGame {
    * ran.
    */
   topDimContributions?: DimContribution[];
+  /**
+   * Full per-dim contribution breakdown (all 5 dims the matcher
+   * surfaced, including those classified `neutral`). Used by the
+   * "why this rec" expander to give the full picture beyond the
+   * 3 chips. May be omitted when the engine returns no breakdown.
+   */
+  allDimContributions?: DimContribution[];
   /**
    * Optional human-readable explanation. Future: aggregate of per-engine
    * explanations.
@@ -436,6 +446,7 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
     score: r.score,
     contributions: { seidr: r.score },
     topDimContributions: r.topContributions,
+    allDimContributions: r.allContributions,
   }));
 
   return {

@@ -259,6 +259,7 @@ export async function POST(request: NextRequest) {
       rank: idx + 1,
       contributions: r.contributions,
       top_dim_contributions: r.topDimContributions,
+      all_dim_contributions: r.allDimContributions,
       explanation: r.explanation,
     };
   });

@@ -778,6 +778,72 @@
     }
   };
 
+  // ----- Why-this-rec expander -----
+  // Shows the full per-dim breakdown that drove the cosine score for
+  // a given rec. Each row: dim id + your-vs-game positions on the
+  // axis + the contribution magnitude (how much this dim added to the
+  // score, signed). Re-clicking the link collapses the panel.
+  window.__whyThisRec = (gameId) => {
+    const slot = document.getElementById('why-' + gameId);
+    if (!slot) return;
+    if (slot.style.display !== 'none') {
+      slot.style.display = 'none';
+      slot.innerHTML = '';
+      return;
+    }
+    const breakdown = (window.__recBreakdowns || {})[gameId] || [];
+    if (breakdown.length === 0) {
+      slot.innerHTML = `<div style="margin-top:8px; padding:10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.78rem; opacity:0.7;">No breakdown available.</div>`;
+      slot.style.display = 'block';
+      return;
+    }
+    // Build dim-id → {low, high} for axis labels.
+    const dimMeta = {};
+    for (const d of (dims.dimensions || [])) {
+      dimMeta[d.id] = { low: d.low, high: d.high };
+    }
+    const rows = breakdown.map((c) => {
+      const meta = dimMeta[c.dim] || { low: c.dim, high: c.dim };
+      // Map [-1, 1] → 0%..100% across the bar; render two markers.
+      const playerPct = ((c.player + 1) / 2) * 100;
+      const gamePct = ((c.game + 1) / 2) * 100;
+      const contribAbs = Math.abs(c.contribution);
+      const contribLabel = c.contribution >= 0 ? `+${contribAbs.toFixed(2)}` : `−${contribAbs.toFixed(2)}`;
+      const contribColor = c.contribution >= 0 ? '#10b981' : '#ef4444';
+      const kindLabel = ({
+        agree_high: 'both like',
+        agree_low: 'both prefer',
+        disagree: 'gap',
+        neutral: 'neutral',
+      })[c.kind] || c.kind;
+      return `<div style="margin-bottom:10px; font-size:0.74rem;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px; opacity:0.85;">
+          <span><strong style="color:#FF8200; font-size:0.7rem; letter-spacing:0.04em;">${escapeHtml(c.dim)}</strong> · ${kindLabel}</span>
+          <span style="color:${contribColor}; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-weight:700;">${contribLabel}</span>
+        </div>
+        <div style="position:relative; height:6px; background:rgba(255,255,255,0.06); border-radius:3px; margin-bottom:2px;">
+          <div style="position:absolute; left:50%; top:0; bottom:0; width:1px; background:rgba(255,255,255,0.2);"></div>
+          <div style="position:absolute; left:${gamePct}%; top:-2px; width:8px; height:10px; background:#FBDB65; border-radius:2px; transform:translateX(-4px);" title="game"></div>
+          <div style="position:absolute; left:${playerPct}%; top:-2px; width:8px; height:10px; background:#FF8200; border-radius:2px; transform:translateX(-4px); opacity:0.85;" title="you"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.66rem; opacity:0.5;">
+          <span>${escapeHtml(meta.low)}</span>
+          <span>${escapeHtml(meta.high)}</span>
+        </div>
+      </div>`;
+    }).join('');
+    slot.innerHTML = `<div style="margin-top:10px; padding:12px 14px; background:rgba(255,130,0,0.04); border:1px solid rgba(255,130,0,0.18); border-radius:8px;">
+      <div style="font-size:0.74rem; opacity:0.7; margin-bottom:10px;">
+        <span style="display:inline-block; width:8px; height:8px; background:#FF8200; border-radius:2px; vertical-align:middle; margin-right:4px;"></span>you
+        &nbsp;&nbsp;
+        <span style="display:inline-block; width:8px; height:8px; background:#FBDB65; border-radius:2px; vertical-align:middle; margin-right:4px;"></span>game
+        &nbsp;·&nbsp; the dimensions that drove this match, ranked by contribution magnitude.
+      </div>
+      ${rows}
+    </div>`;
+    slot.style.display = 'block';
+  };
+
   // ----- Game-tagging search -----
   // Debounced typeahead against /api/recs/games/search. Each result row
   // gets the same feedback button bar as a rec card, so tagging a known
@@ -1096,13 +1162,24 @@
 
         const fb = window.__buildFeedbackBar(r.game_id);
 
+        // Stash the full breakdown so __whyThisRec can read it without
+        // re-fetching. Cleared on each render but persists for the life
+        // of this rec list.
+        if (!window.__recBreakdowns) window.__recBreakdowns = {};
+        window.__recBreakdowns[r.game_id] = r.all_dim_contributions || [];
+
+        const whyLink = (r.all_dim_contributions && r.all_dim_contributions.length > 0)
+          ? `<a href="#" onclick="window.__whyThisRec(${r.game_id}); return false;" style="color:rgba(251,219,101,0.85); text-decoration:none; font-size:0.74rem; margin-left:8px; opacity:0.7;">why?</a>`
+          : '';
+
         return `<div id="rec-card-${r.game_id}" style="display:flex; align-items:flex-start; gap:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
           <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:rgba(255,130,0,0.2); color:#FF8200; display:flex; align-items:center; justify-content:center; font-weight:700; margin-top:2px;">${i + 1}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:600; color:#f8fafc;">${escapeHtml(name)}</div>
             ${metaLine}
-            <div style="font-size:0.78rem; opacity:0.6; margin-top:4px;">match ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a></div>
+            <div style="font-size:0.78rem; opacity:0.6; margin-top:4px;">match ${score}% &middot; <a href="${bggUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:underline;">BGG #${r.game_id}</a>${whyLink}</div>
             ${contribs ? `<div style="margin-top:6px; line-height:1.6;">${contribs}</div>` : ''}
+            <div id="why-${r.game_id}" style="display:none;"></div>
             ${fb}
           </div>
         </div>`;
