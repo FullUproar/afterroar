@@ -374,15 +374,42 @@
   }
 
   function renderIntro() {
+    // When a saved profile was found at load time, offer a one-click
+    // resume above the standard intro copy. Anon users + first-time
+    // signed-in users see the regular intro.
+    const hasSaved = window.__savedProfile && window.__savedProfile.profile;
+    const resumeBlock = hasSaved
+      ? `<div style="margin: 20px 0 24px; padding: 16px 18px; background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px;">
+          <p style="margin: 0 0 10px; color: #FBDB65; font-weight: 600;">Welcome back</p>
+          <p style="margin: 0 0 14px; font-size: 0.92rem;">You took this before. Pick up where you left off, or start fresh for sharper signal.</p>
+          <button class="btn-primary" onclick="window.__resumeSaved()" style="margin-bottom: 8px;">Use my saved profile</button>
+          <button class="btn-secondary" onclick="window.__begin()" style="width: 100%; margin-top: 4px;">Retake the quiz</button>
+        </div>`
+      : '';
+    const beginBtn = hasSaved
+      ? '' // covered by the resume block above
+      : `<button class="btn-primary" onclick="window.__begin()">Begin</button>`;
     app.innerHTML = `
       <span class="badge">Research preview</span>
       <h1 style="margin-top: 14px;">What kind of tabletop player are you?</h1>
+      ${resumeBlock}
       <p>About 18 quick questions — “this-or-that”, agree/disagree, and a few “which game tonight?” picks.</p>
       <p>You’ll get back a 24-dimension profile of your gaming preferences. Takes ~5 minutes.</p>
       <p style="margin-bottom: 28px;"><small>Nothing leaves your device. The result is yours; you can copy or download it. This is a research instrument; recommendations come in a future version.</small></p>
-      <button class="btn-primary" onclick="window.__begin()">Begin</button>
+      ${beginBtn}
     `;
   }
+
+  // Jump straight to the results page using the previously-saved profile.
+  // No quiz, no compute, no save — the resume flow assumes the saved
+  // version is what the user wants right now.
+  window.__resumeSaved = () => {
+    if (!window.__savedProfile || !window.__savedProfile.profile) return;
+    renderResults({
+      profile: window.__savedProfile.profile,
+      confidence: window.__savedProfile.confidence,
+    });
+  };
 
   window.__begin = () => {
     sampled = sampleQuestions();
@@ -462,8 +489,27 @@
     setTimeout(renderResults, 700);
   }
 
-  function renderResults() {
-    const { profile, confidence, count } = computeProfile();
+  function renderResults(preloaded) {
+    // preloaded: optional { profile, confidence, count } from a saved
+    // (resumed) profile. When supplied we skip the quiz-derived
+    // computation entirely. Count is faked from confidence so the dim
+    // bars can still annotate "Nq" — callers without a count get
+    // ceil(confidence * 3) per dim (the inverse of how renderResults
+    // computed it originally).
+    let profile, confidence, count;
+    if (preloaded && preloaded.profile && preloaded.confidence) {
+      profile = preloaded.profile;
+      confidence = preloaded.confidence;
+      count = preloaded.count || {};
+      for (const d of dims.dimensions) {
+        if (count[d.id] === undefined) {
+          count[d.id] = Math.ceil((confidence[d.id] || 0) * 3);
+        }
+      }
+    } else {
+      ({ profile, confidence, count } = computeProfile());
+    }
+    const isResumed = !!preloaded;
     const narrative = generateNarrative(profile, confidence);
 
     // Group dimensions by cluster
@@ -528,9 +574,16 @@
 
     // Save-status banner placeholder — auto-save kicks off below and
     // updates the banner asynchronously without re-rendering the rest.
-    const saveBanner = window.__authState && window.__authState.signedIn
-      ? `<div id="save-banner" style="margin: 16px 0; padding: 10px 14px; background: rgba(125,85,199,0.12); border: 1px solid rgba(125,85,199,0.4); border-radius: 8px; font-size: 0.86rem; color: #cbd5e1;">⏳ Saving your profile to your Passport…</div>`
-      : `<div style="margin: 16px 0; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; font-size: 0.86rem; color: #94a3b8;">Anonymous mode — your profile lives in this browser only. <a href="/login?callbackUrl=/quiz" style="color:#FBDB65;">Sign in</a> next time to save it to your Passport.</div>`;
+    // When the user resumed a saved profile, skip the save dance — show
+    // a "loaded from Passport" tag instead with a Retake offer.
+    let saveBanner;
+    if (isResumed) {
+      saveBanner = `<div style="margin: 16px 0; padding: 10px 14px; background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.4); border-radius: 8px; font-size: 0.86rem; color: #cbd5e1;">✓ Loaded from your Passport. Want fresher signal? <a href="#" onclick="window.__retake(); return false;" style="color:#FBDB65;">Retake the quiz</a>.</div>`;
+    } else if (window.__authState && window.__authState.signedIn) {
+      saveBanner = `<div id="save-banner" style="margin: 16px 0; padding: 10px 14px; background: rgba(125,85,199,0.12); border: 1px solid rgba(125,85,199,0.4); border-radius: 8px; font-size: 0.86rem; color: #cbd5e1;">⏳ Saving your profile to your Passport…</div>`;
+    } else {
+      saveBanner = `<div style="margin: 16px 0; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; font-size: 0.86rem; color: #94a3b8;">Anonymous mode — your profile lives in this browser only. <a href="/login?callbackUrl=/quiz" style="color:#FBDB65;">Sign in</a> next time to save it to your Passport.</div>`;
+    }
 
     app.innerHTML = `
       <div class="progress-track"><div class="progress-fill" style="width: 100%"></div></div>
@@ -562,11 +615,12 @@
     window.__profileBaseline = { ...profile };
     window.__edited = new Set();
 
-    // Auto-save the freshly-computed profile when signed in. Best-effort —
-    // a save failure leaves the banner showing the error but doesn't
-    // block the user from getting recs (which work fine on an in-memory
-    // profile).
-    if (window.__authState && window.__authState.signedIn) {
+    // Auto-save the freshly-computed profile when signed in. Skip when
+    // the profile was just loaded from the DB (resume path) — that
+    // would create a duplicate version row with identical content.
+    // Best-effort: a save failure leaves the banner showing the error
+    // but doesn't block recs (which work fine on an in-memory profile).
+    if (!isResumed && window.__authState && window.__authState.signedIn) {
       (async () => {
         const banner = document.getElementById('save-banner');
         try {
@@ -1138,7 +1192,27 @@
     }
   };
 
+  // Probe for a saved profile when signed in. Renders the intro twice
+  // in the worst case: once immediately (so the page never feels stuck),
+  // then again after the GET resolves to inject the resume block. The
+  // double-render is cheap and avoids blocking first paint on a network
+  // round-trip.
   renderIntro();
+  if (window.__authState && window.__authState.signedIn) {
+    fetch('/api/quiz/profile')
+      .then(async (r) => {
+        if (r.status === 404) return null; // Signed in but never saved.
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((data) => {
+        if (data && data.profile) {
+          window.__savedProfile = data;
+          renderIntro(); // Re-render with the resume block now visible.
+        }
+      })
+      .catch(() => { /* silent — anon path remains valid */ });
+  }
 })();
 </script>
 </body>
