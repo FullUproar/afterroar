@@ -90,14 +90,58 @@
   .dim-row {
     margin-bottom: 14px;
     opacity: 0.95;
+    cursor: pointer;
+    padding: 6px 8px;
+    margin-left: -8px; margin-right: -8px;
+    border-radius: 8px;
+    transition: background 0.12s;
   }
+  .dim-row:hover { background: rgba(255, 130, 0, 0.05); }
   .dim-row.low-conf { opacity: 0.4; }
+  .dim-row.edited .dim-id::after {
+    content: ' · edited';
+    color: #FBDB65;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .dim-row.edited .dim-bar-fill { background: #FBDB65; }
   .dim-header {
     display: flex; justify-content: space-between; align-items: baseline;
     margin-bottom: 4px; font-size: 13px;
   }
   .dim-id { color: #FF8200; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; }
   .dim-conf { color: #6b7280; font-size: 11px; }
+  .dim-editor {
+    margin-top: 10px; padding: 10px 12px;
+    background: rgba(251, 219, 101, 0.06);
+    border: 1px solid rgba(251, 219, 101, 0.3);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .dim-editor input[type="range"] {
+    width: 100%;
+    accent-color: #FBDB65;
+    margin: 8px 0 6px;
+  }
+  .dim-editor .editor-row {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 8px;
+  }
+  .dim-editor .editor-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #FBDB65; font-weight: 700; font-size: 13px;
+    min-width: 48px; text-align: right;
+  }
+  .dim-editor button {
+    background: rgba(255,255,255,0.06); color: #cbd5e1;
+    padding: 6px 10px; font-size: 12px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .dim-editor button:hover { background: rgba(255,255,255,0.12); }
+  .dim-editor .editor-warn {
+    color: #94a3b8; font-size: 11px; margin: 4px 0 0;
+    line-height: 1.4;
+  }
   .dim-bar-bg {
     height: 8px; background: #1f2937; border-radius: 4px;
     position: relative; overflow: hidden;
@@ -429,7 +473,7 @@
         const pct = (v + 1) * 50; // 0..100
         const fillLeft = Math.min(50, pct);
         const fillWidth = Math.abs(pct - 50);
-        return `<div class="dim-row${lowConf ? ' low-conf' : ''}">
+        return `<div class="dim-row${lowConf ? ' low-conf' : ''}" id="dimrow-${escapeHtml(d.id)}" onclick="window.__toggleDimEditor('${escapeHtml(d.id)}')" data-dim-id="${escapeHtml(d.id)}" data-low="${escapeHtml(d.low)}" data-high="${escapeHtml(d.high)}">
           <div class="dim-header">
             <span class="dim-id">${escapeHtml(d.id)}</span>
             <span class="dim-conf">conf ${(conf * 100).toFixed(0)}% · ${count[d.id]}q</span>
@@ -442,6 +486,7 @@
             <span>${escapeHtml(d.low)}</span>
             <span>${escapeHtml(d.high)}</span>
           </div>
+          <div class="dim-editor-slot" id="dimedit-${escapeHtml(d.id)}" style="display:none;"></div>
         </div>`;
       }).join('');
       clustersHtml += `<section class="cluster-section">
@@ -490,7 +535,100 @@
     `;
     window.__exportJson = exportJson;
     window.__profile = profile;
+    // Snapshot the quiz-derived profile so the per-dim editor's
+    // "Reset to quiz answer" can restore it. window.__profile is
+    // mutated in place by the editor; baseline must be a copy.
+    window.__profileBaseline = { ...profile };
+    window.__edited = new Set();
   }
+
+  // Tracks dim ids the user has manually edited via the slider editor.
+  // Used to render the "edited" badge + tint and to make the warning
+  // about resetting only show when there's something to reset.
+  window.__edited = window.__edited || new Set();
+
+  // Re-renders the bar fill + edited class on a single dim row in place,
+  // so the user sees their slider change reflected immediately without
+  // a full re-render that would close the editor.
+  window.__paintDimRow = (dimId) => {
+    const row = document.getElementById('dimrow-' + dimId);
+    if (!row) return;
+    const v = window.__profile[dimId];
+    if (typeof v !== 'number') return;
+    const pct = (v + 1) * 50;
+    const fillLeft = Math.min(50, pct);
+    const fillWidth = Math.abs(pct - 50);
+    const fill = row.querySelector('.dim-bar-fill');
+    if (fill) {
+      fill.style.left = fillLeft + '%';
+      fill.style.width = fillWidth + '%';
+    }
+    if (window.__edited.has(dimId)) row.classList.add('edited');
+    else row.classList.remove('edited');
+  };
+
+  window.__toggleDimEditor = (dimId) => {
+    const slot = document.getElementById('dimedit-' + dimId);
+    const row = document.getElementById('dimrow-' + dimId);
+    if (!slot || !row) return;
+    if (slot.style.display !== 'none') {
+      slot.style.display = 'none';
+      slot.innerHTML = '';
+      return;
+    }
+    const low = row.dataset.low || 'low';
+    const high = row.dataset.high || 'high';
+    const v = typeof window.__profile[dimId] === 'number' ? window.__profile[dimId] : 0;
+    const slider = (Math.round(v * 100)).toString();
+    slot.innerHTML = `
+      <div class="dim-editor" onclick="event.stopPropagation()">
+        <p class="editor-warn"><strong style="color:#FBDB65;">Heads up:</strong> these scores reflect what your answers said about you. Editing tells the system "you got me wrong here." Only nudge a dim if the recs from this dim feel clearly off.</p>
+        <input type="range" min="-100" max="100" step="5" value="${slider}"
+          oninput="window.__setDimValue('${dimId}', this.value, this.parentElement.querySelector('.editor-val'))">
+        <div class="editor-row">
+          <span style="opacity:0.7;">${escapeHtml(low)}</span>
+          <span class="editor-val">${(v).toFixed(2)}</span>
+          <span style="opacity:0.7;">${escapeHtml(high)}</span>
+        </div>
+        <div class="editor-row" style="margin-top:8px;">
+          <button onclick="window.__resetDim('${dimId}')">Reset to quiz answer</button>
+          <button onclick="window.__toggleDimEditor('${dimId}')">Done</button>
+        </div>
+      </div>
+    `;
+    slot.style.display = 'block';
+  };
+
+  window.__setDimValue = (dimId, rawSlider, valEl) => {
+    const v = Math.max(-1, Math.min(1, Number(rawSlider) / 100));
+    window.__profile[dimId] = v;
+    window.__edited.add(dimId);
+    if (valEl) valEl.textContent = v.toFixed(2);
+    window.__paintDimRow(dimId);
+    // Cue: if recs are visible, hint they're stale.
+    const recsContainer = document.getElementById('recs-container');
+    if (recsContainer && recsContainer.children.length > 0) {
+      const btn = document.getElementById('recs-btn');
+      if (btn) btn.textContent = 'Recompute with edits';
+    }
+  };
+
+  // Resets a single dim back to the value the quiz computed.
+  window.__resetDim = (dimId) => {
+    if (!window.__profileBaseline) return;
+    const base = window.__profileBaseline[dimId];
+    if (typeof base !== 'number') return;
+    window.__profile[dimId] = base;
+    window.__edited.delete(dimId);
+    window.__paintDimRow(dimId);
+    const slot = document.getElementById('dimedit-' + dimId);
+    if (slot && slot.style.display !== 'none') {
+      const slider = slot.querySelector('input[type="range"]');
+      const valEl = slot.querySelector('.editor-val');
+      if (slider) slider.value = (Math.round(base * 100)).toString();
+      if (valEl) valEl.textContent = base.toFixed(2);
+    }
+  };
 
   window.__getRecs = async () => {
     const btn = document.getElementById('recs-btn');
