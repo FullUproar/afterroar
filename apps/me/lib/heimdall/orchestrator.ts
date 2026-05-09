@@ -34,20 +34,24 @@ import {
   type SeidrGameProfile,
 } from './load';
 
-/**
- * Inline cosine matcher. Self-contained replacement for the seidr
- * package's full match() during Phase 0 — runs in Vercel's Next.js
- * runtime without any cross-tree .mjs import (which was hitting build
- * cache + bundler issues). The full seidr matcher (with MMR diversity,
- * designer cap, player-count filter, confidence weighting) is still
- * the source of truth in rec-engines/; this is the simplest correct
- * subset for the public quiz flow.
- *
- * v0.2 will switch to importing the canonical seidr matcher once
- * we've moved the engines into a proper packages/* workspace path
- * and out of rec-engines/* (which Vercel's Root Directory excludes
- * from the build sandbox in some configs).
- */
+// Local copy of the canonical seidr matcher. The original lives in
+// rec-engines/seidr/src/match.mjs (283 tests, hand-tuned over 30
+// sprints). Copied verbatim into apps/me/lib/heimdall/ on 2026-05-09
+// because Vercel's bundler couldn't resolve cross-tree .mjs imports
+// reliably under the apps/me Root Directory config.
+//
+// Source of truth: still rec-engines/seidr/src/match.mjs. Sync this
+// file when the canonical matcher changes (no automated process yet —
+// add a CI check or a sync script when seidr v2 lands).
+//
+// What we get vs the previous inline cosine:
+//   - MMR diversification (the bigger win for perceived quality —
+//     avoids 5 same-vibe games clustering at the top)
+//   - Designer cap (max 2 games per designer)
+//   - Confidence-weighted cosine (low-confidence dims contribute less)
+//   - Player-count filtering when bggMetadata is supplied
+//
+import { match as canonicalSeidrMatch } from './seidr-match.mjs';
 /**
  * One contributing dimension's role in the cosine score. The contribution
  * is the un-normalized term that adds to the dot product (player × game).
@@ -74,97 +78,82 @@ function classifyContribution(player: number, game: number): DimContribution['ki
   return 'disagree';
 }
 
-interface InlineRecommendation {
+/**
+ * Wrap the canonical seidr.match() and re-build our DimContribution shape
+ * (which encodes player vs game value alongside the contribution magnitude
+ * — needed for the agree_high/agree_low/disagree classification).
+ *
+ * The seidr matcher returns contributingDims as { dim, contribution }
+ * sorted top-5 by absolute magnitude. We re-look-up the player + game
+ * values per dim to classify each.
+ */
+interface SeidrRecommendation {
   game_id: number;
   score: number;
   topContributions: DimContribution[];
 }
 
-function seidrMatchInline(
+interface SeidrCanonicalRecommendation {
+  game_id: number;
+  score: number;
+  cosineSimilarity: number;
+  unweightedCosine: number;
+  contributingDims: Array<{ dim: string; contribution: number }>;
+  dimsConsidered: number;
+  normalizedScore?: number;
+}
+
+function runSeidr(
   player: SeidrPlayerProfile,
   games: SeidrGameProfile[],
   options: { limit: number; excludeGameIds?: number[]; topDims?: number },
 ): {
-  recommendations: InlineRecommendation[];
+  recommendations: SeidrRecommendation[];
   filtered: Array<{ game_id: number; reason: string }>;
   totalConsidered: number;
 } {
-  const exclude = new Set(options.excludeGameIds ?? []);
   const topDims = options.topDims ?? 3;
-  const filtered: Array<{ game_id: number; reason: string }> = [];
-  const scored: InlineRecommendation[] = [];
-  const pVec = player.dim_vector ?? {};
-
-  let totalConsidered = 0;
-  for (const g of games) {
-    if (g.game_id == null) continue;
-    if (exclude.has(g.game_id)) {
-      filtered.push({ game_id: g.game_id, reason: 'excluded' });
-      continue;
-    }
-    totalConsidered++;
-    const result = cosineWithContributions(pVec, g.dim_vector);
-    if (result === null) continue;
-    scored.push({
-      game_id: g.game_id,
-      score: result.cosine,
-      topContributions: result.contributions
-        // Filter out neutrals so the UI explanation prioritizes
-        // dimensions where both sides actually had a stake.
-        .filter((c) => c.kind !== 'neutral')
-        .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
-        .slice(0, topDims),
-    });
-  }
-
-  scored.sort((a, b) => b.score - a.score);
-  return {
-    recommendations: scored.slice(0, options.limit),
-    filtered,
-    totalConsidered,
+  const result = canonicalSeidrMatch(player, games, {
+    limit: options.limit,
+    excludeGameIds: options.excludeGameIds ?? [],
+    diversify: true,
+    useConfidence: true,
+  }) as {
+    recommendations: SeidrCanonicalRecommendation[];
+    filtered: Array<{ game_id: number; reason: string }>;
+    totalConsidered: number;
   };
-}
 
-function cosineWithContributions(
-  a: DimVector,
-  b: DimVector,
-): { cosine: number; contributions: DimContribution[] } | null {
-  let dot = 0;
-  let na = 0;
-  let nb = 0;
-  const contributions: DimContribution[] = [];
-  const seen = new Set<string>();
+  const playerVec = player.dim_vector ?? {};
+  const gamesById = new Map<number, SeidrGameProfile>();
+  for (const g of games) gamesById.set(g.game_id, g);
 
-  for (const k of Object.keys(a)) {
-    seen.add(k);
-    const av = numericOr(a[k], 0);
-    const bv = numericOr(b[k], 0);
-    const term = av * bv;
-    dot += term;
-    na += av * av;
-    nb += bv * bv;
-    if (term !== 0) {
-      contributions.push({
-        dim: k,
-        contribution: term,
-        player: av,
-        game: bv,
-        kind: classifyContribution(av, bv),
-      });
-    }
-  }
-  for (const k of Object.keys(b)) {
-    if (seen.has(k)) continue;
-    const bv = numericOr(b[k], 0);
-    nb += bv * bv;
-  }
-  if (na === 0 || nb === 0) {
-    return { cosine: 0, contributions };
-  }
-  let c = dot / (Math.sqrt(na) * Math.sqrt(nb));
-  if (c > 1) c = 1;
-  if (c < -1) c = -1;
-  return { cosine: c, contributions };
+  const recommendations: SeidrRecommendation[] = result.recommendations.map((r) => {
+    const game = gamesById.get(r.game_id);
+    const gameVec = game?.dim_vector ?? {};
+    const enriched: DimContribution[] = (r.contributingDims ?? []).map((c) => {
+      const pv = numericOr(playerVec[c.dim], 0);
+      const gv = numericOr(gameVec[c.dim], 0);
+      return {
+        dim: c.dim,
+        contribution: c.contribution,
+        player: pv,
+        game: gv,
+        kind: classifyContribution(pv, gv),
+      };
+    });
+    return {
+      game_id: r.game_id,
+      score: r.score,
+      topContributions: enriched.filter((c) => c.kind !== 'neutral').slice(0, topDims),
+    };
+  });
+
+  return {
+    recommendations,
+    filtered: result.filtered,
+    totalConsidered: result.totalConsidered,
+  };
 }
 
 function numericOr(v: unknown, fallback: number): number {
@@ -294,7 +283,7 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
   }
 
   const gameProfiles: SeidrGameProfile[] = await loadGameProfiles();
-  const seidrResult = seidrMatchInline(playerProfile, gameProfiles, {
+  const seidrResult = runSeidr(playerProfile, gameProfiles, {
     limit,
     excludeGameIds: req.context?.excludeGameIds ?? [],
     topDims: 3,
