@@ -109,32 +109,40 @@ export interface AffinityAnchor {
  * — one strongly-loved-similar game shouldn't be drowned out by many
  * weakly-similar ones). Multiply candidate score by (1 + alpha * boost).
  *
- * Anchor games themselves are excluded from the candidate pool earlier
- * (the "owned" / "thumbs_down" filter), so we don't have to worry about
- * a loved game self-boosting to rank #1.
+ * `candidatePool` is the set of games eligible to BE a recommendation
+ * (post-filter). `anchorPool` is the set we look up anchor profiles in;
+ * pass the un-filtered pool so an owned-and-loved game (which is
+ * excluded as a candidate) can still serve as an anchor for boosting
+ * similar games. Without this distinction, a user's strongest taste
+ * signals get silently lost the moment they tag a game as owned.
  */
 function applyAffinityBoost(
   recs: SeidrRecommendation[],
-  gameProfiles: SeidrGameProfile[],
+  candidatePool: SeidrGameProfile[],
+  anchorPool: SeidrGameProfile[],
   anchors: AffinityAnchor[],
   alpha: number,
 ): SeidrRecommendation[] {
   if (anchors.length === 0 || alpha <= 0) return recs;
-  const profilesById = new Map<number, SeidrGameProfile>();
-  for (const g of gameProfiles) profilesById.set(g.game_id, g);
+
+  const candidatesById = new Map<number, SeidrGameProfile>();
+  for (const g of candidatePool) candidatesById.set(g.game_id, g);
+
+  const anchorsById = new Map<number, SeidrGameProfile>();
+  for (const g of anchorPool) anchorsById.set(g.game_id, g);
 
   // Precompute anchor profiles once. Skip anchors not in our corpus
   // (the user can tag a game we don't have a profile for; it just
   // contributes nothing to the boost).
   const anchorProfiles: Array<{ profile: SeidrGameProfile; weight: number }> = [];
   for (const a of anchors) {
-    const p = profilesById.get(a.gameId);
+    const p = anchorsById.get(a.gameId);
     if (p) anchorProfiles.push({ profile: p, weight: a.weight });
   }
   if (anchorProfiles.length === 0) return recs;
 
   return recs.map((r) => {
-    const candidate = profilesById.get(r.game_id);
+    const candidate = candidatesById.get(r.game_id);
     if (!candidate) return r;
     let maxSim = 0;
     for (const { profile: anchor, weight } of anchorProfiles) {
@@ -484,7 +492,10 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
   // thumbs-upped picks, without inverting it. alpha=0.5 means a perfect
   // similarity match (sim=1.0) gets +50% boost — strong but not dominant.
   const AFFINITY_ALPHA = 0.5;
-  const boosted = applyAffinityBoost(seidrResult.recommendations, gameProfiles, anchors, AFFINITY_ALPHA);
+  // Pass the unfiltered allProfiles as the anchor pool so an
+  // owned-and-loved game (excluded from candidates) can still anchor
+  // the boost for similar candidates.
+  const boosted = applyAffinityBoost(seidrResult.recommendations, gameProfiles, allProfiles, anchors, AFFINITY_ALPHA);
 
   // After boosting, re-sort and take the original requested limit. The
   // matcher already MMR-diversified the input pool, so the boosted
@@ -739,6 +750,9 @@ export async function recommendForGroup(
   // *any* anchor gets the lift, but multi-anchor matches don't compound.
   const anchors = req.affinityAnchors ?? [];
   const AFFINITY_ALPHA = 0.5;
+  // Same anchor-pool decoupling as recommendGames: pass allProfiles
+  // (unfiltered) for anchor lookup so excluded-from-candidates games
+  // can still anchor the boost.
   const boosted = applyAffinityBoost(
     aggregated.map((g) => ({
       game_id: g.gameId,
@@ -747,6 +761,7 @@ export async function recommendForGroup(
       allContributions: [],
     })),
     candidates,
+    allProfiles,
     anchors,
     AFFINITY_ALPHA,
   );

@@ -13,6 +13,8 @@
     "lint": "next lint",
     "test:api": "vitest run",
     "test:api:watch": "vitest",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:unit:watch": "vitest --config vitest.unit.config.ts",
     "test:e2e": "playwright test --config playwright.e2e.config.ts",
     "test:visual": "playwright test"
   },
