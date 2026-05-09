@@ -769,6 +769,49 @@
     }
   };
 
+  // ----- Game-tagging search -----
+  // Debounced typeahead against /api/recs/games/search. Each result row
+  // gets the same feedback button bar as a rec card, so tagging a known
+  // game uses the exact same flow (POST /api/recs/feedback). Tagged
+  // games immediately count toward the signal-aware exclusion on the
+  // next recs refresh.
+  let __searchTimer = null;
+  window.__searchGames = (raw) => {
+    const q = String(raw || '').trim();
+    const out = document.getElementById('game-tag-results');
+    if (!out) return;
+    if (__searchTimer) clearTimeout(__searchTimer);
+    if (q.length < 2) {
+      out.innerHTML = '';
+      return;
+    }
+    out.innerHTML = `<p style="opacity:0.5; font-size:0.84rem; margin:6px 0;">Searching…</p>`;
+    __searchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/recs/games/search?q=' + encodeURIComponent(q) + '&limit=8');
+        const data = await res.json();
+        const matches = data.matches || [];
+        if (matches.length === 0) {
+          out.innerHTML = `<p style="opacity:0.55; font-size:0.84rem; margin:6px 0;">No matches in the corpus. (We're seeding more games as the LLM tail run completes.)</p>`;
+          return;
+        }
+        out.innerHTML = matches.map((m) => {
+          const meta = [];
+          if (m.year) meta.push(String(m.year));
+          if (m.subdomain) meta.push(escapeHtml(m.subdomain));
+          const metaLine = meta.length ? `<div style="font-size:0.74rem; opacity:0.55;">${meta.join(' · ')}</div>` : '';
+          return `<div style="padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:6px;">
+            <div style="font-weight:600; color:#f8fafc;">${escapeHtml(m.name)}</div>
+            ${metaLine}
+            ${window.__buildFeedbackBar(m.game_id)}
+          </div>`;
+        }).join('');
+      } catch (err) {
+        out.innerHTML = `<p style="color:#ef4444; font-size:0.84rem; margin:6px 0;">Search failed: ${escapeHtml(String(err.message || err))}</p>`;
+      }
+    }, 220);
+  };
+
   // Tracks dim ids the user has manually edited via the slider editor.
   // Used to render the "edited" badge + tint and to make the warning
   // about resetting only show when there's something to reset.
@@ -1133,6 +1176,14 @@
         <div>${items}</div>
         <p style="margin-top: 16px; opacity: 0.6; font-size: 0.85rem;">Considered ${data.candidates_considered} candidates. Engines that ran: ${(data.engines_ran || []).join(', ')}.</p>
         ${excludedLine}
+        <h2 style="color: #FBDB65; margin: 32px 0 8px;">Tell us about a game you know</h2>
+        <p style="margin: 0 0 12px; font-size: 0.86rem; opacity: 0.78;">Search the corpus and tag a game you own, love, or wish we'd stop suggesting. Tags feed back into your next recs.</p>
+        <div id="game-tag-search" style="position:relative;">
+          <input type="text" id="game-tag-input" placeholder="e.g. Pandemic, Catan, Wingspan…" autocomplete="off"
+            oninput="window.__searchGames(this.value)"
+            style="width:100%; padding:10px 12px; background:#1f2937; color:#e2e8f0; border:1px solid rgba(255,255,255,0.12); border-radius:8px; font-size:0.95rem; outline:none;">
+          <div id="game-tag-results" style="margin-top:8px;"></div>
+        </div>
       `;
       if (btn) { btn.disabled = false; btn.textContent = 'Refresh recommendations'; }
     } catch (err) {
