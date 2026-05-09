@@ -190,10 +190,14 @@
   let responses = [];
 
   // -------------------- LOAD DATA --------------------
+  let gameInfo = {};
   try {
-    [bank, dims] = await Promise.all([
+    [bank, dims, gameInfo] = await Promise.all([
       fetch('/quiz/question-bank.json').then(r => r.json()),
       fetch('/quiz/dimensions.json').then(r => r.json()),
+      // Game info for this-or-that questions. Best-effort — quiz works
+      // without it; the info-expand buttons just won't have content.
+      fetch('/quiz/game-info.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
     ]);
   } catch (err) {
     app.innerHTML = `<h1>Couldn’t load quiz data</h1>
@@ -344,9 +348,14 @@
         const lines = a.text.split(' — ');
         const name = lines[0];
         const meta = lines.slice(1).join(' — ');
+        const bggId = a.bgg_id || a.game_id || null;
+        const infoBtn = bggId
+          ? `<span onclick="event.stopPropagation(); window.__toggleGameInfo(${bggId}); return false;" style="display:inline-block; margin-left:8px; padding:2px 7px; border:1px solid rgba(255,255,255,0.2); border-radius:10px; font-size:11px; font-weight:600; opacity:0.65; cursor:pointer;" title="More info about this game">i</span>`
+          : '';
         return `<button class="answer answer-game" onclick="window.__answer(${i})">
-          <span class="game-name">${escapeHtml(name)}</span>
+          <span class="game-name">${escapeHtml(name)}${infoBtn}</span>
           <span class="game-meta">${escapeHtml(meta)}</span>
+          <div id="game-info-${bggId}" style="display:none; margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; font-size:13px; line-height:1.5; color:#cbd5e1; text-align:left;"></div>
         </button>`;
       }).join('');
     } else {
@@ -490,12 +499,16 @@
     container.innerHTML = '';
 
     try {
-      // Mood deltas are computed on each call. They don't persist —
-      // a page reload clears them and recs go back to the pure profile.
+      // Mood deltas + filters are computed on each call. They don't
+      // persist — a page reload clears them.
       const moodDelta = (typeof window.__computeMoodDelta === 'function')
         ? window.__computeMoodDelta()
         : {};
       const hasMoodDelta = Object.keys(moodDelta).length > 0;
+      const filters = (typeof window.__computeFilters === 'function')
+        ? window.__computeFilters()
+        : {};
+      const hasFilters = Object.keys(filters).length > 0;
 
       const res = await fetch('/api/quiz/recommend', {
         method: 'POST',
@@ -504,6 +517,7 @@
           profile: window.__profile,
           limit: 12,
           ...(hasMoodDelta ? { mood_delta: moodDelta } : {}),
+          ...(hasFilters ? { filters } : {}),
         }),
       });
       if (!res.ok) {
@@ -674,7 +688,66 @@
         ? '<small style="opacity: 0.6;">Tap to nudge your recommendations toward a mood without re-taking the quiz.</small>'
         : `<small style="opacity: 0.7;">${activeMoodCount} mood nudge${activeMoodCount === 1 ? '' : 's'} active. Tap again to clear.</small>`;
 
+      // Filter UI: era + genre. Both apply hard filters before the
+      // matcher sees candidates. Stored in window.__filters across
+      // re-renders so toggles persist while the user iterates.
+      const ALL_SUBDOMAINS = ['Strategy', 'Family', 'Party', 'Wargame', 'Thematic', 'Customizable', 'Children', 'Abstract'];
+      const ERAS = [
+        { id: 'any',     label: 'Any era',  emoji: '📅' },
+        { id: 'modern',  label: 'Modern (2015+)', emoji: '✨', minYear: 2015 },
+        { id: 'recent',  label: '2010s',          emoji: '🆕', minYear: 2010, maxYear: 2019 },
+        { id: 'classic', label: 'Classic (pre-2010)', emoji: '📜', maxYear: 2009 },
+      ];
+      function buildFilterRowHtml() {
+        const f = window.__filters || { eraId: 'any', subdomains: [] };
+        const eraChips = ERAS.map(e => {
+          const on = f.eraId === e.id;
+          return `<button onclick="window.__setEra('${e.id}')" style="padding:5px 10px; border-radius:14px; border:1px solid ${on ? '#FF8200' : 'rgba(255,255,255,0.12)'}; background:${on ? 'rgba(255,130,0,0.18)' : 'rgba(255,255,255,0.04)'}; color:${on ? '#FBDB65' : '#e2e8f0'}; font-size:0.78rem; cursor:pointer; margin-right:4px;">${e.emoji} ${e.label}</button>`;
+        }).join('');
+        const subChips = ALL_SUBDOMAINS.map(s => {
+          const on = f.subdomains.includes(s);
+          return `<button onclick="window.__toggleSub('${s}')" style="padding:5px 10px; border-radius:14px; border:1px solid ${on ? '#FF8200' : 'rgba(255,255,255,0.12)'}; background:${on ? 'rgba(255,130,0,0.18)' : 'rgba(255,255,255,0.04)'}; color:${on ? '#FBDB65' : '#e2e8f0'}; font-size:0.78rem; cursor:pointer; margin-right:4px; margin-bottom:4px;">${s}</button>`;
+        }).join('');
+        const hasFilters = f.eraId !== 'any' || f.subdomains.length > 0;
+        const summary = hasFilters
+          ? `<small style="opacity:0.7;">Filters: ${f.eraId !== 'any' ? f.eraId : ''}${f.subdomains.length ? ' · ' + f.subdomains.join(', ') : ''}. <a href="#" onclick="window.__clearFilters(); return false;" style="color:#FF8200;">Clear all</a></small>`
+          : '<small style="opacity:0.55;">Filter your candidate pool by era or genre. All games are considered by default.</small>';
+        return `
+          ${summary}
+          <div style="margin-top:10px;"><div style="opacity:0.65; font-size:0.74rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Era</div>${eraChips}</div>
+          <div style="margin-top:10px;"><div style="opacity:0.65; font-size:0.74rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Genre (multi-select)</div>${subChips}</div>
+        `;
+      }
+
+      window.__setEra = (eraId) => {
+        if (!window.__filters) window.__filters = { eraId: 'any', subdomains: [] };
+        window.__filters.eraId = window.__filters.eraId === eraId && eraId !== 'any' ? 'any' : eraId;
+        window.__getRecs();
+      };
+      window.__toggleSub = (sub) => {
+        if (!window.__filters) window.__filters = { eraId: 'any', subdomains: [] };
+        const i = window.__filters.subdomains.indexOf(sub);
+        if (i >= 0) window.__filters.subdomains.splice(i, 1);
+        else window.__filters.subdomains.push(sub);
+        window.__getRecs();
+      };
+      window.__clearFilters = () => {
+        window.__filters = { eraId: 'any', subdomains: [] };
+        window.__getRecs();
+      };
+      window.__computeFilters = () => {
+        const f = window.__filters || { eraId: 'any', subdomains: [] };
+        const era = ERAS.find(e => e.id === f.eraId);
+        const out = {};
+        if (era && era.minYear) out.min_year = era.minYear;
+        if (era && era.maxYear) out.max_year = era.maxYear;
+        if (f.subdomains.length > 0) out.subdomains = f.subdomains;
+        return out;
+      };
+
       container.innerHTML = `
+        <h2 style="color: #FBDB65; margin: 24px 0 8px;">Filter the pool</h2>
+        <div style="margin: 8px 0 24px;">${buildFilterRowHtml()}</div>
         <h2 style="color: #FBDB65; margin: 24px 0 8px;">Tonight's mood</h2>
         ${moodSummary}
         <div style="margin: 12px 0 24px;">${buildMoodCardsHtml()}</div>
@@ -707,6 +780,38 @@
     URL.revokeObjectURL(url);
   };
   window.__retake = () => { renderIntro(); };
+
+  // Toggle inline game info on this-or-that answers. Click the (i)
+  // button to read about a game you don't recognize without leaving
+  // the quiz flow.
+  window.__toggleGameInfo = (bggId) => {
+    const el = document.getElementById('game-info-' + bggId);
+    if (!el) return;
+    if (el.style.display === 'none') {
+      const info = gameInfo[String(bggId)];
+      if (info && !info.missing) {
+        const players = info.minPlayers && info.maxPlayers
+          ? (info.minPlayers === info.maxPlayers ? `${info.minPlayers}p` : `${info.minPlayers}-${info.maxPlayers}p`)
+          : null;
+        const meta = [info.year, info.subdomain, players, info.playingTime ? `${info.playingTime}min` : null]
+          .filter(Boolean).join(' · ');
+        const cats = (info.categories || []).slice(0, 3).join(', ');
+        const desc = info.description || 'No description available.';
+        const bgg = `<a href="https://boardgamegeek.com/boardgame/${bggId}" target="_blank" rel="noopener" style="color:#FF8200;">view on BGG ↗</a>`;
+        el.innerHTML = `
+          <div style="font-weight:700; color:#f8fafc; margin-bottom:4px;">${meta}</div>
+          ${cats ? `<div style="opacity:0.7; font-size:12px; margin-bottom:6px;">${cats}</div>` : ''}
+          <div>${desc}${desc.length >= 500 ? '…' : ''}</div>
+          <div style="margin-top:6px; font-size:12px;">${bgg}</div>
+        `;
+      } else {
+        el.innerHTML = `<div style="opacity:0.7;">No info available for this game.</div>`;
+      }
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  };
 
   renderIntro();
 })();

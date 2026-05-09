@@ -45,6 +45,15 @@ interface RawBody {
    * persist deltas.
    */
   mood_delta?: Record<string, number>;
+  /**
+   * Hard filters on the candidate pool. Active filters drop candidates
+   * before the matcher sees them.
+   */
+  filters?: {
+    min_year?: number;
+    max_year?: number;
+    subdomains?: string[];
+  };
 }
 
 interface GameMetaEntry {
@@ -104,6 +113,28 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  if (b.filters !== undefined) {
+    if (typeof b.filters !== 'object' || b.filters === null) {
+      return NextResponse.json({ error: 'filters must be an object.' }, { status: 400 });
+    }
+    const f = b.filters;
+    if (f.min_year !== undefined && (!Number.isFinite(f.min_year) || (f.min_year as number) < 1900)) {
+      return NextResponse.json({ error: 'filters.min_year must be >= 1900.' }, { status: 400 });
+    }
+    if (f.max_year !== undefined && (!Number.isFinite(f.max_year) || (f.max_year as number) > 2100)) {
+      return NextResponse.json({ error: 'filters.max_year must be <= 2100.' }, { status: 400 });
+    }
+    if (f.subdomains !== undefined) {
+      if (!Array.isArray(f.subdomains)) {
+        return NextResponse.json({ error: 'filters.subdomains must be an array.' }, { status: 400 });
+      }
+      for (const s of f.subdomains) {
+        if (typeof s !== 'string') {
+          return NextResponse.json({ error: 'filters.subdomains entries must be strings.' }, { status: 400 });
+        }
+      }
+    }
+  }
   const limit =
     typeof b.limit === 'number' && Number.isInteger(b.limit) && b.limit > 0 && b.limit <= MAX_LIMIT
       ? b.limit
@@ -116,6 +147,13 @@ export async function POST(request: NextRequest) {
     result = await recommendGames({
       playerProfile: effectiveProfile,
       limit,
+      filters: b.filters
+        ? {
+            minYear: b.filters.min_year,
+            maxYear: b.filters.max_year,
+            subdomains: b.filters.subdomains,
+          }
+        : undefined,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

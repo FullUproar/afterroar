@@ -79,11 +79,21 @@ function main() {
     }
     const subdomain = pickSubdomain(g.bggSubdomains);
     const categories = normCategories(g.categories).slice(0, 3);
+    // Truncate description to a snippet — full BGG descriptions are
+    // multi-paragraph and bloat the lookup. 400 chars is enough to
+    // give a feel for the game in the info expander.
+    const description = typeof g.description === 'string'
+      ? g.description.replace(/\s+/g, ' ').trim().slice(0, 400)
+      : null;
     const entry = {
       name: g.name || name,
       year: typeof g.year === 'number' ? g.year : null,
       subdomain,
       categories,
+      description,
+      minPlayers: typeof g.minPlayers === 'number' ? g.minPlayers : null,
+      maxPlayers: typeof g.maxPlayers === 'number' ? g.maxPlayers : null,
+      playingTime: typeof g.playingTime === 'number' ? g.playingTime : null,
     };
     if (subdomain) withSubdomain++;
     if (categories.length) withCategories++;

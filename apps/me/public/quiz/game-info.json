@@ -1,0 +1,138 @@
+{
+  "13": {
+    "name": "Catan",
+    "year": 1995,
+    "subdomain": "Customizable",
+    "categories": [
+      "Economic",
+      "Negotiation"
+    ],
+    "description": "In CATAN (formerly The Settlers of Catan), players try to be the dominant force on the island of Catan by building settlements, cities and roads. On each turn dice are rolled to determine which resources the island produces. Players build structures by 'spending' resources (sheep, wheat, wood, brick and ore) which are represented by the relevant resource cards; each land type, with the exception of the unproductive desert, produces a specific resource: hills produce brick, forests produce wood, ",
+    "minPlayers": 3,
+    "maxPlayers": 4,
+    "playingTime": 120
+  },
+  "2655": {
+    "name": "Hive",
+    "year": 2001,
+    "subdomain": "Abstract",
+    "categories": [
+      "Abstract Strategy",
+      "Animals"
+    ],
+    "description": "Hive is a strategic game for two players that is not restricted by a board and can be played anywhere on any flat surface. Hive is made up of twenty two pieces, eleven black and eleven white, resembling a variety of creatures each with a unique way of moving. With no setting up to do, the game begins when the first piece is placed down. As the subsequent pieces are placed this forms a pattern that becomes the playing surface (the pieces themselves become the board). Unlike other such games, the ",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 20
+  },
+  "12333": {
+    "name": "Twilight Struggle",
+    "year": 2005,
+    "subdomain": "Strategy",
+    "categories": [
+      "Modern Warfare",
+      "Political",
+      "Wargame"
+    ],
+    "description": "Now the trumpet summons us again, not as a call to bear arms, though arms we need; not as a call to battle, though embattled we are – but a call to bear the burden of a long twilight struggle. – John F. Kennedy In 1945, unlikely allies toppled Hitler's war machine, while humanity's most devastating weapons forced the Japanese Empire to its knees in a storm of fire. Where once there stood many great powers, there then stood only two. The world had scant months to sigh its collective relief before",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
+  },
+  "30549": {
+    "name": "Pandemic",
+    "year": 2008,
+    "subdomain": "Family",
+    "categories": [
+      "Medical",
+      "Travel"
+    ],
+    "description": "In Pandemic, several virulent diseases have broken out simultaneously all over the world! The players are disease-fighting specialists whose mission is to treat disease hotspots while researching cures for each of four plagues before they get out of hand. The game board depicts several major population centers on Earth. On each turn, a player can use up to four actions to travel between cities, treat infected populaces, discover a cure, or build a research station. A deck of cards provides the p",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
+  },
+  "133473": {
+    "name": "Sushi Go!",
+    "year": 2013,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Party Game"
+    ],
+    "description": "In the super-fast sushi card game Sushi Go!, you are eating at a sushi restaurant and trying to grab the best combination of sushi dishes as they whiz by. Score points for collecting the most sushi rolls or making a full set of sashimi. Dip your favorite nigiri in wasabi to triple its value! And once you've eaten it all, finish your meal with all the pudding you've got! But be careful which sushi you allow your friends to take; it might be just what they need to beat you! Sushi Go! takes the car",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 15
+  },
+  "162886": {
+    "name": "Spirit Island",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Environmental",
+      "Fantasy",
+      "Mythology"
+    ],
+    "description": "In the most distant reaches of the world, magic still exists, embodied by spirits of the land, of the sky, and of every natural thing. As the great powers of Europe stretch their colonial empires further and further, they will inevitably lay claim to a place where spirits still hold power - and when they do, the land itself will fight back alongside the islanders who live there. Spirit Island is a complex and thematic co-operative game about defending your island home from colonizing Invaders. P",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
+  },
+  "174430": {
+    "name": "Gloomhaven",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
+    ],
+    "description": "Gloomhaven is a game of Euro-inspired tactical combat in a persistent world of shifting motives. Players will take on the roles of wandering adventurers with their own special sets of skills and their own reasons for traveling to this dark corner of the world. Players must work together out of necessity to clear out menacing dungeons and forgotten ruins. In the process, they will enhance their abilities with experience and loot, discover new locations to explore and plunder, and expand an ever-b",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
+  },
+  "178900": {
+    "name": "Codenames",
+    "year": 2015,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Party Game"
+    ],
+    "description": "Two rival spymasters know the secret identities of 25 agents. Their teammates know the agents only by their codenames — single-word labels like \"disease\", \"Germany\", and \"carrot\". Yes, carrot. It's a legitimate codename. Each spymaster wants their team to identify their agents first...without uncovering the assassin by mistake. In Codenames, two teams compete to see who can make contact with all of their agents first. Lay out 25 cards, each bearing a single word. The spymasters look at a card sh",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 15
+  },
+  "233078": {
+    "name": "Twilight Imperium: Fourth Edition",
+    "year": 2017,
+    "subdomain": "Strategy",
+    "categories": [
+      "Civilization",
+      "Economic",
+      "Exploration"
+    ],
+    "description": "Twilight Imperium (Fourth Edition) is a game of galactic conquest in which three to six players each take on the role of one of seventeen factions vying for galactic domination through military might, political maneuvering, and economic bargaining. Every faction offers a completely different play experience, from the wormhole-hopping Ghosts of Creuss to the Emirates of Hacan, masters of trade and economics. These seventeen races are offered many paths to victory, but only one may sit upon the th",
+    "minPlayers": 3,
+    "maxPlayers": 6,
+    "playingTime": 480
+  },
+  "266192": {
+    "name": "Wingspan",
+    "year": 2019,
+    "subdomain": "Family",
+    "categories": [
+      "Animals",
+      "Card Game",
+      "Educational"
+    ],
+    "description": "Wingspan is a competitive, medium-weight, card-driven, engine-building board game from Stonemaier Games. It's designed by Elizabeth Hargrave and features 180 birds illustrated by Natalia Rojas and Ana Maria Martinez. You are bird enthusiasts—researchers, bird watchers, ornithologists, and collectors—seeking to discover and attract the best birds to your network of wildlife preserves. Each bird extends a chain of powerful combinations in one of your habitats (actions). These habitats focus on sev",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 70
+  }
+}

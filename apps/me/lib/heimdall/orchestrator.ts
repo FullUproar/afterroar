@@ -33,6 +33,34 @@ import {
   type SeidrPlayerProfile,
   type SeidrGameProfile,
 } from './load';
+import gameMeta from './game-meta.json';
+
+interface GameMetaEntry {
+  name: string;
+  year?: number | null;
+  subdomain?: string | null;
+  categories?: string[];
+}
+
+function applyFilters(
+  profiles: SeidrGameProfile[],
+  filters: RecommendRequest['filters'],
+): SeidrGameProfile[] {
+  if (!filters) return profiles;
+  const { minYear, maxYear, subdomains } = filters;
+  const subdomainSet = subdomains && subdomains.length > 0 ? new Set(subdomains) : null;
+  const meta = gameMeta as Record<string, GameMetaEntry>;
+  return profiles.filter((p) => {
+    const m = meta[String(p.game_id)];
+    // Games without metadata fall through filters silently — better to
+    // include than to drop a candidate purely because we don't have year.
+    if (!m) return true;
+    if (typeof minYear === 'number' && typeof m.year === 'number' && m.year < minYear) return false;
+    if (typeof maxYear === 'number' && typeof m.year === 'number' && m.year > maxYear) return false;
+    if (subdomainSet && m.subdomain && !subdomainSet.has(m.subdomain)) return false;
+    return true;
+  });
+}
 
 // Local copy of the canonical seidr matcher. The original lives in
 // rec-engines/seidr/src/match.mjs (283 tests, hand-tuned over 30
@@ -186,6 +214,25 @@ export interface RecommendRequest {
     excludeGameIds?: number[];
   };
   /**
+   * Hard filters applied to the candidate pool BEFORE matching. A game
+   * not matching all active filters is dropped from consideration. Keep
+   * these soft-leaning in UI ("show me modern only" should still find
+   * the great older classics if specifically asked) but the engine
+   * itself treats them as a strict filter — the matcher only sees
+   * candidates that passed.
+   */
+  filters?: {
+    /** Inclusive year range. Either bound is optional. */
+    minYear?: number;
+    maxYear?: number;
+    /**
+     * BGG subdomains to allow (Strategy / Family / Party / Wargame /
+     * Thematic / Customizable / Children / Abstract). Empty/missing
+     * means "all subdomains."
+     */
+    subdomains?: string[];
+  };
+  /**
    * Top-K to return. Defaults to 12.
    */
   limit?: number;
@@ -282,7 +329,8 @@ export async function recommendGames(req: RecommendRequest): Promise<RecommendRe
     };
   }
 
-  const gameProfiles: SeidrGameProfile[] = await loadGameProfiles();
+  const allProfiles: SeidrGameProfile[] = await loadGameProfiles();
+  const gameProfiles = applyFilters(allProfiles, req.filters);
   const seidrResult = runSeidr(playerProfile, gameProfiles, {
     limit,
     excludeGameIds: req.context?.excludeGameIds ?? [],
