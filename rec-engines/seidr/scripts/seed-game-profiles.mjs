@@ -22,13 +22,22 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DATA_PATH = join(__dirname, '..', 'data', 'seed-game-profiles.json');
+const DEFAULT_DATA_PATH = join(__dirname, '..', 'data', 'seed-game-profiles.json');
 
 async function main() {
   const connStr = process.env.DATABASE_URL;
   if (!connStr) throw new Error('DATABASE_URL env var required');
 
-  const corpus = JSON.parse(readFileSync(DATA_PATH, 'utf8'));
+  // Allow alternate corpus file via --file <path> for staged additions
+  // (e.g. the 25-game hand-authored extension on top of the 225 base).
+  let dataPath = DEFAULT_DATA_PATH;
+  const fileFlagIdx = process.argv.indexOf('--file');
+  if (fileFlagIdx >= 0 && process.argv[fileFlagIdx + 1]) {
+    dataPath = process.argv[fileFlagIdx + 1];
+  }
+  console.log('Reading corpus from:', dataPath);
+
+  const corpus = JSON.parse(readFileSync(dataPath, 'utf8'));
   if (!Array.isArray(corpus.profiles)) {
     throw new Error('seed-game-profiles.json missing "profiles" array');
   }

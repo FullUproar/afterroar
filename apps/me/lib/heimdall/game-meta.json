@@ -1,4 +1,23 @@
 {
+  "11": {
+    "name": "Bohnanza",
+    "year": 1997,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Farming",
+      "Negotiation"
+    ]
+  },
+  "13": {
+    "name": "Catan",
+    "year": 1995,
+    "subdomain": "Customizable",
+    "categories": [
+      "Economic",
+      "Negotiation"
+    ]
+  },
   "91": {
     "name": "Paths of Glory",
     "year": 1999,
@@ -16,6 +35,15 @@
       "Action / Dexterity",
       "Children's Game",
       "Party Game"
+    ]
+  },
+  "172": {
+    "name": "For Sale",
+    "year": 1997,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Economic"
     ]
   },
   "188": {
@@ -81,12 +109,31 @@
       "Abstract Strategy"
     ]
   },
+  "822": {
+    "name": "Carcassonne",
+    "year": 2000,
+    "subdomain": "Family",
+    "categories": [
+      "Medieval",
+      "Territory Building"
+    ]
+  },
   "2346": {
     "name": "DVONN",
     "year": 2001,
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
+    ]
+  },
+  "2511": {
+    "name": "Sherlock Holmes Consulting Detective: The Thames Murders & Other Cases",
+    "year": 1981,
+    "subdomain": "Thematic",
+    "categories": [
+      "Deduction",
+      "Murder / Mystery",
+      "Novel-based"
     ]
   },
   "2651": {
@@ -123,6 +170,14 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
+    ]
+  },
+  "9209": {
+    "name": "Ticket to Ride",
+    "year": 2004,
+    "subdomain": "Family",
+    "categories": [
+      "Trains"
     ]
   },
   "9609": {
@@ -250,6 +305,15 @@
       "World War II"
     ]
   },
+  "30549": {
+    "name": "Pandemic",
+    "year": 2008,
+    "subdomain": "Family",
+    "categories": [
+      "Medical",
+      "Travel"
+    ]
+  },
   "31260": {
     "name": "Agricola",
     "year": 2007,
@@ -278,6 +342,15 @@
       "Industry / Manufacturing"
     ]
   },
+  "36218": {
+    "name": "Dominion",
+    "year": 2008,
+    "subdomain": "Strategy",
+    "categories": [
+      "Card Game",
+      "Medieval"
+    ]
+  },
   "36553": {
     "name": "Time's Up! Title Recall!",
     "year": 2008,
@@ -298,6 +371,16 @@
       "Maze"
     ]
   },
+  "39856": {
+    "name": "Dixit",
+    "year": 2008,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Humor",
+      "Party Game"
+    ]
+  },
   "40354": {
     "name": "Maria",
     "year": 2009,
@@ -316,6 +399,16 @@
       "Negotiation",
       "Pike and Shot",
       "Political"
+    ]
+  },
+  "41114": {
+    "name": "The Resistance",
+    "year": 2009,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Deduction"
     ]
   },
   "41916": {
@@ -365,6 +458,16 @@
       "Ancient",
       "Card Game",
       "City Building"
+    ]
+  },
+  "70323": {
+    "name": "King of Tokyo",
+    "year": 2011,
+    "subdomain": "Customizable",
+    "categories": [
+      "Dice",
+      "Fighting",
+      "Movies / TV / Radio theme"
     ]
   },
   "77423": {
@@ -417,6 +520,16 @@
       "Card Game"
     ]
   },
+  "92415": {
+    "name": "Skull",
+    "year": 2011,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Party Game"
+    ]
+  },
   "92828": {
     "name": "Dixit: Odyssey",
     "year": 2011,
@@ -445,6 +558,16 @@
       "Adventure",
       "Exploration",
       "Fantasy"
+    ]
+  },
+  "98778": {
+    "name": "Hanabi",
+    "year": 2010,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Memory"
     ]
   },
   "101721": {
@@ -545,6 +668,16 @@
       "Deduction"
     ]
   },
+  "129622": {
+    "name": "Love Letter",
+    "year": 2012,
+    "subdomain": "Customizable",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Renaissance"
+    ]
+  },
   "130960": {
     "name": "Triumph & Tragedy: European Balance of Power 1936-1945",
     "year": 2015,
@@ -553,6 +686,16 @@
       "Economic",
       "Negotiation",
       "Political"
+    ]
+  },
+  "131357": {
+    "name": "Coup",
+    "year": 2012,
+    "subdomain": "Party",
+    "categories": [
+      "Bluffing",
+      "Card Game",
+      "Deduction"
     ]
   },
   "144189": {
@@ -575,6 +718,16 @@
       "Children's Game"
     ]
   },
+  "146021": {
+    "name": "Eldritch Horror",
+    "year": 2013,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Fighting",
+      "Horror"
+    ]
+  },
   "146312": {
     "name": "Ghost Fightin' Treasure Hunters",
     "year": 2013,
@@ -585,6 +738,26 @@
       "Fantasy"
     ]
   },
+  "148228": {
+    "name": "Splendor",
+    "year": 2014,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Economic",
+      "Renaissance"
+    ]
+  },
+  "150145": {
+    "name": "Skull King",
+    "year": 2013,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Nautical",
+      "Pirates"
+    ]
+  },
   "153016": {
     "name": "Telestrations: 12 Player Party Pack",
     "year": 2011,
@@ -593,6 +766,25 @@
       "Humor",
       "Party Game",
       "Real-time"
+    ]
+  },
+  "153938": {
+    "name": "Camel Up",
+    "year": 2014,
+    "subdomain": "Customizable",
+    "categories": [
+      "Animals",
+      "Arabian",
+      "Dice"
+    ]
+  },
+  "155873": {
+    "name": "Power Grid Deluxe: Europe/North America",
+    "year": 2014,
+    "subdomain": "Strategy",
+    "categories": [
+      "Economic",
+      "Industry / Manufacturing"
     ]
   },
   "156129": {
@@ -916,6 +1108,15 @@
       "Fantasy"
     ]
   },
+  "192291": {
+    "name": "Sushi Go Party!",
+    "year": 2016,
+    "subdomain": "Family",
+    "categories": [
+      "Card Game",
+      "Party Game"
+    ]
+  },
   "193042": {
     "name": "Junk Art",
     "year": 2016,
@@ -942,6 +1143,16 @@
       "Abstract Strategy",
       "Ancient",
       "Mythology"
+    ]
+  },
+  "198773": {
+    "name": "Codenames: Pictures",
+    "year": 2016,
+    "subdomain": "Party",
+    "categories": [
+      "Card Game",
+      "Deduction",
+      "Party Game"
     ]
   },
   "199561": {
@@ -1204,6 +1415,16 @@
       "Negotiation"
     ]
   },
+  "239188": {
+    "name": "Chronicles of Crime",
+    "year": 2018,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Deduction",
+      "Murder / Mystery"
+    ]
+  },
   "240980": {
     "name": "Blood on the Clocktower",
     "year": 2022,
@@ -1363,6 +1584,15 @@
       "Renaissance"
     ]
   },
+  "256916": {
+    "name": "Concordia Venus",
+    "year": 2018,
+    "subdomain": "Strategy",
+    "categories": [
+      "Ancient",
+      "Economic"
+    ]
+  },
   "256952": {
     "name": "Zombie Kidz Evolution",
     "year": 2018,
@@ -1411,6 +1641,16 @@
       "Animals",
       "Arabian",
       "Dice"
+    ]
+  },
+  "264220": {
+    "name": "Tainted Grail: The Fall of Avalon",
+    "year": 2019,
+    "subdomain": "Thematic",
+    "categories": [
+      "Adventure",
+      "Exploration",
+      "Fantasy"
     ]
   },
   "264241": {

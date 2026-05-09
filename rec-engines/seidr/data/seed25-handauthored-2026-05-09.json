@@ -1,0 +1,587 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-05-09T00:00:00Z",
+  "source_provenance": "claude-opus-4-7-in-conversation-2026-05-09",
+  "model_version": "claude-opus-4-7",
+  "prompt_version": "in-conversation-direct-author",
+  "dimension_set_version": "1.0.0",
+  "rationale": "25 popular benchmark games hand-authored by Claude Opus 4.7 directly in conversation with Shawn on 2026-05-09. Generated with full BGG metadata (mechanics, categories, families, descriptions) + the 24-dimension taxonomy as input. Quality calibration / quick-win extension to the existing 225-game corpus before kicking off the full SDK-based LLM run for the long tail.",
+  "scale": { "dim_value": "[-1.0, 1.0]", "confidence": "[0.0, 1.0]" },
+  "profiles": [
+    {
+      "game_id": 13,
+      "game_name": "Catan",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.2, "PSY_EXPLORATION": 0.4, "PSY_SOCIAL": 0.75, "PSY_KILLER": 0.0, "PSY_OPENNESS": -0.3,
+        "PSY_CONSCIENTIOUSNESS": 0.3, "PSY_EXTRAVERSION": 0.55, "PSY_AGREEABLENESS": -0.2, "PSY_NEUROTICISM": 0.4,
+        "SOC_COOP_COMP": 0.7, "SOC_DIRECT_INDIRECT": -0.3, "SOC_TRUST_BETRAYAL": -0.3,
+        "MEC_LUCK_SKILL": -0.2, "MEC_COMPLEXITY": -0.3, "MEC_STRATEGY": 0.0, "MEC_ASYMMETRY": -0.8,
+        "AES_THEME_MECH": 0.2, "AES_NARRATIVE": -0.9, "AES_COMPONENT": 0.3,
+        "CTX_TIME": 0.0, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.2,
+        "EMO_TENSION": 0.3, "EMO_HUMOR": -0.3
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.9, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.8, "SOC_TRUST_BETRAYAL": 0.7,
+        "MEC_LUCK_SKILL": 0.9, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.75, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.8, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.7,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.95, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.8, "EMO_HUMOR": 0.85
+      },
+      "narrative": "The original gateway. Trade-driven social game with significant luck and deep nostalgia. Builds rather than fights, but the robber + blocking can frustrate."
+    },
+    {
+      "game_id": 822,
+      "game_name": "Carcassonne",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.2, "PSY_EXPLORATION": 0.5, "PSY_SOCIAL": 0.2, "PSY_KILLER": -0.2, "PSY_OPENNESS": -0.2,
+        "PSY_CONSCIENTIOUSNESS": 0.4, "PSY_EXTRAVERSION": 0.0, "PSY_AGREEABLENESS": 0.0, "PSY_NEUROTICISM": 0.1,
+        "SOC_COOP_COMP": 0.5, "SOC_DIRECT_INDIRECT": -0.5, "SOC_TRUST_BETRAYAL": -0.7,
+        "MEC_LUCK_SKILL": -0.1, "MEC_COMPLEXITY": -0.5, "MEC_STRATEGY": 0.1, "MEC_ASYMMETRY": -0.9,
+        "AES_THEME_MECH": -0.2, "AES_NARRATIVE": -0.9, "AES_COMPONENT": 0.5,
+        "CTX_TIME": -0.3, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": -0.1,
+        "EMO_TENSION": -0.1, "EMO_HUMOR": -0.3
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.8, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.9,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.8, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.8, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.9, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.8, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Quiet, contemplative tile placement. Some take-that via farm grabs but mostly parallel building. Wooden meeples + tiles feel premium for the price."
+    },
+    {
+      "game_id": 30549,
+      "game_name": "Pandemic",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.4, "PSY_EXPLORATION": 0.2, "PSY_SOCIAL": 0.5, "PSY_KILLER": -0.7, "PSY_OPENNESS": -0.1,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.3, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.5,
+        "SOC_COOP_COMP": -0.95, "SOC_DIRECT_INDIRECT": -0.95, "SOC_TRUST_BETRAYAL": -0.9,
+        "MEC_LUCK_SKILL": -0.1, "MEC_COMPLEXITY": -0.1, "MEC_STRATEGY": 0.4, "MEC_ASYMMETRY": 0.5,
+        "AES_THEME_MECH": 0.5, "AES_NARRATIVE": 0.0, "AES_COMPONENT": 0.3,
+        "CTX_TIME": -0.2, "CTX_NOSTALGIA": 0.5, "CTX_PLAYER_COUNT": -0.3,
+        "EMO_TENSION": 0.7, "EMO_HUMOR": -0.5
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.9, "PSY_KILLER": 0.95, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.9, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.95, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.99, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.9, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.95, "EMO_HUMOR": 0.95
+      },
+      "narrative": "The defining cooperative game. High-tension racing-against-the-disease. Asymmetric roles. Quarterbacking risk is real (one player optimizes for everyone)."
+    },
+    {
+      "game_id": 9209,
+      "game_name": "Ticket to Ride",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.1, "PSY_EXPLORATION": 0.2, "PSY_SOCIAL": 0.0, "PSY_KILLER": 0.0, "PSY_OPENNESS": -0.4,
+        "PSY_CONSCIENTIOUSNESS": 0.3, "PSY_EXTRAVERSION": 0.0, "PSY_AGREEABLENESS": 0.0, "PSY_NEUROTICISM": 0.2,
+        "SOC_COOP_COMP": 0.6, "SOC_DIRECT_INDIRECT": -0.4, "SOC_TRUST_BETRAYAL": -0.8,
+        "MEC_LUCK_SKILL": -0.3, "MEC_COMPLEXITY": -0.6, "MEC_STRATEGY": -0.1, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": 0.0, "AES_NARRATIVE": -0.9, "AES_COMPONENT": 0.4,
+        "CTX_TIME": -0.2, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.0,
+        "EMO_TENSION": 0.1, "EMO_HUMOR": -0.4
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.75, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": 0.8, "PSY_EXTRAVERSION": 0.75, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.8,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.9,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.8, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.7, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.9, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Quintessential gateway. Simple turns, satisfying claim moments, light blocking on routes. Plastic trains feel cheap to some, classic to others."
+    },
+    {
+      "game_id": 148228,
+      "game_name": "Splendor",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.4, "PSY_EXPLORATION": 0.0, "PSY_SOCIAL": -0.4, "PSY_KILLER": -0.3, "PSY_OPENNESS": -0.2,
+        "PSY_CONSCIENTIOUSNESS": 0.5, "PSY_EXTRAVERSION": -0.3, "PSY_AGREEABLENESS": 0.1, "PSY_NEUROTICISM": -0.1,
+        "SOC_COOP_COMP": 0.5, "SOC_DIRECT_INDIRECT": -0.7, "SOC_TRUST_BETRAYAL": -0.85,
+        "MEC_LUCK_SKILL": 0.4, "MEC_COMPLEXITY": -0.5, "MEC_STRATEGY": 0.2, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": -0.5, "AES_NARRATIVE": -0.95, "AES_COMPONENT": 0.5,
+        "CTX_TIME": -0.4, "CTX_NOSTALGIA": 0.2, "CTX_PLAYER_COUNT": -0.2,
+        "EMO_TENSION": 0.0, "EMO_HUMOR": -0.5
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.8, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.9, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.75,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.8, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.9, "SOC_TRUST_BETRAYAL": 0.9,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.7, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.9,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.8,
+        "EMO_TENSION": 0.7, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Solitaire-y engine builder with chunky poker chips. Pure mechanics, theme is wallpaper. Quick, quiet, optimization-driven."
+    },
+    {
+      "game_id": 36218,
+      "game_name": "Dominion",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.6, "PSY_EXPLORATION": 0.6, "PSY_SOCIAL": -0.5, "PSY_KILLER": 0.0, "PSY_OPENNESS": 0.2,
+        "PSY_CONSCIENTIOUSNESS": 0.6, "PSY_EXTRAVERSION": -0.4, "PSY_AGREEABLENESS": -0.1, "PSY_NEUROTICISM": 0.0,
+        "SOC_COOP_COMP": 0.6, "SOC_DIRECT_INDIRECT": -0.4, "SOC_TRUST_BETRAYAL": -0.7,
+        "MEC_LUCK_SKILL": 0.2, "MEC_COMPLEXITY": -0.1, "MEC_STRATEGY": 0.3, "MEC_ASYMMETRY": -0.9,
+        "AES_THEME_MECH": -0.7, "AES_NARRATIVE": -0.9, "AES_COMPONENT": 0.0,
+        "CTX_TIME": -0.3, "CTX_NOSTALGIA": 0.6, "CTX_PLAYER_COUNT": -0.3,
+        "EMO_TENSION": 0.0, "EMO_HUMOR": -0.4
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.9, "PSY_EXPLORATION": 0.85, "PSY_SOCIAL": 0.9, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.9, "PSY_EXTRAVERSION": 0.8, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.7, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.9, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.95, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.9, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.7, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Genre-defining deck-builder. Highly variable kingdoms = high replay. Multiplayer-solitaire critique is fair. Mechanics-first to a fault."
+    },
+    {
+      "game_id": 70323,
+      "game_name": "King of Tokyo",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": -0.3, "PSY_EXPLORATION": 0.2, "PSY_SOCIAL": 0.5, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.0,
+        "PSY_CONSCIENTIOUSNESS": -0.5, "PSY_EXTRAVERSION": 0.6, "PSY_AGREEABLENESS": -0.3, "PSY_NEUROTICISM": 0.3,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": -0.4,
+        "MEC_LUCK_SKILL": -0.6, "MEC_COMPLEXITY": -0.85, "MEC_STRATEGY": -0.7, "MEC_ASYMMETRY": -0.4,
+        "AES_THEME_MECH": 0.7, "AES_NARRATIVE": -0.6, "AES_COMPONENT": 0.5,
+        "CTX_TIME": -0.5, "CTX_NOSTALGIA": 0.3, "CTX_PLAYER_COUNT": 0.4,
+        "EMO_TENSION": 0.4, "EMO_HUMOR": 0.7
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.9, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.95, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.8,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.9, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.9, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Yahtzee-with-monsters. Loud, lucky, aggressive, silly. Player elimination still hurts. Family-friendly gateway to direct conflict."
+    },
+    {
+      "game_id": 198773,
+      "game_name": "Codenames: Pictures",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.0, "PSY_EXPLORATION": 0.6, "PSY_SOCIAL": 0.95, "PSY_KILLER": -0.3, "PSY_OPENNESS": 0.3,
+        "PSY_CONSCIENTIOUSNESS": -0.2, "PSY_EXTRAVERSION": 0.5, "PSY_AGREEABLENESS": 0.5, "PSY_NEUROTICISM": 0.0,
+        "SOC_COOP_COMP": 0.0, "SOC_DIRECT_INDIRECT": -0.6, "SOC_TRUST_BETRAYAL": -0.5,
+        "MEC_LUCK_SKILL": 0.0, "MEC_COMPLEXITY": -0.95, "MEC_STRATEGY": -0.6, "MEC_ASYMMETRY": 0.7,
+        "AES_THEME_MECH": -0.4, "AES_NARRATIVE": -0.9, "AES_COMPONENT": 0.0,
+        "CTX_TIME": -0.7, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": 0.7,
+        "EMO_TENSION": 0.4, "EMO_HUMOR": 0.6
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.85, "PSY_SOCIAL": 0.99, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.95, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.95,
+        "EMO_TENSION": 0.9, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Team word/image association party game. Asymmetric (cluegiver vs guesser). Massive group sizes. Pictures version is more accessible than original."
+    },
+    {
+      "game_id": 39856,
+      "game_name": "Dixit",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": -0.5, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.9, "PSY_KILLER": -0.7, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": -0.4, "PSY_EXTRAVERSION": 0.4, "PSY_AGREEABLENESS": 0.5, "PSY_NEUROTICISM": -0.2,
+        "SOC_COOP_COMP": 0.0, "SOC_DIRECT_INDIRECT": -0.85, "SOC_TRUST_BETRAYAL": 0.0,
+        "MEC_LUCK_SKILL": 0.0, "MEC_COMPLEXITY": -0.95, "MEC_STRATEGY": -0.85, "MEC_ASYMMETRY": 0.4,
+        "AES_THEME_MECH": 0.4, "AES_NARRATIVE": 0.2, "AES_COMPONENT": 0.8,
+        "CTX_TIME": -0.4, "CTX_NOSTALGIA": 0.2, "CTX_PLAYER_COUNT": 0.5,
+        "EMO_TENSION": -0.3, "EMO_HUMOR": 0.4
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.95, "PSY_EXPLORATION": 0.95, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.95, "PSY_OPENNESS": 0.95,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.7, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.7,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.9, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.95,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.9
+      },
+      "narrative": "Surreal art-card storytelling party game. Beautiful illustrations. Reward for being interestingly weird, not too obvious or too obscure. Creative-mindset required."
+    },
+    {
+      "game_id": 41114,
+      "game_name": "The Resistance",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.2, "PSY_EXPLORATION": 0.4, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.4, "PSY_OPENNESS": 0.4,
+        "PSY_CONSCIENTIOUSNESS": 0.0, "PSY_EXTRAVERSION": 0.6, "PSY_AGREEABLENESS": -0.6, "PSY_NEUROTICISM": 0.4,
+        "SOC_COOP_COMP": -0.3, "SOC_DIRECT_INDIRECT": 0.5, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.0, "MEC_COMPLEXITY": -0.85, "MEC_STRATEGY": -0.4, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.5, "AES_NARRATIVE": -0.4, "AES_COMPONENT": -0.4,
+        "CTX_TIME": -0.6, "CTX_NOSTALGIA": 0.4, "CTX_PLAYER_COUNT": 0.6,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.0
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.99, "PSY_KILLER": 0.9, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.99,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.7, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.9, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.95,
+        "EMO_TENSION": 0.95, "EMO_HUMOR": 0.7
+      },
+      "narrative": "Hidden-role social deduction without elimination. All accusation, all the time. Asymmetric (resistance vs spies). Big-group party game."
+    },
+    {
+      "game_id": 92415,
+      "game_name": "Skull",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.0, "PSY_EXPLORATION": 0.5, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.4, "PSY_OPENNESS": 0.3,
+        "PSY_CONSCIENTIOUSNESS": -0.3, "PSY_EXTRAVERSION": 0.5, "PSY_AGREEABLENESS": -0.3, "PSY_NEUROTICISM": 0.5,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.5, "SOC_TRUST_BETRAYAL": 0.99,
+        "MEC_LUCK_SKILL": 0.0, "MEC_COMPLEXITY": -0.95, "MEC_STRATEGY": -0.6, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": -0.3, "AES_NARRATIVE": -0.95, "AES_COMPONENT": 0.4,
+        "CTX_TIME": -0.7, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": 0.5,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.4
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.7, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.99, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.7, "SOC_TRUST_BETRAYAL": 0.99,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.7, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.7,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.95, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Pure bluffing in 4 cards. Read the table or fold. Tense, tactile, dead simple rules. Anti-strategy in the best way."
+    },
+    {
+      "game_id": 129622,
+      "game_name": "Love Letter",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.0, "PSY_EXPLORATION": 0.5, "PSY_SOCIAL": 0.5, "PSY_KILLER": 0.2, "PSY_OPENNESS": 0.0,
+        "PSY_CONSCIENTIOUSNESS": 0.0, "PSY_EXTRAVERSION": 0.0, "PSY_AGREEABLENESS": -0.2, "PSY_NEUROTICISM": 0.2,
+        "SOC_COOP_COMP": 0.7, "SOC_DIRECT_INDIRECT": 0.4, "SOC_TRUST_BETRAYAL": 0.4,
+        "MEC_LUCK_SKILL": -0.5, "MEC_COMPLEXITY": -0.95, "MEC_STRATEGY": -0.7, "MEC_ASYMMETRY": -0.7,
+        "AES_THEME_MECH": -0.4, "AES_NARRATIVE": -0.7, "AES_COMPONENT": -0.2,
+        "CTX_TIME": -0.85, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": 0.0,
+        "EMO_TENSION": 0.4, "EMO_HUMOR": 0.0
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.7, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.7
+      },
+      "narrative": "16-card deduction microgame. 5-minute rounds. Light bluffing, lots of luck, perfect filler."
+    },
+    {
+      "game_id": 131357,
+      "game_name": "Coup",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.2, "PSY_EXPLORATION": 0.5, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.4,
+        "PSY_CONSCIENTIOUSNESS": -0.2, "PSY_EXTRAVERSION": 0.5, "PSY_AGREEABLENESS": -0.6, "PSY_NEUROTICISM": 0.5,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.2, "MEC_COMPLEXITY": -0.85, "MEC_STRATEGY": -0.5, "MEC_ASYMMETRY": -0.7,
+        "AES_THEME_MECH": 0.0, "AES_NARRATIVE": -0.6, "AES_COMPONENT": -0.2,
+        "CTX_TIME": -0.7, "CTX_NOSTALGIA": 0.2, "CTX_PLAYER_COUNT": 0.4,
+        "EMO_TENSION": 0.7, "EMO_HUMOR": 0.4
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.95, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.95, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.99,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.7, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.9, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Lying-only social deduction. No hidden roles, just claims. Player elimination but rounds are short. Aggressive, mean, fast."
+    },
+    {
+      "game_id": 11,
+      "game_name": "Bohnanza",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.1, "PSY_EXPLORATION": 0.0, "PSY_SOCIAL": 0.85, "PSY_KILLER": -0.6, "PSY_OPENNESS": 0.0,
+        "PSY_CONSCIENTIOUSNESS": 0.2, "PSY_EXTRAVERSION": 0.5, "PSY_AGREEABLENESS": 0.4, "PSY_NEUROTICISM": -0.2,
+        "SOC_COOP_COMP": 0.4, "SOC_DIRECT_INDIRECT": -0.5, "SOC_TRUST_BETRAYAL": -0.5,
+        "MEC_LUCK_SKILL": -0.3, "MEC_COMPLEXITY": -0.6, "MEC_STRATEGY": -0.3, "MEC_ASYMMETRY": -0.85,
+        "AES_THEME_MECH": -0.2, "AES_NARRATIVE": -0.85, "AES_COMPONENT": 0.0,
+        "CTX_TIME": -0.4, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.4,
+        "EMO_TENSION": 0.0, "EMO_HUMOR": 0.4
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.7, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.7, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Forced trade-or-rot bean farming. Awkward hand-can't-reorder rule. Sounds bad on paper, plays delightful. Pure trading social."
+    },
+    {
+      "game_id": 153938,
+      "game_name": "Camel Up",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": -0.3, "PSY_EXPLORATION": 0.4, "PSY_SOCIAL": 0.7, "PSY_KILLER": -0.4, "PSY_OPENNESS": 0.3,
+        "PSY_CONSCIENTIOUSNESS": -0.3, "PSY_EXTRAVERSION": 0.6, "PSY_AGREEABLENESS": 0.0, "PSY_NEUROTICISM": -0.1,
+        "SOC_COOP_COMP": 0.7, "SOC_DIRECT_INDIRECT": -0.2, "SOC_TRUST_BETRAYAL": -0.3,
+        "MEC_LUCK_SKILL": -0.7, "MEC_COMPLEXITY": -0.85, "MEC_STRATEGY": -0.7, "MEC_ASYMMETRY": -0.85,
+        "AES_THEME_MECH": 0.5, "AES_NARRATIVE": -0.85, "AES_COMPONENT": 0.7,
+        "CTX_TIME": -0.4, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": 0.4,
+        "EMO_TENSION": 0.5, "EMO_HUMOR": 0.7
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.95, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.95,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Goofy dice-pyramid camel betting. Light, loud, family-friendly. Lots of laughs at swap-outs. Wood + dice pyramid is iconic."
+    },
+    {
+      "game_id": 98778,
+      "game_name": "Hanabi",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.5, "PSY_EXPLORATION": 0.4, "PSY_SOCIAL": 0.6, "PSY_KILLER": -0.95, "PSY_OPENNESS": 0.4,
+        "PSY_CONSCIENTIOUSNESS": 0.6, "PSY_EXTRAVERSION": -0.3, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.4,
+        "SOC_COOP_COMP": -0.99, "SOC_DIRECT_INDIRECT": -0.95, "SOC_TRUST_BETRAYAL": -0.95,
+        "MEC_LUCK_SKILL": -0.1, "MEC_COMPLEXITY": -0.6, "MEC_STRATEGY": 0.2, "MEC_ASYMMETRY": -0.6,
+        "AES_THEME_MECH": -0.5, "AES_NARRATIVE": -0.85, "AES_COMPONENT": 0.0,
+        "CTX_TIME": -0.6, "CTX_NOSTALGIA": 0.2, "CTX_PLAYER_COUNT": -0.4,
+        "EMO_TENSION": 0.6, "EMO_HUMOR": -0.2
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.95, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.95, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.99, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.99,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.95, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Hidden-hand cooperative information puzzle. Quiet, brain-bending, communication-rule constrained. Spiel des Jahres winner."
+    },
+    {
+      "game_id": 192291,
+      "game_name": "Sushi Go Party!",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.2, "PSY_EXPLORATION": 0.3, "PSY_SOCIAL": 0.4, "PSY_KILLER": -0.3, "PSY_OPENNESS": 0.2,
+        "PSY_CONSCIENTIOUSNESS": 0.2, "PSY_EXTRAVERSION": 0.3, "PSY_AGREEABLENESS": 0.0, "PSY_NEUROTICISM": -0.1,
+        "SOC_COOP_COMP": 0.6, "SOC_DIRECT_INDIRECT": -0.5, "SOC_TRUST_BETRAYAL": -0.7,
+        "MEC_LUCK_SKILL": -0.1, "MEC_COMPLEXITY": -0.85, "MEC_STRATEGY": -0.5, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": 0.0, "AES_NARRATIVE": -0.95, "AES_COMPONENT": 0.5,
+        "CTX_TIME": -0.5, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": 0.5,
+        "EMO_TENSION": 0.1, "EMO_HUMOR": 0.5
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.9,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.85
+      },
+      "narrative": "Simultaneous card drafting. Cute art, fast turns, low decision pressure. Family + adult crossover. Pretty version of original Sushi Go."
+    },
+    {
+      "game_id": 172,
+      "game_name": "For Sale",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.3, "PSY_EXPLORATION": 0.0, "PSY_SOCIAL": 0.4, "PSY_KILLER": 0.0, "PSY_OPENNESS": -0.3,
+        "PSY_CONSCIENTIOUSNESS": 0.4, "PSY_EXTRAVERSION": 0.3, "PSY_AGREEABLENESS": -0.1, "PSY_NEUROTICISM": 0.1,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.0, "SOC_TRUST_BETRAYAL": -0.5,
+        "MEC_LUCK_SKILL": 0.2, "MEC_COMPLEXITY": -0.85, "MEC_STRATEGY": -0.4, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": -0.5, "AES_NARRATIVE": -0.95, "AES_COMPONENT": -0.2,
+        "CTX_TIME": -0.85, "CTX_NOSTALGIA": 0.3, "CTX_PLAYER_COUNT": 0.3,
+        "EMO_TENSION": 0.4, "EMO_HUMOR": 0.0
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.7, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.95, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.7
+      },
+      "narrative": "20-minute auction game in two phases. Bid for properties, then sell them. Pure auction, pure tactics. Old-school filler that aged well."
+    },
+    {
+      "game_id": 150145,
+      "game_name": "Skull King",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.4, "PSY_EXPLORATION": 0.3, "PSY_SOCIAL": 0.4, "PSY_KILLER": -0.1, "PSY_OPENNESS": -0.3,
+        "PSY_CONSCIENTIOUSNESS": 0.4, "PSY_EXTRAVERSION": 0.3, "PSY_AGREEABLENESS": -0.2, "PSY_NEUROTICISM": 0.4,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": -0.4, "SOC_TRUST_BETRAYAL": -0.5,
+        "MEC_LUCK_SKILL": -0.4, "MEC_COMPLEXITY": -0.6, "MEC_STRATEGY": -0.2, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": -0.2, "AES_NARRATIVE": -0.85, "AES_COMPONENT": 0.2,
+        "CTX_TIME": -0.4, "CTX_NOSTALGIA": 0.3, "CTX_PLAYER_COUNT": 0.4,
+        "EMO_TENSION": 0.6, "EMO_HUMOR": 0.0
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.7, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.9, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.7, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.7
+      },
+      "narrative": "Predict-your-tricks pirate trick-taker. Be exactly right or lose points. Punishing, social, fast. Modern classic of the trick-taking renaissance."
+    },
+    {
+      "game_id": 146021,
+      "game_name": "Eldritch Horror",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.3, "PSY_EXPLORATION": 0.85, "PSY_SOCIAL": 0.4, "PSY_KILLER": -0.6, "PSY_OPENNESS": 0.6,
+        "PSY_CONSCIENTIOUSNESS": 0.5, "PSY_EXTRAVERSION": -0.1, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.5,
+        "SOC_COOP_COMP": -0.99, "SOC_DIRECT_INDIRECT": -0.95, "SOC_TRUST_BETRAYAL": -0.85,
+        "MEC_LUCK_SKILL": -0.5, "MEC_COMPLEXITY": 0.5, "MEC_STRATEGY": 0.4, "MEC_ASYMMETRY": 0.7,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.85, "AES_COMPONENT": 0.7,
+        "CTX_TIME": 0.7, "CTX_NOSTALGIA": 0.5, "CTX_PLAYER_COUNT": -0.2,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": -0.7
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.95, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.95, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.99, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.9, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.95, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.95, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Sprawling cooperative Lovecraft adventure. Story-rich via encounter cards. Long, swingy, you'll lose more than you win. Chunky thematic Ameritrash."
+    },
+    {
+      "game_id": 155873,
+      "game_name": "Power Grid Deluxe: Europe/North America",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.0, "PSY_SOCIAL": 0.0, "PSY_KILLER": 0.3, "PSY_OPENNESS": -0.2,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": -0.2, "PSY_AGREEABLENESS": -0.4, "PSY_NEUROTICISM": 0.3,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.5, "SOC_TRUST_BETRAYAL": -0.6,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.5, "MEC_STRATEGY": 0.7, "MEC_ASYMMETRY": -0.95,
+        "AES_THEME_MECH": -0.6, "AES_NARRATIVE": -0.95, "AES_COMPONENT": 0.4,
+        "CTX_TIME": 0.5, "CTX_NOSTALGIA": 0.6, "CTX_PLAYER_COUNT": 0.0,
+        "EMO_TENSION": 0.5, "EMO_HUMOR": -0.7
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.95, "PSY_EXPLORATION": 0.85, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.95, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.95, "SOC_DIRECT_INDIRECT": 0.85, "SOC_TRUST_BETRAYAL": 0.85,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.95, "MEC_ASYMMETRY": 0.95,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Heavy auction-driven economic optimization. Math-y, brutal kingmaker risk, late-game leader-bashing baked in. Deluxe ed adds sharper bits."
+    },
+    {
+      "game_id": 256916,
+      "game_name": "Concordia Venus",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.4, "PSY_SOCIAL": -0.4, "PSY_KILLER": -0.6, "PSY_OPENNESS": 0.0,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": -0.4, "PSY_AGREEABLENESS": 0.2, "PSY_NEUROTICISM": -0.2,
+        "SOC_COOP_COMP": 0.6, "SOC_DIRECT_INDIRECT": -0.95, "SOC_TRUST_BETRAYAL": -0.95,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.5, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": -0.5,
+        "AES_THEME_MECH": -0.5, "AES_NARRATIVE": -0.85, "AES_COMPONENT": 0.5,
+        "CTX_TIME": 0.4, "CTX_NOSTALGIA": 0.4, "CTX_PLAYER_COUNT": 0.0,
+        "EMO_TENSION": 0.3, "EMO_HUMOR": -0.7
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.95, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.95, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.95, "PSY_EXTRAVERSION": 0.85, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.85, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.95, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.95, "MEC_ASYMMETRY": 0.7,
+        "AES_THEME_MECH": 0.85, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Quiet, deterministic, deeply strategic. Hand-management + tableau. Venus adds team play. The thinking-person's Euro."
+    },
+    {
+      "game_id": 239188,
+      "game_name": "Chronicles of Crime",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.4, "PSY_EXPLORATION": 0.7, "PSY_SOCIAL": 0.4, "PSY_KILLER": -0.7, "PSY_OPENNESS": 0.5,
+        "PSY_CONSCIENTIOUSNESS": 0.5, "PSY_EXTRAVERSION": 0.0, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.0,
+        "SOC_COOP_COMP": -0.95, "SOC_DIRECT_INDIRECT": -0.95, "SOC_TRUST_BETRAYAL": -0.95,
+        "MEC_LUCK_SKILL": 0.4, "MEC_COMPLEXITY": -0.4, "MEC_STRATEGY": -0.2, "MEC_ASYMMETRY": -0.4,
+        "AES_THEME_MECH": 0.95, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.4,
+        "CTX_TIME": 0.0, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": -0.2,
+        "EMO_TENSION": 0.4, "EMO_HUMOR": -0.6
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.95, "PSY_SOCIAL": 0.7, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.99, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.95, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.85, "EMO_HUMOR": 0.85
+      },
+      "narrative": "App-driven cooperative detective. Visit locations via app, interrogate witnesses. Replayable but each case is one-and-done. Modern mystery feel."
+    },
+    {
+      "game_id": 264220,
+      "game_name": "Tainted Grail: The Fall of Avalon",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.5, "PSY_EXPLORATION": 0.95, "PSY_SOCIAL": 0.0, "PSY_KILLER": 0.0, "PSY_OPENNESS": 0.85,
+        "PSY_CONSCIENTIOUSNESS": 0.6, "PSY_EXTRAVERSION": -0.4, "PSY_AGREEABLENESS": 0.4, "PSY_NEUROTICISM": 0.5,
+        "SOC_COOP_COMP": -0.95, "SOC_DIRECT_INDIRECT": -0.95, "SOC_TRUST_BETRAYAL": -0.85,
+        "MEC_LUCK_SKILL": 0.0, "MEC_COMPLEXITY": 0.6, "MEC_STRATEGY": 0.5, "MEC_ASYMMETRY": 0.6,
+        "AES_THEME_MECH": 0.95, "AES_NARRATIVE": 0.95, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.95, "CTX_NOSTALGIA": 0.0, "CTX_PLAYER_COUNT": -0.4,
+        "EMO_TENSION": 0.7, "EMO_HUMOR": -0.85
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.99, "PSY_SOCIAL": 0.85, "PSY_KILLER": 0.7, "PSY_OPENNESS": 0.95,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.7, "PSY_NEUROTICISM": 0.85,
+        "SOC_COOP_COMP": 0.99, "SOC_DIRECT_INDIRECT": 0.95, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.85, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.85, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.99, "AES_NARRATIVE": 0.99, "AES_COMPONENT": 0.95,
+        "CTX_TIME": 0.99, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.95, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Massive cooperative narrative campaign. Dark Arthurian mythos. 100+ hour commitment. Story choices matter. Heavy thematic experience."
+    },
+    {
+      "game_id": 2511,
+      "game_name": "Sherlock Holmes Consulting Detective: The Thames Murders & Other Cases",
+      "dim_vector": {
+        "PSY_ACHIEVEMENT": 0.4, "PSY_EXPLORATION": 0.85, "PSY_SOCIAL": 0.5, "PSY_KILLER": -0.7, "PSY_OPENNESS": 0.5,
+        "PSY_CONSCIENTIOUSNESS": 0.7, "PSY_EXTRAVERSION": 0.0, "PSY_AGREEABLENESS": 0.85, "PSY_NEUROTICISM": -0.2,
+        "SOC_COOP_COMP": -0.95, "SOC_DIRECT_INDIRECT": -0.99, "SOC_TRUST_BETRAYAL": -0.95,
+        "MEC_LUCK_SKILL": 0.5, "MEC_COMPLEXITY": -0.4, "MEC_STRATEGY": 0.0, "MEC_ASYMMETRY": -0.85,
+        "AES_THEME_MECH": 0.95, "AES_NARRATIVE": 0.95, "AES_COMPONENT": -0.4,
+        "CTX_TIME": 0.6, "CTX_NOSTALGIA": 0.7, "CTX_PLAYER_COUNT": -0.3,
+        "EMO_TENSION": 0.2, "EMO_HUMOR": -0.6
+      },
+      "confidence_per_dim": {
+        "PSY_ACHIEVEMENT": 0.85, "PSY_EXPLORATION": 0.95, "PSY_SOCIAL": 0.7, "PSY_KILLER": 0.85, "PSY_OPENNESS": 0.7,
+        "PSY_CONSCIENTIOUSNESS": 0.85, "PSY_EXTRAVERSION": 0.7, "PSY_AGREEABLENESS": 0.95, "PSY_NEUROTICISM": 0.7,
+        "SOC_COOP_COMP": 0.99, "SOC_DIRECT_INDIRECT": 0.99, "SOC_TRUST_BETRAYAL": 0.95,
+        "MEC_LUCK_SKILL": 0.7, "MEC_COMPLEXITY": 0.85, "MEC_STRATEGY": 0.7, "MEC_ASYMMETRY": 0.85,
+        "AES_THEME_MECH": 0.99, "AES_NARRATIVE": 0.99, "AES_COMPONENT": 0.85,
+        "CTX_TIME": 0.85, "CTX_NOSTALGIA": 0.85, "CTX_PLAYER_COUNT": 0.85,
+        "EMO_TENSION": 0.7, "EMO_HUMOR": 0.95
+      },
+      "narrative": "Pure narrative deduction. Read flavor-text Victorian mysteries, follow leads, compare to Holmes. Almost a book. Cooperative discussion-driven."
+    }
+  ]
+}
