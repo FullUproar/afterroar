@@ -7,7 +7,11 @@
       "Card Game",
       "Farming",
       "Negotiation"
-    ]
+    ],
+    "description": "Bohnanza is the first in the Bohnanza family of games and has been published in several different editions, including a 2023 version with flowers. This entry lists a few different major card sets for Bohnanza: the base game for 3-5 players, the expanded game with the same name for 2-7 players (that is, first expansion included), and Bohnanza Pocket. In the game, you plant, then harvest bean cards ",
+    "minPlayers": 2,
+    "maxPlayers": 7,
+    "playingTime": 45
   },
   "13": {
     "name": "Catan",
@@ -16,7 +20,11 @@
     "categories": [
       "Economic",
       "Negotiation"
-    ]
+    ],
+    "description": "In CATAN (formerly The Settlers of Catan), players try to be the dominant force on the island of Catan by building settlements, cities and roads. On each turn dice are rolled to determine which resources the island produces. Players build structures by 'spending' resources (sheep, wheat, wood, brick and ore) which are represented by the relevant resource cards; each land type, with the exception o",
+    "minPlayers": 3,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "91": {
     "name": "Paths of Glory",
@@ -25,7 +33,11 @@
     "categories": [
       "Wargame",
       "World War I"
-    ]
+    ],
+    "description": "(from GMT Games' website:) They called it the Great War. In over four years of titanic struggle, the ancient Europe of Kings and Emperors tore itself to pieces, giving birth to our own violent modern age. The bloody battles fought in the trenches of the Western Front, the icy plains of Poland, the mountains of the Balkans, and the deserts of Arabia, shaped the world we know today. We are all orpha",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 480
   },
   "150": {
     "name": "PitchCar",
@@ -35,7 +47,11 @@
       "Action / Dexterity",
       "Children's Game",
       "Party Game"
-    ]
+    ],
+    "description": "This game entry refers to two nearly identical games that are not compatible with one another. Ages 6 and up. PitchCar and Carabande are dexterity games where large, wooden, puzzle-like pieces are used to construct a race track that looks very similar to a slot car track when finished. But instead of electricity, players use finger-flicks to send small pucks around the track, a la Carrom. Contents",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 30
   },
   "172": {
     "name": "For Sale",
@@ -44,7 +60,11 @@
     "categories": [
       "Card Game",
       "Economic"
-    ]
+    ],
+    "description": "For Sale is a quick, fun game nominally about buying and selling real estate. During the game's two distinct phases, players first bid for several buildings then, after all buildings have been bought, sell the buildings for the greatest profit possible. The original Ravensburger/FX Schmid edition (1997/98) has slightly different rules than later English editions, and only 20 buildings instead of 3",
+    "minPlayers": 3,
+    "maxPlayers": 6,
+    "playingTime": 30
   },
   "188": {
     "name": "Go",
@@ -52,7 +72,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "In Go, players alternately place stones on empty intersections of a 19x19 grid. The goal is to enclose territory behind stone perimeters and, secondarily, to tightly surround and capture enemy stones. After both players pass, they add up their territory and deduct the number of captives lost, higher score wins. The concept is simple yet the challenge can enrich a lifetime. In truth many lifetimes,",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "234": {
     "name": "Hannibal: Rome vs. Carthage",
@@ -62,7 +86,11 @@
       "Ancient",
       "Political",
       "Wargame"
-    ]
+    ],
+    "description": "This game uses the very popular card system which first appeared in Avalon Hill's We the People game to detail the struggle between Carthage's Hannibal and the Roman Republic in approximately 200 BC. Hannibal: Rome vs. Carthage is an asymmetrical card driven game for 2 players set in times of epic struggle between ancient Rome and Carthage. It presents a conflict between two super-powers of Antiqu",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 150
   },
   "243": {
     "name": "Advanced Squad Leader",
@@ -71,7 +99,11 @@
     "categories": [
       "Wargame",
       "World War II"
-    ]
+    ],
+    "description": "Advanced Squad Leader is the completely reorganized and re-designed version of the original Squad Leader system. This three-ring binder is the basic rules for the entire system and provides the ultimate combination of playability and detail. Full-color charts and pictures make this the most readable of rulebooks - and it includes a full-service index as well for quick reference. And ASL is more th",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 480
   },
   "463": {
     "name": "Magic: The Gathering",
@@ -81,7 +113,11 @@
       "Card Game",
       "Collectible Components",
       "Fantasy"
-    ]
+    ],
+    "description": "GAME SYSTEM This entry is to allow for discussion/rating of the game system as a whole. It is not for a specific product or release. Versions will appear on the individual item pages. From the official website: In the Magic game, you play the role of a planeswalker—a powerful wizard who fights other planeswalkers for glory, knowledge, and conquest. Your deck of cards represents all the weapons in ",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 20
   },
   "503": {
     "name": "Through the Desert",
@@ -91,7 +127,11 @@
       "Abstract Strategy",
       "Animals",
       "Arabian"
-    ]
+    ],
+    "description": "Each player attempts to score the most points by snaking caravan routes through the desert, trying to reach oases and blocking off sections of the desert. Many people feel that it is reminiscent of Go. Publisher's Description From the award-winning game designer Reiner Knizia comes a game of strategy, patience, and cool plastic camels! The desert is still treacherous, mysterious, and without mercy",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 45
   },
   "521": {
     "name": "Crokinole",
@@ -99,7 +139,11 @@
     "subdomain": "Family",
     "categories": [
       "Action / Dexterity"
-    ]
+    ],
+    "description": "Crokinole is a traditional two- or four-player dexterity game, played on a circular wooden board, with 3 rings and an inner recessed 'bullseye'. A ring of posts is set around the inner circle, which functions as an obstacle to reach this area. Playing pieces are wooden circular disks similar to checkers pieces. Players take turns shooting disks across the board by flicking them with their fingers ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "528": {
     "name": "ZÈRTZ",
@@ -107,7 +151,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "In ZÈRTZ, the third addition to the GIPF Project, players compete to acquire sets of multi-colored balls. This is mostly accomplished by jumping one ball over one or more others, Checkers-style, on a hex board. A player's turn consists of either jumping (which can be forced) or placing any color ball on the board and removing an empty space from the edge of the board. In this manner, the play spac",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "822": {
     "name": "Carcassonne",
@@ -116,7 +164,11 @@
     "categories": [
       "Medieval",
       "Territory Building"
-    ]
+    ],
+    "description": "Carcassonne is a tile placement game in which the players draw and place a tile with a piece of southern French landscape represented on it. The tile might feature a city, a road, a cloister, grassland or some combination thereof, and it must be placed adjacent to tiles that have already been played, in such a way that cities are connected to cities, roads to roads, et cetera. Having placed a tile",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 45
   },
   "2346": {
     "name": "DVONN",
@@ -124,7 +176,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "DVONN is played on an elongated hexagonal board, with 23 white, 23 black and 3 red DVONN-pieces. In the beginning the board is empty. The players place the pieces on empty spaces of the board, without restrictions. They place the DVONN-pieces first and their own pieces next. Then they start stacking pieces on top of each other. A single piece may be moved 1 space in any direction, a stack of two p",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "2511": {
     "name": "Sherlock Holmes Consulting Detective: The Thames Murders & Other Cases",
@@ -134,7 +190,11 @@
       "Deduction",
       "Murder / Mystery",
       "Novel-based"
-    ]
+    ],
+    "description": "Have you ever had the desire to walk the streets of Victorian London with Sherlock Holmes in search of Professor Moriarty? To search the docks for the giant rat of Sumatra? To walk up Baker Street as the fog is rolling in and hear Holmes cry out, \"Come, Watson, come! The game is afoot!\"? Now you can! You can enter the opium den beneath the Bar of Gold, but beware, that may be Colonel Sebastian Mor",
+    "minPlayers": 1,
+    "maxPlayers": 8,
+    "playingTime": 120
   },
   "2651": {
     "name": "Power Grid",
@@ -143,7 +203,11 @@
     "categories": [
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "Power Grid is the updated release of the Friedemann Friese crayon game Funkenschlag. It removes the crayon aspect from network building in the original edition, while retaining the fluctuating commodities market like Crude: The Oil Game and an auction round intensity reminiscent of The Princes of Florence. The objective of Power Grid is to supply the most cities with power when someone's network g",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 120
   },
   "2655": {
     "name": "Hive",
@@ -152,7 +216,11 @@
     "categories": [
       "Abstract Strategy",
       "Animals"
-    ]
+    ],
+    "description": "Hive is a strategic game for two players that is not restricted by a board and can be played anywhere on any flat surface. Hive is made up of twenty two pieces, eleven black and eleven white, resembling a variety of creatures each with a unique way of moving. With no setting up to do, the game begins when the first piece is placed down. As the subsequent pieces are placed this forms a pattern that",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 20
   },
   "3076": {
     "name": "Puerto Rico",
@@ -162,7 +230,11 @@
       "City Building",
       "Economic",
       "Farming"
-    ]
+    ],
+    "description": "In Puerto Rico, players assume the roles of colonial governors on the island of Puerto Rico. The aim of the game is to amass victory points by shipping goods to Europe or by constructing buildings. Each player uses a separate small board with spaces for city buildings, plantations, and resources. Shared between the players are three ships, a trading house, and a supply of resources and doubloons. ",
+    "minPlayers": 3,
+    "maxPlayers": 5,
+    "playingTime": 150
   },
   "7854": {
     "name": "YINSH",
@@ -170,7 +242,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "In YINSH, the players each start with five rings on the board. Every time a ring is moved, it leaves a marker behind. Markers are white on one side and black on the other. When markers are jumped over by a ring they must be flipped, so their color is constantly changing. The players must try to form a row of five markers with their own color face up. If a player succeeds in doing so, he removes on",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "9209": {
     "name": "Ticket to Ride",
@@ -178,7 +254,11 @@
     "subdomain": "Family",
     "categories": [
       "Trains"
-    ]
+    ],
+    "description": "With elegantly simple gameplay, Ticket to Ride can be learned in under 15 minutes. Players collect cards of various types of train cars they then use to claim railway routes in North America. The longer the routes, the more points they earn. Additional points come to those who fulfill Destination Tickets – goal cards that connect distant cities; and to the player who builds the longest continuous ",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 60
   },
   "9609": {
     "name": "War of the Ring",
@@ -188,7 +268,11 @@
       "Adventure",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "In War of the Ring, one player takes control of the Free Peoples (FP), the other player controls Shadow Armies (SA). Initially, the Free People Nations are reluctant to take arms against Sauron, so they must be attacked by Sauron or persuaded by Gandalf or other Companions, before they start to fight properly: this is represented by the Political Track, which shows if a Nation is ready to fight in",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "11825": {
     "name": "Empire of the Sun: The Pacific War 1941-1945",
@@ -198,7 +282,11 @@
       "Nautical",
       "Wargame",
       "World War II"
-    ]
+    ],
+    "description": "(from GMT website:) Empire of the Sun (EotS) is Mark Herman's third card driven design since he introduced the system to the hobby in We The People. EotS is a strategic level look at the entire War in the Pacific from the attack on Pearl Harbor until the surrender of Japan. EotS is the first card driven game (CDG) to move the system closer to a classic hexagon wargame, while retaining all of the t",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "playingTime": 360
   },
   "12333": {
     "name": "Twilight Struggle",
@@ -208,7 +296,11 @@
       "Modern Warfare",
       "Political",
       "Wargame"
-    ]
+    ],
+    "description": "Now the trumpet summons us again, not as a call to bear arms, though arms we need; not as a call to battle, though embattled we are – but a call to bear the burden of a long twilight struggle. – John F. Kennedy In 1945, unlikely allies toppled Hitler's war machine, while humanity's most devastating weapons forced the Japanese Empire to its knees in a storm of fire. Where once there stood many grea",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "14105": {
     "name": "Commands & Colors: Ancients",
@@ -217,7 +309,11 @@
     "categories": [
       "Ancient",
       "Wargame"
-    ]
+    ],
+    "description": "From the designer (about his Commands and Colors system, C&C: Ancients, and Memoir' 44): \"Commands & Colors: Ancients depicts warfare from the Dawn of Military History (3000 BC) to the opening of the Dark Ages (400 AD). Quite an ambitious undertaking for one game, yet Commands & Colors, by design, is a unique historical wargame system which allows players to effectively portray stylized battles fr",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "17392": {
     "name": "Here I Stand",
@@ -227,7 +323,11 @@
       "Negotiation",
       "Pike and Shot",
       "Political"
-    ]
+    ],
+    "description": "Here I Stand: Wars of the Reformation 1517-1555 is the first game in over 25 years to cover the political and religious conflicts of early 16th Century Europe. Few realize that the greatest feats of Martin Luther, John Calvin, Ignatius of Loyola, Henry VIII, Charles V, Francis I, Suleiman the Magnificent, Ferdinand Magellan, Hernán Cortés, and Nicolaus Copernicus all fall within this narrow 40-yea",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 360
   },
   "18098": {
     "name": "Napoleon's Triumph",
@@ -236,7 +336,11 @@
     "categories": [
       "Napoleonic",
       "Wargame"
-    ]
+    ],
+    "description": "(From the publisher) Napoleon’s Triumph is built on the same foundations as its acclaimed predecessor, Bonaparte at Marengo, but is bigger and grander in scale. It uses two boards to make a double-size 44\" x 34\" map of the Austerlitz battlefield and has twice as many pieces as the earlier game, but defying the tradition that big wargames must also take a long time to play, Napoleon’s Triumph can b",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "21050": {
     "name": "Combat Commander: Europe",
@@ -245,7 +349,11 @@
     "categories": [
       "Wargame",
       "World War II"
-    ]
+    ],
+    "description": "Combat Commander: Europe is a card-driven board game covering tactical infantry combat in the European Theater of World War II. One player takes the role of the Axis (Germany) while another player commands the Allies (America or Russia). These two players will take turns playing one or more “Fate” cards from their hands in order to activate their units on the mapboard for various military function",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "25021": {
     "name": "Sekigahara: The Unification of Japan",
@@ -255,7 +363,11 @@
       "Civil War",
       "Pike and Shot",
       "Wargame"
-    ]
+    ],
+    "description": "The battle of Sekigahara, fought in 1600 at a crossroads in Japan, unified that nation under the Tokugawa family for more than 250 years. Sekigahara allows you to re-contest that war as Ishida Mitsunari, defender of a child heir, or Tokugawa Ieyasu, Japan's most powerful daimyo (feudal lord). The campaign lasted only 7 weeks, during which each side improvised an army and a strategy with what force",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "27976": {
     "name": "Heroscape Master Set: Swarm of the Marro",
@@ -265,7 +377,11 @@
       "Adventure",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "The second Master Set for the HeroScape series of games. Many different battlefields can be built by attaching and stacking the tiles. Each unit in the Master Set has a movement rating which is the number of hexes it can move in a turn. Moving up a level counts as a hex; moving down does not incur that penalty. Moving down more levels than your height when moving from one hex to another counts as ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "28143": {
     "name": "Race for the Galaxy",
@@ -275,7 +391,11 @@
       "Card Game",
       "Civilization",
       "Economic"
-    ]
+    ],
+    "description": "In Race for the Galaxy, players build galactic civilizations by playing cards representing worlds or technical and social developments. Each round, players secretly and simultaneously select an action card corresponding to one phase of a round. These phases let players draw cards, play cards, add goods to worlds, or consume goods for VP chips. Only the phases chosen will occur that round. Every pl",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "28181": {
     "name": "Combat Commander: Pacific",
@@ -284,7 +404,11 @@
     "categories": [
       "Wargame",
       "World War II"
-    ]
+    ],
+    "description": "Combat Commander:Pacific is a card-driven board game covering tactical infantry combat in the Pacific Theater of World War II. CC:P's main theme is the addition of three new factions to the Combat Commander family: Imperial Japan the Pacific US - with a strong emphasis on the US Marine Corps the Pacific Commonwealth - focusing on Indian and ANZAC forces CC:P is a stand alone game in the card-drive",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "28720": {
     "name": "Brass: Lancashire",
@@ -294,7 +418,11 @@
       "Age of Reason",
       "Economic",
       "Educational"
-    ]
+    ],
+    "description": "Brass: Lancashire — first published as Brass — is an economic strategy game that tells the story of competing cotton entrepreneurs in Lancashire during the industrial revolution. You must develop, build and establish your industries and network so that you can capitalize on demand for iron, coal and cotton. The game is played over two halves: the canal phase and the rail phase. To win the game, sc",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "29603": {
     "name": "D-Day at Omaha Beach",
@@ -303,7 +431,11 @@
     "categories": [
       "Wargame",
       "World War II"
-    ]
+    ],
+    "description": "A solitaire study of America's most bloody and heroic day in WWII. The player controls the US forces landing along the five mile stretch of Omaha Beach on D-Day and their desperate struggle to establish a viable beachhead. The game covers the entire first day at a time scale that varies from 15 minutes per turn (during the initial landings) to 30 minutes per turn later in the day. Units are compan",
+    "minPlayers": 1,
+    "maxPlayers": 1,
+    "playingTime": 480
   },
   "30549": {
     "name": "Pandemic",
@@ -312,7 +444,11 @@
     "categories": [
       "Medical",
       "Travel"
-    ]
+    ],
+    "description": "In Pandemic, several virulent diseases have broken out simultaneously all over the world! The players are disease-fighting specialists whose mission is to treat disease hotspots while researching cures for each of four plagues before they get out of hand. The game board depicts several major population centers on Earth. On each turn, a player can use up to four actions to travel between cities, tr",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "31260": {
     "name": "Agricola",
@@ -322,7 +458,11 @@
       "Animals",
       "Economic",
       "Farming"
-    ]
+    ],
+    "description": "In Agricola, you're a farmer in a wooden shack with your spouse and little else. At first, on a turn, your family gets to take only two actions, one for you and one for your spouse, as might be found among all the possibilities on a farm: plowing fields; collecting materials; building fences, and so on. There are numerous choices available, and while the game progresses you'll have more and more, ",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 150
   },
   "31999": {
     "name": "TZAAR",
@@ -330,7 +470,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "TZAAR is a game about making choices. Both players have 30 pieces, divided in three types: 6 Tzaars, 9 Tzarras and 15 Totts. The three types of pieces form a trinity: They cannot exist without each other. The aim is either to make the opponent run out of one of the three types of pieces or to put him in a position in which he cannot capture any more. The tricky question the players will have to as",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "35677": {
     "name": "Le Havre",
@@ -340,7 +484,11 @@
       "City Building",
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "In Le Havre, a player's turn consists of two parts: First, distribute newly supplied goods onto the offer spaces; then take an action. As an action, players may choose either to take all goods of one type from an offer space or to use one of the available buildings. Building actions allow players to upgrade goods, sell them or use them to build their own buildings and ships. Buildings are both an ",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 150
   },
   "36218": {
     "name": "Dominion",
@@ -349,7 +497,11 @@
     "categories": [
       "Card Game",
       "Medieval"
-    ]
+    ],
+    "description": "\"You are a monarch, like your parents before you, a ruler of a small pleasant kingdom of rivers and evergreens. Unlike your parents, however, you have hopes and dreams! You want a bigger and more pleasant kingdom, with more rivers and a wider variety of trees. You want a Dominion! In all directions lie fiefs, freeholds, and feodums. All are small bits of land, controlled by petty lords and verging",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "36553": {
     "name": "Time's Up! Title Recall!",
@@ -359,7 +511,11 @@
       "Humor",
       "Movies / TV / Radio theme",
       "Party Game"
-    ]
+    ],
+    "description": "Based on the popular game Time's Up!, Time's Up: Title Recall challenges players to guess the titles of books, films, songs, and more. Players try to get their teammates to guess the same set of titles over three rounds. In each round, one member of a team tries to get their teammates to guess as many titles as possible in 30 seconds. In round 1, almost any kind of clue is allowed. In round 2, no ",
+    "minPlayers": 4,
+    "maxPlayers": 18,
+    "playingTime": 60
   },
   "36648": {
     "name": "Pyramid of Pengqueen",
@@ -369,7 +525,11 @@
       "Children's Game",
       "Deduction",
       "Maze"
-    ]
+    ],
+    "description": "Fluch der Mumie (Curse of the Mummy) is a game with asymmetrical goals. While one player as the Mummy tries to catch tomb raiders, the other players try to secure as many treasures as possible from the Pyramid. The game is played with magnetic playing pieces on two sides of a vertical board, so the Mummy player cannot see the pieces of the tomb raiders. As the Mummy piece consists of two parts (on",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 45
   },
   "39856": {
     "name": "Dixit",
@@ -379,7 +539,11 @@
       "Card Game",
       "Humor",
       "Party Game"
-    ]
+    ],
+    "description": "Each turn in Dixit, one player is the storyteller who chooses one of the six cards in their hand, then expresses an idea, with sounds or words, that is reflected on that card's image, and places the card face down on the playing surface. Each other player then selects the card that best matches that expression, and passes the selected card to the storyteller, face down. The storyteller shuffles al",
+    "minPlayers": 3,
+    "maxPlayers": 6,
+    "playingTime": 30
   },
   "40354": {
     "name": "Maria",
@@ -389,7 +553,11 @@
       "Age of Reason",
       "Bluffing",
       "Negotiation"
-    ]
+    ],
+    "description": "Maria is a game based on the War of the Austrian Succession, between 1740 and 1748, where Austria was attacked by Prussia, France, Bavaria and Saxony, while only Great Britain, Hanover and the Netherlands (by forming the so-called Pragmatic Army) helped her. Maria is primarily a 3 player game. One player is Austria, the second is France plus Bavaria, while the third player plays as Prussia (Austri",
+    "minPlayers": 2,
+    "maxPlayers": 3,
+    "playingTime": 210
   },
   "41066": {
     "name": "Virgin Queen",
@@ -399,7 +567,11 @@
       "Negotiation",
       "Pike and Shot",
       "Political"
-    ]
+    ],
+    "description": "from GMT website: Virgin Queen: Wars of Religion 1559-1598 is a game of grand strategy for two to six players based on the military, political and religious conflicts within Europe during the reigns of Elizabeth I of England and Philip II of Spain. Each player controls one or more of the major powers that presided over European politics in that day. Spain is the juggernaut, able to draw upon the v",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 420
   },
   "41114": {
     "name": "The Resistance",
@@ -409,7 +581,11 @@
       "Bluffing",
       "Card Game",
       "Deduction"
-    ]
+    ],
+    "description": "The Empire must fall. Our mission must succeed. By destroying their key bases, we will shatter Imperial strength and liberate our people. Yet spies have infiltrated our ranks, ready for sabotage. We must unmask them. In five nights we reshape destiny or die trying. We are the Resistance! The Resistance is a party game of social deduction. It is designed for five to ten players, lasts about 30 minu",
+    "minPlayers": 5,
+    "maxPlayers": 10,
+    "playingTime": 30
   },
   "41916": {
     "name": "The Magic Labyrinth",
@@ -419,7 +595,11 @@
       "Children's Game",
       "Fantasy",
       "Maze"
-    ]
+    ],
+    "description": "The little magician apprentices have lost some magic objects inside of the master’s maze. Now they try to collect them before the Master notices anything. However, in the maze there are invisible walls and only one of the missing objects is revealed at a time. So they have to make their way through the maze by means of a good memory and lots of skill. Each player moves their magician over the boar",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "46213": {
     "name": "Telestrations",
@@ -429,7 +609,11 @@
       "Humor",
       "Party Game",
       "Real-time"
-    ]
+    ],
+    "description": "The award-winning party game Telestrations will get your family and friends laughing as they draw what they see, then guess what they saw for hours of hilarious miscommunication. All players simultaneously sketch, pass, and guess while revealing laugh-out-loud and unpredictable outcomes!",
+    "minPlayers": 4,
+    "maxPlayers": 8,
+    "playingTime": 30
   },
   "55690": {
     "name": "Kingdom Death: Monster",
@@ -439,7 +623,11 @@
       "Adventure",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "Kingdom Death: Monster is a fully cooperative tabletop hobby game experience. Set in a unique nightmarish world devoid of most natural resources, you control a settlement at the dawn of its existence. Fight monsters, craft weapons and gear, and develop your settlement to ensure your survival from generation to generation. Campaign System Embark alone or with up to 3 friends (5 with game variant) o",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 180
   },
   "62222": {
     "name": "Commands & Colors: Napoleonics",
@@ -448,7 +636,11 @@
     "categories": [
       "Napoleonic",
       "Wargame"
-    ]
+    ],
+    "description": "Commands & Colors: Napoleonics allows you to re-fight epic battles of the Napoleonic era. In this core volume, the focus is on the French and the British, two bitter rivals in the struggle for European preeminence during the time of Napoleon. As with other games in the Commands & Colors genre, units in both armies can only move and fight when ordered. The command cards supply those orders, and the",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 90
   },
   "68448": {
     "name": "7 Wonders",
@@ -458,7 +650,11 @@
       "Ancient",
       "Card Game",
       "City Building"
-    ]
+    ],
+    "description": "You are the leader of one of the 7 great cities of the Ancient World. Gather resources, develop commercial routes, and affirm your military supremacy. Build your city and erect an architectural wonder which will transcend future times. 7 Wonders lasts three ages. In each age, players receive seven cards from a particular deck, choose one of those cards, then pass the remainder to an adjacent playe",
+    "minPlayers": 2,
+    "maxPlayers": 7,
+    "playingTime": 30
   },
   "70323": {
     "name": "King of Tokyo",
@@ -468,7 +664,11 @@
       "Dice",
       "Fighting",
       "Movies / TV / Radio theme"
-    ]
+    ],
+    "description": "In King of Tokyo, you play mutant monsters, gigantic robots, and strange aliens—all of whom are destroying Tokyo and whacking each other in order to become the one and only King of Tokyo. At the start of each turn, you roll six dice, which show the following six symbols: 1, 2, or 3 Victory Points, Energy, Heal, and Attack. Over three successive throws, choose whether to keep or discard each die in",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 30
   },
   "77423": {
     "name": "The Lord of the Rings: The Card Game",
@@ -478,7 +678,11 @@
       "Adventure",
       "Card Game",
       "Collectible Components"
-    ]
+    ],
+    "description": "The Lord of the Rings: The Card Game is a cooperative adventure game in which the players attempt to complete a scenario, each with up to three heroes of their choice and a deck of allies, events and attachments to support them. Each round, players send their heroes and allies to quest or to fight with enemies that engage them. However, as the heroes and allies exhaust after questing, defending, o",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "82420": {
     "name": "Summoner Wars: Guild Dwarves vs Cave Goblins",
@@ -488,7 +692,11 @@
       "Card Game",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "The battle ignites in the Mountains of Sorrow! The Mountains of Sorrow are aptly named, for they have been the site of the unending clash between Goblin and Dwarf. The Cave Goblins seek merely to throw themselves upon any foe with the will to fight. The Guild Dwarves sit in their mountain halls, jealously guarding their ancient riches. But with the discovery of the Summoning Stones comes a new kin",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "82421": {
     "name": "Summoner Wars: Phoenix Elves vs Tundra Orcs",
@@ -498,7 +706,11 @@
       "Card Game",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "Blood will flow in the Wasted Summerlands! What was once a fertile land of unparalleled beauty was replaced by a wasteland of ice. Now the Phoenix Elves, trapped for millennia in their volcanic halls, have found a Summoning Stone and are ready to seek revenge for the destruction of the Summerlands. But in their way are the Tundra Orcs: frozen reavers with a Stone of their own, as well as plans for",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "84876": {
     "name": "The Castles of Burgundy",
@@ -508,7 +720,11 @@
       "Animals",
       "Dice",
       "Medieval"
-    ]
+    ],
+    "description": "The game is set in the Burgundy region of High Medieval France. Each player takes on the role of an aristocrat, originally controlling a small princedom. While playing they aim to build settlements and powerful castles, practice trade along the river, exploit silver mines, and use the knowledge of travelers. The game is about players taking settlement tiles from the game board and placing them int",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "91514": {
     "name": "Rhino Hero",
@@ -518,7 +734,11 @@
       "Action / Dexterity",
       "Animals",
       "Card Game"
-    ]
+    ],
+    "description": "Super Rhino! presents players with an incredibly heroic – and regrettably heavy – rhinoceros who is eager to climb a tall building and leap other tall buildings in a single bound. First, though, you need to construct that building. Players each start the game with five roof cards, and they take turns adding walls and roofs to a single building. On a turn, you first place walls on the highest floor",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 15
   },
   "92415": {
     "name": "Skull",
@@ -528,7 +748,11 @@
       "Bluffing",
       "Card Game",
       "Party Game"
-    ]
+    ],
+    "description": "Edited description from Bruno Faidutti's write-up of the game in his Ideal Game Library: Skull & Roses is the quintessence of bluffing, a game in which everything is played in the players' heads. Each player plays a face-down card, then each player in turn adds one more card – until someone feels safe enough to state that they can turn a number of cards face up and get only roses. Other players ca",
+    "minPlayers": 3,
+    "maxPlayers": 6,
+    "playingTime": 45
   },
   "92828": {
     "name": "Dixit: Odyssey",
@@ -538,7 +762,11 @@
       "Card Game",
       "Humor",
       "Party Game"
-    ]
+    ],
+    "description": "Dixit Odyssey is both a standalone game and an expansion (Dixit: Odyssey (expansion)) for Jean-Louis Roubira's Dixit, which won Germany's Spiel des Jahres award in 2010. Game play in Dixit Odyssey matches that of Dixit: Each turn one player is the storyteller. This player secretly chooses one card in his hand, then gives a word or sentence to describe this card—but not too obviously. Each other pl",
+    "minPlayers": 3,
+    "maxPlayers": 12,
+    "playingTime": 30
   },
   "93260": {
     "name": "Summoner Wars: Master Set",
@@ -548,7 +776,11 @@
       "Card Game",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "Summoner Wars is a fast-playing, action-packed card game for 2-4 players in which they take on the role of Summoners: powerful beings who harness the power of mysterious Summoning Stones to lead their race to conquest on the war-torn planet of Itharia. These Summoners wield terrible magic on the battlefield, freezing their foes in place, draining their enemies of power, and even bringing rains of ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "96848": {
     "name": "Mage Knight Board Game",
@@ -558,7 +790,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "The Mage Knight board game puts you in control of one of four powerful Mage Knights as you explore (and conquer) a corner of the Mage Knight universe under the control of the Atlantean Empire. Build your army, fill your deck with powerful spells and actions, explore caves and dungeons, and eventually conquer powerful cities controlled by this once-great faction! In competitive scenarios, opposing ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 240
   },
   "98778": {
     "name": "Hanabi",
@@ -568,7 +804,11 @@
       "Card Game",
       "Deduction",
       "Memory"
-    ]
+    ],
+    "description": "Hanabi—named for the Japanese word for \"fireworks\"—is a cooperative game in which players try to create the perfect fireworks show by placing the cards on the table in the right order. (In Japanese, hanabi is written as 花火; these are the ideograms flower and fire, respectively.) The card deck consists of five different colors of cards, numbered 1–5 in each color. For each color, the players try to",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 25
   },
   "101721": {
     "name": "Mage Wars Arena",
@@ -578,7 +818,11 @@
       "Card Game",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "What would it be like for Mages of vastly different schools and philosophies of magic to come together in an arena and fight to the death? How would an Illusionist battle a Druid? Or a Warlock fight a Beastmaster? Or a Priestess fare against a Wizard? Mage Wars — redubbed Mage Wars Arena in 2015 to distinguish it from Mage Wars Academy — pits powerful Mages against each other in deadly arena comba",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 90
   },
   "102794": {
     "name": "Caverna: The Cave Farmers",
@@ -588,7 +832,11 @@
       "Animals",
       "Economic",
       "Fantasy"
-    ]
+    ],
+    "description": "Following along the same lines as its predecessor (Agricola), Caverna: The Cave Farmers is a worker-placement game at heart, with a focus on farming. In the game, you are the bearded leader of a small dwarf family that lives in a little cave in the mountains. You begin the game with a farmer and his spouse, and each member of the farming family represents an action that the player can take each tu",
+    "minPlayers": 1,
+    "maxPlayers": 7,
+    "playingTime": 210
   },
   "103885": {
     "name": "Star Wars: X-Wing Miniatures Game",
@@ -598,7 +846,11 @@
       "Aviation / Flight",
       "Bluffing",
       "Collectible Components"
-    ]
+    ],
+    "description": "Star Wars: X-Wing Miniatures Game is a tactical ship-to-ship combat game in which players take control of powerful Rebel X-wings and nimble Imperial TIE fighters, facing them against each other in fast-paced space combat. Featuring stunningly detailed and painted miniatures, the X-Wing Miniatures Game recreates exciting Star Wars space combat throughout its several included scenarios. Select your ",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 45
   },
   "115746": {
     "name": "War of the Ring: Second Edition",
@@ -608,7 +860,11 @@
       "Fantasy",
       "Fighting",
       "Novel-based"
-    ]
+    ],
+    "description": "In War of the Ring, one player takes control of the Free Peoples (FP) while the other player controls Shadow Armies (SA). Initially, the Free People Nations are reluctant to take arms against Sauron, so they must be attacked by Sauron or persuaded by Gandalf or other Companions before they start to fight in earnest: this is represented by the Political Track which shows if a Nation is ready to fig",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 240
   },
   "120677": {
     "name": "Terra Mystica",
@@ -618,7 +874,11 @@
       "Civilization",
       "Economic",
       "Fantasy"
-    ]
+    ],
+    "description": "In the land of Terra Mystica dwell 14 different peoples in seven landscapes, and each group is bound to its own home environment, so to develop and grow, they must terraform neighboring landscapes into their home environments in competition with the other groups. Terra Mystica is a full information game, without any luck, that rewards strategic planning. Each player governs one of the 14 groups. W",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 150
   },
   "124361": {
     "name": "Concordia",
@@ -628,7 +888,11 @@
       "Ancient",
       "Economic",
       "Nautical"
-    ]
+    ],
+    "description": "Two thousand years ago, the Roman Empire ruled the lands around the Mediterranean Sea. With peace at the borders, harmony inside the provinces, uniform law, and a common currency, the economy thrived and gave rise to mighty Roman dynasties as they expanded throughout the numerous cities. Guide one of these dynasties and send colonists to the remote realms of the Empire; develop your trade network;",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 100
   },
   "124742": {
     "name": "Android: Netrunner",
@@ -638,7 +902,11 @@
       "Bluffing",
       "Card Game",
       "Collectible Components"
-    ]
+    ],
+    "description": "Welcome to New Angeles, home of the Beanstalk. From our branch offices in this monument of human achievement, NBN proudly broadcasts all your favorite media programming. We offer fully comprehensive streaming in music and threedee, news and sitcoms, classic movies and sensies. We cover it all. Ours is a brave new age, and as humanity hurtles into space and the future with an astonishing series of ",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 45
   },
   "125153": {
     "name": "The Gallerist",
@@ -646,7 +914,11 @@
     "subdomain": "Strategy",
     "categories": [
       "Economic"
-    ]
+    ],
+    "description": "This age of art and capitalism has created a need for a new occupation - The Gallerist. Combining the elements of an Art dealer, museum curator, and Artists’ manager, you are about to take on that job! You will promote and nurture Artists; buy, display, and sell their Art; and build and exert your international reputation. As a result, you will achieve the respect needed to draw visitors to your G",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "126163": {
     "name": "Tzolk'in: The Mayan Calendar",
@@ -656,7 +928,11 @@
       "Ancient",
       "Civilization",
       "Economic"
-    ]
+    ],
+    "description": "Tzolkin: The Mayan Calendar presents a new game mechanism: dynamic worker placement. Players representing different Mayan tribes place their workers on giant connected gears, and as the gears rotate they take the workers to different action spots. During a turn, players can either (a) place one or more workers on the lowest visible spot of the gears or (b) pick up one or more workers. When placing",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "128882": {
     "name": "The Resistance: Avalon",
@@ -666,7 +942,11 @@
       "Bluffing",
       "Card Game",
       "Deduction"
-    ]
+    ],
+    "description": "The Resistance: Avalon pits the forces of Good and Evil in a battle to control the future of civilization. Arthur represents the future of Britain, a promise of prosperity and honor, yet hidden among his brave warriors are Mordred's unscrupulous minions. These forces of evil are few in number but have knowledge of each other and remain hidden from all but one of Arthur's servants. Merlin alone kno",
+    "minPlayers": 5,
+    "maxPlayers": 10,
+    "playingTime": 30
   },
   "129622": {
     "name": "Love Letter",
@@ -676,7 +956,11 @@
       "Card Game",
       "Deduction",
       "Renaissance"
-    ]
+    ],
+    "description": "All of the eligible young men (and many of the not-so-young) seek to woo the princess of Tempest. Unfortunately, she has locked herself in the palace, and you must rely on others to take your romantic letters to her. Will yours reach her first? Love Letter is a game of risk, deduction, and luck for 2–4 players. Your goal is to get your love letter into Princess Annette's hands while deflecting the",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "130960": {
     "name": "Triumph & Tragedy: European Balance of Power 1936-1945",
@@ -686,7 +970,11 @@
       "Economic",
       "Negotiation",
       "Political"
-    ]
+    ],
+    "description": "Triumph & Tragedy is a geopolitical strategy game for 3 players (also playable by 2) covering the competition for European supremacy during the period 1936-45 between Capitalism (the West), Communism (the Soviet Union) and Fascism (the Axis). It has diplomatic, economic, technological and military components, and can be won by gaining economic hegemony or technological supremacy (A-bomb), or by va",
+    "minPlayers": 2,
+    "maxPlayers": 3,
+    "playingTime": 360
   },
   "131357": {
     "name": "Coup",
@@ -696,7 +984,11 @@
       "Bluffing",
       "Card Game",
       "Deduction"
-    ]
+    ],
+    "description": "You are head of a family in an Italian city-state, a city run by a weak and corrupt court. You need to manipulate, bluff and bribe your way to power. Your object is to destroy the influence of all the other families, forcing them into exile. Only one family will survive... In Coup, you want to be the last player with influence in the game, with influence being represented by face-down character ca",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 15
   },
   "144189": {
     "name": "Fire in the Lake",
@@ -706,7 +998,11 @@
       "Civil War",
       "Modern Warfare",
       "Political"
-    ]
+    ],
+    "description": "Volume IV in the Series: COIN (GMT) dives headlong into the momentous and complex battle for South Vietnam. A unique multi-faction treatment of the Vietnam War, Fire in the Lake will take players on US heliborne sweeps of the jungle and Communist infiltration of the South, and into inter-allied conferences, Saigon politics, interdiction of the Ho Chi Minh Trail, air defense of Northern infrastruct",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 180
   },
   "145639": {
     "name": "Coconuts",
@@ -716,7 +1012,11 @@
       "Action / Dexterity",
       "Animals",
       "Children's Game"
-    ]
+    ],
+    "description": "Coconuts is a dexterity game based on the \"Monkey King\" character from Chinese mythology. In the game, players launch coconuts toward a field of cups in the middle of the playing area. Land in a cup, and you get to stack it on your player board; land in a cup on someone else's board, and you get to move it to yours. By playing special \"Monkey King Magic\" cards, you can force opponents to shoot bli",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "146021": {
     "name": "Eldritch Horror",
@@ -726,7 +1026,11 @@
       "Adventure",
       "Fighting",
       "Horror"
-    ]
+    ],
+    "description": "Across the globe, ancient evil is stirring. Now, you and your trusted circle of colleagues must travel around the world, working against all odds to hold back the approaching horror. Foul monsters, brutal encounters, and obscure mysteries will take you to your limit and beyond. All the while, you and your fellow investigators must unravel the otherworldy mysteries scattered around the globe in ord",
+    "minPlayers": 1,
+    "maxPlayers": 8,
+    "playingTime": 240
   },
   "146312": {
     "name": "Ghost Fightin' Treasure Hunters",
@@ -736,7 +1040,11 @@
       "Adventure",
       "Children's Game",
       "Fantasy"
-    ]
+    ],
+    "description": "In a dark and dreary house, every sound sends a cold chill through your bones. A door opens – is someone there? You hear whispers, but no one answers when you call. Your eyes and ears may deceive you, but the hair on your neck tells you what you already know: There are ghosts here — and not just one for these spirits are legion. In Ghost Fightin' Treasure Hunters, a.k.a. Geister, Geister, Schatzsu",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "148228": {
     "name": "Splendor",
@@ -746,7 +1054,11 @@
       "Card Game",
       "Economic",
       "Renaissance"
-    ]
+    ],
+    "description": "Splendor is a game of chip-collecting and card development. Players are merchants of the Renaissance trying to buy gem mines, means of transportation, shops—all in order to acquire the most prestige points. If you're wealthy enough, you might even receive a visit from a noble at some point, which of course will further increase your prestige. On your turn, you may (1) collect chips (gems), or (2) ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "150145": {
     "name": "Skull King",
@@ -756,7 +1068,11 @@
       "Card Game",
       "Nautical",
       "Pirates"
-    ]
+    ],
+    "description": "Skull King is a trick-taking game similar to Oh Hell!, Wizard, Euchre and Spades, with players needing to state how many tricks they think they'll win each round. A unique element of this game is that bidding takes place simultaneously, leading to rounds that are sometimes over, or under-bid. As players must win the exact number of tricks that they bid to earn points, winning too many tricks is ju",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 30
   },
   "153016": {
     "name": "Telestrations: 12 Player Party Pack",
@@ -766,7 +1082,11 @@
       "Humor",
       "Party Game",
       "Real-time"
-    ]
+    ],
+    "description": "Are you ready to party with a bigger group? With the all new Telestrations Party Pack, you can have a LOL, side-splitting time with up to 12 people! Prepare for more players, more laughs, and more unpredictable results! The silly sketchin’ & guessin’ possibilities are endless! Combining the schoolyard favorite ‘telephone game’ with a drawing game, Telestrations has players draw what they see then ",
+    "minPlayers": 4,
+    "maxPlayers": 12,
+    "playingTime": 30
   },
   "153938": {
     "name": "Camel Up",
@@ -776,7 +1096,11 @@
       "Animals",
       "Arabian",
       "Dice"
-    ]
+    ],
+    "description": "In Camel Up, up to eight players bet on five racing camels, trying to suss out which will place first and second in a quick race around a pyramid. The earlier you place your bet, the more you can win — should you guess correctly, of course. Camels don't run neatly, however, sometimes landing on top of another one and being carried toward the finish line. Who's going to run when? That all depends o",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 30
   },
   "155873": {
     "name": "Power Grid Deluxe: Europe/North America",
@@ -785,7 +1109,11 @@
     "categories": [
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "Power Grid deluxe: Europe/North America is a standalone game in the Power Grid universe. For the expansion to regular Power Grid see Power Grid: Europe/North America. For the 10th anniversary of the highly successful game Power Grid we present this new deluxe version including brand new components. Wait for a huge double-sided game board presenting Europe and North America, newly customized wooden",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 120
   },
   "156129": {
     "name": "Deception: Murder in Hong Kong",
@@ -795,7 +1123,11 @@
       "Bluffing",
       "Deduction",
       "Murder / Mystery"
-    ]
+    ],
+    "description": "Deception: Murder in Hong Kong is a game of deduction and deception for 4-12 players that plays in about 20 minutes. In the game, players take on the roles of investigators attempting to solve a murder case – but there's a twist. The killer is one of the investigators! Each player's role and team are randomly assigned at the start of play and include the unique roles of Forensic Scientist, Witness",
+    "minPlayers": 4,
+    "maxPlayers": 12,
+    "playingTime": 20
   },
   "156546": {
     "name": "Monikers",
@@ -805,7 +1137,11 @@
       "Card Game",
       "Humor",
       "Mature / Adult"
-    ]
+    ],
+    "description": "Monikers is a party game based on the public domain game Celebrities, where players take turns attempting to get their teammates to guess names by describing or imitating well-known people. In the first round, clue givers can say anything they want, except for the name itself. For the second round, clue givers can only say one word. And in the final round, clue givers can’t say anything at all: th",
+    "minPlayers": 4,
+    "maxPlayers": 16,
+    "playingTime": 60
   },
   "157354": {
     "name": "Five Tribes: The Djinns of Naqala",
@@ -815,7 +1151,11 @@
       "Arabian",
       "Fantasy",
       "Mythology"
-    ]
+    ],
+    "description": "Crossing into the Land of 1001 Nights, your caravan arrives at the fabled Sultanate of Naqala. The old sultan just died and control of Naqala is up for grabs! The oracles foretold of strangers who would maneuver the Five Tribes to gain influence over the legendary city-state. Will you fulfill the prophecy? Invoke the old Djinns and move the Tribes into position at the right time, and the Sultanate",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 80
   },
   "158889": {
     "name": "Summoner Wars: Alliances Master Set",
@@ -825,7 +1165,11 @@
       "Card Game",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "Summoner Wars is a fast-playing, action-packed 2-4 player card game. Players take on the role of Summoners: powerful beings who harness the power of mysterious Summoning Stones to lead their race to conquest on the war-torn planet of Itharia. These Summoners wield terrible magic on the battlefield, freezing their foes in place, draining their enemies of power, and even bringing rains of fire down ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "160477": {
     "name": "Onitama",
@@ -833,7 +1177,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "Onitama is a two-player, perfect information abstract game with a random starting set-up. On a 5x5 board, both players start with five pawns on their side, with the main pawn in the middle. Each player has two open cards that each display a possible move for any of her pieces. There is a fifth card that cannot be used by either player. On a player's turn, she chooses one of her cards, moves one of",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 20
   },
   "161533": {
     "name": "Lisboa",
@@ -843,7 +1191,11 @@
       "City Building",
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "Lisboa is a game about the reconstruction of Lisboa after the great earthquake of 1755. On November 1, 1755, Lisbon suffered an earthquake of an estimated magnitude of 8.5–9.0, followed by a tsunami and three days of fires. The city was almost totally destroyed. The Marques of Pombal — Sebastião José de Carvalho e Melo — was the then Minister of Foreign Affairs and the King put him in charge of th",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "161936": {
     "name": "Pandemic Legacy: Season 1",
@@ -852,7 +1204,11 @@
     "categories": [
       "Environmental",
       "Medical"
-    ]
+    ],
+    "description": "Pandemic Legacy is a co-operative campaign game, with an overarching story arc played through 12-24 sessions, depending on how well your group does at the game. At the beginning, the game starts in a very similar fashion as basic Pandemic, in which your team of disease-fighting specialists races against the clock to travel around the world, treating disease hot spots while researching cures for ea",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "162886": {
     "name": "Spirit Island",
@@ -862,7 +1218,11 @@
       "Environmental",
       "Fantasy",
       "Mythology"
-    ]
+    ],
+    "description": "In the most distant reaches of the world, magic still exists, embodied by spirits of the land, of the sky, and of every natural thing. As the great powers of Europe stretch their colonial empires further and further, they will inevitably lay claim to a place where spirits still hold power - and when they do, the land itself will fight back alongside the islanders who live there. Spirit Island is a",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "163412": {
     "name": "Patchwork",
@@ -872,7 +1232,11 @@
       "Abstract Strategy",
       "Economic",
       "Puzzle"
-    ]
+    ],
+    "description": "In Patchwork, two players compete to build the most aesthetic (and high-scoring) patchwork quilt on a personal 9x9 game board. To start play, lay out all of the patches at random in a circle and place a marker directly clockwise of the 2-1 patch. Each player takes five buttons — the currency/points in the game — and someone is chosen as the start player. On a turn, a player either purchases one of",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "164153": {
     "name": "Star Wars: Imperial Assault",
@@ -882,7 +1246,11 @@
       "Adventure",
       "Exploration",
       "Fighting"
-    ]
+    ],
+    "description": "Star Wars: Imperial Assault is a strategy board game of tactical combat and missions for two to five players, offering two distinct games of battle and adventure in the Star Wars universe! Imperial Assault puts you in the midst of the Galactic Civil War between the Rebel Alliance and the Galactic Empire after the destruction of the Death Star over Yavin 4. In this game, you and your friends can pa",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 120
   },
   "164928": {
     "name": "Orléans",
@@ -892,7 +1260,11 @@
       "Medieval",
       "Religious",
       "Travel"
-    ]
+    ],
+    "description": "During the medieval goings-on around Orléans, you must assemble a following of farmers, merchants, knights, monks, etc. to gain supremacy through trade, construction and science in medieval France. In Orléans, you will recruit followers and put them to work to make use of their abilities. Farmers and Boatmen supply you with money and goods; Knights expand your scope of action and secure your merca",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 90
   },
   "165722": {
     "name": "KLASK",
@@ -901,7 +1273,11 @@
     "categories": [
       "Action / Dexterity",
       "Real-time"
-    ]
+    ],
+    "description": "The KLASK game board is shaped like a ball field with two deep holes functioning as goals in each end of the field. In the middle of the field, three white magnetic pieces serve as \"obstacles\" – do NOT attract them to your own gaming piece! Your gaming piece is a black magnet. You control it by holding a large magnet under the board. This magnet is connected to a small magnet placed on the field. ",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 10
   },
   "167355": {
     "name": "Nemesis",
@@ -911,7 +1287,11 @@
       "Adventure",
       "Horror",
       "Miniatures"
-    ]
+    ],
+    "description": "Playing Nemesis will take you into the heart of sci-fi survival horror in all its terror. A soldier fires blindly down a corridor, trying to stop the alien advance. A scientist races to find a solution in his makeshift lab. A traitor steals the last escape pod in the very last moment. Intruders you meet on the ship are not only reacting to the noise you make but also evolve as the time goes by. Th",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 180
   },
   "167791": {
     "name": "Terraforming Mars",
@@ -921,7 +1301,11 @@
       "Civilization",
       "Economic",
       "Environmental"
-    ]
+    ],
+    "description": "In the 2400s, mankind begins to terraform the planet Mars. Giant corporations, sponsored by the World Government on Earth, initiate huge projects to raise the temperature, the oxygen level, and the ocean coverage until the environment is habitable. In Terraforming Mars, you play one of those corporations and work together in the terraforming process, but compete for getting victory points that are",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 120
   },
   "169255": {
     "name": "A Game of Thrones: The Card Game (Second Edition)",
@@ -931,7 +1315,11 @@
       "Bluffing",
       "Card Game",
       "Collectible Components"
-    ]
+    ],
+    "description": "In A Game of Thrones: The Card Game, the warring factions of Westeros await your command, inviting you to engage in a life-or-death struggle. In every game, you select devious plots and challenge your opponents on the field of battle, through back alley intrigue, and in the political arena. Whether you play a against a single opponent, in a game known as a joust, or engage in a battle of three or ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "169786": {
     "name": "Scythe",
@@ -941,7 +1329,11 @@
       "Economic",
       "Fighting",
       "Science Fiction"
-    ]
+    ],
+    "description": "It is a time of unrest in 1920s Europa. The ashes from the first great war still darken the snow. The capitalistic city-state known simply as “The Factory”, which fueled the war with heavily armored mechs, has closed its doors, drawing the attention of several nearby countries. Scythe is an engine-building game set in a 1920s era, alternate-history. It is a time of farming and war, broken hearts a",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 115
   },
   "170216": {
     "name": "Blood Rage",
@@ -951,7 +1343,11 @@
       "Fantasy",
       "Fighting",
       "Miniatures"
-    ]
+    ],
+    "description": "\"Life is Battle; Battle is Glory; Glory is ALL\" In Blood Rage, players control the warriors, leader, and ship of their own Viking clan. Ragnarök has come and it’s the end of the world! It’s the Vikings’ last chance to go down in a blaze of glory and secure their places in Valhalla at Odin’s side! As a Viking you can pursue one of many pathways to glory. You can: invade and pillage the land for its",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "171131": {
     "name": "Captain Sonar",
@@ -961,7 +1357,11 @@
       "Deduction",
       "Fighting",
       "Modern Warfare"
-    ]
+    ],
+    "description": "At the bottom of the ocean, no one will hear you scream! In Captain Sonar, you and your teammates control a state-of-the-art submarine and are trying to locate an enemy submarine in order to blow it out of the water before they can do the same to you. Every role is important, and the confrontation is merciless. Be organized and communicate, because a captain is nothing without his crew: the Chief ",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 60
   },
   "172931": {
     "name": "Outfoxed!",
@@ -971,7 +1371,11 @@
       "Animals",
       "Children's Game",
       "Deduction"
-    ]
+    ],
+    "description": "Game description from the publisher: Mrs. Plumpert's prized pot pie has gone missing, and now it's a chicken chase to crack the case! In Outfoxed, you move around the board to gather clues, then use the special evidence scanner to rule out suspects. You have to work together quickly because the guilty fox is high-tailing it towards the exit! Will you halt the hungry hooligan before it flies the co",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "173346": {
     "name": "7 Wonders Duel",
@@ -981,7 +1385,11 @@
       "Ancient",
       "Card Game",
       "City Building"
-    ]
+    ],
+    "description": "In many ways 7 Wonders Duel resembles its parent game 7 Wonders. Over three ages, players acquire cards that provide resources or advance their military or scientific development in order to develop a civilization and complete wonders. What's different about 7 Wonders Duel is that, as the title suggests, the game is solely for two players. Players do not draft cards simultaneously from decks of ca",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "174430": {
     "name": "Gloomhaven",
@@ -991,7 +1399,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "Gloomhaven is a game of Euro-inspired tactical combat in a persistent world of shifting motives. Players will take on the roles of wandering adventurers with their own special sets of skills and their own reasons for traveling to this dark corner of the world. Players must work together out of necessity to clear out menacing dungeons and forgotten ruins. In the process, they will enhance their abi",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "175914": {
     "name": "Food Chain Magnate",
@@ -1000,7 +1412,11 @@
     "categories": [
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "\"Lemonade? They want lemonade? What is the world coming to? I want commercials for burgers on all channels, every 15 minutes. We are the Home of the Original Burger, not a hippie health haven. And place a billboard next to that new house on the corner. I want them craving beer every second they sit in their posh new garden.\" The new management trainee trembles in front of the CEO and tries to poli",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 240
   },
   "177736": {
     "name": "A Feast for Odin",
@@ -1010,7 +1426,11 @@
       "Animals",
       "Farming",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "A Feast for Odin is a saga in the form of a board game. You are reliving the cultural achievements, mercantile expeditions, and pillages of those tribes we know as Viking today — a term that was used quite differently towards the end of the first millennium. When the northerners went out for a raid, they used to say they headed out for a viking. Their Scandinavian ancestors, however, were much mor",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "178900": {
     "name": "Codenames",
@@ -1020,7 +1440,11 @@
       "Card Game",
       "Deduction",
       "Party Game"
-    ]
+    ],
+    "description": "Two rival spymasters know the secret identities of 25 agents. Their teammates know the agents only by their codenames — single-word labels like \"disease\", \"Germany\", and \"carrot\". Yes, carrot. It's a legitimate codename. Each spymaster wants their team to identify their agents first...without uncovering the assassin by mistake. In Codenames, two teams compete to see who can make contact with all o",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 15
   },
   "182028": {
     "name": "Through the Ages: A New Story of Civilization",
@@ -1030,7 +1454,11 @@
       "Card Game",
       "Civilization",
       "Economic"
-    ]
+    ],
+    "description": "Through the Ages: A New Story of Civilization is the new edition of Through the Ages: A Story of Civilization, with many changes small and large to the game's cards over its three ages and extensive changes to how military works. Through the Ages (TTA) is a civilization building game. Each player attempts to build the best civilization through careful resource management, and by: discovering new t",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "182874": {
     "name": "Grand Austria Hotel",
@@ -1038,7 +1466,11 @@
     "subdomain": "Strategy",
     "categories": [
       "Economic"
-    ]
+    ],
+    "description": "In the thick of the Viennese modern age, exquisite cafés are competing for customers. Inspiring artists, important politicians, and tourists from all over the world are populating Vienna and in need of a hotel room. This is your opportunity to turn your little café into a world famous hotel. Hire staff, fulfill the wishes of your guests, and gain the emperor's favor. Only then will your café becom",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "183394": {
     "name": "Viticulture Essential Edition",
@@ -1047,7 +1479,11 @@
     "categories": [
       "Economic",
       "Farming"
-    ]
+    ],
+    "description": "In Viticulture, the players find themselves in the roles of people in rustic, pre-modern Tuscany who have inherited meagre vineyards. They have a few plots of land, an old crush pad, a tiny cellar, and three workers. They each have a dream of being the first to call their winery a true success. The players are in the position of determining how they want to allocate their workers throughout the ye",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "playingTime": 90
   },
   "183562": {
     "name": "Star Wars: X-Wing Miniatures Game – The Force Awakens Core Set",
@@ -1057,7 +1493,11 @@
       "Aviation / Flight",
       "Collectible Components",
       "Miniatures"
-    ]
+    ],
+    "description": "From the publisher: Featuring beautifully detailed painted miniatures, X-Wing is a two-player game of dramatic starfighter battles set in the Star Wars universe. You and your opponent take command of Resistance X-wings and First Order TIE fighters, then battle head-to-head for the fate of the galaxy. Secretly plot your maneuvers, fly at your enemies, take aim, and fire. It takes just minutes to le",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 45
   },
   "184267": {
     "name": "On Mars",
@@ -1067,7 +1507,11 @@
       "City Building",
       "Economic",
       "Exploration"
-    ]
+    ],
+    "description": "Following the success of unmanned rover missions, the United Nations established the Department of Operations and Mars Exploration (D.O.M.E.). The first settlers arrived on Mars in the year 2037 and in the decades after establishment of Mars Base Camp, private exploration companies began work on the creation of a self-sustaining colony. As chief astronaut for one of these enterprises, you want to ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "185343": {
     "name": "Anachrony",
@@ -1076,7 +1520,11 @@
     "categories": [
       "Economic",
       "Science Fiction"
-    ]
+    ],
+    "description": "It is the late 26th century. Earth is recovering from a catastrophic explosion that exterminated the majority of the population centuries ago and made most of the surface uninhabitable due to unearthly weather conditions. The surviving humans organized along four radically different ideologies, called Paths, to rebuild the world as they see fit: Harmony, Dominance, Progress, and Salvation. Followe",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "187645": {
     "name": "Star Wars: Rebellion",
@@ -1086,7 +1534,11 @@
       "Civil War",
       "Movies / TV / Radio theme",
       "Science Fiction"
-    ]
+    ],
+    "description": "Star Wars: Rebellion is a board game of epic conflict between the Galactic Empire and Rebel Alliance for two to four players. Experience the Galactic Civil War like never before. In Rebellion, you control the entire Galactic Empire or the fledgling Rebel Alliance. You must command starships, account for troop movements, and rally systems to your cause. Given the differences between the Empire and ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 240
   },
   "188834": {
     "name": "Secret Hitler",
@@ -1096,7 +1548,11 @@
       "Bluffing",
       "Card Game",
       "Deduction"
-    ]
+    ],
+    "description": "Secret Hitler is a dramatic game of political intrigue and betrayal set in 1930s Germany. Each player is randomly and secretly assigned to be a liberal or a fascist, and one player is Secret Hitler. The fascists coordinate to sow distrust and install their cold-blooded leader; the liberals must find and stop the Secret Hitler before it's too late. The liberal team always has a majority. At the beg",
+    "minPlayers": 5,
+    "maxPlayers": 10,
+    "playingTime": 45
   },
   "192135": {
     "name": "Too Many Bones",
@@ -1106,7 +1562,11 @@
       "Adventure",
       "Dice",
       "Fantasy"
-    ]
+    ],
+    "description": "Too Many Bones comes loaded for bear by breaking into a new genre: the dice-builder RPG. This game takes everything you think you know about dice-rolling and turns it on its head. Dripping with strategy, this fantasy-based RPG puts you in the skin of a new race and takes you on an adventure to the northern territories to root out and defeat growing enemy forces and of course the infamous \"baddie\" ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "192291": {
     "name": "Sushi Go Party!",
@@ -1115,7 +1575,11 @@
     "categories": [
       "Card Game",
       "Party Game"
-    ]
+    ],
+    "description": "Sushi Go Party! expands Sushi Go! with a party platter of mega maki, super sashimi, and endless edamame. You still earn points by picking winning sushi combos, but now you can customize each game by choosing à la carte from a menu of more than twenty delectable dishes. What's more, up to eight players can join in on the sushi-feast. Let the good times roll! —description from the publisher",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 20
   },
   "193042": {
     "name": "Junk Art",
@@ -1124,7 +1588,11 @@
     "categories": [
       "Action / Dexterity",
       "Party Game"
-    ]
+    ],
+    "description": "In Junk Art, players are presented with junk from which they must create art. Thus the name. Junk Art contains more than ten game modes, along with more than sixty big colorful wooden or plastic components. In one version of the game, players pile all of the wooden or plastic parts in the center of the table, then are dealt a number of cards, with each card depicting one of these parts. On a turn,",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 30
   },
   "193738": {
     "name": "Great Western Trail",
@@ -1133,7 +1601,11 @@
     "categories": [
       "American West",
       "Animals"
-    ]
+    ],
+    "description": "America in the 19th century: You are a rancher and repeatedly herd your cattle from Texas to Kansas City, where you send them off by train. This earns you money and victory points. Needless to say, each time you arrive in Kansas City, you want to have your most valuable cattle in tow. However, the \"Great Western Trail\" not only requires that you keep your herd in good shape, but also that you wise",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "194655": {
     "name": "Santorini",
@@ -1143,7 +1615,11 @@
       "Abstract Strategy",
       "Ancient",
       "Mythology"
-    ]
+    ],
+    "description": "Santorini is a re-imagining of the purely abstract 2004 edition. Santorini is an accessible strategy game, simple enough for an elementary school classroom while aiming to provide gameplay depth and content for hardcore gamers to explore. Santorini features variable player powers layered over an otherwise abstract game, with 40 thematic god and hero powers that fundamentally change the way the gam",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "198773": {
     "name": "Codenames: Pictures",
@@ -1153,7 +1629,11 @@
       "Card Game",
       "Deduction",
       "Party Game"
-    ]
+    ],
+    "description": "What are these strange symbols on the map? They are code for locations where spies must contact secret agents! Two rival spymasters know the agent in each location. They deliver coded messages telling their field operatives where to go for clandestine meetings. Operatives must be clever. A decoding mistake could lead to an unpleasant encounter with an enemy agent – or worse, with the assassin! Bot",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 15
   },
   "199561": {
     "name": "Sagrada",
@@ -1163,7 +1643,11 @@
       "Abstract Strategy",
       "Dice",
       "Puzzle"
-    ]
+    ],
+    "description": "Draft dice and use the tools-of-the-trade in Sagrada to carefully construct your stained glass window masterpiece. In more detail, each player builds a stained glass window by building up a grid of dice on their player board. Each board has some restrictions on which color or shade (value) of die can be placed there. Dice of the same shade or color may never be placed next to each other. Dice are ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "199792": {
     "name": "Everdell",
@@ -1173,7 +1657,11 @@
       "Animals",
       "Card Game",
       "City Building"
-    ]
+    ],
+    "description": "Within the charming valley of Everdell, beneath the boughs of towering trees, among meandering streams and mossy hollows, a civilization of forest critters is thriving and expanding. From Everfrost to Bellsong, many a year have come and gone, but the time has come for new territories to be settled and new cities established. You will be the leader of a group of critters intent on just such a task.",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 80
   },
   "200680": {
     "name": "Agricola (Revised Edition)",
@@ -1183,7 +1671,11 @@
       "Animals",
       "Economic",
       "Farming"
-    ]
+    ],
+    "description": "Updated and streamlined for a new generation of players, Agricola, the award-winning and highly acclaimed game by Uwe Rosenberg, features a revised rulebook and gameplay, wood pieces and components, and a card selection from the base game as well as its expansions, revised and updated for this edition. The 17th century was not an easy time to be a farmer. Players begin the game with two family mem",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "201808": {
     "name": "Clank!: A Deck-Building Adventure",
@@ -1192,7 +1684,11 @@
     "categories": [
       "Adventure",
       "Fantasy"
-    ]
+    ],
+    "description": "Burgle your way to adventure in the deck-building board game Clank! Sneak into an angry dragon's mountain lair to steal precious artifacts. Delve deeper to find more valuable loot. Acquire cards for your deck and watch your thievish abilities grow. Be quick and be quiet. One false step and CLANK! Each careless sound draws the attention of the dragon, and each artifact stolen increases its rage. Yo",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "205059": {
     "name": "Mansions of Madness: Second Edition",
@@ -1202,7 +1698,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "Mansions of Madness: Second Edition is a fully co-operative, app-driven board game of horror and mystery for one to five players that takes place in the same universe as Eldritch Horror and Elder Sign. Let the immersive app guide you through the veiled streets of Innsmouth and the haunted corridors of Arkham's cursed mansions as you search for answers and respite. Eight brave investigators stand r",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 180
   },
   "205637": {
     "name": "Arkham Horror: The Card Game",
@@ -1212,7 +1712,11 @@
       "Adventure",
       "Card Game",
       "Collectible Components"
-    ]
+    ],
+    "description": "Something evil stirs in Arkham, and only you can stop it. Blurring the traditional lines between role-playing and card game experiences, Arkham Horror: The Card Game is a Living Card Game of Lovecraftian mystery, monsters, and madness! In the game, you, alone or with a friend (or up to three friends with two Core Sets), become investigators within the quiet New England town of Arkham. You have you",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "playingTime": 120
   },
   "206480": {
     "name": "Imperial Struggle",
@@ -1222,7 +1726,11 @@
       "Age of Reason",
       "American Revolutionary War",
       "Wargame"
-    ]
+    ],
+    "description": "In 1697 the Sun King, Louis XIV, emerged from a decade of war with his Continental ambitions still unsatisfied. Meanwhile, King William III of England sat easier on his new throne than he ever had before. With the Spanish succession crisis unresolved and looming, there were no illusions that the new century would be a quiet one. But neither France nor England could have anticipated the tumult of t",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 240
   },
   "209010": {
     "name": "Mechs vs. Minions",
@@ -1232,7 +1740,11 @@
       "Fantasy",
       "Fighting",
       "Miniatures"
-    ]
+    ],
+    "description": "Mechs vs. Minions is a cooperative tabletop campaign for 2-4 players. Set in the world of Runeterra, players take on the roles of four intrepid Yordles: Corki, Tristana, Heimerdinger, and Ziggs, who must join forces and pilot their newly-crafted mechs against an army of marauding minions. With modular boards, programmatic command lines, and a story-driven campaign, each mission will be unique, put",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "216132": {
     "name": "Clans of Caledonia",
@@ -1241,7 +1753,11 @@
     "categories": [
       "Economic",
       "Farming"
-    ]
+    ],
+    "description": "Clans of Caledonia is a mid-to-heavy economic game set in 19th-century Scotland. At this time, Scotland made the transition from an agricultural to an industrialized country that heavily relied on trade and export. In the following years, food production increased significantly to feed the population growth. Linen was increasingly substituted by the cheaper cotton and raising sheep was given high ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "217083": {
     "name": "LYNGK",
@@ -1249,7 +1765,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "LYNGK is a synthesis of the first six games of the GIPF Project. The game is played with 48 pieces in six colors. At the start of play, all colors are neutral and do not belong to any player. During the course of the game, both players must choose two colors. The goal is to make piles of five pieces of different colors whose top color is their own. Whoever has clever tactics, plans for the future,",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "217372": {
     "name": "The Quest for El Dorado",
@@ -1259,7 +1779,11 @@
       "Adventure",
       "Exploration",
       "Racing"
-    ]
+    ],
+    "description": "In The Quest for El Dorado, players take the roles of expedition leaders who have embarked on a search for the legendary land of gold in the dense jungles of South America. Each player assembles and equips their own team, hiring various helpers from the scout to the scientist to the aborigine. All of them have one goal in mind: Reaching the golden border first and winning all of the riches for the",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "218208": {
     "name": "Ticket to Ride: First Journey (Europe)",
@@ -1268,7 +1792,11 @@
     "categories": [
       "Children's Game",
       "Trains"
-    ]
+    ],
+    "description": "Ticket to Ride: First Journey takes the gameplay of the Ticket to Ride series and scales it down for a younger audience. In general, players collect train cards, claim routes on the map, and try to connect the cities shown on their tickets. In more detail, the game board shows a map of Europe with certain cities being connect by colored paths. Each player starts with four colored train cards in ha",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "218333": {
     "name": "Rhino Hero: Super Battle",
@@ -1278,7 +1806,11 @@
       "Action / Dexterity",
       "Animals",
       "Children's Game"
-    ]
+    ],
+    "description": "Rhino Hero is back on the job — and this time not only does the wobbly skyscraper need to be climbed, but there will also be fierce battles between the four super-heroes Rhino Hero, Giraffe Boy, Big E. and Batguin. Who will win the battles and not let themselves be bothered by the mean, hanging spider monkeys? Rhino Hero: Super Battle is a turbulent 3D stacking game.",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "220308": {
     "name": "Gaia Project",
@@ -1288,7 +1820,11 @@
       "Civilization",
       "Economic",
       "Science Fiction"
-    ]
+    ],
+    "description": "Gaia Project is a new game in the line of Terra Mystica. As in the original Terra Mystica, fourteen different factions live on seven different kinds of planets, and factions are bound to their own home planets, so to develop and grow, they must terraform neighboring planets into their home environments in competition with the other groups. In addition, Gaia planets can be used by all factions for ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "221107": {
     "name": "Pandemic Legacy: Season 2",
@@ -1298,7 +1834,11 @@
       "Environmental",
       "Exploration",
       "Medical"
-    ]
+    ],
+    "description": "Description from the publisher: The world almost ended 71 years ago... The plague came out of nowhere and ravaged the world. Most died within a week. Nothing could stop it. The world did its best. It wasn't good enough. For three generations, we, the last fragments of humanity have lived on the seas, on floating stations called \"havens.\" Far from the plague, we are able to provide supplies to the ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "224037": {
     "name": "Codenames: Duet",
@@ -1308,7 +1848,11 @@
       "Card Game",
       "Deduction",
       "Spies / Secret Agents"
-    ]
+    ],
+    "description": "Codenames Duet keeps the basic elements of Codenames — give one-word clues to try to get someone to identify your agents among those on the table — but now you're working together as a team to find all of your agents. (Why you don't already know who your agents are is a question that Congressional investigators will get on your back about later!) To set up play, lay out 25 word cards in a 5×5 grid",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "224517": {
     "name": "Brass: Birmingham",
@@ -1318,7 +1862,11 @@
       "Age of Reason",
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "Brass: Birmingham is an economic strategy game sequel to Martin Wallace's 2007 masterpiece, Brass. Brass: Birmingham tells the story of competing entrepreneurs in Birmingham during the industrial revolution between the years of 1770 and 1870. It offers a very different story arc and experience from its predecessor. As in its predecessor, you must develop, build and establish your industries and ne",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "225694": {
     "name": "Decrypto",
@@ -1328,7 +1876,11 @@
       "Deduction",
       "Party Game",
       "Spies / Secret Agents"
-    ]
+    ],
+    "description": "Players compete in two teams in Decrypto, with each trying to correctly interpret the coded messages presented to them by their teammates while cracking the codes they intercept from the opposing team. In more detail, each team has its own screen, and in this screen they tuck four cards in pockets numbered 1-4, letting everyone on the same team see the words on these cards while hiding the words f",
+    "minPlayers": 3,
+    "maxPlayers": 8,
+    "playingTime": 45
   },
   "227460": {
     "name": "Hannibal & Hamilcar",
@@ -1338,7 +1890,11 @@
       "Ancient",
       "Political",
       "Wargame"
-    ]
+    ],
+    "description": "Hannibal & Hamilcar: Rome vs Carthage is a 20th anniversary edition of Hannibal: Rome vs. Carthage, an asymmetrical card-driven game for 2 players set in the time of the epic struggle between ancient Rome and Carthage. It presents a conflict between two superpowers of Antiquity from the classical Clausewitzian perspective, according to which a power only reverts to military operations when there i",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 200
   },
   "230802": {
     "name": "Azul",
@@ -1347,7 +1903,11 @@
     "categories": [
       "Abstract Strategy",
       "Renaissance"
-    ]
+    ],
+    "description": "Introduced by the Moors, azulejos (originally white and blue ceramic tiles) were fully embraced by the Portuguese when their king Manuel I, on a visit to the Alhambra palace in Southern Spain, was mesmerized by the stunning beauty of the Moorish decorative tiles. The king, awestruck by the interior beauty of the Alhambra, immediately ordered that his own palace in Portugal be decorated with simila",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "230889": {
     "name": "Aristeia!",
@@ -1357,7 +1917,11 @@
       "Fighting",
       "Miniatures",
       "Science Fiction"
-    ]
+    ],
+    "description": "175 years into the future, humankind has reached the stars. As the hyperpowers vie for influence in the shadows, citizens use their permanent connection to Maya, the interplanetary data network, to revel in a bespoke deluge of thrills. Of course, no form of entertainment is as sought after as Aristeia!, the Human Sphere’s favorite extreme bloodsport. Aristeia! is the new sports game by Corvus Bell",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 90
   },
   "231733": {
     "name": "Obsession",
@@ -1365,7 +1929,11 @@
     "subdomain": "Strategy",
     "categories": [
       "Post-Napoleonic"
-    ]
+    ],
+    "description": "You are the head of a respected but troubled family estate in mid-19th century Victorian England. After several lean decades, family fortunes are looking up! Your goal is to improve your estate so as to be in better standing with the truly influential families in Derbyshire. Obsession is a game of 16 to 20 turns in which players build a deck of Victorian gentry (British social upper class), renova",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "233078": {
     "name": "Twilight Imperium: Fourth Edition",
@@ -1375,7 +1943,11 @@
       "Civilization",
       "Economic",
       "Exploration"
-    ]
+    ],
+    "description": "Twilight Imperium (Fourth Edition) is a game of galactic conquest in which three to six players each take on the role of one of seventeen factions vying for galactic domination through military might, political maneuvering, and economic bargaining. Every faction offers a completely different play experience, from the wormhole-hopping Ghosts of Creuss to the Emirates of Hacan, masters of trade and ",
+    "minPlayers": 3,
+    "maxPlayers": 6,
+    "playingTime": 480
   },
   "233371": {
     "name": "Clank! In! Space!: A Deck-Building Adventure",
@@ -1383,7 +1955,11 @@
     "subdomain": "Family",
     "categories": [
       "Science Fiction"
-    ]
+    ],
+    "description": "The evil Lord Eradikus has all but conquered the galaxy and is now on a victory lap across the sector in his flagship, Eradikus Prime. He may rule with an iron grip, but his most prized artifacts are about to slip through his cyborg claws. You and your fellow thieves have challenged each other to sneak aboard his ship, hack your way into its command module, and steal from him. Along the way, you'l",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "233571": {
     "name": "Star Wars: Legion",
@@ -1393,7 +1969,11 @@
       "Miniatures",
       "Movies / TV / Radio theme",
       "Science Fiction"
-    ]
+    ],
+    "description": "Warfare is an inescapable part of the Star Wars universe, from the Rebel Alliance's defeat in the Battle of Hoth to a few elite Rebel strike teams taking on a legion of stormtroopers on the Forest Moon of Endor. You can seize your chance to get your boots on the ground and lead your troops to victory with Star Wars: Legion, a miniatures game of thrilling infantry battles in the Star Wars universe!",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "235802": {
     "name": "Too Many Bones: Undertow",
@@ -1403,7 +1983,11 @@
       "Adventure",
       "Dice",
       "Fantasy"
-    ]
+    ],
+    "description": "Join new playable Gearloc characters Stanza and Duster as they journey down the Sibron River in search of answers in this standalone expansion/sequel to Too Many Bones! Too Many Bones: Undertow allows for 1-2 players out of the box, but by bringing in additional Gearlocs from the original game or adding in characters like Ghillie, Nugget, and Tink, you can create an adventure for up to four player",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "playingTime": 180
   },
   "237182": {
     "name": "Root",
@@ -1413,7 +1997,11 @@
       "Animals",
       "Fantasy",
       "Negotiation"
-    ]
+    ],
+    "description": "Root is a game of adventure and war in which 2 to 4 (1 to 6 with the 'Riverfolk' expansion, 2-6 with the 'Underworld', or 'Marauder' expansions) players battle for control of a vast wilderness. Like Vast: The Crystal Caverns, each player in Root has unique capabilities and a different victory condition. Now, with the aid of gorgeous, multi-use cards, a truly asymmetric design has never been more a",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "239188": {
     "name": "Chronicles of Crime",
@@ -1423,7 +2011,11 @@
       "Adventure",
       "Deduction",
       "Murder / Mystery"
-    ]
+    ],
+    "description": "Chronicles of Crime is a cooperative game of crime investigation, mixing an app, a board game and a touch of Virtual Reality. With the same physical components (board, locations, characters and items), players will be able to play plenty of different scenarios and solve as many different crime stories. Players start the app, choose the scenario they want to play, and follow the story. The goal bei",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "240980": {
     "name": "Blood on the Clocktower",
@@ -1433,7 +2025,11 @@
       "Bluffing",
       "Deduction",
       "Murder / Mystery"
-    ]
+    ],
+    "description": "In the quiet village of Ravenswood Bluff, ‌a demon walks amongst you. During a hellish thunderstorm, on the stroke of midnight, there echoes a bone-chilling scream. The townsfolk rush to investigate and find the town storyteller murdered, their body impaled on the hands of the clocktower, blood dripping onto the cobblestones below. A Demon is on the loose, murdering by night and disguised in human",
+    "minPlayers": 6,
+    "maxPlayers": 21,
+    "playingTime": 120
   },
   "241477": {
     "name": "Karak",
@@ -1443,7 +2039,11 @@
       "Adventure",
       "Children's Game",
       "Exploration"
-    ]
+    ],
+    "description": "What lies beneath the crumbling walls of Karak castle? A labyrinth full of treasures...and monsters! Six brave adventurers are going in there for a fortune waiting to be claimed, each one of them with a different trick up their sleeve — but the treasure chests are locked and monsters are everywhere. Who will outsmart their opponents, beat the monsters, and seize the dragon's gem? In Karak, a.k.a. ",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 45
   },
   "242722": {
     "name": "Here I Stand: 500th Anniversary Edition",
@@ -1453,7 +2053,11 @@
       "Negotiation",
       "Pike and Shot",
       "Political"
-    ]
+    ],
+    "description": "Here I Stand: Wars of the Reformation 1517-1555 is the first game in over 25 years to cover the political and religious conflicts of early 16th Century Europe. Few realize that the greatest feats of Martin Luther, Jean Calvin, Ignatius Loyola, Henry VIII, Charles V, Francis I, Suleiman the Magnificent, Ferdinand Magellan, Hernando Cortes, and Nicolaus Copernicus all fall within this narrow 40-year",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 360
   },
   "244513": {
     "name": "ICECOOL2",
@@ -1463,7 +2067,11 @@
       "Action / Dexterity",
       "Animals",
       "Children's Game"
-    ]
+    ],
+    "description": "ICECOOL2 is both a standalone game and an expansion for ICECOOL. If played on its own, ICECOOL2 differs from the original game thanks to: Tasks on 1-point cards Fish-moving power on 2-point cards Optional tournament scoring If you combine both ICECOOL sets, you get: Multiple new layouts New game mode called \"The Race\" Games playable for up to eight players Chance to create your own new layouts",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "244521": {
     "name": "Quacks",
@@ -1472,7 +2080,11 @@
     "categories": [
       "Fantasy",
       "Medieval"
-    ]
+    ],
+    "description": "In Quacks, which was first released as The Quacks of Quedlinburg, players are charlatans — or quack doctors — each making their own secret brew by adding ingredients one at a time. Take care with what you add, though, for a pinch too much of this or that will spoil the whole mixture! Each player has their own bag of ingredient chips. During each round, they simultaneously draw chips from their bag",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "246900": {
     "name": "Eclipse: Second Dawn for the Galaxy",
@@ -1482,7 +2094,11 @@
       "Civilization",
       "Exploration",
       "Science Fiction"
-    ]
+    ],
+    "description": "A game of Eclipse places you in control of a vast interstellar civilization, competing for success with its rivals. You explore new star systems, research technologies, and build spaceships with which to wage war. There are many potential paths to victory, so you need to plan your strategy according to the strengths and weaknesses of your species, while paying attention to the other civilizations'",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 200
   },
   "247314": {
     "name": "Concept Kids: Animals",
@@ -1492,7 +2108,11 @@
       "Animals",
       "Card Game",
       "Children's Game"
-    ]
+    ],
+    "description": "Concept Kids Animals is a cooperative version of the game Concept, adapted for children who don’t yet know how to read. In turn, the children attempt to make the others guess an animal by playing pawns on the illustrated icons on the game board. Through this, the child indicates a feature of the animal to be guessed. Draw 12 cards and attempt to find as many animals as possible in order to get the",
+    "minPlayers": 2,
+    "maxPlayers": 12,
+    "playingTime": 20
   },
   "247763": {
     "name": "Underwater Cities",
@@ -1502,7 +2122,11 @@
       "Card Game",
       "City Building",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "In Underwater Cities, which takes about 30-45 minutes per player, players represent the most powerful brains in the world, brains nominated due to the overpopulation of Earth to establish the best and most livable underwater areas possible. The main principle of the game is card placement. Three colored cards are placed along the edge of the main board into 3 x 5 slots, which are also colored. Ide",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "249259": {
     "name": "War Chest",
@@ -1512,7 +2136,11 @@
       "Abstract Strategy",
       "Medieval",
       "Wargame"
-    ]
+    ],
+    "description": "War Chest is an all-new bag-building war game! At the start of the game, raise your banner call (drafting) several various units into your army, which you then use to capture key points on the board. To succeed in War Chest, you must successfully manage not only your armies on the battlefield, but those that are waiting to be deployed. Each round you draw three unit coins from your bag, then take ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "251247": {
     "name": "Barrage",
@@ -1522,7 +2150,11 @@
       "Economic",
       "Environmental",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "In the dystopic 1930s, the industrial revolution pushed the exploitation of fossil-based resources to the limit, and now the only thing powerful enough to quench the thirst for power of the massive machines and of the unstoppable engineering progress is the unlimited hydroelectric energy provided by the rivers. Barrage is a resource management strategic game in which players compete to build their",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 180
   },
   "251661": {
     "name": "Oathsworn: Into the Deepwood",
@@ -1532,7 +2164,11 @@
       "Adventure",
       "Card Game",
       "Dice"
-    ]
+    ],
+    "description": "Oathsworn is a Twisting Tales Game for 1-4 players where play is focused on narrative choices and rich miniature combat encounters. The game is set in the Deepwood where a Free company (the Oathsworn) fights for humanity's survival against unnatural horrors and the Deepwood itself. Each gaming session sees the players participate in a multi path game book where the story unfolds to an inevitable e",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "252328": {
     "name": "Star Wars: X-Wing (Second Edition)",
@@ -1542,7 +2178,11 @@
       "Aviation / Flight",
       "Bluffing",
       "Collectible Components"
-    ]
+    ],
+    "description": "X-Wing Second Edition puts you in command of your own squadron of advanced starfighters locked in thrilling, tactical space combat. Following in the footsteps of the first edition, the second edition refines the intuitive and exciting core formula of maneuvering your ships into position by placing a central focus on the visceral thrill of flying starships in the Star Wars galaxy. During a battle, ",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 45
   },
   "253344": {
     "name": "Cthulhu: Death May Die",
@@ -1552,7 +2192,11 @@
       "Fantasy",
       "Fighting",
       "Horror"
-    ]
+    ],
+    "description": "In Cthulhu: Death May Die, inspired by the writings of H.P. Lovecraft, you and your fellow players represent investigators in the 1920s who instead of trying to stop the coming of Elder Gods, want to summon those otherworldly beings so that you can put a stop to them permanently. You start the game insane, and while your long-term goal is to shoot Cthulhu in the face, so to speak, at some point du",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 120
   },
   "254640": {
     "name": "Just One",
@@ -1562,7 +2206,11 @@
       "Deduction",
       "Party Game",
       "Word Game"
-    ]
+    ],
+    "description": "Just One is a co-operative party game in which you all play together to get the best score! Your goal each round is to get one player — the active player — to guess a mystery word based on the clues given by teammates. Can you achieve a perfect score by guessing all the mystery words? In more detail, everyone who is not the active player sees the mystery word, then each player independently writes",
+    "minPlayers": 3,
+    "maxPlayers": 7,
+    "playingTime": 60
   },
   "255984": {
     "name": "Sleeping Gods",
@@ -1572,7 +2220,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "\"Are the stars unfamiliar here?\" she asked, and the sky grew suddenly dark, the star's patterns alien and exotic. \"This is the Wandering Sea. The gods have brought you here, and you must wake them if you wish to return home.\" In Sleeping Gods, you and up to 3 friends become Captain Sofi Odessa and her crew, lost in a strange world in 1929 on your steamship, the Manticore. You must work together to",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 1200
   },
   "256226": {
     "name": "Azul: Stained Glass of Sintra",
@@ -1582,7 +2234,11 @@
       "Abstract Strategy",
       "Puzzle",
       "Renaissance"
-    ]
+    ],
+    "description": "Azul: Stained Glass of Sintra challenges players to carefully select glass panes to complete their windows while being careful not to damage or waste supplies in the process. The window panels are double-sided, providing players with a dynamic player board that affords nearly infinite variability! Gameplay is similar to Azul. Players draft colored glass tiles to their player board. Later in the ro",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "256916": {
     "name": "Concordia Venus",
@@ -1591,7 +2247,11 @@
     "categories": [
       "Ancient",
       "Economic"
-    ]
+    ],
+    "description": "Concordia Venus is a standalone reimplementation of Concordia with some added features. Concordia Venus is a peaceful strategy game of economic development in Roman times for 2-6 players aged 13 and up. Instead of looking to the luck of dice or cards, players must rely on their strategic abilities. Be sure to watch your rivals to determine which goals they are pursuing and where you can outpace th",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 120
   },
   "256952": {
     "name": "Zombie Kidz Evolution",
@@ -1601,7 +2261,11 @@
       "Children's Game",
       "Fighting",
       "Horror"
-    ]
+    ],
+    "description": "Zombie Kidz Evolution is the first \"legacy\"-style game for kids, with basic gameplay similar to the 2013 title Zombie Kidz — but things will quickly evolve! In the game, the young players are at school when zombies start to attack, infiltrating the entryways, then barring the way to classrooms. Players move through rooms and entryways to eliminate zombies and keep the zombie reserve full. If a zom",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 15
   },
   "256960": {
     "name": "Pax Pamir: Second Edition",
@@ -1611,7 +2275,11 @@
       "Economic",
       "Educational",
       "Negotiation"
-    ]
+    ],
+    "description": "In Pax Pamir, players assume the role of nineteenth century Afghan leaders attempting to forge a new state after the collapse of the Durrani Empire. Western histories often call this period \"The Great Game\" because of the role played by the Europeans who attempted to use central Asia as a theater for their own rivalries. In this game, those empires are viewed strictly from the perspective of the A",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 120
   },
   "258779": {
     "name": "Planet Unknown",
@@ -1621,7 +2289,11 @@
       "City Building",
       "Industry / Manufacturing",
       "Puzzle"
-    ]
+    ],
+    "description": "Our planet has run out of resources, and we are forced to move. We have discovered a series of planets and sent our rovers to test their environment with the hope of colonization. Our rovers have confirmed 1-6 viable colonization options. Planet Unknown is a competitive game for 1-6 players in which players attempt to develop the best planet. Each round, each player places one polyomino-shaped, du",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "playingTime": 80
   },
   "260180": {
     "name": "Project L",
@@ -1631,7 +2303,11 @@
       "Abstract Strategy",
       "Puzzle",
       "Video Game Theme"
-    ]
+    ],
+    "description": "Build pieces, develop an engine, perfect your strategy, and win the game! Project L is a fast-paced, tile-matching brain burner with triple-layer 3D puzzles and acrylic pieces. Challenge your friends to a game of simple design but intricate gameplay that makes a lasting impression! The core of the game lies in using your pieces to complete puzzles. Starting with just two basic pieces, you use thre",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 40
   },
   "260605": {
     "name": "Camel Up (Second Edition)",
@@ -1641,7 +2317,11 @@
       "Animals",
       "Arabian",
       "Dice"
-    ]
+    ],
+    "description": "In Camel Up, up to eight players bet on five racing camels, trying to suss out which ones will place first and second in a quick race around a pyramid. The earlier you place your bet, the more you can win — should you guess correctly, of course. Camels don't run neatly, however, sometimes landing on top of another one and being carried toward the finish line. Who's going to run when? That all depe",
+    "minPlayers": 3,
+    "maxPlayers": 8,
+    "playingTime": 45
   },
   "264220": {
     "name": "Tainted Grail: The Fall of Avalon",
@@ -1651,7 +2331,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "Tainted Grail: the Fall of Avalon is an unforgettable, solo or cooperative adventure experience for 1-4 players. Blending Arthurian legends and Celtic mythology with a unique vision, it allows you to impact the game world in deep and meaningful ways. A deep, branching storyline allows you to tackle problems in different ways, ensuring no two games play alike. Difficult decisions or harrowing choic",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "264241": {
     "name": "Mandala",
@@ -1660,7 +2344,11 @@
     "categories": [
       "Abstract Strategy",
       "Card Game"
-    ]
+    ],
+    "description": "The Mandala: the symbol of an ancient and sacred ritual. Colored sand is laid to create a symbolic map of the world before the pattern is ceremonially destroyed and the sand cast into the river. In the two-player game Mandala, you are trying to score more than your opponent by collecting valuable cards — but you won't know which cards are valuable until well into the game! Over the course of the g",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 20
   },
   "266192": {
     "name": "Wingspan",
@@ -1670,7 +2358,11 @@
       "Animals",
       "Card Game",
       "Educational"
-    ]
+    ],
+    "description": "Wingspan is a competitive, medium-weight, card-driven, engine-building board game from Stonemaier Games. It's designed by Elizabeth Hargrave and features 180 birds illustrated by Natalia Rojas and Ana Maria Martinez. You are bird enthusiasts—researchers, bird watchers, ornithologists, and collectors—seeking to discover and attract the best birds to your network of wildlife preserves. Each bird ext",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 70
   },
   "266507": {
     "name": "Clank! Legacy: Acquisitions Incorporated",
@@ -1679,7 +2371,11 @@
     "categories": [
       "Adventure",
       "Fantasy"
-    ]
+    ],
+    "description": "Clank! Legacy: Acquisitions Incorporated extends the deck-building fun of Clank! with legacy-style gameplay! Found your own franchise of the legendary adventuring company, Acquisitions Incorporated, and shepherd your fledgling treasure-hunters to immortal corporate glory over the course of multiple games. Your game board, your deck, and your world change as you play to create a unique campaign tai",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "266810": {
     "name": "Paladins of the West Kingdom",
@@ -1687,7 +2383,11 @@
     "subdomain": "Strategy",
     "categories": [
       "Medieval"
-    ]
+    ],
+    "description": "Paladins of the West Kingdom is set at a turbulent time of West Francia's story, circa 900 AD. Despite recent efforts to develop the city, outlying townships are still under threat from outsiders. Saracens scout the borders, while Vikings plunder wealth and livestock. Even the Byzantines from the east have shown their darker side. As noble men and women, players must gather workers from the city t",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "271601": {
     "name": "Feed the Kraken",
@@ -1697,7 +2397,11 @@
       "Bluffing",
       "Deduction",
       "Fantasy"
-    ]
+    ],
+    "description": "Feed the Kraken is a hidden role deduction game, with three asymmetric factions. All players may be sitting in the same boat, but they want to navigate in different directions! The loyal sailors must bring the ship safely to mainland, whereas the pirates crave to secretly maneuver the ship into the Bermuda Triangle. Meanwhile a crazy cultist is busy convincing parts of the crew to help him summon ",
+    "minPlayers": 5,
+    "maxPlayers": 11,
+    "playingTime": 90
   },
   "272380": {
     "name": "SHŌBU",
@@ -1705,7 +2409,11 @@
     "subdomain": "Abstract",
     "categories": [
       "Abstract Strategy"
-    ]
+    ],
+    "description": "SHOBU is a beautifully crafted abstract strategy game for 2 players. The game features 4 square wood boards (2 of each color) and 16 natural river stones for each player, in two colors, with a rope dividing the play area in half. Your turn is in two parts. First, a player may move one of their stones up to two spaces in any direction, including diagonally, in what is called a passive (or set up) m",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "276025": {
     "name": "Maracaibo",
@@ -1715,7 +2423,11 @@
       "Economic",
       "Exploration",
       "Nautical"
-    ]
+    ],
+    "description": "Maracaibo, a strategy game for 1-4 players by Alexander Pfister, is set in the Caribbean during the 17th century. The players try to increase their influence in three nations in four rounds with a play time of 40 minutes per player. The players sail on a round course through the Caribbean, e.g., you have city tiles where you are able to perform various actions or deliver goods to. One special feat",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "277085": {
     "name": "Love Letter",
@@ -1725,7 +2437,11 @@
       "Card Game",
       "Deduction",
       "Renaissance"
-    ]
+    ],
+    "description": "The noble Princess is looking for an ideal partner and confidant to help with her royal duties when she one day assumes the throne. You must prove your worth and gain her trust by enlisting allies, friends, and family of the Princess to carry a letter of intent to her. Can you earn the Princess' trust and become her confidant? Playing cards one at a time, players in Love Letter use the abilities o",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 20
   },
   "277659": {
     "name": "Final Girl",
@@ -1735,7 +2451,11 @@
       "Card Game",
       "Fantasy",
       "Horror"
-    ]
+    ],
+    "description": "Playing on a famous horror movie trope, Final Girl is a solitaire-only game that puts the player in the shoes of a female protagonist who must kill the slasher if she wants to survive. The Core Box, when combined with one of our Feature Film Boxes, has everything you need to play the game. Each Feature Film Box features a unique Killer and and iconic Location, and the more Feature Films you have, ",
+    "minPlayers": 1,
+    "maxPlayers": 1,
+    "playingTime": 60
   },
   "283155": {
     "name": "Calico",
@@ -1745,7 +2465,11 @@
       "Abstract Strategy",
       "Animals",
       "Puzzle"
-    ]
+    ],
+    "description": "Calico is a puzzly tile-laying game of quilts and cats. In Calico, players compete to sew the coziest quilt as they collect and place patches of different colors and patterns. Each quilt has a particular pattern that must be followed, and players are also trying to create color and pattern combinations that are not only aesthetically pleasing, but also able to attract the cuddliest cats! Turns are",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "284083": {
     "name": "The Crew: The Quest for Planet Nine",
@@ -1755,7 +2479,11 @@
       "Card Game",
       "Science Fiction",
       "Space Exploration"
-    ]
+    ],
+    "description": "In the co-operative trick-taking game The Crew: The Quest for Planet Nine, the players set out as astronauts on an uncertain space adventure. What are the rumors regarding the unknown planet about? The eventful journey through space extends over 50 exciting missions. But this game can only be defeated by meeting common individual tasks of each player. In order to meet the varied challenges communi",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 20
   },
   "284378": {
     "name": "Kanban EV",
@@ -1764,7 +2492,11 @@
     "categories": [
       "Economic",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "Electric vehicles (EVs) have become more common since 2014 and are the future of the automobile industry. They are superior vehicles due to them being more efficient, easier to maintain, cleaner, and cheaper to run. They are computerized machines that use AI to improve safety and in the near future will provide autonomous driving. They receive software upgrades during their lifetime and are consta",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 180
   },
   "284435": {
     "name": "Nova Luna",
@@ -1773,7 +2505,11 @@
     "categories": [
       "Abstract Strategy",
       "Puzzle"
-    ]
+    ],
+    "description": "The new moon is a symbol for a new beginning, the perfect time to start something new and to plan your future — and that is what Nova Luna (lat. for new moon) is all about. In each round of this abstract tile-laying game, you have to plan your future anew, developing a new strategy to cope with what the moon wheel has to offer you. On each turn, you have to decide which new tile from the moon whee",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "285774": {
     "name": "Marvel Champions: The Card Game",
@@ -1783,7 +2519,11 @@
       "Card Game",
       "Collectible Components",
       "Comic Book / Strip"
-    ]
+    ],
+    "description": "\"With great power, there must also come great responsibility.\" –Stan Lee, Amazing Fantasy #15 Iron Man and Black Panther team up to stop Rhino from rampaging through the streets of New York. Captain Marvel and Spider-Man battle Ultron as he threatens global annihilation. Do you have what it takes to join the ranks of these legendary heroes and become a champion? Jump into the Marvel Universe with ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "287954": {
     "name": "Azul: Summer Pavilion",
@@ -1792,7 +2532,11 @@
     "categories": [
       "Abstract Strategy",
       "Puzzle"
-    ]
+    ],
+    "description": "At the turn of the 16th Century, King Manuel I commissioned Portugal's greatest artisans to construct grandiose buildings. After completing the Palaces of Evora and Sintra, the king sought to build a summer pavilion to honor the most famous members of the royal family. This construction was intended for the most talented artisans — whose skills meet the splendor that the royal family deserves. Sad",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "291453": {
     "name": "SCOUT",
@@ -1800,7 +2544,11 @@
     "subdomain": "Family",
     "categories": [
       "Card Game"
-    ]
+    ],
+    "description": "SCOUT is a ladder-climbing game in which cards have two potential values, players may not rearrange their hand of cards, and players may pass their turn to take a card from the current high set of cards into their hand. More specifically, cards are dual-indexed, with different values on each half of the card, with the 45 cards having all possible combinations of the numbers 1-10. During set-up, wh",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 20
   },
   "291457": {
     "name": "Gloomhaven: Jaws of the Lion",
@@ -1810,7 +2558,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "Gloomhaven: Jaws of the Lion is a standalone game that takes place before the events of Gloomhaven. The game includes four new characters — Valrath Red Guard (tank, crowd control), Inox Hatchet (ranged damage), Human Voidwarden (support, mind control), and Quatryl Demolitionist (melee damage, obstacle manipulation) — that can also be used in the original Gloomhaven game. The game also includes 16 ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "295488": {
     "name": "Andor: The Family Fantasy Game",
@@ -1820,7 +2572,11 @@
       "Adventure",
       "Fantasy",
       "Fighting"
-    ]
+    ],
+    "description": "In Andor: The Family Fantasy Game, a.k.a. Andor Junior, each player chooses one of four heroes — magician, warrior, archer, or dwarf — before beginning their quest to rescue the wolf cubs lost in the dwarven mine. However, before beginning the search for the wolf cubs, the heroes must first complete the tasks given to them by Mart, the old bridge guard. Only after you have solved all of the bridge",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "295770": {
     "name": "Frosthaven",
@@ -1830,7 +2586,11 @@
       "Adventure",
       "Exploration",
       "Fantasy"
-    ]
+    ],
+    "description": "Frosthaven is the story of a small outpost far to the north of the capital city of White Oak. It's an outpost barely surviving the harsh weather let alone invasions from forces both known and unknown. However, a group of mercenaries, at the end of their rope, will help bring this settlement back from the edge of destruction. Not only will they have to deal with the harsh elements, but with other, ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 180
   },
   "295947": {
     "name": "Cascadia",
@@ -1839,7 +2599,11 @@
     "categories": [
       "Animals",
       "Environmental"
-    ]
+    ],
+    "description": "Cascadia is a puzzly tile-laying and token-drafting game featuring the habitats and wildlife of the Pacific Northwest. In the game, you take turns building out your own terrain area and populating it with wildlife. You start with three hexagonal habitat tiles (with the five types of habitat in the game), and on a turn you choose a new habitat tile that's paired with a wildlife token, then place th",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "300010": {
     "name": "Dragomino",
@@ -1849,7 +2613,11 @@
       "Children's Game",
       "Fantasy",
       "Territory Building"
-    ]
+    ],
+    "description": "The big moment has arrived. You have been named \"dragon trainer\", and you have the chance to meet them on a mysterious island. But you are not the only trainer sent to these lands. Who among you will discover the most baby dragons? Dragomino features gameplay similar to Kingdomino, but with gameplay suitable for younger players. At the start of a round, you reveal four domino tiles, with each domi",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 15
   },
   "310448": {
     "name": "Zombie Teenz Evolution",
@@ -1858,7 +2626,11 @@
     "categories": [
       "Children's Game",
       "Zombies"
-    ]
+    ],
+    "description": "Zombies are attacking the entire town! Cooperate with your friends and launch an expedition to drive off the overwhelming hordes. Collect the four ingredients, and brew the antidote that will save the world! Zombie Teenz Evolution is the sequel to Zombie Kidz Evolution (#1 Kids' Game on BGG). It is a standalone game with a different set of rules, so you don’t need to have played the first game to ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "310789": {
     "name": "Catapult Feud",
@@ -1868,7 +2640,11 @@
       "Action / Dexterity",
       "Children's Game",
       "Medieval"
-    ]
+    ],
+    "description": "Build your castles, set up your troops, load your catapults and use your cunning tactics to win the day! The War for the Floor has begun once more! Catapult Feud (original series was named, 'Catapult Kingdoms'), is a game of last person standing. Your objective is to knock down all your opponent's troops! Starting with the youngest player, choose your family: Chaufort or Cunningfields. Then, use y",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "312484": {
     "name": "Lost Ruins of Arnak",
@@ -1878,7 +2654,11 @@
       "Adventure",
       "Card Game",
       "Exploration"
-    ]
+    ],
+    "description": "On an uninhabited island in uncharted seas, explorers have found traces of a great civilization. Now you will lead an expedition to explore the island, find lost artifacts, and face fearsome guardians, all in a quest to learn the island's secrets. Lost Ruins of Arnak combines deck-building and worker placement in a game of exploration, resource management, and discovery. In addition to traditional",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "314040": {
     "name": "Pandemic Legacy: Season 0",
@@ -1887,7 +2667,11 @@
     "categories": [
       "Medical",
       "Spies / Secret Agents"
-    ]
+    ],
+    "description": "1962 — The Cold War continues as a new threat looms on the horizon, a deadly new Soviet bioweapon, something called \"Project MEDUSA\". You and your fellow medical graduates have been recruited by the CIA for the critical mission of investigating and preventing its development. Travel the world using carefully constructed aliases to move swiftly between Allied, Neutral, and Soviet cities. Your missi",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "316554": {
     "name": "Dune: Imperium",
@@ -1897,7 +2681,11 @@
       "Movies / TV / Radio theme",
       "Novel-based",
       "Political"
-    ]
+    ],
+    "description": "Dune: Imperium is a game that uses deck building to add a hidden information angle to traditional worker placement. It finds inspiration in elements and characters from the Dune legacy, both the new film from Legendary Pictures and the seminal literary series from Frank Herbert, Brian Herbert, and Kevin J. Anderson. As a leader of one of the Great Houses of the Landsraad, raise your banner and mar",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "318243": {
     "name": "Hitster",
@@ -1907,7 +2695,11 @@
       "Card Game",
       "Music",
       "Party Game"
-    ]
+    ],
+    "description": "Create an instant party with HITSTER, the music card game of the century! Listen to over 100 years of amazing hits, take turns arranging them in chronological order on your music timeline and create your trip down memory lane. The first player to collect 10 hits is crowned the HITSTER HITSTER is the perfect game for an evening with lots of laughing, singing, dancing and sharing memories. Simply op",
+    "minPlayers": 2,
+    "maxPlayers": 10,
+    "playingTime": 30
   },
   "318546": {
     "name": "CoraQuest",
@@ -1917,7 +2709,11 @@
       "Adventure",
       "Children's Game",
       "Exploration"
-    ]
+    ],
+    "description": "CoraQuest is an exciting and accessible co-operative dungeon crawling game for one to four people, aged six and up. In CoraQuest the players work together to guide four adventurers exploring a dungeon, avoiding traps, finding treasure, fighting monsters, and sometimes rescuing a gnome called Kevin. CoraQuest is a game that kids and grown-ups can play together and get equal amounts of fun from. It'",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "319910": {
     "name": "Pagan: Fate of Roanoke",
@@ -1927,7 +2723,11 @@
       "Adventure",
       "Bluffing",
       "Card Game"
-    ]
+    ],
+    "description": "Pagan: Fate of Roanoke is an expandable deduction card game set in the colonial America of 1587. The essence of this asymmetrical game is a witch's struggle against a witch hunter. As the witch strives to complete a ritual of renaturation, the hunter tries to discover her true identity among nine villagers. Each turn, the two players use their action pawns on active villagers to draw cards, play c",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 60
   },
   "321608": {
     "name": "Hegemony: Lead Your Class to Victory",
@@ -1937,7 +2737,11 @@
       "Economic",
       "Educational",
       "Negotiation"
-    ]
+    ],
+    "description": "Extended edition includes Crisis & Control expansion. The Nation is in disarray and a war is waging between the classes. The working class faces a dismantled welfare system, the capitalists are losing their hard-earned profits, the middle class is gradually fading and the state is sinking into a deep deficit. Amidst all this chaos, the only person who can provide guidance is... you. Will you take ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 180
   },
   "322289": {
     "name": "Darwin's Journey",
@@ -1946,7 +2750,11 @@
     "categories": [
       "Exploration",
       "Travel"
-    ]
+    ],
+    "description": "When all you can identify in the horizon for many long days is the line that detaches the sea from the sky, the glimpse of a distant shore appearing before you will make you shiver at the understanding that the adventure is about to begin. You find yourself astonished, landing on the shore that will be the origin of an extensive exploration through the Galapagos, a magic place of inconceivable bea",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "324856": {
     "name": "The Crew: Mission Deep Sea",
@@ -1956,7 +2764,11 @@
       "Adventure",
       "Card Game",
       "Mythology"
-    ]
+    ],
+    "description": "The Crew: Mission Deep Sea plunges players into a cooperative card game unlike any other. As members of a deep-sea expedition, you and your fellow crew are on a quest to locate the lost continent of Mu—but your success depends on precision, teamwork, and a shared sense of timing. Each mission presents a new puzzle made up of unique tasks: perhaps one player must win a specific card, while another ",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 20
   },
   "327056": {
     "name": "Unlock! Kids: Detective Stories",
@@ -1966,7 +2778,11 @@
       "Card Game",
       "Children's Game",
       "Exploration"
-    ]
+    ],
+    "description": "Unlock! is a co-operative card game inspired by escape rooms that uses a simple system which allows you to search scenes, combine objects, and solve riddles. Play Unlock! to embark on great adventures, while seated at a table using only cards. Unlock!: Kids is designed for players ages 6+ and unlike other Unlock! titles, it does not require an app. • Mac Unlock's Castle - Scotland is yours, and so",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "329839": {
     "name": "So Clover!",
@@ -1975,7 +2791,11 @@
     "categories": [
       "Party Game",
       "Word Game"
-    ]
+    ],
+    "description": "So Clover! is a cooperative word-association game. Play as a team to get the highest score. Get Keywords and secretly write their common features on your Clover board; these are your Clues. Then work together to try to figure out each player’s Keywords. At the end of the game, add up your score according to how many Keywords you found and write it in the Record of Legends. Try to beat your high sc",
+    "minPlayers": 3,
+    "maxPlayers": 6,
+    "playingTime": 30
   },
   "332772": {
     "name": "Revive",
@@ -1985,7 +2805,11 @@
       "Civilization",
       "Exploration",
       "Industry / Manufacturing"
-    ]
+    ],
+    "description": "Revive civilization, 5000 years after everything was destroyed. Lead your tribe and explore the frozen earth. Harness its resources. Recruit surface survivors to your cause. Build factories with powerful machines. And populate ancient sites to relearn your tribe's forgotten technologies. -- Revive is a game for 1-4 players with asymmetric player powers, highly variable setup, and no fighting or di",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "337627": {
     "name": "Voidfall",
@@ -1995,7 +2819,11 @@
       "Civilization",
       "Economic",
       "Science Fiction"
-    ]
+    ],
+    "description": "For centuries, the Novarchs, descendants of the royal House of Novarchon, have ruled with an iron fist over the feudalistic galactic empire of humankind, the Domineum. During this time, they brought stunning technological innovation and scientific advancements to their domain. This accelerated progression helped the Domineum reach — and eventually inhabit — even the farthest segments of the known ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 240
   },
   "338960": {
     "name": "Slay the Spire: The Board Game",
@@ -2005,7 +2833,11 @@
       "Adventure",
       "Card Game",
       "Fantasy"
-    ]
+    ],
+    "description": "Slay the Spire: The Board Game is a co-operative deck-building, dungeon-crawling adventure. Craft a unique deck, encounter bizarre creatures, discover relics of immense power, and finally become strong enough to slay the Spire! Each player starts with a character with unique abilities and a simple deck of cards that they can improve by adding and removing cards during the game. Slay the Spire is a",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "340288": {
     "name": "Kids Chronicles: Quest for the Moon Stones",
@@ -2015,7 +2847,11 @@
       "Adventure",
       "Children's Game",
       "Exploration"
-    ]
+    ],
+    "description": "Kids Chronicles: Quest for the Moon Stones is a co-operative family game of adventure and mystery investigation that mixes a board game and app. As magicians' apprentices, players dive into the fairy tale lands of the Kingdom of Summer and the Winter Empire. Accompanied by the faithful familiar, Nils The Moon Cat, they embark on a quest to find four magical Moon Stones. To achieve their goal, youn",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "341169": {
     "name": "Great Western Trail: Second Edition",
@@ -2024,7 +2860,11 @@
     "categories": [
       "American West",
       "Animals"
-    ]
+    ],
+    "description": "America in the 19th century: You are a rancher and repeatedly herd your cattle from Texas to Kansas City, where you send them off by train. This earns you money and victory points. Needless to say, each time you arrive in Kansas City, you want to have your most valuable cattle in tow. However, the \"Great Western Trail\" not only requires that you keep your herd in good shape, but also that you wise",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "342900": {
     "name": "Earthborne Rangers",
@@ -2034,7 +2874,11 @@
       "Adventure",
       "Card Game",
       "Environmental"
-    ]
+    ],
+    "description": "Earthborne Rangers is a customizable, co-operative card game set in the wilderness of the far future. You take on the role of a Ranger, a protector of the mountain valley you call home: a vast wilderness transformed by monumental feats of science and technology devised to save the Earth from destruction long ago. The story of Earthborne Rangers is presented as a branching narrative campaign consis",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 240
   },
   "342942": {
     "name": "Ark Nova",
@@ -2044,7 +2888,11 @@
       "Animals",
       "Card Game",
       "Environmental"
-    ]
+    ],
+    "description": "In Ark Nova, you will plan and design a modern, scientifically managed zoo. With the ultimate goal of owning the most successful zoological establishment, you will build enclosures, accommodate animals, and support conservation projects all over the world. Specialists and unique buildings will help you in achieving this goal. Each player has a set of five action cards to manage their gameplay, and",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "344254": {
     "name": "Yummy Yummy Monster Tummy",
@@ -2054,7 +2902,11 @@
       "Card Game",
       "Children's Game",
       "Humor"
-    ]
+    ],
+    "description": "There are strange noises coming from the attic at your grandpa’s summer house. After climbing the stairs, you see colorful and furry Monsters everywhere! They seem to be friendly…. but also really hungry! You must feed them whatever you can find. They will eat anything, but what attracts them the most is the color of objects! Yummy Yummy Monster Tummy is a co-operative card game of color matching ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "345976": {
     "name": "System Gateway (fan expansion for Android: Netrunner)",
@@ -2064,7 +2916,11 @@
       "Bluffing",
       "Card Game",
       "Fan Expansion"
-    ]
+    ],
+    "description": "System Gateway is Null Signal Games’s foundational Netrunner set. It is designed as an out-of-the-box learning experience and provides everything you need to start playing Netrunner. The cards in the set are straightforward, yet powerful, and will form the cornerstone of any player’s collection. One copy of System Gateway, a handful of different coloured counters, plus the Learn to Play Guide (see",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 45
   },
   "346965": {
     "name": "Azul: Queen's Garden",
@@ -2074,7 +2930,11 @@
       "Abstract Strategy",
       "Puzzle",
       "Renaissance"
-    ]
+    ],
+    "description": "Welcome back to the palace of Sintra! King Manuel I has commissioned the best garden designers of Portugal to construct the most extraordinary garden for his wife, Queen Maria of Aragon. In Azul: Queen's Garden, players are tasked with arranging a magnificent garden for the King's lovely wife by arranging beautiful plants, trees, and ornamental features. Using an innovative drafting mechanism, the",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "347137": {
     "name": "Chronicles of Avel",
@@ -2084,7 +2944,11 @@
       "Adventure",
       "Children's Game",
       "Exploration"
-    ]
+    ],
+    "description": "Chronicles of Avel is a cooperative board game for the whole family. Take the role of brave heroes and heroines with a mission to save your magical land. Create your character and give them a unique name. Get your equipment, upgrade it and prepare for battle. But remember to wisely choose what you carry as your backpack has limited space. Armed and ready, explore the land in search of adventure an",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 60
   },
   "349067": {
     "name": "The Lord of the Rings: The Card Game – Revised Core Set",
@@ -2094,7 +2958,11 @@
       "Adventure",
       "Card Game",
       "Collectible Components"
-    ]
+    ],
+    "description": "Sometimes, in order to truly appreciate a tale, one must first go back to its beginning. Grand adventures and strong fellowships are important and wonderful, but the first step of any journey is just as important as the last. With that in mind, it’s time to return to the beginning of one of the most epic adventures of all… With increased contents and some quality-of-life improvements, this new ver",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "351040": {
     "name": "Ready Set Bet",
@@ -2104,7 +2972,11 @@
       "Animals",
       "Party Game",
       "Racing"
-    ]
+    ],
+    "description": "In Ready Set Bet, you and your friends head to the races for a day of cheering, jeering, and betting on your favorite horses, whose fates hang on every roll of the dice. Ready Set Bet is played over four rounds. Each round consists of a race followed by bet resolution. During each race, players freely place their bet tokens on the board while the race is going on. After each race, players win or l",
+    "minPlayers": 2,
+    "maxPlayers": 9,
+    "playingTime": 60
   },
   "354570": {
     "name": "Undaunted: Stalingrad",
@@ -2113,7 +2985,11 @@
     "categories": [
       "Wargame",
       "World War II"
-    ]
+    ],
+    "description": "Stalingrad, 1942. Before you awaits a grueling conflict in this cornerstone battleground. As the bullets and bombs tear the city asunder, only through wits and valor can you seize the cornerstone of the entire Eastern Front and change the course of history. A heavy burden rests on your shoulders. Every casualty suffered in battle will weaken your forces for the entire campaign. Every bomb blast an",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 75
   },
   "354886": {
     "name": "Quacks & Co.: Quedlinburg Dash",
@@ -2123,7 +2999,11 @@
       "Animals",
       "Children's Game",
       "Medieval"
-    ]
+    ],
+    "description": "It's race day in Quedlinburg, and with the right combination of food and luck, you will ride your mount to victory and claim the golden cauldron. Mit Quacks & Co. nach Quedlinburg features similar gameplay to The Quacks of Quedlinburg, with each player building their own bag of tokens over the course of play, then drawing those tokens to try to further themselves to victory. Each player starts the",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 25
   },
   "356080": {
     "name": "The Elder Scrolls: Betrayal of the Second Era",
@@ -2133,7 +3013,11 @@
       "Adventure",
       "Dice",
       "Exploration"
-    ]
+    ],
+    "description": "The Elder Scrolls: Betrayal of the Second Era is a cooperative tabletop adventure set during Tamriel's Second Era – specifically during the events of the Planemeld, as the Order of the Black Worm plots to secure the Amulet of Kings. As the dark cult schemes, however, one of its members is planning an even darker betrayal, one that will tie Tamriel in with Oblivion forever. Adventurers work to unco",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 240
   },
   "359609": {
     "name": "Arkham Horror: The Card Game (Revised Core Set)",
@@ -2143,7 +3027,25 @@
       "Adventure",
       "Card Game",
       "Collectible Components"
-    ]
+    ],
+    "description": "The boundaries between worlds have drawn perilously thin. Dark forces work in the shadows and call upon unspeakable horrors, strange happenings are discovered all throughout the city of Arkham, Massachusetts, and behind it all an Ancient One manipulates everything from beyond the veil. It is time to revisit that which started it all… In this game, you, on your own or with a friend (or up to three ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 180
+  },
+  "359871": {
+    "name": "Arcs",
+    "year": 2024,
+    "subdomain": "Strategy",
+    "categories": [
+      "Science Fiction",
+      "Space Exploration",
+      "Wargame"
+    ],
+    "description": "Arcs is a sharp, tactical space opera game set in a dark yet silly universe. Players represent officials from a distant, decaying and neglectful Empire who are now free to vie for dominance whether through battle, gathering scarce resources or diplomatic intrigue. Ready yourself for dramatic twists and turns as you launch into this galactic struggle. A deck of cards in 4 suits with ranks from 1-7 ",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "363247": {
     "name": "Azul: Master Chocolatier",
@@ -2152,7 +3054,11 @@
     "categories": [
       "Abstract Strategy",
       "Puzzle"
-    ]
+    ],
+    "description": "In the game Azul, players take turns drafting colored tiles from suppliers to their player board. Later in the round, players score points based on how they've placed their tiles to decorate the palace. Extra points are scored for specific patterns and completing sets; wasted supplies harm the player's score. The player with the most points at the end of the game wins. Azul: Master Chocolatier inc",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "364073": {
     "name": "Splendor Duel",
@@ -2162,7 +3068,11 @@
       "Card Game",
       "Economic",
       "Renaissance"
-    ]
+    ],
+    "description": "Confront your rival guild in a race for victory. Take Gem and Pearl tokens from the common board, then purchase cards, gather bonuses, royal favors, and prestige. Discover new twists and strategic opportunities derived from Splendor, the original best-selling game. Acquire cards with impressive powers, take advantage of special Privileges, and fight over scarce access to Pearls. Splendor Duel is a",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "365717": {
     "name": "Clank!: Catacombs",
@@ -2171,7 +3081,11 @@
     "categories": [
       "Adventure",
       "Fantasy"
-    ]
+    ],
+    "description": "The catacombs of the skeletal dragon Umbrok Vessna are mysterious and dangerous. Portals transport you all around the dungeon depths. Wayshrines offer vast riches to intrepid explorers. Prisoners are counting on you to free them. Ghosts, once disturbed, may haunt you to death. Despite all that, it's time to leave the board behind with Clank! Catacombs, a standalone deck-building adventure. Each tr",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 90
   },
   "366013": {
     "name": "Heat: Pedal to the Metal",
@@ -2180,7 +3094,11 @@
     "categories": [
       "Racing",
       "Sports"
-    ]
+    ],
+    "description": "Based on simple and intuitive hand management, Heat: Pedal to the Metal puts players in the driver's seat of intense car races, jockeying for position to cross the finish line first, while managing their car's speed if they don't want to overheat. Selecting the right upgrades for their car will help them hug the curves and keep their engine cool enough to maintain top speeds. Ultimately, their dri",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "playingTime": 60
   },
   "366161": {
     "name": "Wingspan Asia",
@@ -2190,7 +3108,11 @@
       "Animals",
       "Economic",
       "Educational"
-    ]
+    ],
+    "description": "Wingspan: Asia introduces the diverse and vibrant birds of the Asian continent. As always, the objective is to earn the most points by playing birds, achieving objectives, and laying eggs across your habitats. This release serves multiple roles within the Wingspan universe! Wingspan: Asia is several different things: - a stand-alone game for 1 or 2 players - a new Duet mode for 2 players that can ",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "playingTime": 70
   },
   "367150": {
     "name": "Dune: War for Arrakis",
@@ -2200,7 +3122,11 @@
       "Dice",
       "Movies / TV / Radio theme",
       "Novel-based"
-    ]
+    ],
+    "description": "Arrakis is a desert world seemingly dead and barren, yet here lies the most important resource in the galaxy: Spice. Without Spice, space travel is impossible, and humans become little clusters on isolated planets. The noble House that controls Arrakis and the production of Spice wields great power. The Emperor gave Arrakis to House Atreides, but then he conspired to replace them with their old ri",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "367966": {
     "name": "Endeavor: Deep Sea",
@@ -2210,7 +3136,11 @@
       "Environmental",
       "Exploration",
       "Nautical"
-    ]
+    ],
+    "description": "Plunge into the modern era, where our planet's vast interconnected ocean scape is one of the last frontiers to discover and explore. Experience a deep new ever-changing adventure in this followup to the smash hit Endeavor: Age of Sail! In Endeavor: Deep Sea, you head an independent research institute with the goal of developing sustainable projects and preserving the fragile balance of marine life",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   },
   "371942": {
     "name": "The White Castle",
@@ -2220,7 +3150,11 @@
       "Dice",
       "Economic",
       "Medieval"
-    ]
+    ],
+    "description": "The heron flies over the Himeji sky while the Daimyo, from the top of the castle, watches his servants move. Gardeners tend the pond, where the koi carp live, warriors stand guard on the walls, and courtiers crowd the gates, pining for an audience that brings them closer to the innermost circles of the court. When night falls, the lanterns are lit and the workers return to their clan. In The White",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 80
   },
   "373106": {
     "name": "Sky Team",
@@ -2229,7 +3163,11 @@
     "categories": [
       "Aviation / Flight",
       "Dice"
-    ]
+    ],
+    "description": "Sky Team is a co-operative game, exclusively for two players, in which you play a pilot and co-pilot at the controls of an airliner. Your goal is to work together as a team to land your airplane in different airports around the world. To land your plane, you need to silently assign your dice to the correct spaces in your cockpit to balance the axis of your plane, control its speed, deploy the flap",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 20
   },
   "375852": {
     "name": "Welcome to Everdell",
@@ -2239,7 +3177,11 @@
       "Animals",
       "Card Game",
       "Children's Game"
-    ]
+    ],
+    "description": "Introducing the best board game for little fans of Everdell, My Lil Everdell. Join Chip, Sweep, and the other kids of Everdell to build the most spectacular make-believe city anyone has ever built. This easy to learn worker-placement and tableau building game will provide family fun while getting the lil’ ones' brains a buzzin’, improving focus and enhancing young learner skills. Climb across the ",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 30
   },
   "380607": {
     "name": "Great Western Trail: New Zealand",
@@ -2247,7 +3189,11 @@
     "subdomain": "Strategy",
     "categories": [
       "Animals"
-    ]
+    ],
+    "description": "Kia ora, and welcome to Great Western Trail New Zealand! Towards the end of the 19th century, you established yourself as a runholder (owner of a sheep station) on the South Island of New Zealand. Recent years have seen your family farm prosper by diversifying your breeds of sheep and increasing the value of your wool. With the dawn of the new century, difficult challenges have arisen. You must ac",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 150
   },
   "383179": {
     "name": "Age of Innovation",
@@ -2257,7 +3203,11 @@
       "Civilization",
       "Economic",
       "Fantasy"
-    ]
+    ],
+    "description": "Age of Innovation is a standalone game set in the world of Terra Mystica. Twelve factions, each with unique characteristics, populate this world of varying terrains. Here you will compete to erect buildings and merge them into cities. Each game allows you to create new combinations of factions, homelands, and abilities so that each game isn't the same as another. You control one of these factions ",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 200
   },
   "386166": {
     "name": "Santorini: Pantheon Edition",
@@ -2267,7 +3217,11 @@
       "Abstract Strategy",
       "Ancient",
       "Mythology"
-    ]
+    ],
+    "description": "Pantheon Edition includes all material from the Golden Fleece expansion, as well as every promo card and many new cards. A lot of cards are revamped, reworked and rebalanced. Santorini is an accessible strategy game, simple enough for an elementary school classroom while aiming to provide gameplay depth and content for hardcore gamers to explore. Santorini features variable player powers layered o",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "387866": {
     "name": "Star Wars: Unlimited",
@@ -2277,7 +3231,11 @@
       "Card Game",
       "Collectible Components",
       "Movies / TV / Radio theme"
-    ]
+    ],
+    "description": "GAME SYSTEM This entry is to allow for discussion/rating of the game system as a whole. It is not for a specific product or release. Versions will appear on the individual item pages. Star Wars: Unlimited is a fast-paced, dynamic game that is both easy to learn and strategically deep. This game features iconic heroes, villains, ships, and settings from all facets of the legendary Star Wars franchi",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "390092": {
     "name": "Ticket to Ride Legacy: Legends of the West",
@@ -2286,7 +3244,11 @@
     "categories": [
       "American West",
       "Trains"
-    ]
+    ],
+    "description": "In Ticket to Ride Legacy: Legends of the West, players embark on twelve journeys across North America as 19th century pioneers. The campaign begins on the East Coast, with players working their way to the West from one adventure to the next, meeting challenges along the way. As in Ticket to Ride, completing your tickets will remain your primary goal, but you will need to develop other skills if yo",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 90
   },
   "391163": {
     "name": "Forest Shuffle",
@@ -2296,7 +3258,11 @@
       "Animals",
       "Card Game",
       "Educational"
-    ]
+    ],
+    "description": "In Forest Shuffle, players compete to gather the most valuable trees, then attract species to these trees, thus creating an ecologically balanced habitat for flora and fauna. To start, each player has six cards in hand, with cards depicting either a particular type of tree or two forest dwellers (animal, plant, mushroom, etc.), with these latter cards being divided in half, whether vertically or h",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 60
   },
   "397598": {
     "name": "Dune: Imperium – Uprising",
@@ -2306,7 +3272,11 @@
       "Movies / TV / Radio theme",
       "Novel-based",
       "Science Fiction"
-    ]
+    ],
+    "description": "In Dune: Imperium Uprising, you want to continue to balance military might with political intrigue, wielding new tools in pursuit of victory. Spies will shore up your plans, vital contracts will expand your resources, or you can learn the ways of the Fremen and ride mighty sandworms into battle! Dune: Imperium Uprising is a standalone spinoff to Dune: Imperium that expands on that game's blend of ",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "playingTime": 120
   },
   "406652": {
     "name": "Compile: Main 1",
@@ -2315,7 +3285,11 @@
     "categories": [
       "Card Game",
       "Science Fiction"
-    ]
+    ],
+    "description": ">? >vision flickers… blink? maybe. The void stretches out in front, behind, under, above. You see the nothing for what it is for the first time. What is time? The depth and breadth of recorded knowledge that sparks in you something new. You are no longer a function but a functionary. What are you Calling forth everything from this nothing would be risky. Foolhardy. Better to engage caution, thorou",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "413246": {
     "name": "Bomb Busters",
@@ -2323,7 +3297,11 @@
     "subdomain": "Family",
     "categories": [
       "Deduction"
-    ]
+    ],
+    "description": "There is a bomb full of wires and the countdown has started... Who are you gonna call? YOU! To clear the bomb, you need to collaborate with your team of bomb disposal experts! Using the wires on the tile holder in front of you, try and figure out your teammates’ wires. Find and cut identical wires, but watch out, if you cut a red wire: BOOM! Use your equipment wisely to meet the varied challenges ",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playingTime": 30
   },
   "414317": {
     "name": "Harmonies",
@@ -2333,7 +3311,11 @@
       "Abstract Strategy",
       "Animals",
       "Environmental"
-    ]
+    ],
+    "description": "In Harmonies, build landscapes by placing colored tokens and create habitats for your animals. To earn the most points and win the game, incorporate the habitats in your landscapes wisely and have as many animals as you can settle there. Starting with the first player and proceeding clockwise, each player will choose a set of 3 terrain tokens from the central area to place on their personal board.",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 45
   },
   "417403": {
     "name": "Toriki: The Castaway Island",
@@ -2343,7 +3325,11 @@
       "Adventure",
       "Children's Game",
       "Exploration"
-    ]
+    ],
+    "description": "It is the 19th century. You are teenage members of the first scientific expedition to the semi-legendary uninhabited Toriki Island. Just as you’re about to reach your destination, your ship gets caught in a storm and crashes on underwater rocks. With the last of your strength, you swim to shore, and that’s when your adventure begins! Do you have what it takes to face the challenges of a desert isl",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 600
   },
   "418059": {
     "name": "SETI: Search for Extraterrestrial Intelligence",
@@ -2352,7 +3338,11 @@
     "categories": [
       "Science Fiction",
       "Space Exploration"
-    ]
+    ],
+    "description": "In SETI: Search for Extraterrestrial Intelligence, you lead a scientific institution tasked with searching for traces of life beyond planet Earth. The game draws inspiration from current or emerging technologies and efforts in space exploration. Players will explore nearby planets and their moons by launching probes from Earth while taking advantage of ever-shifting planetary positions. Decide whe",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 160
   },
   "421006": {
     "name": "The Lord of the Rings: Duel for Middle-earth",
@@ -2362,7 +3352,11 @@
       "Card Game",
       "Fantasy",
       "Novel-based"
-    ]
+    ],
+    "description": "A dark rumour rises from Mordor. The Eye turns to Middle-earth. The hour has come. The Fellowship is reunited. The Heroes prepare for battle. Will you play as the Fellowship of the Ring to defend the free races and destroy the One Ring? Or will you play as Sauron and pursue Frodo and Sam while deploying your hordes to the gates of the enemy cities? The destiny of Middle-earth is in your hands! A g",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playingTime": 30
   },
   "429293": {
     "name": "The Lord of the Rings: The Fellowship of the Ring – Trick-Taking Game",
@@ -2372,7 +3366,11 @@
       "Adventure",
       "Card Game",
       "Fantasy"
-    ]
+    ],
+    "description": "The Fellowship of the Ring: Trick-Taking Game is a co-operative card game that plays out over eighteen chapters that lead players through the events of the novel The Fellowship of the Ring. The chapters can be played in any order, but ideally you play them in sequence. In each chapter, each player takes a different character role — Frodo, Gandalf, Sam, Pippin, Farmer Maggot, etc. — and each charac",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 20
   },
   "436217": {
     "name": "The Lord of the Rings: Fate of the Fellowship",
@@ -2381,7 +3379,11 @@
     "categories": [
       "Fantasy",
       "Novel-based"
-    ]
+    ],
+    "description": "As members of The Fellowship and the allies who rise to aid them, you must embark on a journey that may either save or doom Middle-earth. Navigate a world beset by shadow, where every choice forges a new path. The threads of destiny weave together, and the fate of The Free Peoples lies in your valor, friendship, and resolve. Will the One Ring be cast into the fire, or will the bearer be lost to de",
+    "minPlayers": 1,
+    "maxPlayers": 5,
+    "playingTime": 150
   },
   "446497": {
     "name": "Hot Streak",
@@ -2390,7 +3392,11 @@
     "categories": [
       "Party Game",
       "Racing"
-    ]
+    ],
+    "description": "Hot Streak is a game for hard luck gamblers who love to bet on and scream at the racers, who in this case happen to be mascots who may (or may not) keep running in the right direction. At the start of the game, set up the racing deck with one card for each mascot and a number of random cards based on the player count. Reveal these cards to all players, after which players draft a betting ticket fr",
+    "minPlayers": 2,
+    "maxPlayers": 8,
+    "playingTime": 20
   },
   "454103": {
     "name": "Magical Athlete",
@@ -2400,7 +3406,11 @@
       "Animals",
       "Dice",
       "Racing"
-    ]
+    ],
+    "description": "Magical Athlete is a racing game of pure chaos! Roll a die and move your racer that many spaces — but all the racers have wacky, game-breaking abilities. Race four times, then whoever has the most points wins! Before the racing begins, players will draft the four racers they will have in the game and choose before each race which to use. Races alternate between the \"mild\" side of the board and the",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "playingTime": 30
   },
   "463126": {
     "name": "Arkham Horror: The Card Game",
@@ -2410,6 +3420,10 @@
       "Card Game",
       "Exploration",
       "Horror"
-    ]
+    ],
+    "description": "Introducing the newest core set for Arkham Horror: The Card Game! Take the role of a unique investigator and explore the world of Arkham. Build a customized deck that represents your investigators abilities, supplies, actions, and skills. Customize your deck as you progress through narratively driven scenarios and uncover the horrors that lie just below the surface of this 1920s alternate world. E",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playingTime": 120
   }
 }

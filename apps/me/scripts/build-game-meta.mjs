@@ -1,12 +1,19 @@
 // Build apps/me/lib/heimdall/game-meta.json from the BGG dump.
 //
-// Joins:
-//   - apps/me/lib/heimdall/game-names.json (id → name, the slim corpus lookup)
+// Source-of-truth for which IDs belong in the bundle:
+//   - rec_seidr_game_profile (DB) — every game with an active, non-superseded
+//     profile. This guarantees we never recommend a game whose name/year
+//     we can't render. Whatever the engine knows about, the bundle covers.
+//   - apps/me/lib/heimdall/game-names.json — supplementary fallback for
+//     legacy IDs not in the DB (preserves hand-curated names if the DB
+//     query returns nothing).
+//
+// Joins against:
 //   - rec-engines/mimir/tmp/bgg_deep.json (BGG metadata for ~2600 games)
 //
 // Outputs:
 //   apps/me/lib/heimdall/game-meta.json
-//     { "<id>": { name, year, subdomain, categories: [up to 3 strings] } }
+//     { "<id>": { name, year, subdomain, categories, description, ...} }
 //
 // `subdomain` is the BGG top-level genre bucket (Strategy / Family /
 // Party / Thematic / Wargame / Customizable / Children / Abstract).
@@ -16,7 +23,10 @@
 // array and {id, value}-object-array formats present in the dump).
 //
 // Run from apps/me/:
-//   node scripts/build-game-meta.mjs
+//   DATABASE_URL=postgres://... node scripts/build-game-meta.mjs
+//
+// (DATABASE_URL is REQUIRED so the script can pull the live ID set from
+// rec_seidr_game_profile.)
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -52,12 +62,42 @@ function pickSubdomain(raw) {
   return null;
 }
 
-function main() {
+async function loadIdsFromDb() {
+  const connStr = process.env.DATABASE_URL;
+  if (!connStr) {
+    throw new Error('DATABASE_URL env var required (sources active game IDs from rec_seidr_game_profile)');
+  }
+  const { default: pg } = await import('pg');
+  const client = new pg.Client({ connectionString: connStr });
+  await client.connect();
+  try {
+    const { rows } = await client.query(
+      'SELECT DISTINCT game_id FROM rec_seidr_game_profile WHERE NOT superseded',
+    );
+    return rows.map((r) => Number(r.game_id));
+  } finally {
+    await client.end();
+  }
+}
+
+async function main() {
   if (!fs.existsSync(BGG_DUMP_PATH)) {
     console.error('BGG dump not found at', BGG_DUMP_PATH);
     process.exit(1);
   }
-  const names = JSON.parse(fs.readFileSync(NAMES_PATH, 'utf8'));
+
+  const dbIds = await loadIdsFromDb();
+  // Merge: DB IDs (authoritative) ∪ legacy game-names.json IDs (fallback).
+  // The union guarantees coverage even if a name was hand-added but never
+  // got a profile in the DB yet.
+  const namesFallback = fs.existsSync(NAMES_PATH)
+    ? JSON.parse(fs.readFileSync(NAMES_PATH, 'utf8'))
+    : {};
+  const idSet = new Set(dbIds);
+  for (const idStr of Object.keys(namesFallback)) idSet.add(Number(idStr));
+  const allIds = [...idSet].sort((a, b) => a - b);
+  console.log(`Sourcing ${allIds.length} IDs (${dbIds.length} from DB, ${Object.keys(namesFallback).length} from names fallback).`);
+
   const dump = JSON.parse(fs.readFileSync(BGG_DUMP_PATH, 'utf8'));
   const dumpById = new Map();
   for (const g of dump) dumpById.set(g.id, g);
@@ -68,12 +108,16 @@ function main() {
   let withYear = 0;
   let missingInDump = 0;
 
-  for (const [idStr, name] of Object.entries(names)) {
-    const id = Number(idStr);
+  for (const id of allIds) {
+    const idStr = String(id);
+    const fallbackName = namesFallback[idStr];
     const g = dumpById.get(id);
     if (!g) {
-      // Game in seidr corpus but not in dump — keep name only.
-      meta[idStr] = { name };
+      // Profile exists but BGG metadata is missing — keep whatever name
+      // we have (fallback or a stub). The recommend route falls back to
+      // "Game #ID" only when the meta entry itself is absent, so this
+      // entry is enough to suppress that.
+      meta[idStr] = { name: fallbackName || `Game #${id}` };
       missingInDump++;
       continue;
     }
@@ -86,7 +130,7 @@ function main() {
       ? g.description.replace(/\s+/g, ' ').trim().slice(0, 400)
       : null;
     const entry = {
-      name: g.name || name,
+      name: g.name || fallbackName || `Game #${id}`,
       year: typeof g.year === 'number' ? g.year : null,
       subdomain,
       categories,
@@ -111,4 +155,7 @@ function main() {
   );
 }
 
-main();
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});
