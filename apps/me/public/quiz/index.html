@@ -373,26 +373,73 @@
     }[c]));
   }
 
+  function fmtDate(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const now = Date.now();
+      const ms = now - d.getTime();
+      const days = Math.floor(ms / 86400000);
+      if (days === 0) return 'today';
+      if (days === 1) return 'yesterday';
+      if (days < 7) return `${days} days ago`;
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return ''; }
+  }
+
   function renderIntro() {
-    // When a saved profile was found at load time, offer a one-click
-    // resume above the standard intro copy. Anon users + first-time
-    // signed-in users see the regular intro.
     const hasSaved = window.__savedProfile && window.__savedProfile.profile;
-    const resumeBlock = hasSaved
-      ? `<div style="margin: 20px 0 24px; padding: 16px 18px; background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px;">
+    // window.__anonProfile is populated by the page-load orchestrator
+    // when there's a fresh quiz in localStorage that hasn't been claimed
+    // yet. Only surfaces when signed-in (anon flow ignores it).
+    const hasAnon = window.__authState && window.__authState.signedIn
+      && window.__anonProfile && window.__anonProfile.profile;
+
+    let topBlock = '';
+
+    if (hasSaved && hasAnon) {
+      // Conflict: user took the quiz anonymously then signed in, and
+      // they ALSO have a previously-saved profile from an earlier visit.
+      // Surface both with timestamps and let them pick.
+      const savedDate = fmtDate(window.__savedProfile.completed_at);
+      const anonDate = fmtDate(window.__anonProfile.taken_at);
+      topBlock = `<div style="margin: 20px 0 24px; padding: 16px 18px; background: rgba(125,85,199,0.10); border: 1px solid rgba(125,85,199,0.4); border-radius: 10px;">
+          <p style="margin: 0 0 10px; color: #FBDB65; font-weight: 600;">Two profiles, one Passport</p>
+          <p style="margin: 0 0 14px; font-size: 0.92rem;">You signed in after taking the quiz. We have both your fresh take and your previously-saved profile — which do you want to use?</p>
+          <button class="btn-primary" onclick="window.__useFreshAnonProfile()" style="margin-bottom: 8px;">Use my fresh quiz${anonDate ? ' (' + escapeHtml(anonDate) + ')' : ''}</button>
+          <button class="btn-secondary" onclick="window.__keepSavedProfile()" style="width: 100%; margin-top: 4px;">Keep my saved profile${savedDate ? ' (' + escapeHtml(savedDate) + ')' : ''}</button>
+          <p style="margin: 12px 0 0; font-size: 0.78rem; opacity: 0.7;">Picking "fresh" saves it as a new version — your old one stays in history.</p>
+        </div>`;
+    } else if (hasSaved) {
+      topBlock = `<div style="margin: 20px 0 24px; padding: 16px 18px; background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px;">
           <p style="margin: 0 0 10px; color: #FBDB65; font-weight: 600;">Welcome back</p>
           <p style="margin: 0 0 14px; font-size: 0.92rem;">You took this before. Pick up where you left off, or start fresh for sharper signal.</p>
           <button class="btn-primary" onclick="window.__resumeSaved()" style="margin-bottom: 8px;">Use my saved profile</button>
           <button class="btn-secondary" onclick="window.__begin()" style="width: 100%; margin-top: 4px;">Retake the quiz</button>
-        </div>`
-      : '';
-    const beginBtn = hasSaved
-      ? '' // covered by the resume block above
+        </div>`;
+    } else if (hasAnon) {
+      // Signed-in user with no saved profile but a fresh anon take —
+      // most common is "took quiz then signed in for the first time."
+      // The claim flow's profile rescue should have already saved it
+      // to DB by now (or will momentarily); offer a direct jump to
+      // results plus retake.
+      const anonDate = fmtDate(window.__anonProfile.taken_at);
+      topBlock = `<div style="margin: 20px 0 24px; padding: 16px 18px; background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px;">
+          <p style="margin: 0 0 10px; color: #FBDB65; font-weight: 600;">Your fresh quiz is on your Passport</p>
+          <p style="margin: 0 0 14px; font-size: 0.92rem;">We saved the quiz you just took${anonDate ? ' (' + escapeHtml(anonDate) + ')' : ''} to your Passport. Jump back to your results, or retake for sharper signal.</p>
+          <button class="btn-primary" onclick="window.__resumeAnon()" style="margin-bottom: 8px;">View my results</button>
+          <button class="btn-secondary" onclick="window.__begin()" style="width: 100%; margin-top: 4px;">Retake the quiz</button>
+        </div>`;
+    }
+
+    const beginBtn = topBlock
+      ? '' // covered by the topBlock above
       : `<button class="btn-primary" onclick="window.__begin()">Begin</button>`;
+
     app.innerHTML = `
       <span class="badge">Research preview</span>
       <h1 style="margin-top: 14px;">What kind of tabletop player are you?</h1>
-      ${resumeBlock}
+      ${topBlock}
       <p>About 18 quick questions — “this-or-that”, agree/disagree, and a few “which game tonight?” picks.</p>
       <p>You’ll get back a 24-dimension profile of your gaming preferences. Takes ~5 minutes.</p>
       <p style="margin-bottom: 28px;"><small>Nothing leaves your device. The result is yours; you can copy or download it. This is a research instrument; recommendations come in a future version.</small></p>
@@ -400,15 +447,63 @@
     `;
   }
 
-  // Jump straight to the results page using the previously-saved profile.
-  // No quiz, no compute, no save — the resume flow assumes the saved
-  // version is what the user wants right now.
+  // Resume from the DB-saved profile (signed-in only, no conflict path).
   window.__resumeSaved = () => {
     if (!window.__savedProfile || !window.__savedProfile.profile) return;
     renderResults({
       profile: window.__savedProfile.profile,
       confidence: window.__savedProfile.confidence,
     });
+  };
+
+  // Resume from the localStorage anon profile (post-sign-in, no DB conflict).
+  window.__resumeAnon = () => {
+    if (!window.__anonProfile || !window.__anonProfile.profile) return;
+    renderResults({
+      profile: window.__anonProfile.profile,
+      confidence: window.__anonProfile.confidence,
+    });
+  };
+
+  // Conflict resolution: user picked "fresh." Save the localStorage anon
+  // profile to the DB as a new version (the existing /api/quiz/profile
+  // POST auto-bumps profile_version), clear the anon copy, then jump to
+  // results using the fresh profile.
+  window.__useFreshAnonProfile = async () => {
+    if (!window.__anonProfile || !window.__anonProfile.profile) return;
+    const a = window.__anonProfile;
+    try {
+      await fetch('/api/quiz/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile: a.profile,
+          confidence: a.confidence || {},
+          question_set_version: a.question_set_version || 'unknown',
+          questions_answered: a.questions_answered || 1,
+        }),
+      });
+    } catch (err) {
+      console.warn('[seidr] save fresh failed; rendering anon-profile results anyway:', err);
+    }
+    window.__clearAnonProfile();
+    window.__anonProfile = null;
+    renderResults({ profile: a.profile, confidence: a.confidence || {} });
+  };
+
+  // Conflict resolution: user picked "keep saved." Discard the
+  // localStorage anon profile, jump to results using the DB profile.
+  window.__keepSavedProfile = () => {
+    window.__clearAnonProfile();
+    window.__anonProfile = null;
+    if (window.__savedProfile && window.__savedProfile.profile) {
+      renderResults({
+        profile: window.__savedProfile.profile,
+        confidence: window.__savedProfile.confidence,
+      });
+    } else {
+      renderIntro();
+    }
   };
 
   window.__begin = () => {
@@ -615,6 +710,21 @@
     window.__profileBaseline = { ...profile };
     window.__edited = new Set();
 
+    // Persist the freshly-computed quiz profile to localStorage so it
+    // survives the sign-in redirect (the page reload wipes JS state).
+    // The post-sign-in claim flow can then rescue it. Skipped for the
+    // resume case — re-saving the same profile we just loaded would be
+    // a no-op write at best, a duplicate-version trigger at worst.
+    if (!isResumed) {
+      window.__saveAnonProfile({
+        profile,
+        confidence,
+        questions_answered: responses.length,
+        question_set_version: bank.metadata?.version || 'unknown',
+        taken_at: new Date().toISOString(),
+      });
+    }
+
     // Auto-save the freshly-computed profile when signed in. Skip when
     // the profile was just loaded from the DB (resume path) — that
     // would create a duplicate version row with identical content.
@@ -654,6 +764,40 @@
       })();
     }
   }
+
+  // ----- Anon profile localStorage helpers -----
+  // Stores the quiz-derived profile in localStorage so it survives the
+  // sign-in page reload. Until persistence to a Passport happens, this
+  // is the only durable copy of the user's quiz output.
+  //
+  // Format: { profile, confidence, questions_answered,
+  //   question_set_version, taken_at }
+  // taken_at: ISO string, used to (a) display the take date in conflict
+  // UI and (b) gate against ancient stale entries (>30d → ignored).
+  const ANON_PROFILE_TTL_DAYS = 30;
+  window.__saveAnonProfile = (data) => {
+    try {
+      localStorage.setItem('seidr_anon_profile', JSON.stringify(data));
+    } catch {}
+  };
+  window.__loadAnonProfile = () => {
+    try {
+      const raw = localStorage.getItem('seidr_anon_profile');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.profile || !parsed.taken_at) return null;
+      const ageMs = Date.now() - new Date(parsed.taken_at).getTime();
+      if (ageMs > ANON_PROFILE_TTL_DAYS * 86400 * 1000) {
+        // Stale — ignore + clean up.
+        try { localStorage.removeItem('seidr_anon_profile'); } catch {}
+        return null;
+      }
+      return parsed;
+    } catch { return null; }
+  };
+  window.__clearAnonProfile = () => {
+    try { localStorage.removeItem('seidr_anon_profile'); } catch {}
+  };
 
   // ----- Anon session id + per-game feedback signals -----
   // Browser-generated uuid stored in localStorage so anon quiz takers
@@ -1337,25 +1481,40 @@
     }
   };
 
+  // Pre-populate window.__anonProfile from localStorage so the claim
+  // and conflict-resolution logic below have it available. Stale
+  // entries (>30d via TTL) return null. May be overridden by later
+  // claim outcomes (e.g. cleared after a successful rescue or pick).
+  window.__anonProfile = window.__loadAnonProfile();
+
   // Anonymous → signed-in claim. When a user takes the quiz anonymously
   // and later signs in, we want their existing tags + rec history to
   // follow them onto their Passport. Fire the claim once per
   // (anon_session_id, session) pair — the marker is stored in
   // localStorage so we don't pound the endpoint on every page load.
   // Idempotent server-side either way.
+  //
+  // Profile rescue: the server can save a not-yet-persisted profile to
+  // the user's Passport when (a) the body includes one and (b) they
+  // don't already have a saved profile. We pull from localStorage now
+  // (anon profile survives page reloads), with in-memory as a fallback
+  // for the rare case the user finishes the quiz, signs in, completes
+  // the auth round-trip, and somehow still has JS state — that path
+  // never actually runs but keeping it doesn't hurt.
   if (window.__authState && window.__authState.signedIn) {
     try {
       const anonId = window.__getAnonSessionId();
       const claimedKey = 'seidr_claimed_for_' + (window.__authState.userId || 'unknown');
       const alreadyClaimed = localStorage.getItem(claimedKey) === anonId;
       if (!alreadyClaimed) {
-        // Best-effort: include the latest in-browser profile + responses
-        // so the server can rescue an unsaved profile from the anon
-        // session. window.__profile + window.__exportJson land after
-        // results render — at this point in page lifecycle they're
-        // typically null, but a re-claim after results would carry them.
         const body = { anon_session_id: anonId };
-        if (window.__profile && bank && bank.metadata && responses && responses.length > 0) {
+        const lp = window.__anonProfile;
+        if (lp && lp.profile) {
+          body.profile = lp.profile;
+          body.confidence = lp.confidence || {};
+          body.question_set_version = lp.question_set_version || 'unknown';
+          body.questions_answered = lp.questions_answered || 1;
+        } else if (window.__profile && bank && bank.metadata && responses && responses.length > 0) {
           body.profile = window.__profile;
           body.confidence = (typeof computeProfile === 'function')
             ? computeProfile().confidence
@@ -1372,10 +1531,23 @@
           .then((data) => {
             if (!data) return;
             try { localStorage.setItem(claimedKey, anonId); } catch {}
+            // If the server rescued the profile (no DB conflict at the
+            // time the claim ran), clear the localStorage copy — it's
+            // now durably on the Passport and re-rendering the conflict
+            // UI on a future visit would be incorrect. Re-paint the
+            // intro so the now-cleared anonProfile state is reflected.
+            if (data.profile_migrated) {
+              window.__clearAnonProfile();
+              window.__anonProfile = null;
+              // Only re-render if the intro is currently on screen
+              // (don't disturb the user once they've drilled into
+              // results or mid-quiz).
+              if (document.querySelector('main#app .badge')) {
+                renderIntro();
+              }
+            }
             const total = (data.events_migrated || 0) + (data.signals_migrated || 0);
             if (total > 0 || data.profile_migrated) {
-              // Light surfacing — most users won't have anything to claim;
-              // when they do, a console line is fine for now.
               console.info(`[seidr] claim: ${data.events_migrated} events + ${data.signals_migrated} signals migrated, ${data.signals_dropped} dropped, profile ${data.profile_migrated ? 'migrated' : 'kept'}.`);
             }
           })
