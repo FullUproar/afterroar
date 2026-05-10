@@ -7,42 +7,50 @@ import { prisma } from "./prisma";
 /*  even if a route forgets to add store_id, queries are scoped.       */
 /* ------------------------------------------------------------------ */
 
-// Models that have a direct store_id column
+// Models that have a direct store_id column.
+//
+// IMPORTANT: Prisma's $extends query hooks pass `model` in PascalCase
+// ("PosCustomer"), NOT camelCase ("posCustomer"). This used to be wrong
+// and the entire tenant-scoping extension was silently a no-op for
+// every operation — the API routes that pass an explicit store_id
+// filter still worked, but anything trusting the tenant client to
+// auto-scope (e.g. store-intelligence) was leaking cross-store data.
+// Caught 2026-05-10 during the post-audit KPI investigation.
 const TENANT_MODELS = [
-  "posStore",
-  "posStaff",
-  "posCustomer",
-  "posCustomerNote",
-  "posInventoryItem",
-  "posSupplier",
-  "posEvent",
-  "posLedgerEntry",
-  "posTradeIn",
-  "posReturn",
-  "posGiftCard",
-  "posLocation",
-  "posInventoryLevel",
-  "posTransfer",
-  "posPreorder",
-  "posPromotion",
-  "posLoyaltyEntry",
-  "posImportJob",
-  "posCertification",
-  "posGameCheckout",
-  "posPurchaseOrder",
-  "posStockCount",
-  "posTournament",
-  "posOrder",
-  "posTab",
-  "posMenuItem",
-  "posMenuModifier",
-  "posConsignmentItem",
-  "posTimeEntry",
-  "posOperationalLog",
-  "posMobileSession",
-  "posAccessCodeAttempt",
-  "posAllocationPool",
-  "posInventoryHold",
+  "PosStore",
+  "PosStaff",
+  "PosCustomer",
+  "PosCustomerNote",
+  "PosInventoryItem",
+  "PosSupplier",
+  "PosEvent",
+  "PosLedgerEntry",
+  "PosTradeIn",
+  "PosReturn",
+  "PosGiftCard",
+  "PosLocation",
+  "PosInventoryLevel",
+  "PosTransfer",
+  "PosPreorder",
+  "PosPromotion",
+  "PosLoyaltyEntry",
+  "PosImportJob",
+  "PosCertification",
+  "PosGameCheckout",
+  "PosPurchaseOrder",
+  "PosStockCount",
+  "PosTournament",
+  "PosOrder",
+  "PosTab",
+  "PosMenuItem",
+  "PosMenuModifier",
+  "PosConsignmentItem",
+  "PosTimeEntry",
+  "PosOperationalLog",
+  "PosMobileSession",
+  "PosAccessCodeAttempt",
+  "PosAllocationPool",
+  "PosInventoryHold",
 ] as const;
 
 type TenantModel = (typeof TENANT_MODELS)[number];
@@ -69,10 +77,6 @@ export function getTenantClient(storeId: string) {
         async findMany({ model, args, query }) {
           if (isTenantModel(model)) {
             args.where = { ...args.where, store_id: storeId };
-            // DIAGNOSTIC: log to verify extension is running
-            if (model === "posCustomer") {
-              console.log(`[TENANT] ${model}.findMany scoped to store_id=${storeId}, where=`, JSON.stringify((args as Record<string, unknown>).where).slice(0, 200));
-            }
           }
           const results = await query(args);
           // SECURITY: warn if any results leak from another store
@@ -125,7 +129,7 @@ export function getTenantClient(storeId: string) {
           return query(args);
         },
         async create({ model, args, query }) {
-          if (isTenantModel(model) && model !== "posStore") {
+          if (isTenantModel(model) && model !== "PosStore") {
             const data = args.data as Record<string, unknown>;
             if (!data.store_id) {
               data.store_id = storeId;
@@ -134,7 +138,7 @@ export function getTenantClient(storeId: string) {
           return query(args);
         },
         async createMany({ model, args, query }) {
-          if (isTenantModel(model) && model !== "posStore") {
+          if (isTenantModel(model) && model !== "PosStore") {
             const dataArray = Array.isArray(args.data) ? args.data : [args.data];
             for (const item of dataArray) {
               const record = item as Record<string, unknown>;

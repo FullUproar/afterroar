@@ -242,7 +242,13 @@ export default function PullListsPage() {
             >
               {search
                 ? "Try a different series title."
-                : "Set one up when a customer asks you to hold a book."}
+                : "Set one up when a customer asks you to hold a book — works for comics, ongoing series, or anything you reserve weekly."}
+            </p>
+            <p
+              className="font-mono uppercase text-ink-faint"
+              style={{ fontSize: "0.6rem", letterSpacing: "0.24em", fontWeight: 600 }}
+            >
+              Comic-shop terminology by default · TCG/board-game stores can repurpose for reserves
             </p>
             {!search && statusFilter === "active" && (
               <button

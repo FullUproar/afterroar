@@ -179,7 +179,7 @@ export default async function DashboardPage() {
           <KpiCell k="Revenue Today" v={formatCents(todayRevenueCents)} primary />
           <KpiCell k="Sales" v={String(todaySales)} />
           <KpiCell k="Avg Ticket" v={formatCents(avgTicketCents)} />
-          <KpiCell k="Customers" v={String(customersServedToday)} />
+          <KpiCell k="Customers Served Today" v={String(customersServedToday)} />
           <KpiCell k="Upcoming Events" v={String(upcomingEvents)} />
         </section>
 

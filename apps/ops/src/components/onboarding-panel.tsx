@@ -217,17 +217,10 @@ export function OnboardingPanel() {
   const settings = (store.settings ?? {}) as Record<string, unknown>;
   if (settings.onboarding_complete) return null;
 
-  // On register page, show only a minimal pill
-  if (isRegisterPage) {
-    return (
-      <button
-        onClick={() => update({ minimized: false })}
-        className="fixed bottom-4 right-4 z-[60] rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition-opacity"
-      >
-        Setup: Step {state.step + 1}/{STEPS.length}
-      </button>
-    );
-  }
+  // Suppress entirely in register mode — onboarding shouldn't compete
+  // with payment / sale-completion controls. Owner can finish setup
+  // after exiting the register. (UX-006)
+  if (isRegisterPage) return null;
 
   // Minimized pill
   if (state.minimized) {
@@ -307,7 +300,8 @@ export function OnboardingPanel() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Sales Tax Rate (%)</label>
-                  <input type="number" step="0.01" min="0" max="30" value={state.taxRate} onChange={(e) => update({ taxRate: e.target.value })} onKeyDown={(e) => e.stopPropagation()} placeholder="8.25" className={inputClass} />
+                  <input type="number" step="0.01" min="0" max="30" value={state.taxRate} onChange={(e) => update({ taxRate: e.target.value })} onKeyDown={(e) => e.stopPropagation()} placeholder="e.g. 8.25" className={inputClass} />
+                  <p className="mt-1 text-[0.65rem] text-muted">Saved to Settings → Store when you continue.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Phone <span className="text-muted">(opt.)</span></label>

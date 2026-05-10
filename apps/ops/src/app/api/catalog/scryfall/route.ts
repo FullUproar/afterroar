@@ -38,7 +38,28 @@ export async function GET(request: NextRequest) {
     }
 
     const { cards, total } = await searchCards(q);
-    const mapped = cards.slice(0, 30).map(scryfallToCatalogCard);
+
+    // Bubble exact-name matches to the top so a query like "Lightning Bolt"
+    // doesn't lead with split/dual-faced cards that happen to contain the
+    // phrase in one half ("Emeritus of Conflict // Lightning Bolt"). Cashiers
+    // searching a common card name expect the canonical printing first.
+    // (UX-023)
+    const qLower = q.toLowerCase();
+    const ranked = [...cards].sort((a, b) => {
+      const aName = (a.name || "").toLowerCase();
+      const bName = (b.name || "").toLowerCase();
+      const aExact = aName === qLower ? 0 : 1;
+      const bExact = bName === qLower ? 0 : 1;
+      if (aExact !== bExact) return aExact - bExact;
+      const aStarts = aName.startsWith(qLower) ? 0 : 1;
+      const bStarts = bName.startsWith(qLower) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      // Prefer non-split cards (no " // ") at same precedence level
+      const aSplit = aName.includes(" // ") ? 1 : 0;
+      const bSplit = bName.includes(" // ") ? 1 : 0;
+      return aSplit - bSplit;
+    });
+    const mapped = ranked.slice(0, 30).map(scryfallToCatalogCard);
 
     return NextResponse.json({ cards: mapped, total });
   } catch (error) {

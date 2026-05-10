@@ -176,6 +176,7 @@ export function Sidebar() {
     { href: "/dashboard/orders", label: "Orders", icon: ICON.orders, permission: "checkout" },
     { href: "/dashboard/cash-flow", label: "Intelligence", icon: ICON.intel, permission: "cash_flow" },
     { href: "/dashboard/staff", label: "Staff", icon: ICON.staff, permission: "staff.manage" },
+    { href: "/dashboard/timeclock", label: "Time Clock", icon: ICON.staff, permission: "staff.manage" },
     { href: "/dashboard/devices", label: "Devices", icon: ICON.staff, permission: "staff.manage" },
     { href: "/dashboard/integrations", label: "Integrations", icon: ICON.settings, permission: "store.settings" },
     { href: "/dashboard/settings", label: "Settings", icon: ICON.settings, permission: "store.settings" },

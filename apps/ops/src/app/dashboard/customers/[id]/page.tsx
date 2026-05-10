@@ -399,8 +399,9 @@ export default function CustomerDetailPage() {
                 <button
                   onClick={() => setShowLinkForm(true)}
                   className="px-4 py-2 bg-accent hover:opacity-90 text-foreground rounded text-sm font-medium"
+                  title="Look up an existing Afterroar account by email — does not send mail"
                 >
-                  Link by Email
+                  Look Up by Email
                 </button>
                 <button
                   onClick={async () => {
@@ -445,6 +446,9 @@ export default function CustomerDetailPage() {
                     onChange={(e) => { setLinkEmail(e.target.value); setLinkError(''); }}
                     className="w-full max-w-md bg-card-hover border border-input-border rounded px-3 py-2 text-foreground text-sm"
                   />
+                  <p className="mt-1 text-[11px] text-muted/70">
+                    Looks up an existing Afterroar account. No email is sent to the customer.
+                  </p>
                 </div>
                 {linkError && (
                   <p className="text-xs text-red-400">{linkError}</p>

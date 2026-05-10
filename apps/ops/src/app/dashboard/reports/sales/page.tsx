@@ -383,33 +383,44 @@ export default function SalesPage() {
           )}
 
           {/* Peak Hours */}
-          <section className="space-y-3">
-            <SectionHeader>Peak Hours</SectionHeader>
-            <p className="text-sm text-muted">When your customers are shopping. Darker means busier.</p>
-            <div className="rounded-xl border border-card-border bg-card p-4">
-              <div className="grid grid-cols-8 md:grid-cols-12 gap-1">
-                {data.peak_hours
-                  .filter((h) => h.hour >= 8 && h.hour <= 22)
-                  .map((h) => (
-                    <div
-                      key={h.hour}
-                      className="aspect-square rounded-lg flex flex-col items-center justify-center cursor-default transition-colors"
-                      style={{
-                        backgroundColor: h.intensity > 0
-                          ? `rgba(255, 130, 0, ${0.1 + (h.intensity / 100) * 0.7})`
-                          : "rgba(255,255,255,0.03)",
-                      }}
-                      title={`${formatHour(h.hour)}: ${h.count} transactions`}
-                    >
-                      <span className="text-[10px] text-muted">{formatHour(h.hour)}</span>
-                      <span className={`text-xs font-bold ${h.count > 0 ? "text-foreground" : "text-muted/50"}`}>
-                        {h.count}
-                      </span>
+          {(() => {
+            const peakHasData = data.peak_hours.some((h) => h.count > 0);
+            return (
+              <section className="space-y-3">
+                <SectionHeader>Peak Hours</SectionHeader>
+                <p className="text-sm text-muted">When your customers are shopping. Darker means busier.</p>
+                <div className="rounded-xl border border-card-border bg-card p-4">
+                  {peakHasData ? (
+                    <div className="grid grid-cols-8 md:grid-cols-12 gap-1">
+                      {data.peak_hours
+                        .filter((h) => h.hour >= 8 && h.hour <= 22)
+                        .map((h) => (
+                          <div
+                            key={h.hour}
+                            className="aspect-square rounded-lg flex flex-col items-center justify-center cursor-default transition-colors"
+                            style={{
+                              backgroundColor: h.intensity > 0
+                                ? `rgba(255, 130, 0, ${0.1 + (h.intensity / 100) * 0.7})`
+                                : "rgba(255,255,255,0.03)",
+                            }}
+                            title={`${formatHour(h.hour)}: ${h.count} transactions`}
+                          >
+                            <span className="text-[10px] text-muted">{formatHour(h.hour)}</span>
+                            <span className={`text-xs font-bold ${h.count > 0 ? "text-foreground" : "text-muted/50"}`}>
+                              {h.count}
+                            </span>
+                          </div>
+                        ))}
                     </div>
-                  ))}
-              </div>
-            </div>
-          </section>
+                  ) : (
+                    <p className="text-sm text-muted text-center py-8">
+                      Not enough hourly data in this window yet — come back after a few more sales.
+                    </p>
+                  )}
+                </div>
+              </section>
+            );
+          })()}
         </>
       )}
 

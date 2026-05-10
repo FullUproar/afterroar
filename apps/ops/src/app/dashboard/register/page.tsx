@@ -1741,9 +1741,9 @@ export default function RegisterPage() {
               <ReceiptEmailButton receiptToken={lastReceipt.receiptToken} customerEmail={customer?.email} />
             )}
             {receiptQrUrl && lastReceipt && (
-              <button onClick={() => setShowCustomerDisplay(true)} className="flex items-center gap-2 rounded-xl border border-card-border bg-card-hover px-4 text-sm font-medium text-foreground active:scale-[0.98] transition-transform" style={{ height: 44, touchAction: "manipulation" }}>
+              <button onClick={() => setShowCustomerDisplay(true)} className="flex items-center gap-2 rounded-xl border border-card-border bg-card-hover px-4 text-sm font-medium text-foreground active:scale-[0.98] transition-transform" style={{ height: 44, touchAction: "manipulation" }} title="Open full-screen QR on the customer-facing display">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                Show QR
+                Show on Customer Display
               </button>
             )}
           </div>
@@ -2151,9 +2151,9 @@ export default function RegisterPage() {
               <ReceiptEmailButton receiptToken={lastReceipt.receiptToken} customerEmail={customer?.email} />
             )}
             {receiptQrUrl && lastReceipt && (
-              <button onClick={() => setShowCustomerDisplay(true)} className="flex items-center gap-2 rounded-xl border border-card-border bg-card-hover px-4 text-sm font-medium text-foreground active:scale-[0.98] transition-transform" style={{ height: 44, touchAction: "manipulation" }}>
+              <button onClick={() => setShowCustomerDisplay(true)} className="flex items-center gap-2 rounded-xl border border-card-border bg-card-hover px-4 text-sm font-medium text-foreground active:scale-[0.98] transition-transform" style={{ height: 44, touchAction: "manipulation" }} title="Open full-screen QR on the customer-facing display">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                Show QR
+                Show on Customer Display
               </button>
             )}
           </div>

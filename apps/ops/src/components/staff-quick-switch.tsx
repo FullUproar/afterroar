@@ -222,9 +222,26 @@ export function StaffQuickSwitch({ open, onClose }: StaffQuickSwitchProps) {
             <div style={{ color: "var(--ink)", fontFamily: "var(--font-display)", fontSize: "1.05rem", fontWeight: 600, marginBottom: "0.5rem" }}>
               No PINs set up yet
             </div>
-            <p style={{ color: "var(--ink-faint)", fontSize: "0.85rem", lineHeight: 1.5 }}>
+            <p style={{ color: "var(--ink-faint)", fontSize: "0.85rem", lineHeight: 1.5, marginBottom: "0.75rem" }}>
               Have each staff member open Time Clock and set their PIN.
             </p>
+            <a
+              href="/dashboard/timeclock"
+              style={{
+                display: "inline-block",
+                padding: "0.5rem 1rem",
+                background: "var(--orange)",
+                color: "var(--void)",
+                fontFamily: "var(--font-display)",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                borderRadius: 6,
+              }}
+            >
+              Open Time Clock
+            </a>
           </div>
         ) : !selected ? (
           // Avatar tile grid

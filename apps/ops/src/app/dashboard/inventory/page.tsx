@@ -602,7 +602,7 @@ export default function InventoryPage() {
           primary
         />
         <KpiCell
-          k="In Stock"
+          k="SKUs In Stock"
           v={kpis.inStockSkus.toLocaleString()}
           sub={kpis.uniqueSkus > 0 ? `${Math.round((kpis.inStockSkus / kpis.uniqueSkus) * 100)}% of catalog` : undefined}
         />

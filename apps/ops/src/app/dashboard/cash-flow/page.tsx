@@ -666,7 +666,7 @@ export default function CashFlowPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           title="Store Intelligence"
-          crumb="Console · Cash Flow"
+          crumb="Console · Intelligence"
           desc="Cash flow, inventory health, and actionable insights."
         />
         <div

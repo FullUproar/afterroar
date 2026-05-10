@@ -154,6 +154,14 @@ function tournamentStatusStyle(status: string): React.CSSProperties {
   return { ...base, color: 'var(--ink-soft)', background: 'var(--panel)', border: '1px solid var(--rule-hi)' };
 }
 
+function formatEventTime(iso: string) {
+  // Operator-friendly: "Fri, May 15 · 10:00 PM" — no seconds, no year unless needed.
+  const d = new Date(iso);
+  const datePart = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  const timePart = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return `${datePart} · ${timePart}`;
+}
+
 function statusBadge(event: EventWithCount) {
   const now = new Date();
   const start = new Date(event.starts_at);
@@ -736,7 +744,7 @@ function MobileEventDetail({ event }: { event: EventWithCount }) {
     <div className="space-y-2 text-sm">
       <div className="flex items-center justify-between font-mono text-ink-soft" style={{ fontSize: '0.74rem' }}>
         <span>Entry Fee: <span className="tabular-nums text-ink">{event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}</span></span>
-        <span>{new Date(event.starts_at).toLocaleString()}</span>
+        <span>{formatEventTime(event.starts_at)}</span>
       </div>
       <div className="flex items-center gap-2 font-mono text-ink-soft" style={{ fontSize: '0.74rem' }}>
         <span>Players: <span className="tabular-nums text-ink">{event.checkin_count}</span></span>
@@ -862,7 +870,11 @@ function EventRow({
       <tr
         onClick={onToggle}
         className="hover:bg-panel cursor-pointer text-ink"
-        style={{ borderTop: '1px solid var(--rule-faint)' }}
+        style={{
+          borderTop: '1px solid var(--rule-faint)',
+          background: expanded ? 'var(--slate)' : undefined,
+          boxShadow: expanded ? 'inset 3px 0 0 var(--orange)' : undefined,
+        }}
       >
         <td className="px-4 py-3 font-display" style={{ fontWeight: 500 }}>
           <span className="flex items-center gap-2">
@@ -874,7 +886,7 @@ function EventRow({
         </td>
         <td className="px-4 py-3">{typeBadge(event.event_type)}</td>
         <td className="px-4 py-3 font-mono text-ink-soft tabular-nums" style={{ fontSize: '0.78rem' }}>
-          {new Date(event.starts_at).toLocaleString()}
+          {formatEventTime(event.starts_at)}
         </td>
         <td className="px-4 py-3 font-mono text-ink-soft tabular-nums">
           {event.entry_fee_cents > 0 ? formatCents(event.entry_fee_cents) : 'Free'}

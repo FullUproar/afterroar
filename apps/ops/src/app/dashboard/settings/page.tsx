@@ -669,8 +669,8 @@ export default function SettingsPage() {
       case 'test-mode':
         return {
           status: 'info',
-          summary: isTraining ? 'Training mode active' : 'Training mode off',
-          badge: isTraining ? { kind: 'warn', text: 'Live' } : undefined,
+          summary: isTraining ? 'Training mode active — transactions are not real' : 'Training mode off',
+          badge: isTraining ? { kind: 'warn', text: 'On' } : undefined,
         };
       default:
         return { status: 'info', summary: '' };

@@ -256,8 +256,16 @@ function IntegrationRow({
               target="_blank"
               rel="noreferrer"
               className="text-[10px] uppercase tracking-wider text-ink-faint hover:text-ink"
+              title={i.docsUrl}
             >
-              Docs ↗
+              {(() => {
+                try {
+                  const host = new URL(i.docsUrl).hostname.replace(/^www\./, "");
+                  return `Docs · ${host} ↗`;
+                } catch {
+                  return "Docs ↗";
+                }
+              })()}
             </a>
           )}
         </div>

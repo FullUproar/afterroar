@@ -139,7 +139,19 @@ export function PanelContent(props: PanelContentProps) {
           </div>
           {searchResults.length > 0 ? (
             <div className="space-y-1.5">
-              {searchResults.slice(0, 20).map((item) => {
+              {(() => {
+                // Build a display-label histogram so duplicate-looking rows
+                // (same name + set + condition + foil) get a stable
+                // disambiguator badge. Without this, two seeded copies of a
+                // card render as visually identical rows and cashiers can't
+                // tell them apart. (UX-007)
+                const labelCounts = new Map<string, number>();
+                for (const r of searchResults.slice(0, 20)) {
+                  const a = (r.attributes || {}) as Record<string, unknown>;
+                  const key = `${r.name}|${a.set_name ?? ""}|${a.condition ?? ""}|${a.foil ? "f" : ""}`;
+                  labelCounts.set(key, (labelCounts.get(key) ?? 0) + 1);
+                }
+                return searchResults.slice(0, 20).map((item) => {
                 const attrs = (item.attributes || {}) as Record<string, unknown>;
                 const isTCG = item.category === "tcg_single";
                 const condition = (attrs.condition as string) || "";
@@ -148,6 +160,8 @@ export function PanelContent(props: PanelContentProps) {
                 const foil = !!(attrs.foil);
                 const rarity = (attrs.rarity as string) || "";
                 const outOfStock = item.quantity <= 0;
+                const dupKey = `${item.name}|${setName}|${condition}|${foil ? "f" : ""}`;
+                const isDup = (labelCounts.get(dupKey) ?? 0) > 1;
 
                 if (isTCG) {
                   // TCG card — image-forward layout
@@ -175,6 +189,11 @@ export function PanelContent(props: PanelContentProps) {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {condition && <ConditionBadge condition={condition} />}
                           <SetInfo setName={setName} rarity={rarity} />
+                          {isDup && (
+                            <span className="text-[0.6rem] font-mono uppercase tracking-wider text-muted" title="Duplicate row in inventory — use the ID to tell them apart">
+                              {item.sku || `id ${item.id.slice(-6)}`}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           {outOfStock ? (
@@ -221,12 +240,18 @@ export function PanelContent(props: PanelContentProps) {
                         {item.category.replace(/_/g, " ")}
                         {" \u00B7 "}
                         {outOfStock ? <span className="text-red-400">out of stock</span> : `${item.quantity} in stock`}
+                        {isDup && (
+                          <span className="ml-2 text-[0.6rem] font-mono uppercase tracking-wider" title="Duplicate row in inventory">
+                            {item.sku || `id ${item.id.slice(-6)}`}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-lg font-bold text-foreground ml-3 tabular-nums font-mono">{formatCents(item.price_cents)}</div>
                   </button>
                 );
-              })}
+              });
+              })()}
             </div>
           ) : searchQuery.trim() ? (
             <div className="flex items-center justify-center h-24 text-muted text-lg">No products found</div>

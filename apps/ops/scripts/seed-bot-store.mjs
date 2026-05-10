@@ -44,16 +44,16 @@ const BOT_EMAILS = {
 // ── Inventory data ────────────────────────────────────────────────────
 const INVENTORY = [
   // TCG singles (MTG)
-  { name: 'Lightning Bolt', category: 'tcg_single', price_cents: 250, cost_cents: 100, quantity: 12, attributes: { game: 'MTG', condition: 'NM', set: 'Foundations' } },
-  { name: 'Sol Ring', category: 'tcg_single', price_cents: 100, cost_cents: 30, quantity: 20, attributes: { game: 'MTG', condition: 'NM', set: 'Foundations' } },
-  { name: 'Fatal Push', category: 'tcg_single', price_cents: 350, cost_cents: 150, quantity: 8, attributes: { game: 'MTG', condition: 'NM', set: 'Aetherdrift' } },
-  { name: 'Counterspell', category: 'tcg_single', price_cents: 150, cost_cents: 50, quantity: 14, attributes: { game: 'MTG', condition: 'NM', set: 'Foundations' } },
-  { name: 'Wrath of God', category: 'tcg_single', price_cents: 1500, cost_cents: 700, quantity: 3, attributes: { game: 'MTG', condition: 'NM', set: 'Foundations' } },
-  { name: 'The One Ring', category: 'tcg_single', price_cents: 12000, cost_cents: 8000, quantity: 1, attributes: { game: 'MTG', condition: 'NM', set: 'Lord of the Rings' } },
+  { name: 'Lightning Bolt', category: 'tcg_single', price_cents: 250, cost_cents: 100, quantity: 12, attributes: { game: 'MTG', condition: 'NM', set_name: 'Foundations' } },
+  { name: 'Sol Ring', category: 'tcg_single', price_cents: 100, cost_cents: 30, quantity: 20, attributes: { game: 'MTG', condition: 'NM', set_name: 'Foundations' } },
+  { name: 'Fatal Push', category: 'tcg_single', price_cents: 350, cost_cents: 150, quantity: 8, attributes: { game: 'MTG', condition: 'NM', set_name: 'Aetherdrift' } },
+  { name: 'Counterspell', category: 'tcg_single', price_cents: 150, cost_cents: 50, quantity: 14, attributes: { game: 'MTG', condition: 'NM', set_name: 'Foundations' } },
+  { name: 'Wrath of God', category: 'tcg_single', price_cents: 1500, cost_cents: 700, quantity: 3, attributes: { game: 'MTG', condition: 'NM', set_name: 'Foundations' } },
+  { name: 'The One Ring', category: 'tcg_single', price_cents: 12000, cost_cents: 8000, quantity: 1, attributes: { game: 'MTG', condition: 'NM', set_name: 'Lord of the Rings' } },
   // TCG singles (Pokemon)
-  { name: 'Charizard ex', category: 'tcg_single', price_cents: 4500, cost_cents: 2500, quantity: 2, attributes: { game: 'Pokemon', condition: 'NM', set: 'Prismatic Evolutions' } },
-  { name: 'Pikachu VMAX', category: 'tcg_single', price_cents: 2800, cost_cents: 1800, quantity: 1, attributes: { game: 'Pokemon', condition: 'NM', set: 'Vivid Voltage' } },
-  { name: 'Mewtwo VSTAR', category: 'tcg_single', price_cents: 1800, cost_cents: 900, quantity: 3, attributes: { game: 'Pokemon', condition: 'NM', set: 'Pokemon GO' } },
+  { name: 'Charizard ex', category: 'tcg_single', price_cents: 4500, cost_cents: 2500, quantity: 2, attributes: { game: 'Pokemon', condition: 'NM', set_name: 'Prismatic Evolutions' } },
+  { name: 'Pikachu VMAX', category: 'tcg_single', price_cents: 2800, cost_cents: 1800, quantity: 1, attributes: { game: 'Pokemon', condition: 'NM', set_name: 'Vivid Voltage' } },
+  { name: 'Mewtwo VSTAR', category: 'tcg_single', price_cents: 1800, cost_cents: 900, quantity: 3, attributes: { game: 'Pokemon', condition: 'NM', set_name: 'Pokemon GO' } },
   { name: 'Eevee Heroes Booster Pack', category: 'tcg_single', price_cents: 800, cost_cents: 350, quantity: 25, attributes: { game: 'Pokemon', condition: 'NM' } },
   // Sealed
   { name: 'MTG Play Booster Box - Foundations', category: 'sealed', price_cents: 12999, cost_cents: 8500, quantity: 6, attributes: { game: 'MTG', product_type: 'booster_box' } },
@@ -150,7 +150,7 @@ async function main() {
       owner_id: owner.id,
       address: { street: '123 Main St', city: 'South Bend', state: 'IN', zip: '46601' },
       settings: {
-        onboarded: true,
+        onboarding_complete: true,
         currency: 'USD',
         timezone: 'America/Indiana/Indianapolis',
         store_type: 'flgs_with_cafe',
