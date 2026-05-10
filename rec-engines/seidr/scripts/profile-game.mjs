@@ -40,7 +40,7 @@
 //   --max-concurrent <n>    not yet implemented; currently always sequential
 // ============================================================================
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, appendFileSync, writeFileSync } from 'node:fs';
 import { join, basename, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -65,6 +65,17 @@ function parseArgs(argv) {
     model: 'claude-sonnet-4-6',
     mock: false,
     apply: false,
+    // Resumability: when true (default in --apply mode), pre-query DB
+    // for existing game_ids and skip them. Set --no-skip-existing to
+    // force-regenerate everything (rare; useful for testing).
+    skipExisting: true,
+    // Where to log per-game failures so a follow-up retry script can
+    // pick them up. Default: tmp/failures-<timestamp>.json next to
+    // the input bundle. Set --failure-log <path> to override.
+    failureLog: null,
+    // Progress logging cadence (every N games). Default 10 keeps the
+    // log readable without spam.
+    progressEvery: 10,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -76,6 +87,9 @@ function parseArgs(argv) {
       case '--model': args.model = argv[++i]; break;
       case '--mock': args.mock = true; break;
       case '--apply': args.apply = true; break;
+      case '--no-skip-existing': args.skipExisting = false; break;
+      case '--failure-log': args.failureLog = argv[++i]; break;
+      case '--progress-every': args.progressEvery = Number(argv[++i]); break;
       default:
         throw new Error(`Unrecognized argument: ${a}`);
     }
@@ -181,46 +195,123 @@ async function buildAnthropicClient(modelName) {
 // ----------------------------------------------------------------------------
 // Apply-to-DB layer (only invoked when --apply is set)
 // ----------------------------------------------------------------------------
+//
+// Design notes (post-incident, 2026-05-09):
+//
+// The previous version of this script accumulated all generated profiles
+// in memory and wrote them at the very end via a single shared pg client.
+// On a 2351-game run it did two things wrong:
+//
+//   1. Held the pg connection idle for ~5 hours while LLM calls churned;
+//      the connection died (Neon idle TCP reset / "Connection terminated
+//      unexpectedly") just as the end-of-run write started. ~1500
+//      generated profiles were lost.
+//   2. Kept burning Anthropic credits after the account hit zero balance
+//      (37 in-flight games failed with "credit balance too low"). Should
+//      have aborted on the first credit-out.
+//
+// New design:
+//   - Resumable: pre-query the DB for game_ids that already have an
+//     active profile and skip them. Restarts after partial runs are
+//     cheap; idempotent.
+//   - Incremental writes: each profile gets written to DB the moment
+//     it's generated + validated. Open a fresh pg client per write
+//     (latency adds ~50ms; eliminates idle-timeout class entirely).
+//   - Abort on credit-out: catch the error from the LLM call; if it's
+//     a credit-balance error, exit non-zero with a clear message.
+//   - Progress logging every N games (default 10).
+//   - Failure log: per-game failures are appended to a JSON-lines file
+//     so a follow-up `--retry` workflow can target just the misses.
+// ----------------------------------------------------------------------------
 
-async function writeProfilesToDb(profiles, connStr) {
+const CREDIT_OUT_MARKERS = [
+  'credit balance is too low',
+  'credit balance too low',
+  'invalid_request_error',  // covers the broader class; we double-check below
+];
+
+function isCreditOutError(err) {
+  const msg = String(err?.message || err || '');
+  if (!msg) return false;
+  // The first marker is sufficient + specific. The second/third are
+  // sanity checks to catch wording drift.
+  return msg.includes('credit balance is too low') ||
+    msg.includes('credit balance too low');
+}
+
+/**
+ * Pre-fetch game_ids with active (not-superseded) profiles already in DB.
+ * Used to make --apply runs resumable: skip games we've already done.
+ */
+async function loadExistingGameIds(connStr) {
   const { default: pg } = await import('pg');
   const client = new pg.Client({ connectionString: connStr });
   await client.connect();
-  let written = 0;
   try {
-    for (const p of profiles) {
-      // Best-effort upsert by (game_id, profile_version=1). The schema
-      // permits multiple versions; for v0 of this script we always write
-      // version 1 and supersede manually if needed.
-      await client.query(
-        `INSERT INTO rec_seidr_game_profile
-          (id, game_id, profile_version, dim_vector, confidence_per_dim,
-           source_provenance, model_version, prompt_version)
-         VALUES ($1, $2, 1, $3, $4, $5, $6, $7)
-         ON CONFLICT (game_id, profile_version) DO UPDATE SET
-           dim_vector = EXCLUDED.dim_vector,
-           confidence_per_dim = EXCLUDED.confidence_per_dim,
-           source_provenance = EXCLUDED.source_provenance,
-           model_version = EXCLUDED.model_version,
-           prompt_version = EXCLUDED.prompt_version`,
-        [
-          // id: synthesize from game_id (game_id * 1000 + version) so two
-          // versions of the same game don't collide on PK
-          p.game_id * 1000 + 1,
-          p.game_id,
-          p.dim_vector,
-          p.confidence_per_dim,
-          p.source_provenance,
-          p.model_version || null,
-          p.prompt_version || null,
-        ]
-      );
-      written++;
-    }
+    const { rows } = await client.query(
+      'SELECT DISTINCT game_id FROM rec_seidr_game_profile WHERE NOT superseded',
+    );
+    return new Set(rows.map((r) => Number(r.game_id)));
   } finally {
     await client.end();
   }
-  return written;
+}
+
+/**
+ * Write ONE profile to DB with its own short-lived pg connection.
+ * Defeats Neon's idle-connection killer + simplifies error semantics
+ * (one INSERT == one connection lifecycle == can't half-fail).
+ */
+async function writeOneProfile(profile, connStr) {
+  const { default: pg } = await import('pg');
+  const client = new pg.Client({ connectionString: connStr });
+  await client.connect();
+  try {
+    await client.query(
+      `INSERT INTO rec_seidr_game_profile
+        (id, game_id, profile_version, dim_vector, confidence_per_dim,
+         source_provenance, model_version, prompt_version)
+       VALUES ($1, $2, 1, $3, $4, $5, $6, $7)
+       ON CONFLICT (game_id, profile_version) DO UPDATE SET
+         dim_vector = EXCLUDED.dim_vector,
+         confidence_per_dim = EXCLUDED.confidence_per_dim,
+         source_provenance = EXCLUDED.source_provenance,
+         model_version = EXCLUDED.model_version,
+         prompt_version = EXCLUDED.prompt_version`,
+      [
+        profile.game_id * 1000 + 1,
+        profile.game_id,
+        profile.dim_vector,
+        profile.confidence_per_dim,
+        profile.source_provenance,
+        profile.model_version || null,
+        profile.prompt_version || null,
+      ],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Append one failure record to the JSON-lines failure log so a follow-up
+ * retry can target just the missing games. Best-effort — log failures
+ * shouldn't break the main loop.
+ */
+function appendFailure(logPath, record) {
+  if (!logPath) return;
+  try {
+    appendFileSync(logPath, JSON.stringify(record) + '\n', 'utf8');
+  } catch {}
+}
+
+function deriveFailureLogPath(args) {
+  if (args.failureLog) return args.failureLog;
+  // Default: tmp/profile-failures-<timestamp>.jsonl next to the input.
+  const inputBase = args.bggBundle || args.bggDir || args.bggFile || 'profile-failures';
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const tmpDir = resolve(__dirname, '..', '..', 'mimir', 'tmp');
+  return join(tmpDir, `profile-failures-${stamp}.jsonl`);
 }
 
 // ----------------------------------------------------------------------------
@@ -235,8 +326,8 @@ async function main() {
 
   // Load BGG metadata into an array of game objects (loadGames enforces
   // exactly-one-source and validates bundle shape)
-  const games = loadGames(args);
-  console.log(`Loaded ${games.length} game(s) for profiling.`);
+  const allGames = loadGames(args);
+  console.log(`Loaded ${allGames.length} game(s) for profiling.`);
 
   // Build LLM client
   const llmClient = args.mock
@@ -244,29 +335,131 @@ async function main() {
     : await buildAnthropicClient(args.model);
   console.log(args.mock ? 'Using mock LLM (reference profiles).' : `Using Anthropic ${args.model}.`);
 
-  // Generate
-  const { ok, failed } = await generateBatch(games, dimensions, llmClient, {
-    modelVersionTag: args.mock ? 'mock-reference' : args.model,
-  });
+  // Two paths: --apply (resilient incremental loop) vs dry-run (in-memory
+  // batch via the original generateBatch helper, prints to stdout).
 
-  console.log(`Generated ${ok.length} valid profile(s); ${failed.length} failure(s).`);
-  for (const f of failed) {
-    console.log(`  ✗ ${f.game_id} (${f.name}): ${f.error}`);
-  }
-
-  // Apply or print
-  if (args.apply) {
-    const connStr = process.env.DATABASE_URL;
-    if (!connStr) {
-      throw new Error('DATABASE_URL env var required for --apply');
-    }
-    const written = await writeProfilesToDb(ok, connStr);
-    console.log(`Wrote ${written} profile(s) to rec_seidr_game_profile.`);
-  } else {
+  if (!args.apply) {
+    // Dry-run path: keep the original behavior (cheap, useful for offline
+    // smoke tests). No DB writes; uses generateBatch directly.
+    const { ok, failed } = await generateBatch(allGames, dimensions, llmClient, {
+      modelVersionTag: args.mock ? 'mock-reference' : args.model,
+    });
+    console.log(`Generated ${ok.length} valid profile(s); ${failed.length} failure(s).`);
+    for (const f of failed) console.log(`  ✗ ${f.game_id} (${f.name}): ${f.error}`);
     for (const p of ok) {
       console.log(`\n--- profile for game_id=${p.game_id} ---`);
       console.log(JSON.stringify(p, null, 2));
     }
+    return;
+  }
+
+  // ---- --apply path: resumable, incremental, credit-aware -----------------
+
+  const connStr = process.env.DATABASE_URL;
+  if (!connStr) {
+    throw new Error('DATABASE_URL env var required for --apply');
+  }
+
+  const failureLogPath = deriveFailureLogPath(args);
+  console.log(`Failure log: ${failureLogPath}`);
+
+  // Resumability: skip games that already have an active profile.
+  let games = allGames;
+  if (args.skipExisting) {
+    process.stdout.write(`Querying existing rec_seidr_game_profile rows… `);
+    const existing = await loadExistingGameIds(connStr);
+    console.log(`found ${existing.size}.`);
+    games = allGames.filter((g) => !existing.has(g.id));
+    console.log(`Skipping ${allGames.length - games.length} game(s) already in DB. ${games.length} remaining.`);
+  }
+
+  if (games.length === 0) {
+    console.log('Nothing to do. Exiting.');
+    return;
+  }
+
+  const startedAt = Date.now();
+  let written = 0;
+  let validationFailures = 0;
+  let llmFailures = 0;
+  let writeFailures = 0;
+  const modelVersionTag = args.mock ? 'mock-reference' : args.model;
+
+  for (let i = 0; i < games.length; i++) {
+    const game = games[i];
+
+    // Generation step. Catches per-game errors so one bad LLM response
+    // doesn't abort the whole run — except credit-out, which we treat as
+    // a hard stop (every subsequent call will fail the same way).
+    let profile;
+    try {
+      profile = await generateProfile(game, dimensions, llmClient, { modelVersionTag });
+    } catch (err) {
+      const msg = err?.message || String(err);
+      const isCredit = isCreditOutError(err);
+      const isValidation = msg.startsWith('generateProfile: validation failed');
+
+      if (isValidation) validationFailures++;
+      else llmFailures++;
+
+      appendFailure(failureLogPath, {
+        kind: isCredit ? 'credit_out' : (isValidation ? 'validation' : 'llm_call'),
+        game_id: game.id,
+        game_name: game.name,
+        error: msg,
+        at: new Date().toISOString(),
+      });
+
+      if (isCredit) {
+        console.error(`\n⛔ Anthropic credits exhausted at game ${i + 1}/${games.length} (${game.id} — ${game.name}).`);
+        console.error(`Top up at https://console.anthropic.com/settings/billing and re-run; the script is resumable + will skip everything already written.`);
+        console.error(`Wrote ${written} new profile(s) before stopping.`);
+        process.exit(2);
+      }
+
+      // Non-fatal failure — log + move on.
+      console.log(`  ✗ ${game.id} (${game.name}): ${msg.split('\n')[0]}`);
+      // Fall through to the progress-log block below.
+    }
+
+    // Write step. Each write opens its own short-lived pg connection so
+    // we never carry an idle connection across the next LLM call.
+    if (profile) {
+      try {
+        await writeOneProfile(profile, connStr);
+        written++;
+      } catch (err) {
+        writeFailures++;
+        const msg = err?.message || String(err);
+        console.log(`  ✗ ${game.id} (${game.name}): write failed — ${msg.split('\n')[0]}`);
+        appendFailure(failureLogPath, {
+          kind: 'write',
+          game_id: game.id,
+          game_name: game.name,
+          error: msg,
+          at: new Date().toISOString(),
+        });
+      }
+    }
+
+    if ((i + 1) % args.progressEvery === 0 || i === games.length - 1) {
+      const elapsed = (Date.now() - startedAt) / 1000;
+      const rate = (i + 1) / elapsed;
+      const remaining = games.length - (i + 1);
+      const etaMin = remaining > 0 && rate > 0 ? Math.round(remaining / rate / 60) : 0;
+      console.log(
+        `[${i + 1}/${games.length}] written=${written} ` +
+          `validation_fails=${validationFailures} llm_fails=${llmFailures} write_fails=${writeFailures} ` +
+          `· ${rate.toFixed(2)} games/s · ETA ~${etaMin}m`,
+      );
+    }
+  }
+
+  const totalMin = ((Date.now() - startedAt) / 60000).toFixed(1);
+  console.log(`\nDone in ${totalMin}m. Wrote ${written}/${games.length} profiles to rec_seidr_game_profile.`);
+  console.log(`Failures: validation=${validationFailures}, llm=${llmFailures}, write=${writeFailures}.`);
+  if (validationFailures + llmFailures + writeFailures > 0) {
+    console.log(`See ${failureLogPath} for per-game details (re-run with --bgg-bundle pointed at a filtered list to retry).`);
   }
 }
 
