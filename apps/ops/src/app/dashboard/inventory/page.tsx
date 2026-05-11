@@ -597,8 +597,9 @@ export default function InventoryPage() {
         style={{ background: 'var(--rule)', border: '1px solid var(--rule)' }}
       >
         <KpiCell
-          k="Unique SKUs"
-          v={(totalItems > 0 ? totalItems : kpis.uniqueSkus).toLocaleString()}
+          k={searchQuery.trim() ? "Matches" : "Unique SKUs"}
+          v={(searchQuery.trim() ? kpis.uniqueSkus : (totalItems > 0 ? totalItems : kpis.uniqueSkus)).toLocaleString()}
+          sub={searchQuery.trim() ? `of ${(totalItems > 0 ? totalItems : kpis.uniqueSkus).toLocaleString()} catalog` : undefined}
           primary
         />
         <KpiCell

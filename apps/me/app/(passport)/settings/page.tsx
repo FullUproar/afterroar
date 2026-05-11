@@ -45,6 +45,7 @@ export default async function SettingsPage() {
       select: {
         id: true,
         email: true,
+        emailVerified: true,
         displayName: true,
         username: true,
         avatarUrl: true,
@@ -142,7 +143,8 @@ export default async function SettingsPage() {
                 { label: 'Email', value: user.email },
                 { label: 'Passport code', value: user.passportCode || 'Not generated' },
                 { label: 'Tier', value: user.membershipTier === 'AFTERROAR_PLUS' ? 'Fugly Prime' : user.membershipTier || 'FREE' },
-                { label: 'Verified', value: user.identityVerified ? 'Yes' : 'No' },
+                { label: 'Email verified', value: user.emailVerified ? 'Yes' : 'No' },
+                { label: 'ID verified', value: user.identityVerified ? 'Yes' : 'No' },
                 { label: 'Reputation', value: String(user.reputationScore) },
                 { label: 'Member since', value: user.createdAt.toLocaleDateString() },
               ].map(({ label, value }) => (

@@ -61,7 +61,13 @@ export default function WishlistPage() {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* noop */ }
+    } catch {
+      // Clipboard API is unavailable (insecure context, browser permission
+      // denied, or headless environments that block it). Surface the URL
+      // so the user can copy manually — previously failed silently which
+      // looked like the Share button did nothing.
+      window.prompt('Copy this link to share your wishlist:', url);
+    }
   };
 
   return (

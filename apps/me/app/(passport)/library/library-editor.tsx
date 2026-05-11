@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, X, Plus } from 'lucide-react';
 import { Button, Chip, EmptyState, TYPE, SpinnerInline, inputStyle } from '@/app/components/ui';
 
@@ -52,6 +53,7 @@ type TimeBand = 'quick' | 'medium' | 'long';
 type WeightBand = 'light' | 'mid' | 'heavy';
 
 export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
+  const router = useRouter();
   const [games, setGames] = useState<GameEntry[]>(initialGames);
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -219,6 +221,11 @@ export function LibraryEditor({ initialGames }: { initialGames: GameEntry[] }) {
         body: JSON.stringify({ games: gameList }),
       });
       setSaved(true);
+      // Refresh server component so TitleBar + SecHero counts (rendered
+      // server-side from prisma.user.gameLibrary) stay in sync with the
+      // client-side mutations. Without this the header header reads "0
+      // games" while the list footer correctly shows the new count.
+      router.refresh();
       setTimeout(() => setSaved(false), 2000);
     } catch {} finally { setSaving(false); }
   };

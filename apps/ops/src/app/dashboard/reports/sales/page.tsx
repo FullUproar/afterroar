@@ -242,15 +242,27 @@ export default function SalesPage() {
           </div>
 
           {/* Revenue by Day */}
-          {data.daily_revenue.length > 0 && (
+          {data.daily_revenue.length > 0 ? (
             <section className="space-y-3">
               <SectionHeader>Revenue by Day</SectionHeader>
               <div className="rounded-xl border border-card-border bg-card p-4 overflow-x-auto scroll-visible">
                 <div className="flex items-end gap-1 min-w-fit" style={{ height: 120 }}>
                   {(() => {
                     const maxRev = Math.max(...data.daily_revenue.map((d) => d.revenue_cents), 1);
-                    return data.daily_revenue.map((day) => {
+                    return data.daily_revenue.map((day, idx) => {
                       const pct = (day.revenue_cents / maxRev) * 100;
+                      // Bumped minimum from 2% to 8% so non-zero days stay
+                      // visibly distinct from empty cells. UX-018: prior 2%
+                      // floor rendered as 2.4px which Manus correctly read
+                      // as "blank chart" despite real data behind it.
+                      const renderedHeight = day.revenue_cents > 0 ? Math.max(pct, 8) : 0;
+                      // For 30d windows label every ~5 days so the axis
+                      // isn't a wall of unlabeled bars.
+                      const showLabel =
+                        data.daily_revenue.length <= 14 ||
+                        idx === 0 ||
+                        idx === data.daily_revenue.length - 1 ||
+                        idx % 5 === 0;
                       return (
                         <div
                           key={day.date}
@@ -259,10 +271,10 @@ export default function SalesPage() {
                         >
                           <div
                             className="w-full rounded-t bg-accent hover:bg-accent/80 transition-colors cursor-default"
-                            style={{ height: `${Math.max(pct, 2)}%` }}
+                            style={{ height: `${renderedHeight}%` }}
                             title={`${formatDate(day.date)}: ${formatCents(day.revenue_cents)}`}
                           />
-                          {data.daily_revenue.length <= 14 && (
+                          {showLabel && (
                             <span className="text-[9px] text-muted mt-1 truncate">
                               {new Date(day.date + "T00:00:00").toLocaleDateString("en-US", { month: "numeric", day: "numeric" })}
                             </span>
@@ -272,6 +284,13 @@ export default function SalesPage() {
                     });
                   })()}
                 </div>
+              </div>
+            </section>
+          ) : (
+            <section className="space-y-3">
+              <SectionHeader>Revenue by Day</SectionHeader>
+              <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+                <p className="text-sm text-muted py-8">No revenue recorded in this period.</p>
               </div>
             </section>
           )}
