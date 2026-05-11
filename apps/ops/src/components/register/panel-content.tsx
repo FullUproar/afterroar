@@ -148,14 +148,17 @@ export function PanelContent(props: PanelContentProps) {
                 const labelCounts = new Map<string, number>();
                 for (const r of searchResults.slice(0, 20)) {
                   const a = (r.attributes || {}) as Record<string, unknown>;
-                  const key = `${r.name}|${a.set_name ?? ""}|${a.condition ?? ""}|${a.foil ? "f" : ""}`;
+                  // Tolerate either set_name (canonical) or legacy "set" attr key
+                  const rSet = (a.set_name as string) || (a.set as string) || "";
+                  const key = `${r.name}|${rSet}|${a.condition ?? ""}|${a.foil ? "f" : ""}`;
                   labelCounts.set(key, (labelCounts.get(key) ?? 0) + 1);
                 }
                 return searchResults.slice(0, 20).map((item) => {
                 const attrs = (item.attributes || {}) as Record<string, unknown>;
                 const isTCG = item.category === "tcg_single";
                 const condition = (attrs.condition as string) || "";
-                const setName = (attrs.set_name as string) || "";
+                // Legacy seed/imports may store the set under "set"; canonical is "set_name"
+                const setName = (attrs.set_name as string) || (attrs.set as string) || "";
                 const game = (attrs.game as string) || "";
                 const foil = !!(attrs.foil);
                 const rarity = (attrs.rarity as string) || "";

@@ -384,7 +384,10 @@ export default function SalesPage() {
 
           {/* Peak Hours */}
           {(() => {
-            const peakHasData = data.peak_hours.some((h) => h.count > 0);
+            // Require at least 3 hours of data before showing the heatmap;
+            // 1-2 cells in a 15-cell grid reads as broken visualization. UX-017.
+            const hoursWithData = data.peak_hours.filter((h) => h.count > 0).length;
+            const peakHasData = hoursWithData >= 3;
             return (
               <section className="space-y-3">
                 <SectionHeader>Peak Hours</SectionHeader>
