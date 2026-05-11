@@ -26,8 +26,11 @@ import { prisma } from '@/lib/prisma';
  * for minutes by a CDN cache.
  */
 export async function GET() {
+  // Verified real-user count. Excludes isTestAccount so internal QA
+  // bots (bot-admin@afterroar.me, AI walkthrough accounts, future
+  // QA scaffolding) don't inflate the Smiirl device's display.
   const verifiedCount = await prisma.user.count({
-    where: { emailVerified: { not: null } },
+    where: { emailVerified: { not: null }, isTestAccount: false },
   });
 
   return NextResponse.json(

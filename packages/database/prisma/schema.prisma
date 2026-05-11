@@ -30,6 +30,11 @@ model User {
   reputationScore   Int       @default(100)
   isFrozen          Boolean   @default(false)
   marketingConsent  Boolean   @default(false)
+  /// Test/bot account flag. Excluded from public-facing counters (Smiirl
+  /// signup counter, growth dashboards) so internal QA accounts don't
+  /// inflate metrics that are supposed to reflect real users. Set by
+  /// seed scripts and admin tooling — users can't self-mark.
+  isTestAccount     Boolean   @default(false)
   /// Date of birth. Required for new signups (collected via neutral age screen).
   /// Used to gate <13 (block), 13-17 (parental consent path), 18+ (standard).
   /// Nullable to allow legacy users created before age-gating shipped.

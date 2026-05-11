@@ -81,9 +81,10 @@ async function main() {
             passwordHash,
             emailVerified: existing.emailVerified ?? now,
             isFrozen: false,
+            isTestAccount: true,
           },
         });
-        console.log(`  ${acc.email} exists — refreshed password + email-verified.`);
+        console.log(`  ${acc.email} exists — refreshed password + isTestAccount.`);
         continue;
       }
 
@@ -99,6 +100,7 @@ async function main() {
           isMinor: false,
           defaultVisibility: 'public',
           passportCode: genPassportCode(),
+          isTestAccount: true,
         },
       });
       console.log(`  Created ${acc.email} (${acc.membershipTier})`);
