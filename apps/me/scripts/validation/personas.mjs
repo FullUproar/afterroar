@@ -83,7 +83,7 @@ export const PERSONAS = [
       subdomainOneOf: ['Strategy'],
       playingTimeRange: [60, 240],
       complexityRange: [3.0, 5.0],
-      shouldNotMatchSubdomains: ['Children', 'Party'],
+      shouldNotMatchSubdomains: ["Children's", 'Party'],
     },
   },
 
@@ -126,7 +126,7 @@ export const PERSONAS = [
     expectations: {
       subdomainOneOf: ['Party', 'Family'],
       playingTimeRange: [10, 60],
-      shouldNotMatchSubdomains: ['Wargame', 'Strategy'],
+      shouldNotMatchSubdomains: ['Wargames', 'Strategy'],
     },
   },
 
@@ -146,9 +146,9 @@ export const PERSONAS = [
     },
     confidence: uniformConfidence(0.9),
     expectations: {
-      subdomainOneOf: ['Wargame', 'Strategy'],
+      subdomainOneOf: ['Wargames', 'Strategy'],
       playingTimeRange: [90, 360],
-      shouldNotMatchSubdomains: ['Children', 'Party', 'Family'],
+      shouldNotMatchSubdomains: ["Children's", 'Party', 'Family'],
     },
   },
 
@@ -168,9 +168,9 @@ export const PERSONAS = [
     },
     confidence: uniformConfidence(0.8),
     expectations: {
-      subdomainOneOf: ['Family', 'Children', 'Party'],
+      subdomainOneOf: ['Family', "Children's", 'Party'],
       playingTimeRange: [20, 75],
-      shouldNotMatchSubdomains: ['Wargame'],
+      shouldNotMatchSubdomains: ['Wargames'],
     },
   },
 
@@ -232,7 +232,7 @@ export const PERSONAS = [
     confidence: uniformConfidence(0.85),
     expectations: {
       playingTimeRange: [10, 45],
-      shouldNotMatchSubdomains: ['Wargame'],
+      shouldNotMatchSubdomains: ['Wargames'],
     },
   },
 
@@ -252,7 +252,7 @@ export const PERSONAS = [
     },
     confidence: uniformConfidence(0.8),
     expectations: {
-      shouldNotMatchSubdomains: ['Wargame', 'Children'],
+      shouldNotMatchSubdomains: ['Wargames', "Children's"],
     },
   },
 
@@ -272,7 +272,7 @@ export const PERSONAS = [
     },
     confidence: uniformConfidence(0.85),
     expectations: {
-      shouldNotMatchSubdomains: ['Wargame', 'Children', 'Abstract'],
+      shouldNotMatchSubdomains: ['Wargames', "Children's", 'Abstract'],
     },
   },
 
@@ -292,7 +292,7 @@ export const PERSONAS = [
     },
     confidence: uniformConfidence(0.7),
     expectations: {
-      shouldNotMatchSubdomains: ['Wargame', 'Children'],
+      shouldNotMatchSubdomains: ['Wargames', "Children's"],
     },
   },
 
@@ -333,7 +333,7 @@ export const PERSONAS = [
     },
     confidence: uniformConfidence(0.9),
     expectations: {
-      shouldNotMatchSubdomains: ['Wargame', 'Children', 'Abstract'],
+      shouldNotMatchSubdomains: ['Wargames', "Children's", 'Abstract'],
     },
   },
 
@@ -354,7 +354,7 @@ export const PERSONAS = [
     confidence: uniformConfidence(0.9),
     expectations: {
       subdomainOneOf: ['Abstract', 'Strategy'],
-      shouldNotMatchSubdomains: ['Thematic', 'Party', 'Children'],
+      shouldNotMatchSubdomains: ['Thematic', 'Party', "Children's"],
     },
   },
 
@@ -375,7 +375,7 @@ export const PERSONAS = [
     confidence: uniformConfidence(0.5),
     expectations: {
       // Newcomer gets a wide net — assert only that recs aren't extreme outliers.
-      shouldNotMatchSubdomains: ['Wargame', 'Customizable'],
+      shouldNotMatchSubdomains: ['Wargames', 'Customizable'],
     },
   },
 
