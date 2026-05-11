@@ -60,6 +60,10 @@ async function checkSagaEligibilityCached(): Promise<SagaEligibility> {
     // Lazy import — saga is in a sibling workspace; we keep the import
     // out of the module-load critical path so a missing/broken saga
     // doesn't break the rest of the orchestrator at import time.
+    // Saga is a pure-JS (.mjs) workspace package with no .d.ts; the
+    // result is cast to SagaEligibility below, so the lost inference
+    // here is harmless and the try/catch handles a missing module.
+    // @ts-expect-error — no type declarations for @afterroar/rec-engine-saga
     const { checkSagaEligibility } = await import('@afterroar/rec-engine-saga/eligibility');
     const adapter = {
       query: async (sql: string) => {
