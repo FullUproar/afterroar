@@ -92,6 +92,17 @@ async function main() {
   try {
     const { fullKey, prefix, hash } = mint();
 
+    // Revoke any existing key with the same name. Prevents a long
+    // tail of forgotten rotation keys; this script is the only path
+    // that creates "FU storefront — Points federation" keys.
+    const revoked = await prisma.apiKey.updateMany({
+      where: { name: KEY_NAME, revokedAt: null },
+      data: { revokedAt: new Date(), revokedBy: 'mint-script' },
+    });
+    if (revoked.count > 0) {
+      console.log(`✓ Revoked ${revoked.count} prior key(s) with the same name.`);
+    }
+
     // Persist before exposing to Vercel — if the env-set fails, the row
     // is already there and we just have to update Vercel manually with
     // a recovery procedure. Avoids the inverse failure mode where
@@ -107,19 +118,13 @@ async function main() {
     console.log(`✓ Minted Afterroar API key: ${prefix}`);
     console.log(`  scopes: ${SCOPES.join(', ')}`);
 
-    // Vercel env add reads from stdin. --force overwrites if already set.
+    // Use --no-sensitive so the value is pullable for local scripts
+    // (backfill, integration tests). Still encrypted at rest in Vercel;
+    // readable only to team members with project access.
     console.log(`\n→ Setting ${ENV_NAME} on full-uproar-site (${TARGET})...`);
-    try {
-      await pipeToVercel(fullKey, [
-        'env', 'add', ENV_NAME, TARGET, '--sensitive', '--force',
-      ]);
-    } catch (firstErr) {
-      // Older Vercel CLI versions don't have --sensitive; retry without.
-      console.warn('  --sensitive flag rejected, retrying without...');
-      await pipeToVercel(fullKey, [
-        'env', 'add', ENV_NAME, TARGET, '--force',
-      ]);
-    }
+    await pipeToVercel(fullKey, [
+      'env', 'add', ENV_NAME, TARGET, '--no-sensitive', '--force',
+    ]);
 
     console.log('\n✓ Done.');
     console.log(`  Key prefix (safe to share): ${prefix}`);
