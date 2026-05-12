@@ -69,6 +69,11 @@ model User {
   /// completes consent. If parent's Pro lapses, kid flips to "paused" until
   /// renewal.
   accountStatus     String    @default("active")
+  /// 30-day soft-delete grace. When the user requests deletion we set
+  /// this to now()+30d and flip accountStatus to "pending_deletion".
+  /// A daily cron hard-deletes records past this timestamp; the user
+  /// can undo via /api/delete-account/undo until then.
+  scheduledDeletionAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
 

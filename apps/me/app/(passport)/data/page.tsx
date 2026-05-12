@@ -14,7 +14,14 @@ export default async function DataPage() {
   const [user, consents, pointsCount, activityCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, displayName: true, passportCode: true, gameLibrary: true, createdAt: true },
+      select: {
+        email: true,
+        displayName: true,
+        passportCode: true,
+        gameLibrary: true,
+        createdAt: true,
+        scheduledDeletionAt: true,
+      },
     }),
     prisma.userConsent.findMany({ where: { userId }, select: { category: true, granted: true } }),
     prisma.pointsLedger.count({ where: { userId } }),
@@ -139,7 +146,10 @@ export default async function DataPage() {
               </p>
             </a>
 
-            <DeletePassport userEmail={user?.email || ''} />
+            <DeletePassport
+              userEmail={user?.email || ''}
+              scheduledDeletionAt={user?.scheduledDeletionAt ? user.scheduledDeletionAt.toISOString() : null}
+            />
           </div>
         </section>
       </div>

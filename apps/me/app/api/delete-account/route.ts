@@ -3,15 +3,20 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 
 /**
- * POST /api/delete-account — Permanently delete a user's Passport.
+ * POST /api/delete-account — Begin a 30-day soft-delete of the
+ * authenticated user's Passport.
  *
- * Deletes: identity, consent grants, points ledger, activity history.
- * Points ledger entries are anonymized (userId set to null) for store
- * accounting integrity, not deleted outright.
+ * Sets `scheduledDeletionAt = now + 30d` and flips accountStatus to
+ * "pending_deletion". The user can undo via POST /api/delete-account/undo
+ * any time before the timer expires. A daily cron then hard-deletes
+ * records whose timestamp has passed.
+ *
+ * Subscription cancellation lives on FU (it owns Stripe). We just mark
+ * the account here; the FU webhook + nightly subscription-cancel job
+ * pick up the pending_deletion status and cancel at period-end so the
+ * user isn't charged again.
  *
  * Requires the user to confirm by sending their email address in the body.
- * This is the "type to confirm" friction pattern — enough to prevent
- * accidental clicks, not enough to feel adversarial.
  */
 export async function POST(request: Request) {
   const session = await auth();
@@ -30,7 +35,7 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true },
+    select: { email: true, scheduledDeletionAt: true },
   });
 
   if (!user?.email) {
@@ -44,21 +49,28 @@ export async function POST(request: Request) {
     );
   }
 
-  // Anonymize points ledger (preserve store accounting, remove user link)
-  await prisma.pointsLedger.updateMany({
-    where: { userId },
-    data: { userId: null as unknown as string },
+  // Idempotent: if already pending, just return the existing timestamp.
+  if (user.scheduledDeletionAt && user.scheduledDeletionAt > new Date()) {
+    return NextResponse.json({
+      pendingDeletion: true,
+      scheduledDeletionAt: user.scheduledDeletionAt.toISOString(),
+      message: 'Your account is already scheduled for deletion.',
+    });
+  }
+
+  const scheduledDeletionAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      scheduledDeletionAt,
+      accountStatus: 'pending_deletion',
+    },
   });
 
-  // Delete everything else
-  await prisma.userActivity.deleteMany({ where: { userId } });
-  await prisma.userConsent.deleteMany({ where: { userId } });
-
-  // Delete auth accounts (OAuth links)
-  await prisma.account.deleteMany({ where: { userId } });
-
-  // Delete the user record itself
-  await prisma.user.delete({ where: { id: userId } });
-
-  return NextResponse.json({ deleted: true });
+  return NextResponse.json({
+    pendingDeletion: true,
+    scheduledDeletionAt: scheduledDeletionAt.toISOString(),
+    message: `Your account will be permanently deleted on ${scheduledDeletionAt.toLocaleDateString()}. You can undo this any time before then by signing in.`,
+  });
 }
