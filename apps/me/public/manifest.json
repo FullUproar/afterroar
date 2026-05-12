@@ -1,33 +1,58 @@
 {
-  "name": "Afterroar",
+  "name": "Afterroar Passport",
   "short_name": "Afterroar",
   "description": "Your tabletop identity. One Passport across every store and app.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0a",
   "theme_color": "#FF8200",
+  "categories": ["lifestyle", "social", "entertainment"],
   "icons": [
     {
-      "src": "/badges/passport-pioneer.png",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "Sign in",
-      "short_name": "Sign in",
-      "url": "/login",
-      "description": "Sign in to your Afterroar Passport"
+      "name": "Show my Passport",
+      "short_name": "Passport",
+      "url": "/dashboard",
+      "description": "Your QR code, library, and recent activity"
     },
     {
-      "name": "API Monitor",
-      "short_name": "API",
-      "url": "/admin/api-usage",
-      "description": "Federation API usage dashboard (admin)"
+      "name": "Library",
+      "short_name": "Library",
+      "url": "/library",
+      "description": "Your game library"
+    },
+    {
+      "name": "Wishlist",
+      "short_name": "Wishlist",
+      "url": "/wishlist",
+      "description": "Games you want"
     }
   ]
 }
