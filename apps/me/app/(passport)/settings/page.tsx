@@ -5,6 +5,7 @@ import { BadgeIcon } from '@/app/components/badge-icon';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { TitleBar, SecHero, Panel, Button, EmptyState, TYPE } from '@/app/components/ui';
+import { ConnectedAccounts } from './ConnectedAccounts';
 
 const CONSENT_LABELS: Record<string, { label: string; description: string }> = {
   platform_functional: {
@@ -39,7 +40,7 @@ export default async function SettingsPage() {
 
   const userId = session.user.id;
 
-  const [user, consents, userBadges, entityConsents] = await Promise.all([
+  const [user, consents, userBadges, entityConsents, accounts] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
         identityVerified: true,
         reputationScore: true,
         gameLibrary: true,
+        passwordHash: true,
         createdAt: true,
       },
     }),
@@ -72,11 +74,22 @@ export default async function SettingsPage() {
       include: { entity: { select: { id: true, name: true, slug: true, type: true, city: true, state: true } } },
       orderBy: { grantedAt: 'desc' },
     }),
+    prisma.account.findMany({
+      where: { userId },
+      select: { provider: true },
+    }),
   ]);
 
   if (!user) redirect('/login');
 
   const consentMap = new Map(consents.map((c) => [c.category, c]));
+
+  const hasPassword = Boolean(user.passwordHash);
+  const linkedProviderSet = new Set(accounts.map((a) => a.provider));
+  const isGoogleLinked = linkedProviderSet.has('google');
+  // Safe to unlink Google when the user has another way back in:
+  // either a password is set, or another OAuth provider remains.
+  const canUnlink = hasPassword || linkedProviderSet.size > 1;
 
   async function toggleConsent(formData: FormData) {
     'use server';
@@ -155,6 +168,18 @@ export default async function SettingsPage() {
               ))}
             </div>
           </Panel>
+        </section>
+
+        {/* Connected sign-in accounts */}
+        <section>
+          <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.35rem' }}>How You Sign In</h2>
+          <p style={{ ...TYPE.body, color: 'var(--ink-soft)', fontSize: '0.82rem', margin: '0 0 0.85rem' }}>
+            Link Google to skip the password next time. {hasPassword ? 'You can sign in either way.' : 'No password set — keep at least one method linked.'}
+          </p>
+          <ConnectedAccounts
+            providers={[{ key: 'google', label: 'Google', linked: isGoogleLinked }]}
+            canUnlink={canUnlink}
+          />
         </section>
 
         {/* Badges */}
