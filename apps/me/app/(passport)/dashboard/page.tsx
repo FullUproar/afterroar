@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import {
   BookOpen, Heart, ArrowLeftRight, Coins,
   Activity, MapPin, SlidersHorizontal, Download,
-  QrCode,
+  QrCode, Sparkles, ArrowRight,
 } from 'lucide-react';
 import { TitleBar, ActionTile, TYPE } from '@/app/components/ui';
 
@@ -40,6 +40,10 @@ export default async function DashboardHub() {
     : user?.membershipTier === 'CONNECT' ? 'Connect'
     : user?.membershipTier === 'STORE_OPS' ? 'Store Ops'
     : 'Passport · Free';
+  // Free users get a discoverable upgrade nudge below the Code chip.
+  // Anything tier-bearing skips it — we don't want to upsell people
+  // who already paid (or who Pro-equivalent on Connect/Store Ops).
+  const showUpgradeNudge = !user?.membershipTier || user.membershipTier === 'FREE';
 
   return (
     <>
@@ -101,15 +105,28 @@ export default async function DashboardHub() {
             gap: '0.5rem',
             flexWrap: 'wrap',
           }}>
-            <span style={{
-              color: 'var(--yellow)',
-              border: '1px solid rgba(251, 219, 101, 0.3)',
-              padding: '1px 6px',
-              fontSize: '0.58rem',
-              letterSpacing: '0.22em',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-            }}>{tierLabel}</span>
+            {showUpgradeNudge ? (
+              <Link href="/upgrade" aria-label="Upgrade your Passport" style={{
+                color: 'var(--orange)',
+                border: '1px solid rgba(255, 130, 0, 0.45)',
+                padding: '1px 6px',
+                fontSize: '0.58rem',
+                letterSpacing: '0.22em',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+              }}>{tierLabel} · upgrade</Link>
+            ) : (
+              <span style={{
+                color: 'var(--yellow)',
+                border: '1px solid rgba(251, 219, 101, 0.3)',
+                padding: '1px 6px',
+                fontSize: '0.58rem',
+                letterSpacing: '0.22em',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+              }}>{tierLabel}</span>
+            )}
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</span>
           </p>
         </div>
@@ -166,6 +183,55 @@ export default async function DashboardHub() {
             textTransform: 'uppercase',
             flexShrink: 0,
           }}>Tap to show →</span>
+        </Link>
+      ) : null}
+
+      {/* Pro upgrade nudge — free tier only. Sits between the Code
+          chip and the stats rail so it's discoverable without being
+          aggressive. Hidden once the user has any paid tier. */}
+      {showUpgradeNudge ? (
+        <Link href="/upgrade" aria-label="Upgrade to Afterroar Pro" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.85rem',
+          padding: '0.85rem var(--pad-x)',
+          borderBottom: '1px solid var(--rule)',
+          background: 'linear-gradient(180deg, rgba(255, 130, 0, 0.08), rgba(255, 130, 0, 0.02))',
+          color: 'inherit',
+          textDecoration: 'none',
+          minHeight: '60px',
+        }}>
+          <span style={{
+            width: 34,
+            height: 34,
+            background: 'var(--orange)',
+            color: 'var(--void)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Sparkles size={18} strokeWidth={2.4} />
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{
+              ...TYPE.mono,
+              fontSize: '0.58rem',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+              color: 'var(--orange)',
+              fontWeight: 700,
+              display: 'block',
+              marginBottom: '0.15rem',
+            }}>Upgrade to Pro · $5/mo</span>
+            <span style={{
+              ...TYPE.body,
+              fontSize: '0.88rem',
+              color: 'var(--cream)',
+              fontWeight: 600,
+            }}>Public game nights, bigger crews, verified badge.</span>
+          </span>
+          <ArrowRight size={18} color="var(--orange)" style={{ flexShrink: 0 }} />
         </Link>
       ) : null}
 

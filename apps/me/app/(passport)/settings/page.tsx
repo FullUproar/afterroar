@@ -155,15 +155,32 @@ export default async function SettingsPage() {
                 { label: 'Username', value: user.username || '—' },
                 { label: 'Email', value: user.email },
                 { label: 'Passport code', value: user.passportCode || 'Not generated' },
-                { label: 'Tier', value: user.membershipTier === 'AFTERROAR_PLUS' ? 'Fugly Prime' : user.membershipTier || 'FREE' },
+                {
+                  label: 'Tier',
+                  value: user.membershipTier === 'AFTERROAR_PLUS' ? 'Fugly Prime' : user.membershipTier || 'FREE',
+                  // Surface the upgrade path right next to the tier itself
+                  // for free users — Annika flagged this was hard to find.
+                  href: (!user.membershipTier || user.membershipTier === 'FREE') ? '/upgrade' : undefined,
+                  hrefLabel: 'Upgrade →',
+                },
                 { label: 'Email verified', value: user.emailVerified ? 'Yes' : 'No' },
                 { label: 'ID verified', value: user.identityVerified ? 'Yes' : 'No' },
                 { label: 'Reputation', value: String(user.reputationScore) },
                 { label: 'Member since', value: user.createdAt.toLocaleDateString() },
-              ].map(({ label, value }) => (
+              ].map(({ label, value, href, hrefLabel }) => (
                 <div key={label}>
                   <p style={{ ...TYPE.mono, color: 'var(--ink-soft)', fontSize: '0.58rem', margin: '0 0 0.25rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</p>
-                  <p style={{ ...TYPE.body, color: 'var(--cream)', fontSize: '0.9rem', margin: 0, fontWeight: 600 }}>{value}</p>
+                  <p style={{ ...TYPE.body, color: 'var(--cream)', fontSize: '0.9rem', margin: 0, fontWeight: 600 }}>
+                    {value}
+                    {href ? (
+                      <>
+                        {' · '}
+                        <a href={href} style={{ color: 'var(--orange)', textDecoration: 'underline', fontSize: '0.78rem' }}>
+                          {hrefLabel}
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
                 </div>
               ))}
             </div>
