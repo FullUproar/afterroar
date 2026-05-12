@@ -12,12 +12,22 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const items = await prisma.wishlistItem.findMany({
-    where: { userId: session.user.id },
-    orderBy: [{ priority: 'asc' }, { addedAt: 'desc' }],
-  });
+  const [items, me] = await Promise.all([
+    prisma.wishlistItem.findMany({
+      where: { userId: session.user.id },
+      orderBy: [{ priority: 'asc' }, { addedAt: 'desc' }],
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { passportCode: true },
+    }),
+  ]);
 
-  return NextResponse.json({ items, count: items.length });
+  return NextResponse.json({
+    items,
+    count: items.length,
+    passportCode: me?.passportCode ?? null,
+  });
 }
 
 export async function POST(request: NextRequest) {

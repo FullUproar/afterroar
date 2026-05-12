@@ -22,15 +22,21 @@ const PRIORITY: Record<number, { label: string; tone: 'red' | 'orange' | 'blue' 
 
 export default function WishlistPage() {
   const [items, setItems] = useState<WishlistItem[]>([]);
+  const [passportCode, setPassportCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ gameTitle: '', priority: 3, notes: '' });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const fetchWishlist = async () => {
     const res = await fetch('/api/wishlist');
-    if (res.ok) { const data = await res.json(); setItems(data.items); }
+    if (res.ok) {
+      const data = await res.json();
+      setItems(data.items);
+      if (data.passportCode) setPassportCode(data.passportCode);
+    }
     setLoading(false);
   };
 
@@ -56,17 +62,17 @@ export default function WishlistPage() {
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/wishlist/share`;
+    if (!passportCode) return;
+    const url = `${window.location.origin}/share/wishlist/${passportCode}`;
+    setShareUrl(url);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 4000);
     } catch {
-      // Clipboard API is unavailable (insecure context, browser permission
-      // denied, or headless environments that block it). Surface the URL
-      // so the user can copy manually — previously failed silently which
-      // looked like the Share button did nothing.
-      window.prompt('Copy this link to share your wishlist:', url);
+      // Clipboard blocked (insecure context, headless test env, no permission).
+      // The inline URL panel below stays open so the user can copy manually —
+      // earlier versions silently failed and looked like the button did nothing.
     }
   };
 
@@ -84,14 +90,59 @@ export default function WishlistPage() {
             <Button onClick={() => setShowForm(!showForm)}>
               <Plus size={15} /> Add game
             </Button>
-            {items.length > 0 ? (
+            {items.length > 0 && passportCode ? (
               <Button variant="ghost" onClick={handleShare}>
-                {copied ? <><Check size={14} /> Copied</> : <><Share2 size={14} /> Share</>}
+                {copied ? <><Check size={14} /> Link copied</> : <><Share2 size={14} /> Share</>}
               </Button>
             ) : null}
           </>
         }
       />
+
+      {shareUrl ? (
+        <div
+          style={{
+            margin: '0.85rem var(--pad-x) 0',
+            padding: '0.85rem 1rem',
+            background: 'var(--panel-mute)',
+            border: '1px solid var(--rule)',
+            borderLeft: '3px solid var(--orange)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.45rem',
+          }}
+        >
+          <div
+            style={{
+              ...TYPE.mono,
+              fontSize: '0.6rem',
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              color: 'var(--orange)',
+              fontWeight: 700,
+            }}
+          >
+            {copied ? 'Link copied — paste it anywhere' : 'Share this link'}
+          </div>
+          <div
+            style={{
+              ...TYPE.mono,
+              fontSize: '0.78rem',
+              color: 'var(--cream)',
+              wordBreak: 'break-all',
+              userSelect: 'all',
+            }}
+          >
+            {shareUrl}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Button onClick={handleShare}>
+              {copied ? <><Check size={14} /> Copied</> : <><Share2 size={14} /> Copy again</>}
+            </Button>
+            <Button variant="ghost" onClick={() => { setShareUrl(null); setCopied(false); }}>Close</Button>
+          </div>
+        </div>
+      ) : null}
 
       <div style={{ padding: '1rem var(--pad-x) 1.5rem', ...TYPE.body }}>
         {/* Add form */}
