@@ -5,28 +5,20 @@ import { auth } from '@/lib/auth-config';
 /**
  * POST /api/auth/parental-consent/start-payment
  *
- * Body: { token: string, path: 'free' | 'pro' }
+ * Body: { token: string }
  *
- * For path='free': starts the one-time $5 consent fee Stripe Checkout
- * session. The fee covers Persona's per-verification cost (~$1-3) plus
- * a small platform margin. After successful payment, Stripe redirects
- * back to /signup/parental-consent?token=...&paid=consent and the
- * client picks up the paid state.
+ * The legacy $5 one-time consent fee was dropped 2026-05-12. The single
+ * consent path is now: **parent must hold active Afterroar Pro** for the
+ * kid account to be approved.
  *
- * For path='pro': starts a Pro subscription Stripe Checkout. Bundles
- * the consent fee into the first month and unlocks the parent
- * monitoring dashboard. (Currently the client links directly to
- * /billing/subscribe; this branch is reserved for any consent-specific
- * Stripe flow we want to thread later.)
+ * This endpoint stays for callback compatibility with older client
+ * builds: if a Pro parent hits it, we just confirm and let them proceed
+ * to /approve. If they don't have Pro, we tell them where to upgrade.
  *
- * **STUBBED for v1**: Stripe wiring isn't done yet. When STRIPE_SECRET_KEY
- * is set in env, this should create a real Checkout session. When it's
- * not (dev / pre-Stripe), we mark the consent fee as paid immediately
- * and return `{ devMarkPaid: true }` so testing can proceed end-to-end.
- * Production deployment must have Stripe wired before public launch.
+ * See memory: project_parental_consent_pro_gated_2026_05_12.
  */
 export async function POST(request: NextRequest) {
-  let body: { token?: string; path?: string };
+  let body: { token?: string };
   try {
     body = await request.json();
   } catch {
@@ -34,8 +26,6 @@ export async function POST(request: NextRequest) {
   }
 
   const token = String(body.token ?? '');
-  const path = body.path === 'pro' ? 'pro' : 'free';
-
   if (!token) {
     return NextResponse.json({ error: 'Token is required.' }, { status: 400 });
   }
@@ -58,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   const parent = await prisma.user.findUnique({
     where: { id: session.user.id as string },
-    select: { id: true, email: true, identityVerified: true },
+    select: { id: true, email: true, identityVerified: true, membershipTier: true },
   });
   if (!parent) {
     return NextResponse.json({ error: 'Parent account not found.' }, { status: 404 });
@@ -67,46 +57,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Signed-in account does not match the consent request.' }, { status: 403 });
   }
   if (!parent.identityVerified) {
+    return NextResponse.json({ error: 'Identity verification required before approving.' }, { status: 403 });
+  }
+
+  const hasPro = parent.membershipTier === 'PRO'
+    || parent.membershipTier === 'VENUE'
+    || parent.membershipTier === 'CONNECT';
+
+  if (!hasPro) {
+    // Direct the parent to the upgrade page. Once they subscribe, the
+    // Stripe webhook propagates the Pro state back to Passport (sync
+    // wiring tracked separately) and they can return to complete consent.
     return NextResponse.json(
-      { error: 'Identity verification required before payment.' },
-      { status: 403 },
+      {
+        error: 'You need an active Afterroar Pro subscription to grant consent for a kid account.',
+        upgradeUrl: 'https://hq.fulluproar.com/game-nights/subscribe',
+        path: 'pro_required',
+      },
+      { status: 402 },
     );
   }
 
-  // STUB: real Stripe Checkout integration goes here when STRIPE_SECRET_KEY
-  // is wired. For now, dev-mode auto-marks paid so we can test end-to-end.
-  if (!process.env.STRIPE_SECRET_KEY) {
-    if (path === 'free') {
-      await prisma.minorConsentRequest.update({
-        where: { id: consent.id },
-        data: { consentFeePaidAt: new Date(), parentChoseProPath: false },
-      });
-      return NextResponse.json({
-        ok: true,
-        devMarkPaid: true,
-        warning: 'Stripe is not configured. Consent fee marked paid in dev mode.',
-      });
-    } else {
-      return NextResponse.json({
-        ok: true,
-        devMarkPaid: true,
-        warning: 'Stripe is not configured. Pro subscription path needs to be wired against the existing /billing/subscribe flow.',
-      });
-    }
-  }
+  // Pro is active — nothing to "pay." Mark the consent as ready (we keep
+  // consentFeePaidAt as a sentinel timestamp meaning "fee waived because
+  // Pro is active"). The approve handler re-validates Pro at the moment
+  // of approval, so this is purely a UX latch.
+  await prisma.minorConsentRequest.update({
+    where: { id: consent.id },
+    data: { consentFeePaidAt: new Date(), parentChoseProPath: true },
+  });
 
-  // Production path (when Stripe is wired):
-  //   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  //   const checkout = await stripe.checkout.sessions.create({
-  //     mode: 'payment',
-  //     line_items: [{ price: process.env.STRIPE_CONSENT_FEE_PRICE_ID, quantity: 1 }],
-  //     customer_email: parent.email,
-  //     success_url: `${process.env.NEXTAUTH_URL}/signup/parental-consent?token=${token}&paid=consent`,
-  //     cancel_url: `${process.env.NEXTAUTH_URL}/signup/parental-consent?token=${token}`,
-  //     metadata: { consentRequestId: consent.id, path: 'free' },
-  //   });
-  //   return NextResponse.json({ checkoutUrl: checkout.url });
   return NextResponse.json({
-    error: 'Stripe Checkout integration is wired but the price IDs need to be configured.',
-  }, { status: 501 });
+    ok: true,
+    path: 'pro',
+    proActive: true,
+  });
 }

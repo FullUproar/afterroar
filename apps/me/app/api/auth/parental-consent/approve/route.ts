@@ -117,16 +117,20 @@ export async function POST(request: NextRequest) {
       { status: 403 },
     );
   }
-  // Either path satisfies the consent: $5 one-time consent fee paid OR
-  // active Pro subscription. Pro adds the monitoring dashboard but is
-  // not required for the kid account to exist.
-  const proActive = parent.membershipTier === 'PRO' || parent.membershipTier === 'CONNECT';
-  const consentFeePaid = !!consent.consentFeePaidAt;
-  if (!proActive && !consentFeePaid) {
+  // Pro-only consent gate (locked 2026-05-12 — see
+  // project_parental_consent_pro_gated_2026_05_12 memory). Parent must
+  // hold active Afterroar Pro (or higher) for the kid account to be
+  // approved; if their subscription lapses, the kid's accountStatus
+  // flips to "paused" via the subscription-deleted webhook.
+  const proActive =
+    parent.membershipTier === 'PRO' ||
+    parent.membershipTier === 'VENUE' ||
+    parent.membershipTier === 'CONNECT';
+  if (!proActive) {
     return NextResponse.json(
       {
-        error:
-          'Choose a path: pay the one-time $5 consent fee or start a Pro subscription before activating.',
+        error: 'Active Afterroar Pro required to approve a kid account.',
+        upgradeUrl: 'https://hq.fulluproar.com/game-nights/subscribe',
       },
       { status: 402 },
     );
@@ -144,10 +148,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // monitoringEnabled = true only when parent is on Pro AND chose the Pro
-  // path during consent. A parent who later upgrades to Pro can flip
-  // monitoring on from settings (post-v1 work).
-  const monitoringEnabled = proActive;
+  // monitoringEnabled is bundled into Pro now — every approved kid account
+  // gets the /parent-dashboard monitoring view since Pro is the only path.
+  const monitoringEnabled = true;
 
   const child = existingChild
     ? await prisma.user.update({
@@ -222,7 +225,7 @@ export async function POST(request: NextRequest) {
       childUserId: child.id,
       childEmail: child.email,
       consentRequestId: consent.id,
-      pathChosen: proActive ? 'pro' : 'free_consent_fee',
+      pathChosen: 'pro',
     },
   });
   await logUserActivity({

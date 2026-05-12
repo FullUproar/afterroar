@@ -5,24 +5,18 @@ import { signIn } from 'next-auth/react';
 import { TYPE } from '@/app/components/ui';
 
 /**
- * Four-step parent consent UX (revised model — May 2026):
+ * Four-step parent consent UX (locked 2026-05-12):
  *   1. Sign in (Google or email/password). Required because the parent's
  *      Passport account is the link to the kid.
- *   2. Verify identity via Persona.
- *   3. Choose a path: pay one-time consent fee ($5) for the verification
- *      cost OR start Pro ($5/mo) which bundles the consent fee in the
- *      first month AND unlocks the parent monitoring dashboard.
+ *   2. Verify identity via Persona / Stripe Identity.
+ *   3. Hold active Afterroar Pro. Single path now — the $5 one-time
+ *      consent fee was dropped. Parents who aren't on Pro are routed to
+ *      the upgrade flow on HQ.
  *   4. Attest "I am the parent or legal guardian" + activate.
  *
- * The previous model required ongoing Pro for the kid account to exist.
- * The new model treats Pro as a value-add ("monitor your kid's activity")
- * rather than a tax. Free-parent kid accounts work fine; Pro-parent
- * accounts get the monitoring dashboard.
- *
- * Stripe handoffs are stubbed in v1 — the endpoints exist and mark
- * payment status, but the actual checkout flow needs to be wired against
- * the existing Stripe integration. The status doc tracks what's full vs
- * stubbed.
+ * If the parent's Pro lapses later, the kid's accountStatus flips to
+ * "paused" via the subscription-deleted webhook. The /parent-dashboard
+ * monitoring view is included with every Pro tier.
  */
 export default function ParentalConsentClient({
   token,
@@ -47,29 +41,17 @@ export default function ParentalConsentClient({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [attestationChecked, setAttestationChecked] = useState(false);
-  const [consentFeePaid, setConsentFeePaid] = useState(initialConsentFeePaid);
-  const [chosenPath, setChosenPath] = useState<'free' | 'pro' | null>(
-    session?.membershipTier === 'PRO' || session?.membershipTier === 'CONNECT' ? 'pro'
-    : initialConsentFeePaid ? 'free'
-    : null,
-  );
-  const [paymentStarting, setPaymentStarting] = useState(false);
 
-  // After a Stripe redirect-back, the URL may contain ?paid=consent or
-  // ?paid=pro. Re-read the consent state from the server to pick up the
-  // payment confirmation. (Actual Stripe wiring is stubbed; the endpoint
-  // marks paid via a manual call for now.)
+  // Surface Stripe redirect-back if the parent came from upgrading on HQ.
+  // The cross-app Pro sync may not have landed yet (FU→Passport sync is
+  // tracked separately); show a soft message reassuring them.
+  const [returnedFromUpgrade, setReturnedFromUpgrade] = useState(false);
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (url.searchParams.has('paid')) {
-      const paid = url.searchParams.get('paid');
-      if (paid === 'consent' || paid === 'pro') {
-        // Refresh page state via a soft reload so server data updates.
-        url.searchParams.delete('paid');
-        window.history.replaceState(null, '', url.toString());
-        setConsentFeePaid(true);
-        setChosenPath(paid === 'pro' ? 'pro' : 'free');
-      }
+    if (url.searchParams.has('upgraded')) {
+      setReturnedFromUpgrade(true);
+      url.searchParams.delete('upgraded');
+      window.history.replaceState(null, '', url.toString());
     }
   }, []);
 
@@ -82,38 +64,14 @@ export default function ParentalConsentClient({
   const isWrongAccount =
     isSignedIn && session.email && session.email.toLowerCase() !== parentEmail.toLowerCase();
   const isVerified = !!session?.identityVerified;
-  const isProActive = session?.membershipTier === 'PRO' || session?.membershipTier === 'CONNECT';
-  const pathSatisfied = chosenPath === 'pro' ? isProActive : chosenPath === 'free' ? consentFeePaid : false;
+  const isProActive =
+    session?.membershipTier === 'PRO' ||
+    session?.membershipTier === 'VENUE' ||
+    session?.membershipTier === 'CONNECT';
 
-  async function startConsentFeePayment() {
-    if (paymentStarting) return;
-    setPaymentStarting(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/auth/parental-consent/start-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, path: 'free' }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data?.error || 'Could not start payment.');
-        setPaymentStarting(false);
-        return;
-      }
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else if (data.devMarkPaid) {
-        // Dev fallback: endpoint immediately marked paid (no Stripe key set).
-        setConsentFeePaid(true);
-        setChosenPath('free');
-        setPaymentStarting(false);
-      }
-    } catch {
-      setError('Network error. Try again.');
-      setPaymentStarting(false);
-    }
-  }
+  const upgradeReturnUrl = `https://hq.fulluproar.com/game-nights/subscribe?return=${encodeURIComponent(
+    `https://www.afterroar.me${callbackUrl}&upgraded=1`,
+  )}`;
 
   async function handleApprove() {
     if (submitting) return;
@@ -163,20 +121,13 @@ export default function ParentalConsentClient({
           {childDisplayName || childEmail}&apos;s Passport is set up. They&apos;ll get an email at{' '}
           <strong>{childEmail}</strong> with a link to set their password and sign in.
         </p>
-        {chosenPath === 'pro' ? (
-          <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-            Your Pro subscription includes the parent monitoring dashboard. You can find it under
-            <a href="/parent-dashboard" style={{ color: 'var(--orange)', marginLeft: '0.25rem' }}>
-              /parent-dashboard
-            </a>
-            .
-          </p>
-        ) : (
-          <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-            You can upgrade to Pro any time to monitor their activity. Your Afterroar account stays
-            active for free.
-          </p>
-        )}
+        <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+          Your Afterroar Pro subscription includes the parent monitoring dashboard at
+          <a href="/parent-dashboard" style={{ color: 'var(--orange)', marginLeft: '0.25rem' }}>
+            /parent-dashboard
+          </a>
+          . If you cancel Pro, this kid account will pause until you renew.
+        </p>
       </div>
     );
   }
@@ -285,62 +236,59 @@ export default function ParentalConsentClient({
 
       <Step
         index={3}
-        title="Choose how to maintain this consent"
-        complete={pathSatisfied}
-        active={isVerified && !pathSatisfied}
+        title="Hold Afterroar Pro"
+        complete={isProActive}
+        active={isVerified && !isProActive}
         disabled={!isVerified}
       >
         <p style={{ ...TYPE.body, fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.5 }}>
-          Pick what fits — both paths fully approve {childDisplayName || childEmail}&apos;s account.
-          Pro adds the ability to see what they&apos;re up to.
+          Approving a kid account requires an active Afterroar Pro subscription ($5/mo or $49/year).
+          Your Pro tier includes the parent monitoring dashboard — visibility into apps your kid
+          signs in to, stores they check in at, badges they earn, and account-level alerts.
         </p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '0.75rem',
-          marginTop: '0.5rem',
-        }}>
-          {/* Free path: $5 one-time consent fee */}
-          <PathCard
-            tier="Free + verification"
-            price="$5 once"
-            selected={chosenPath === 'free'}
-            disabled={!isVerified}
-            features={[
-              'Approves their account',
-              'Verifies you as a real adult',
-              'Your Afterroar account stays free',
-            ]}
-            actionLabel={consentFeePaid ? 'Paid ✓' : paymentStarting ? 'Starting…' : 'Pay $5'}
-            actionDisabled={consentFeePaid || paymentStarting}
-            onAction={consentFeePaid ? undefined : startConsentFeePayment}
-            footnote="Covers the cost of your ID verification. No further charges."
-          />
-          {/* Pro path: $5/mo Pro */}
-          <PathCard
-            tier="Pro · Monitored Passport"
-            price="$5/mo"
-            highlighted
-            selected={chosenPath === 'pro'}
-            disabled={!isVerified}
-            features={[
-              'Everything in Free path',
-              "See where they're using their Passport (apps signed in, stores checked in)",
-              'Badges earned + account-level alerts (new device, identity changes)',
-              'All your own Pro perks (verified profile, public hosting, etc.)',
-            ]}
-            actionLabel={isProActive ? 'Active ✓' : 'Start Pro'}
-            actionDisabled={isProActive}
-            onAction={
-              isProActive
-                ? undefined
-                : () => {
-                    window.location.href = `/billing/subscribe?tier=pro&consent_token=${encodeURIComponent(token)}&return=${encodeURIComponent(callbackUrl)}`;
-                  }
-            }
-            footnote="First month covers the consent fee. Cancel any time. Passport-level only — individual apps hold their own data."
-          />
+        <div
+          style={{
+            marginTop: '0.6rem',
+            padding: '0.85rem 1rem',
+            background: isProActive ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 130, 0, 0.06)',
+            border: `1px solid ${isProActive ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 130, 0, 0.35)'}`,
+          }}
+        >
+          {isProActive ? (
+            <p style={{ ...TYPE.body, margin: 0, fontSize: '0.88rem', color: 'var(--cream)' }}>
+              Afterroar Pro is active on your account. You&apos;re good to continue.
+            </p>
+          ) : (
+            <>
+              <p style={{ ...TYPE.body, margin: '0 0 0.65rem', fontSize: '0.88rem', color: 'var(--cream)' }}>
+                You don&apos;t have Afterroar Pro yet. Start your subscription, then return here to
+                approve the consent.
+              </p>
+              {returnedFromUpgrade ? (
+                <p style={{ ...TYPE.body, margin: '0 0 0.65rem', fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
+                  Just upgraded? Pro state syncs from billing within ~30 seconds. Refresh if the badge
+                  hasn&apos;t flipped to active.
+                </p>
+              ) : null}
+              <a
+                href={upgradeReturnUrl}
+                style={{
+                  display: 'inline-block',
+                  padding: '0.7rem 1.1rem',
+                  background: 'var(--orange)',
+                  border: 'none',
+                  color: 'var(--void, #1a1a1a)',
+                  ...TYPE.display,
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                Start Afterroar Pro →
+              </a>
+            </>
+          )}
         </div>
       </Step>
 
@@ -348,8 +296,8 @@ export default function ParentalConsentClient({
         index={4}
         title="Confirm and activate"
         complete={false}
-        active={pathSatisfied}
-        disabled={!pathSatisfied}
+        active={isProActive}
+        disabled={!isProActive}
       >
         <label
           style={{
@@ -376,7 +324,7 @@ export default function ParentalConsentClient({
         </label>
         <button
           onClick={handleApprove}
-          disabled={submitting || !attestationChecked || !pathSatisfied}
+          disabled={submitting || !attestationChecked || !isProActive}
           style={{
             width: '100%',
             padding: '0.9rem 1.25rem',
@@ -386,8 +334,8 @@ export default function ParentalConsentClient({
             ...TYPE.display,
             fontSize: '0.95rem',
             fontWeight: 700,
-            cursor: submitting || !attestationChecked || !pathSatisfied ? 'not-allowed' : 'pointer',
-            opacity: submitting || !attestationChecked || !pathSatisfied ? 0.5 : 1,
+            cursor: submitting || !attestationChecked || !isProActive ? 'not-allowed' : 'pointer',
+            opacity: submitting || !attestationChecked || !isProActive ? 0.5 : 1,
             marginTop: '0.5rem',
           }}
         >
