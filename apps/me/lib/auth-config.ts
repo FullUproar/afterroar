@@ -14,6 +14,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Auto-link Google to existing email/password User rows when the
+      // emails match. Safe for Google specifically because the profile()
+      // mapper below only trusts email_verified=true accounts — an
+      // attacker can't claim an existing user with an unverified Google
+      // mailbox. Removes the OAuthAccountNotLinked dead-end and lets
+      // existing password users add Google by clicking "Continue with
+      // Google" once.
+      allowDangerousEmailAccountLinking: true,
       // Always show the Google account chooser, even when Chrome already
       // has an active session. Without this, Google auto-passes whichever
       // account is "primary" in the user's profile, which is bad UX for
