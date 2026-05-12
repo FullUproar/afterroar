@@ -13,12 +13,24 @@ function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const inviteCodeParam = searchParams.get("code")?.toUpperCase() || null;
 
   // Two-stage signup. Stage 1 ("gate") = ToS + age radio + Continue.
   // Stage 2 ("creds") = Google or email/password — only shown after the
   // user has self-attested as 18+ on stage 1. Teens are routed to
   // /signup/teen on Continue; under-13 to /signup/blocked.
   const [stage, setStage] = useState<Stage>('gate');
+
+  // Invite-gate state. When INVITE_GATE_ENABLED on server and no ?code,
+  // redirect to /request-invite. When a code is on the URL, pre-validate
+  // so the user sees feedback before filling out the rest of the form.
+  const [inviteCode] = useState<string | null>(inviteCodeParam);
+  const [inviteGate, setInviteGate] = useState<{
+    enabled: boolean;
+    checked: boolean;
+    codeValid: boolean | null;
+    codeReason: string | null;
+  }>({ enabled: false, checked: false, codeValid: null, codeReason: null });
 
   // Stage 1 state
   const [agreedTos, setAgreedTos] = useState(false);
@@ -45,6 +57,66 @@ function SignupContent() {
       })
       .catch(() => {});
   }, [router]);
+
+  // Invite-gate check on mount. If the gate is enabled and there's no
+  // ?code on the URL, route to /request-invite. If there is a code,
+  // validate it server-side so we can surface "invalid"/"expired"/"used"
+  // before the user wastes time on the rest of the form.
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const statusRes = await fetch('/api/auth/invite-gate-status');
+        const status = (await statusRes.json().catch(() => ({}))) as { enabled?: boolean };
+        const enabled = !!status.enabled;
+
+        if (!enabled) {
+          if (!cancel) {
+            setInviteGate({ enabled: false, checked: true, codeValid: null, codeReason: null });
+          }
+          return;
+        }
+
+        // Gate is on. No code → route to /request-invite.
+        if (!inviteCode) {
+          router.replace('/request-invite');
+          return;
+        }
+
+        const validRes = await fetch(
+          `/api/auth/invite-validate?code=${encodeURIComponent(inviteCode)}`,
+        );
+        const valid = (await validRes.json().catch(() => ({ valid: false, reason: 'fetch_failed' }))) as {
+          valid?: boolean;
+          reason?: string;
+        };
+
+        if (!cancel) {
+          setInviteGate({
+            enabled: true,
+            checked: true,
+            codeValid: !!valid.valid,
+            codeReason: valid.reason || null,
+          });
+        }
+      } catch {
+        if (!cancel) {
+          // If the gate-status endpoint is unreachable, fail-closed for safety —
+          // but only when ?code isn't present (no ?code in a gate-uncertain
+          // state means the user is mid-signup and we shouldn't punt them).
+          setInviteGate({
+            enabled: false,
+            checked: true,
+            codeValid: null,
+            codeReason: null,
+          });
+        }
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [inviteCode, router]);
 
   async function handleContinue() {
     setError(null);
@@ -111,6 +183,7 @@ function SignupContent() {
           password,
           displayName: displayName.trim() || undefined,
           confirmedAdult: true,
+          inviteCode: inviteCode || undefined,
         }),
       });
       const data = await res.json();

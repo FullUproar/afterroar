@@ -560,6 +560,54 @@ model GameLoan {
 }
 
 // ============================================================
+// INVITE CODE — Gate for Passport signup during invite-only launch.
+// Single-use by default; multi-use supported for campaign blasts.
+// ============================================================
+model InviteCode {
+  id              String    @id @default(cuid())
+  /// User-facing identifier, e.g. "AFTERROAR-7XQ4M". Uppercase + dashes.
+  code            String    @unique
+  batch           String?
+  maxUses         Int       @default(1)
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  notes           String?
+  createdById     String?
+  createdAt       DateTime  @default(now())
+  consumedAt      DateTime?
+  consumedByEmail String?
+
+  @@index([batch])
+  @@index([expiresAt])
+  @@index([createdAt(sort: Desc)])
+}
+
+// ============================================================
+// INVITE REQUEST — Public request to join during invite-only
+// launch. Submitted via /request-invite with Credo + plain-
+// language consents. Reviewed by staff before an InviteCode is
+// minted + emailed.
+// ============================================================
+model InviteRequest {
+  id               String    @id @default(cuid())
+  email            String
+  displayName      String?
+  whyInterested    String?
+  /// JSON record of plain-language consents at submit time
+  /// (credoRead, dataPolicyAgreed, etc.).
+  consents         Json
+  /// 'pending' | 'approved' | 'rejected' | 'invited'
+  status           String    @default("pending")
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+  inviteCodeId     String?
+  createdAt        DateTime  @default(now())
+
+  @@index([email])
+  @@index([status, createdAt])
+}
+
+// ============================================================
 // PUSH SUBSCRIPTION — Web Push endpoints registered from the
 // Passport PWA. One row per (user, endpoint). userAgent + addedAt
 // kept for debugging delivery issues + culling stale entries.

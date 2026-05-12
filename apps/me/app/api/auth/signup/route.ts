@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
     password?: string;
     displayName?: string;
     confirmedAdult?: boolean;
+    /** Invite code from /request-invite approval emails. Required when
+     *  INVITE_GATE_ENABLED=true; ignored otherwise. */
+    inviteCode?: string;
     // Venue-claim signup path: when called by FU's claim-and-signup
     // orchestrator, FU includes an HMAC-signed claim token proving the
     // user clicked the magic link sent to the venue's listed email.
@@ -69,6 +72,35 @@ export async function POST(request: NextRequest) {
       ? String(body.displayName).trim()
       : null;
   const confirmedAdult = body.confirmedAdult === true;
+  const inviteCodeRaw = body.inviteCode?.trim().toUpperCase() || null;
+
+  // Invite-gate enforcement. When INVITE_GATE_ENABLED is on, every
+  // signup needs a valid InviteCode unless this is a venue-claim path
+  // (where the magic-link email proves a different kind of entitlement).
+  const inviteGateEnabled = process.env.INVITE_GATE_ENABLED === 'true';
+  let consumedInviteCodeId: string | null = null;
+  if (inviteGateEnabled && !body.claimToken) {
+    if (!inviteCodeRaw) {
+      return NextResponse.json(
+        { error: 'Afterroar is invite-only right now. Request access at /request-invite.' },
+        { status: 403 },
+      );
+    }
+    const invite = await prisma.inviteCode.findUnique({ where: { code: inviteCodeRaw } });
+    if (!invite) {
+      return NextResponse.json(
+        { error: 'That invite code doesn\'t look right. Double-check the email we sent you.' },
+        { status: 400 },
+      );
+    }
+    if (invite.expiresAt && invite.expiresAt < new Date()) {
+      return NextResponse.json({ error: 'This invite code has expired.' }, { status: 400 });
+    }
+    if (invite.usedCount >= invite.maxUses) {
+      return NextResponse.json({ error: 'This invite code has already been used.' }, { status: 400 });
+    }
+    consumedInviteCodeId = invite.id;
+  }
 
   // Venue-claim path verification: HMAC over (claimToken|venueSlug|email)
   // signed with the shared secret. FU side computes this when it knows
@@ -254,6 +286,28 @@ export async function POST(request: NextRequest) {
           defaultVisibility: "public",
         },
       });
+
+  // Consume the invite code now that the user is created (or upgraded
+  // from OAuth). Idempotent — if a race somehow consumed it between
+  // validate and now we'd let signup succeed anyway since the User row
+  // exists. We mark the code's first-consume timestamp for the audit.
+  if (consumedInviteCodeId) {
+    await prisma.inviteCode.update({
+      where: { id: consumedInviteCodeId },
+      data: {
+        usedCount: { increment: 1 },
+        consumedAt: new Date(),
+        consumedByEmail: email,
+      },
+    }).catch((err) => console.warn('[signup] invite code consume failed:', err));
+
+    // Mark any matching InviteRequest as 'invited' so the admin view
+    // shows the chain completed.
+    await prisma.inviteRequest.updateMany({
+      where: { email, inviteCodeId: consumedInviteCodeId },
+      data: { status: 'invited' },
+    }).catch(() => {});
+  }
 
   // Generate the passport code at signup time. NextAuth's events.createUser
   // doesn't fire for our custom email-signup flow (it only fires for
