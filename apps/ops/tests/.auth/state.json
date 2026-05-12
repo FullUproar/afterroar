@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "__Host-authjs.csrf-token",
-      "value": "c99ed83a9d77eb5bf83d3e80c5ba062a44c6cdfe51d9fddd624c1dcabc626e2c%7Cbd110eaa3ea2483b8f42beb998ef46347de3297f19320be8e238b6456ce39e5f",
+      "value": "5e4bf600a1e4479406fb7d00b6a76b01328025a219938ee3af57f1609d379fb6%7Ca2de678c2a9238467c20446a9863f6a5f8b9c25964c3e28b58fec8ef3d373076",
       "domain": "www.afterroar.store",
       "path": "/",
       "expires": -1,
@@ -22,10 +22,10 @@
     },
     {
       "name": "__Secure-authjs.session-token",
-      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoidW44QVA2YlRHeHhUMzFPZ1h1Y1JXN3RrRlpGdVd1cXV4Q0s5ZHF2N2Zwd2MyTi1PNFQ1YUxQTUwwTWtqQllTd2xaVUVENlhMZHBmamdqZ1JoWGRYU1EifQ..jZam01jif2vThEjVgiZPzA.VyACAwWLo85kMKqI5FCZc9_qEFa7kcoDhp_8WPw_sAE0lbcTFXgMi4CmORFeteJSBXjgHKl9nlZaNd4qD8SZHriosPlK4vqj_ut2Pi_A7Ku-OJwMqRgfIBJA38DVk6vp6XONwAAmeflrPKwxyK0lE89UUleLrfF430VaPHObGEIywX4UiUvd2P0YLv-7uePB2pye49-wsMGMAZRMkjufCGPKl0fG88iadEKUJw42jeRILKl1j-1Dw6Fgbn9v9L24wSVQJ-s5MJos8380m_uf7ItVJsFuC30cpLmoxQSO3obvVCl-Rx81FThKNPYKKKm1lscLjq6PM9JKgA-fvxrXTeRjuWyPvGgzFLkTXe4CRIAxIdjNcbsFyVmf2Lb3yWdgJAwYSPFJwmoQEdjqs8Ur1Q.AS8qq5eE57Gl_7syxXeJ83Qxh1R7O1rrajIy-oaF_fE",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoidW44QVA2YlRHeHhUMzFPZ1h1Y1JXN3RrRlpGdVd1cXV4Q0s5ZHF2N2Zwd2MyTi1PNFQ1YUxQTUwwTWtqQllTd2xaVUVENlhMZHBmamdqZ1JoWGRYU1EifQ..Hj0dqHHTJILO32R--Sis_Q.yg4OvlPOjPEa1HQu6IFvC60yK0_MZo77x3qFLwAk4nYKCopNL3gnuY4-UpGHfc1mU5yoYafG4C2Kh2N5S4G4IvRdgGqiRHrs3X1IR5ERRmpY_QqCPoCReHME-GTJwLFppgsEJnUErztaL-FKli3zJVvnIRzmAmglHUtSFjVwODOPRP6yIGovk2BqXVkwX7t34XM0VeVfDP8VVDafKvP6TD7miXmpyO057lORK4H7u4UMlHqi-B6Mmc_1JMvMTn9wO7nZHEsM3BX-WyqtU8x39sGA_eeQSbQ07uIU4dE55FaAVzitxQwzbf6mQv-K6pulNz5XGkL2v-X6QMLr740vZ23ygc7klH6iXOc5WbFi_UdtKdJOcovJcD6__4ifMQnL3lq9tOZO1NfKQ-g1wrbS8A.815JImzbFMyD6V8e-yeFw59ep_wwcBXAiiOgP9doF0U",
       "domain": "www.afterroar.store",
       "path": "/",
-      "expires": 1778200568.746568,
+      "expires": 1779332098.875693,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -37,7 +37,7 @@
       "localStorage": [
         {
           "name": "store-settings-cache",
-          "value": "{\"venueId\":\"cmni8gm7x00006o8gujsifoz4\",\"tips_mode\":\"always\",\"tips_presets\":[15,20,25],\"hq_webhook_url\":\"https://www.fulluproar.com/api/store-ops/webhook\",\"intel_wpn_level\":\"advanced\",\"loyalty_enabled\":true,\"tax_rate_percent\":7,\"hq_webhook_secret\":\"669b61129910d22d97507d19d6d9bf272c1bdadaf58165c87c20154a5df472df\",\"tips_allow_custom\":true,\"intel_advisor_tone\":\"gamer\",\"intel_at_risk_days\":14,\"intel_monthly_rent\":3200,\"push_subscriptions\":[{\"keys\":{\"auth\":\"vQulI810ELekrnr9fW7n1A\",\"p256dh\":\"BJNrujpvMTyMODzLUKi3NCs2bjydO99MxLG0schkhSv-qGUnJFxl5jvg6pNLfxncUFS1UrDwKdKQ3agj_wuEL-I\"},\"endpoint\":\"https://fcm.googleapis.com/fcm/send/dwiOTiDMVMM:APA91bHoCMoz_2Sya-B9lYa9UD5u4TD1wlQKggkjtTE4wpflGyFc1b5BXPx-ME2LqGw4ySfQA76A8QHIR9SbR1KQ3ZlMZH__g40yDjNjbAah1a4dy2cmNb58HvzgS-rpmfKuVT40dN2q\"}],\"onboarding_complete\":true,\"intel_advisor_enabled\":true,\"intel_dead_stock_days\":30,\"intel_monthly_payroll\":4800,\"intel_monthly_insurance\":280,\"intel_monthly_utilities\":450,\"intel_seasonal_warnings\":true,\"receipt_counter_20260403\":13,\"receipt_counter_20260404\":1,\"receipt_counter_20260407\":2,\"getting_started_dismissed\":true,\"intel_monthly_other_fixed\":650,\"loyalty_points_per_dollar\":1,\"stripe_terminal_reader_id\":\"tmr_Gcd3NAYbs16xl1\",\"stripe_connected_account_id\":\"acct_1TH21CDxJyvjnpZV\",\"stripe_terminal_location_id\":\"tml_Gcd3NAuZFoLPnV\",\"stripe_terminal_reader_type\":\"stripe_s710\",\"intel_prefer_credit_buylists\":false,\"stripe_terminal_reader_label\":\"Terminal 001\",\"intel_buylist_cash_comfort_days\":14,\"intel_credit_liability_warn_percent\":50}"
+          "value": "{\"venueId\":\"cmni8gm7x00006o8gujsifoz4\",\"tips_mode\":\"always\",\"tips_presets\":[15,20,25],\"hq_webhook_url\":\"https://www.fulluproar.com/api/store-ops/webhook\",\"intel_wpn_level\":\"advanced\",\"loyalty_enabled\":true,\"recent_checkins\":[{\"name\":\"Shawnoah Pollock\",\"customer_id\":\"cmni8mtbf000004l57kqbr35l\",\"checked_in_at\":\"2026-04-08T01:06:20.399Z\",\"afterroar_user_id\":\"cmfstt7t30005jv04rgi5enam\"}],\"tax_rate_percent\":7,\"hq_webhook_secret\":\"669b61129910d22d97507d19d6d9bf272c1bdadaf58165c87c20154a5df472df\",\"tips_allow_custom\":true,\"intel_advisor_tone\":\"gamer\",\"intel_at_risk_days\":14,\"intel_monthly_rent\":3200,\"push_subscriptions\":[{\"keys\":{\"auth\":\"vQulI810ELekrnr9fW7n1A\",\"p256dh\":\"BJNrujpvMTyMODzLUKi3NCs2bjydO99MxLG0schkhSv-qGUnJFxl5jvg6pNLfxncUFS1UrDwKdKQ3agj_wuEL-I\"},\"endpoint\":\"https://fcm.googleapis.com/fcm/send/dwiOTiDMVMM:APA91bHoCMoz_2Sya-B9lYa9UD5u4TD1wlQKggkjtTE4wpflGyFc1b5BXPx-ME2LqGw4ySfQA76A8QHIR9SbR1KQ3ZlMZH__g40yDjNjbAah1a4dy2cmNb58HvzgS-rpmfKuVT40dN2q\"}],\"onboarding_complete\":true,\"intel_advisor_enabled\":true,\"intel_dead_stock_days\":30,\"intel_monthly_payroll\":4800,\"intel_monthly_insurance\":280,\"intel_monthly_utilities\":450,\"intel_seasonal_warnings\":true,\"receipt_counter_20260403\":13,\"receipt_counter_20260404\":1,\"receipt_counter_20260407\":2,\"receipt_counter_20260408\":2,\"getting_started_dismissed\":true,\"intel_monthly_other_fixed\":650,\"loyalty_points_per_dollar\":1,\"stripe_terminal_reader_id\":\"tmr_Gcd3NAYbs16xl1\",\"stripe_connected_account_id\":\"acct_1TH21CDxJyvjnpZV\",\"stripe_terminal_location_id\":\"tml_Gcd3NAuZFoLPnV\",\"stripe_terminal_reader_type\":\"stripe_s710\",\"intel_prefer_credit_buylists\":false,\"stripe_terminal_reader_label\":\"Terminal 001\",\"intel_buylist_cash_comfort_days\":14,\"intel_credit_liability_warn_percent\":50}"
         },
         {
           "name": "onboarding-state-885ccb77-6cc4-4868-b667-6cbf06f61ca8",
