@@ -25,7 +25,7 @@ export default function TermsPage() {
         </p>
 
         <h2 style={h2}>What Afterroar is</h2>
-        <p style={p}>Afterroar is a tabletop gaming identity and federation platform, operated by Full Uproar Games, Inc. (the &ldquo;we&rdquo; throughout these terms). Afterroar provides a cross-store player identity (&ldquo;Passport&rdquo;), loyalty points, event participation tracking, and a consent management system for the tabletop gaming community.</p>
+        <p style={p}>Afterroar is a tabletop gaming identity and federation platform, operated by Full Uproar Games, Inc. Afterroar provides a cross-store player identity (&ldquo;Passport&rdquo;), loyalty points, event participation tracking, and a consent management system for the tabletop gaming community.</p>
         <p style={p}>By creating a Passport or using any Afterroar service, you agree to these terms.</p>
 
         <h2 style={h2}>The Afterroar Credo</h2>

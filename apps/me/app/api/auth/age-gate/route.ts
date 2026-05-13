@@ -6,6 +6,7 @@ import {
   encodeAgeGatePayload,
   COOKIE_AGE_GATE,
   COOKIE_UNDER_13_BLOCK,
+  COOKIE_ADULT_ATTESTATION,
   ageGateCookieOptions,
   under13CookieOptions,
   isUnder13Blocked,
@@ -81,4 +82,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ redirect: '/signup/teen' });
   }
   return NextResponse.json({ redirect: '/signup' });
+}
+
+/**
+ * DELETE /api/auth/age-gate
+ *
+ * Clears the regular age-gate cookie so the user can re-take the cohort
+ * selection on /signup. The COPPA under-13 block cookie is intentionally
+ * NOT cleared — that one is sticky by design. Used by /signup?reset=1
+ * and by anyone testing the age flow (FUL-27).
+ *
+ * If the device is under-13-blocked, this is a no-op (returns the
+ * 'still blocked' state so the caller knows).
+ */
+export async function DELETE() {
+  const store = await cookies();
+  if (await isUnder13Blocked()) {
+    return NextResponse.json({ cleared: false, reason: 'under13_block_sticky' });
+  }
+  store.delete(COOKIE_AGE_GATE);
+  store.delete(COOKIE_ADULT_ATTESTATION);
+  return NextResponse.json({ cleared: true });
 }

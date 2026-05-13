@@ -47,15 +47,34 @@ function SignupContent() {
 
   // Cohort cookie check on mount: if device already attested or is
   // <13-blocked, route accordingly without re-asking.
+  //
+  // FUL-27: `?reset=1` clears the regular age-gate cookie first so QA
+  // and people who clicked the wrong radio can re-pick. The under-13
+  // block cookie stays sticky per COPPA. After clearing, we strip
+  // `?reset=1` from the URL so a refresh doesn't keep wiping cookies.
+  const resetParam = searchParams.get('reset') === '1';
   useEffect(() => {
-    fetch('/api/auth/age-gate/check')
-      .then((r) => r.json())
-      .then((d) => {
+    (async () => {
+      if (resetParam) {
+        try {
+          await fetch('/api/auth/age-gate', { method: 'DELETE' });
+        } catch { /* best-effort */ }
+        if (typeof window !== 'undefined') {
+          // Drop the ?reset=1 from the URL without re-triggering the effect
+          const url = new URL(window.location.href);
+          url.searchParams.delete('reset');
+          window.history.replaceState({}, '', url.toString());
+        }
+      }
+      try {
+        const r = await fetch('/api/auth/age-gate/check');
+        const d = await r.json();
         if (d.cohort === 'under13') router.replace('/signup/blocked');
         else if (d.cohort === 'teen') router.replace('/signup/teen');
         else if (d.cohort === 'adult') setStage('creds');
-      })
-      .catch(() => {});
+      } catch { /* show the gate if check fails */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // Invite-gate check on mount. If the gate is enabled and there's no
