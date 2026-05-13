@@ -96,8 +96,8 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
 
       {/* What you get */}
       <div style={{
-        background: '#1f2937',
-        border: '1px solid #374151',
+        background: '#353b4a',
+        border: '1px solid #414958',
         borderRadius: '16px',
         padding: '2rem 1.5rem',
         marginBottom: '2.5rem',
@@ -244,8 +244,8 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
       {/* Application form */}
       {showForm && signedIn && (
         <form onSubmit={handleSubmit} style={{
-          background: '#1f2937',
-          border: '1px solid #374151',
+          background: '#353b4a',
+          border: '1px solid #414958',
           borderRadius: '16px',
           padding: '2rem 1.5rem',
         }}>
@@ -280,7 +280,7 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
 
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
             <button type="button" onClick={() => setShowForm(false)} style={{
-              padding: '0.75rem 1.25rem', background: '#374151', border: 'none', borderRadius: '8px',
+              padding: '0.75rem 1.25rem', background: '#414958', border: 'none', borderRadius: '8px',
               color: '#9ca3af', fontWeight: 600, cursor: 'pointer',
             }}>
               Cancel
@@ -288,9 +288,9 @@ export function ConnectLanding({ signedIn }: { signedIn: boolean }) {
             <button type="submit" disabled={submitting || !form.name.trim() || !form.contactEmail.trim()} style={{
               flex: 1,
               padding: '0.75rem 1.25rem',
-              background: (!form.name.trim() || !form.contactEmail.trim()) ? '#374151' : '#FF8200',
+              background: (!form.name.trim() || !form.contactEmail.trim()) ? '#414958' : '#FF8200',
               border: 'none', borderRadius: '8px',
-              color: (!form.name.trim() || !form.contactEmail.trim()) ? '#6b7280' : '#0a0a0a',
+              color: (!form.name.trim() || !form.contactEmail.trim()) ? '#6b7280' : '#2a2f3a',
               fontWeight: 700, fontSize: '0.95rem',
               cursor: submitting ? 'wait' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
@@ -348,8 +348,8 @@ const fieldLabel: React.CSSProperties = {
 const fieldInput: React.CSSProperties = {
   width: '100%',
   padding: '0.65rem 0.85rem',
-  background: '#0a0a0a',
-  border: '1px solid #374151',
+  background: '#2a2f3a',
+  border: '1px solid #414958',
   borderRadius: '8px',
   color: '#e2e8f0',
   fontSize: '0.9rem',
@@ -362,22 +362,22 @@ const ctaButton: React.CSSProperties = {
   padding: '0.9rem 2rem',
   background: 'linear-gradient(135deg, #FF8200, #d97706)',
   border: 'none', borderRadius: '10px',
-  color: '#0a0a0a',
+  color: '#2a2f3a',
   fontWeight: 900, fontSize: '1rem',
   cursor: 'pointer',
   boxShadow: '0 6px 20px rgba(255, 130, 0, 0.3)',
 };
 
 const stepStyle: React.CSSProperties = {
-  background: '#1f2937',
-  border: '1px solid #374151',
+  background: '#353b4a',
+  border: '1px solid #414958',
   borderRadius: '12px',
   padding: '1.25rem 1rem',
 };
 
 const stepNum: React.CSSProperties = {
   width: '32px', height: '32px', borderRadius: '50%',
-  background: '#FF8200', color: '#0a0a0a',
+  background: '#FF8200', color: '#2a2f3a',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontWeight: 900, fontSize: '1rem', marginBottom: '0.75rem',
 };

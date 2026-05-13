@@ -61,7 +61,7 @@ export function ConsentApprove({ token, entityName }: { token: string; entityNam
             background: '#FF8200',
             border: 'none',
             borderRadius: '10px',
-            color: '#0a0a0a',
+            color: '#2a2f3a',
             fontWeight: 800,
             fontSize: '0.95rem',
             cursor: submitting ? 'not-allowed' : 'pointer',
@@ -77,7 +77,7 @@ export function ConsentApprove({ token, entityName }: { token: string; entityNam
           style={{
             padding: '0.85rem 1rem',
             background: 'transparent',
-            border: '1px solid #374151',
+            border: '1px solid #414958',
             borderRadius: '10px',
             color: '#9ca3af',
             fontWeight: 700,

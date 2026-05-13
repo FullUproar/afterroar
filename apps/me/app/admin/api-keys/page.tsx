@@ -115,7 +115,7 @@ export default async function ApiKeysPage() {
                 '<div style="color:#10b981;font-weight:900;font-size:1rem;margin-bottom:0.5rem;">Key minted (' + prefix + ')</div>',
                 '<div style="color:#94a3b8;font-size:0.85rem;margin-bottom:0.625rem;">Copy this NOW. After you navigate away, the full key is gone forever.</div>',
                 '<div style="display:flex;gap:0.5rem;">',
-                  '<input id="revealed-key" readonly value="' + key.replace(/"/g, '&quot;') + '" style="flex:1;font-family:monospace;font-size:0.9rem;padding:0.5rem 0.75rem;background:rgba(0,0,0,0.4);border:1px solid #374151;border-radius:0.375rem;color:#FBDB65;" />',
+                  '<input id="revealed-key" readonly value="' + key.replace(/"/g, '&quot;') + '" style="flex:1;font-family:monospace;font-size:0.9rem;padding:0.5rem 0.75rem;background:rgba(0,0,0,0.4);border:1px solid #414958;border-radius:0.375rem;color:#FBDB65;" />',
                   '<button onclick="navigator.clipboard.writeText(document.getElementById(\\'revealed-key\\').value);this.textContent=\\'Copied\\';" style="padding:0.5rem 1rem;background:#FF8200;border:none;border-radius:0.375rem;color:#fff;font-weight:700;cursor:pointer;">Copy</button>',
                 '</div>',
               ].join('');
@@ -132,7 +132,7 @@ export default async function ApiKeysPage() {
           action={mintAction}
           style={{
             background: "rgba(31, 41, 55, 0.6)",
-            border: "1px solid #374151",
+            border: "1px solid #414958",
             borderRadius: "0.75rem",
             padding: "1.25rem",
             marginTop: "0.75rem",
@@ -150,7 +150,7 @@ export default async function ApiKeysPage() {
               style={{
                 padding: "0.5rem 0.75rem",
                 background: "rgba(0, 0, 0, 0.4)",
-                border: "1px solid #374151",
+                border: "1px solid #414958",
                 borderRadius: "0.5rem",
                 color: "#fff",
                 fontSize: "0.95rem",
@@ -186,7 +186,7 @@ export default async function ApiKeysPage() {
         </form>
       </details>
 
-      <div style={{ overflow: "auto", border: "1px solid #374151", borderRadius: "0.75rem" }}>
+      <div style={{ overflow: "auto", border: "1px solid #414958", borderRadius: "0.75rem" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
           <thead>
             <tr style={{ background: "rgba(0, 0, 0, 0.4)" }}>
@@ -199,7 +199,7 @@ export default async function ApiKeysPage() {
           </thead>
           <tbody>
             {keys.map((k) => (
-              <tr key={k.id} style={{ borderTop: "1px solid #1f2937", opacity: k.revokedAt ? 0.5 : 1 }}>
+              <tr key={k.id} style={{ borderTop: "1px solid #353b4a", opacity: k.revokedAt ? 0.5 : 1 }}>
                 <td style={td}>{k.name}</td>
                 <td style={td}><code style={{ color: "#FBDB65", fontFamily: "monospace" }}>{k.keyPrefix}</code></td>
                 <td style={{ ...td, color: "#94a3b8", fontSize: "0.78rem" }}>{k.scopes.join(", ")}</td>

@@ -67,8 +67,8 @@ export function ShopifyClaim({
                 gap: '0.75rem',
                 alignItems: 'center',
                 padding: '0.85rem 1rem',
-                background: on ? 'rgba(16, 185, 129, 0.08)' : '#0a0a0a',
-                border: `1px solid ${on ? '#10b981' : '#374151'}`,
+                background: on ? 'rgba(16, 185, 129, 0.08)' : '#2a2f3a',
+                border: `1px solid ${on ? '#10b981' : '#414958'}`,
                 borderRadius: '8px',
                 color: '#e2e8f0',
                 cursor: 'pointer',
@@ -82,7 +82,7 @@ export function ShopifyClaim({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
-                {on && <Check size={11} strokeWidth={3} style={{ color: '#0a0a0a' }} />}
+                {on && <Check size={11} strokeWidth={3} style={{ color: '#2a2f3a' }} />}
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: '0.95rem' }}>{e.name}</p>
@@ -103,10 +103,10 @@ export function ShopifyClaim({
         style={{
           width: '100%',
           padding: '0.85rem 1rem',
-          background: selected ? '#10b981' : '#374151',
+          background: selected ? '#10b981' : '#414958',
           border: 'none',
           borderRadius: '10px',
-          color: selected ? '#0a0a0a' : '#6b7280',
+          color: selected ? '#2a2f3a' : '#6b7280',
           fontWeight: 800,
           fontSize: '0.95rem',
           cursor: selected && !submitting ? 'pointer' : 'not-allowed',

@@ -70,8 +70,8 @@ function Install({ entityId, entitySlug, reinstall }: { entityId: string; entity
           style={{
             flex: 1,
             padding: '0.65rem 0.85rem',
-            background: '#0a0a0a',
-            border: '1px solid #374151',
+            background: '#2a2f3a',
+            border: '1px solid #414958',
             borderRadius: '8px',
             color: '#e2e8f0',
             fontSize: '0.9rem',
@@ -84,10 +84,10 @@ function Install({ entityId, entitySlug, reinstall }: { entityId: string; entity
           disabled={submitting || !shop.trim()}
           style={{
             padding: '0.65rem 1.1rem',
-            background: shop.trim() ? '#10b981' : '#374151',
+            background: shop.trim() ? '#10b981' : '#414958',
             border: 'none',
             borderRadius: '8px',
-            color: shop.trim() ? '#0a0a0a' : '#6b7280',
+            color: shop.trim() ? '#2a2f3a' : '#6b7280',
             fontWeight: 800,
             fontSize: '0.85rem',
             cursor: submitting || !shop.trim() ? 'not-allowed' : 'pointer',
@@ -209,8 +209,8 @@ function Connected({
 
       {/* Settings */}
       <div style={{
-        background: '#0a0a0a',
-        border: '1px solid #374151',
+        background: '#2a2f3a',
+        border: '1px solid #414958',
         borderRadius: '10px',
         padding: '1rem 1.15rem',
         marginBottom: '1rem',
@@ -248,10 +248,10 @@ function Connected({
             disabled={!dirty || saving}
             style={{
               padding: '0.5rem 0.95rem',
-              background: dirty ? '#FF8200' : '#374151',
+              background: dirty ? '#FF8200' : '#414958',
               border: 'none',
               borderRadius: '6px',
-              color: dirty ? '#0a0a0a' : '#6b7280',
+              color: dirty ? '#2a2f3a' : '#6b7280',
               fontWeight: 700,
               fontSize: '0.8rem',
               cursor: dirty && !saving ? 'pointer' : 'not-allowed',
@@ -301,7 +301,7 @@ function Connected({
                 justifyContent: 'space-between',
                 gap: '0.5rem',
                 padding: '0.45rem 0.7rem',
-                background: '#1f2937',
+                background: '#353b4a',
                 borderRadius: '6px',
                 fontSize: '0.78rem',
               }}>
@@ -348,8 +348,8 @@ function resultColor(result: string | null): string {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem 0.65rem',
-  background: '#1f2937',
-  border: '1px solid #374151',
+  background: '#353b4a',
+  border: '1px solid #414958',
   borderRadius: '6px',
   color: '#e2e8f0',
   fontSize: '0.85rem',

@@ -127,9 +127,9 @@ async function AuthorizeContent({ searchParams }: { searchParams: Promise<Search
 
         <div style={{
           padding: '1.25rem',
-          background: '#1f2937',
+          background: '#353b4a',
           borderRadius: '8px',
-          border: '1px solid #374151',
+          border: '1px solid #414958',
         }}>
           <p style={{ color: '#e2e8f0', fontWeight: 700, margin: '0 0 0.75rem 0', fontSize: '0.9rem' }}>
             This app is requesting:
@@ -154,7 +154,7 @@ async function AuthorizeContent({ searchParams }: { searchParams: Promise<Search
             <button type="submit" style={{
               width: '100%',
               padding: '0.75rem',
-              background: '#374151',
+              background: '#414958',
               border: '1px solid #4b5563',
               borderRadius: '8px',
               color: '#9ca3af',
@@ -172,7 +172,7 @@ async function AuthorizeContent({ searchParams }: { searchParams: Promise<Search
               background: '#FF8200',
               border: 'none',
               borderRadius: '8px',
-              color: '#0a0a0a',
+              color: '#2a2f3a',
               fontSize: '0.95rem',
               fontWeight: 900,
               cursor: 'pointer',

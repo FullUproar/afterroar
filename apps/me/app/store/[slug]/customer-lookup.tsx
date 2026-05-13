@@ -61,8 +61,8 @@ export function CustomerLookup({ entityId, entityName }: { entityId: string; ent
       {/* Lookup input */}
       <div style={{
         display: 'flex', gap: '0.5rem',
-        background: '#0a0a0a',
-        border: '1px solid #374151',
+        background: '#2a2f3a',
+        border: '1px solid #414958',
         borderRadius: '10px',
         padding: '0.5rem 0.5rem 0.5rem 0.85rem',
         alignItems: 'center',
@@ -88,10 +88,10 @@ export function CustomerLookup({ entityId, entityName }: { entityId: string; ent
         />
         <button onClick={handleLookup} disabled={!code.trim() || loading} style={{
           padding: '0.5rem 1rem',
-          background: code.trim() ? '#FF8200' : '#374151',
+          background: code.trim() ? '#FF8200' : '#414958',
           border: 'none',
           borderRadius: '6px',
-          color: code.trim() ? '#0a0a0a' : '#6b7280',
+          color: code.trim() ? '#2a2f3a' : '#6b7280',
           fontWeight: 700,
           fontSize: '0.85rem',
           cursor: code.trim() && !loading ? 'pointer' : 'not-allowed',
@@ -253,8 +253,8 @@ export function CustomerLookup({ entityId, entityName }: { entityId: string; ent
 const resultSection: React.CSSProperties = {
   marginTop: '0.75rem',
   padding: '1rem 1.15rem',
-  background: '#0a0a0a',
-  border: '1px solid #374151',
+  background: '#2a2f3a',
+  border: '1px solid #414958',
   borderRadius: '10px',
 };
 
@@ -272,6 +272,6 @@ const wishItem: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '0.5rem 0.75rem',
-  background: '#1f2937',
+  background: '#353b4a',
   borderRadius: '6px',
 };

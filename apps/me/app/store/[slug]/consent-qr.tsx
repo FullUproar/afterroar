@@ -29,7 +29,7 @@ export function ConsentQR({ entityId }: { entityId: string }) {
     QRCode.toCanvas(canvasRef.current, result.url, {
       width: 240,
       margin: 1,
-      color: { dark: '#0a0a0a', light: '#ffffff' },
+      color: { dark: '#2a2f3a', light: '#ffffff' },
     }).catch(() => setError('Could not render QR code'));
   }, [result]);
 
@@ -134,8 +134,8 @@ export function ConsentQR({ entityId }: { entityId: string }) {
                 alignItems: 'center',
                 gap: '0.75rem',
                 padding: '0.75rem 1rem',
-                background: on ? 'rgba(255, 130, 0, 0.08)' : '#0a0a0a',
-                border: `1px solid ${on ? '#FF8200' : '#374151'}`,
+                background: on ? 'rgba(255, 130, 0, 0.08)' : '#2a2f3a',
+                border: `1px solid ${on ? '#FF8200' : '#414958'}`,
                 borderRadius: '8px',
                 color: '#e2e8f0',
                 cursor: 'pointer',
@@ -150,7 +150,7 @@ export function ConsentQR({ entityId }: { entityId: string }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
-                {on && <Check size={12} style={{ color: '#0a0a0a' }} strokeWidth={3} />}
+                {on && <Check size={12} style={{ color: '#2a2f3a' }} strokeWidth={3} />}
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem' }}>{s.label}</p>
@@ -169,8 +169,8 @@ export function ConsentQR({ entityId }: { entityId: string }) {
         style={{
           width: '100%',
           padding: '0.65rem 0.85rem',
-          background: '#0a0a0a',
-          border: '1px solid #374151',
+          background: '#2a2f3a',
+          border: '1px solid #414958',
           borderRadius: '8px',
           color: '#e2e8f0',
           fontSize: '0.85rem',
@@ -184,10 +184,10 @@ export function ConsentQR({ entityId }: { entityId: string }) {
         style={{
           width: '100%',
           padding: '0.75rem 1rem',
-          background: selected.size > 0 ? '#FF8200' : '#374151',
+          background: selected.size > 0 ? '#FF8200' : '#414958',
           border: 'none',
           borderRadius: '8px',
-          color: selected.size > 0 ? '#0a0a0a' : '#6b7280',
+          color: selected.size > 0 ? '#2a2f3a' : '#6b7280',
           fontWeight: 800,
           fontSize: '0.9rem',
           cursor: selected.size > 0 && !generating ? 'pointer' : 'not-allowed',
@@ -209,7 +209,7 @@ export function ConsentQR({ entityId }: { entityId: string }) {
 const btnSecondary: React.CSSProperties = {
   padding: '0.5rem 0.85rem',
   background: 'transparent',
-  border: '1px solid #374151',
+  border: '1px solid #414958',
   borderRadius: '8px',
   color: '#e2e8f0',
   fontWeight: 600,

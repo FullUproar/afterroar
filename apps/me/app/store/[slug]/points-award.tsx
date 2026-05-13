@@ -58,7 +58,7 @@ export function PointsAward({
   };
 
   return (
-    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #1f2937' }}>
+    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #353b4a' }}>
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
         <button
           type="button"
@@ -117,10 +117,10 @@ export function PointsAward({
           disabled={submitting || !amount}
           style={{
             padding: '0.5rem 0.85rem',
-            background: amount ? '#FF8200' : '#374151',
+            background: amount ? '#FF8200' : '#414958',
             border: 'none',
             borderRadius: '6px',
-            color: amount ? '#0a0a0a' : '#6b7280',
+            color: amount ? '#2a2f3a' : '#6b7280',
             fontWeight: 700,
             fontSize: '0.8rem',
             cursor: submitting || !amount ? 'not-allowed' : 'pointer',
@@ -148,7 +148,7 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
   flex: 1,
   padding: '0.45rem 0.75rem',
   background: active ? 'rgba(255, 130, 0, 0.12)' : 'transparent',
-  border: `1px solid ${active ? '#FF8200' : '#374151'}`,
+  border: `1px solid ${active ? '#FF8200' : '#414958'}`,
   borderRadius: '6px',
   color: active ? '#FF8200' : '#9ca3af',
   fontWeight: 700,
@@ -159,8 +159,8 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
 
 const quickBtn = (disabled: boolean): React.CSSProperties => ({
   padding: '0.4rem 0.75rem',
-  background: disabled ? '#1f2937' : '#0a0a0a',
-  border: '1px solid #374151',
+  background: disabled ? '#353b4a' : '#2a2f3a',
+  border: '1px solid #414958',
   borderRadius: '6px',
   color: disabled ? '#4b5563' : '#FBDB65',
   fontWeight: 700,
@@ -172,8 +172,8 @@ const quickBtn = (disabled: boolean): React.CSSProperties => ({
 const inputStyle: React.CSSProperties = {
   flex: 1,
   padding: '0.5rem 0.65rem',
-  background: '#0a0a0a',
-  border: '1px solid #374151',
+  background: '#2a2f3a',
+  border: '1px solid #414958',
   borderRadius: '6px',
   color: '#e2e8f0',
   fontSize: '0.85rem',

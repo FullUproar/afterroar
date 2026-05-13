@@ -110,7 +110,7 @@ export function InvitesClient({ requests, codes, statusCounts, inviteGateEnabled
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e2e8f0' }}>
+    <div style={{ minHeight: '100vh', background: '#2a2f3a', color: '#e2e8f0' }}>
       <div style={{ maxWidth: '64rem', margin: '0 auto', padding: '2.5rem 1.25rem 4rem' }}>
         <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.26em', textTransform: 'uppercase', color: '#FF8200', fontWeight: 700, margin: 0 }}>
           Admin · Invites
@@ -148,7 +148,7 @@ export function InvitesClient({ requests, codes, statusCounts, inviteGateEnabled
               marginLeft: 'auto',
               padding: '0.55rem 1rem',
               background: '#FF8200',
-              color: '#0a0a0a',
+              color: '#2a2f3a',
               border: 'none',
               borderRadius: 999,
               fontWeight: 800,
@@ -198,7 +198,7 @@ function tabStyle(active: boolean): React.CSSProperties {
     background: active ? '#FF8200' : 'transparent',
     border: '1px solid ' + (active ? '#FF8200' : '#2a2a4a'),
     borderRadius: 999,
-    color: active ? '#0a0a0a' : '#94a3b8',
+    color: active ? '#2a2f3a' : '#94a3b8',
     fontSize: '0.8rem',
     fontWeight: 700,
     cursor: 'pointer',
@@ -271,7 +271,7 @@ function RequestCard({
                 rows={3}
                 style={{
                   padding: '0.5rem',
-                  background: '#0a0a0a',
+                  background: '#2a2f3a',
                   border: '1px solid #2a2a4a',
                   color: '#e2e8f0',
                   borderRadius: 4,
@@ -290,7 +290,7 @@ function RequestCard({
                   flex: 1,
                   padding: '0.55rem 0.9rem',
                   background: '#10b981',
-                  color: '#0a0a0a',
+                  color: '#2a2f3a',
                   border: 'none',
                   borderRadius: 4,
                   fontWeight: 800,

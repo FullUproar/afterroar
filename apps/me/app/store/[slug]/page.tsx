@@ -145,8 +145,8 @@ export default async function StoreDashboard({ params }: { params: Promise<{ slu
 
       {/* Customer lookup */}
       <div style={{
-        background: '#1f2937',
-        border: '1px solid #374151',
+        background: '#353b4a',
+        border: '1px solid #414958',
         borderRadius: '12px',
         padding: '1.5rem',
         marginBottom: '2rem',
@@ -163,8 +163,8 @@ export default async function StoreDashboard({ params }: { params: Promise<{ slu
 
       {/* Consent request QR */}
       <div style={{
-        background: '#1f2937',
-        border: '1px solid #374151',
+        background: '#353b4a',
+        border: '1px solid #414958',
         borderRadius: '12px',
         padding: '1.5rem',
         marginBottom: '2rem',
@@ -180,8 +180,8 @@ export default async function StoreDashboard({ params }: { params: Promise<{ slu
 
       {/* Shopify integration */}
       <div style={{
-        background: '#1f2937',
-        border: '1px solid #374151',
+        background: '#353b4a',
+        border: '1px solid #414958',
         borderRadius: '12px',
         padding: '1.5rem',
         marginBottom: '2rem',
@@ -209,7 +209,7 @@ export default async function StoreDashboard({ params }: { params: Promise<{ slu
       </div>
 
       {/* Footer / nav */}
-      <div style={{ borderTop: '1px solid #1f2937', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+      <div style={{ borderTop: '1px solid #353b4a', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
         <Link href="/store" style={{ color: '#6b7280', textDecoration: 'none' }}>← All stores</Link>
         <div style={{ display: 'flex', gap: '1.25rem' }}>
           <Link href="/credo" style={{ color: '#6b7280', textDecoration: 'none' }}>The Credo</Link>
@@ -229,8 +229,8 @@ function StatCard({ label, value, sub, href }: { label: string; value: string; s
     </>
   );
   const cardStyle: React.CSSProperties = {
-    background: '#1f2937',
-    border: '1px solid #374151',
+    background: '#353b4a',
+    border: '1px solid #414958',
     borderRadius: '10px',
     padding: '1rem 1.15rem',
     display: 'block',

@@ -51,8 +51,8 @@ export default async function ConsentRequestPage({ params }: { params: Promise<{
       </div>
 
       <div style={{
-        background: '#0a0a0a',
-        border: '1px solid #374151',
+        background: '#2a2f3a',
+        border: '1px solid #414958',
         borderRadius: '12px',
         padding: '1.25rem 1.5rem',
         marginBottom: '1.25rem',

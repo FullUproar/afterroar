@@ -264,10 +264,10 @@ function DataTable({
   empty: string;
 }) {
   if (rows.length === 0 && empty) {
-    return <div style={{ padding: "1rem", color: "#6b7280", textAlign: "center", border: "1px solid #374151", borderRadius: "0.5rem" }}>{empty}</div>;
+    return <div style={{ padding: "1rem", color: "#6b7280", textAlign: "center", border: "1px solid #414958", borderRadius: "0.5rem" }}>{empty}</div>;
   }
   return (
-    <div style={{ overflow: "auto", border: "1px solid #374151", borderRadius: "0.75rem" }}>
+    <div style={{ overflow: "auto", border: "1px solid #414958", borderRadius: "0.75rem" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
         <thead>
           <tr style={{ background: "rgba(0, 0, 0, 0.4)" }}>
@@ -280,7 +280,7 @@ function DataTable({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} style={{ borderTop: "1px solid #1f2937" }}>
+            <tr key={i} style={{ borderTop: "1px solid #353b4a" }}>
               {row.map((cell, j) => (
                 <td key={j} style={{ padding: "0.625rem 0.875rem", color: "#e2e8f0", verticalAlign: "middle" }}>
                   {cell}

@@ -60,7 +60,7 @@ export default async function StoreCustomersPage({ params }: { params: Promise<{
       </div>
 
       {consents.length === 0 ? (
-        <div style={{ padding: '2rem', background: '#1f2937', borderRadius: '12px', textAlign: 'center', color: '#9ca3af' }}>
+        <div style={{ padding: '2rem', background: '#353b4a', borderRadius: '12px', textAlign: 'center', color: '#9ca3af' }}>
           No customers connected yet. Generate a consent QR from your dashboard.
         </div>
       ) : (
@@ -68,8 +68,8 @@ export default async function StoreCustomersPage({ params }: { params: Promise<{
           {consents.map((c) => (
             <div key={c.id} style={{
               padding: '1rem 1.25rem',
-              background: '#1f2937',
-              border: '1px solid #374151',
+              background: '#353b4a',
+              border: '1px solid #414958',
               borderRadius: '10px',
               display: 'flex',
               gap: '1rem',

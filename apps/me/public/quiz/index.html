@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#2a2f3a">
 <title>Tabletop Player Profile</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; }
   body {
-    background: #0a0a0a;
+    background: #2a2f3a;
     color: #e2e8f0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     line-height: 1.5;
@@ -33,7 +33,7 @@
   }
   button:active { transform: scale(0.98); }
   .btn-primary {
-    background: #FF8200; color: #0a0a0a;
+    background: #FF8200; color: #2a2f3a;
     padding: 14px 24px; font-size: 17px; font-weight: 700;
     width: 100%;
   }
@@ -45,7 +45,7 @@
   }
   .btn-secondary:hover { background: rgba(255, 130, 0, 0.1); border-color: #FF8200; }
   .progress-track {
-    height: 4px; background: #1f2937; border-radius: 2px;
+    height: 4px; background: #353b4a; border-radius: 2px;
     margin: 0 0 24px; overflow: hidden;
   }
   .progress-fill { height: 100%; background: #FF8200; transition: width 0.3s; }
@@ -59,7 +59,7 @@
   }
   .answer {
     display: block; width: 100%; text-align: left;
-    background: #1f2937; color: #e2e8f0;
+    background: #353b4a; color: #e2e8f0;
     padding: 18px 20px; margin-bottom: 12px;
     border: 2px solid transparent;
     font-size: 16px; line-height: 1.4;
@@ -143,7 +143,7 @@
     line-height: 1.4;
   }
   .dim-bar-bg {
-    height: 8px; background: #1f2937; border-radius: 4px;
+    height: 8px; background: #353b4a; border-radius: 4px;
     position: relative; overflow: hidden;
   }
   .dim-bar-center {
@@ -166,7 +166,7 @@
   }
   .footer-note {
     margin-top: 40px; padding-top: 24px;
-    border-top: 1px solid #1f2937;
+    border-top: 1px solid #353b4a;
     font-size: 13px; color: #94a3b8;
   }
   .footer-note p { margin-bottom: 8px; color: #94a3b8; }
@@ -176,15 +176,15 @@
   .spinner {
     display: inline-block;
     width: 32px; height: 32px;
-    border: 3px solid #1f2937;
+    border: 3px solid #353b4a;
     border-top-color: #FF8200;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .json-export {
-    background: #0a0a0a; color: #94a3b8;
-    border: 1px solid #1f2937;
+    background: #2a2f3a; color: #94a3b8;
+    border: 1px solid #353b4a;
     padding: 12px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 12px; line-height: 1.5;
@@ -862,7 +862,7 @@
     const btn = (kind, label, activeColor) => {
       const on = set.has(kind);
       const bg = on ? activeColor : 'rgba(255,255,255,0.04)';
-      const color = on ? '#0a0a0a' : 'rgba(255,255,255,0.7)';
+      const color = on ? '#2a2f3a' : 'rgba(255,255,255,0.7)';
       const border = on ? activeColor : 'rgba(255,255,255,0.12)';
       return `<button onclick="event.stopPropagation(); window.__toggleSignal(${gameId}, '${kind}')"
         style="padding:4px 10px; font-size:0.72rem; font-weight:600;
@@ -1419,7 +1419,7 @@
         <div id="game-tag-search" style="position:relative;">
           <input type="text" id="game-tag-input" placeholder="e.g. Pandemic, Catan, Wingspan…" autocomplete="off"
             oninput="window.__searchGames(this.value)"
-            style="width:100%; padding:10px 12px; background:#1f2937; color:#e2e8f0; border:1px solid rgba(255,255,255,0.12); border-radius:8px; font-size:0.95rem; outline:none;">
+            style="width:100%; padding:10px 12px; background:#353b4a; color:#e2e8f0; border:1px solid rgba(255,255,255,0.12); border-radius:8px; font-size:0.95rem; outline:none;">
           <div id="game-tag-results" style="margin-top:8px;"></div>
         </div>
       `;

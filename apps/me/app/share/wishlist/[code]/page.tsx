@@ -45,7 +45,7 @@ export default async function SharedWishlistPage({ params }: PageProps) {
   const owner = user.displayName || 'A gamer';
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--void, #0a0a0a)', color: 'var(--cream, #f5e9c9)' }}>
+    <main style={{ minHeight: '100vh', background: 'var(--void, #2a2f3a)', color: 'var(--cream, #f5e9c9)' }}>
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '2.5rem 1.25rem 4rem' }}>
         <Link
           href="/"

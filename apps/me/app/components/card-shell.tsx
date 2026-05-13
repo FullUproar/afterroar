@@ -11,7 +11,7 @@ export function ChromeNav({ email, signedIn = true }: { email?: string | null; s
   return (
     <nav style={{
       background: '#111827',
-      borderBottom: '1px solid #1f2937',
+      borderBottom: '1px solid #353b4a',
       padding: '0.7rem 1rem',
       display: 'flex',
       alignItems: 'center',

@@ -331,7 +331,7 @@ const btnReject = {
 const btnApprove = {
   padding: '0.5rem 0.9rem',
   background: '#FF8200',
-  color: '#0a0a0a',
+  color: '#2a2f3a',
   border: 'none',
   fontSize: '0.82rem',
   fontWeight: 800,

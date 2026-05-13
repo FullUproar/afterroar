@@ -38,7 +38,7 @@ export default async function StorePage() {
           display: 'inline-block',
           padding: '0.75rem 1.5rem',
           background: '#FF8200',
-          color: '#0a0a0a',
+          color: '#2a2f3a',
           borderRadius: '8px',
           textDecoration: 'none',
           fontWeight: 700,

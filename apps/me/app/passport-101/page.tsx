@@ -272,7 +272,7 @@ function PassportCardMock() {
             gap: '1px',
           }}>
             {QR_PATTERN.map((on, i) => (
-              <div key={i} style={{ background: on ? '#0a0a0a' : 'transparent' }} />
+              <div key={i} style={{ background: on ? '#2a2f3a' : 'transparent' }} />
             ))}
           </div>
         </div>

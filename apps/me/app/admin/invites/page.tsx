@@ -11,7 +11,7 @@ export default async function InvitesAdminPage() {
   if (!session?.user?.id) redirect('/login?callbackUrl=/admin/invites');
   if (!isAdmin(session.user.email)) {
     return (
-      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', minHeight: '100vh', background: '#0a0a0a', color: '#FBDB65' }}>
+      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', minHeight: '100vh', background: '#2a2f3a', color: '#FBDB65' }}>
         <h1 style={{ color: '#ef4444', fontSize: '1.5rem', fontWeight: 900 }}>Not authorized</h1>
         <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>Admins only.</p>
       </div>

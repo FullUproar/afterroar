@@ -175,7 +175,7 @@ export default async function HealthPage() {
           })}
         </section>
 
-        <section style={{ marginTop: "2.5rem", padding: "1rem 1.25rem", background: "rgba(0, 0, 0, 0.3)", border: "1px solid #374151", borderRadius: "0.75rem", color: "#94a3b8", fontSize: "0.85rem", lineHeight: 1.6 }}>
+        <section style={{ marginTop: "2.5rem", padding: "1rem 1.25rem", background: "rgba(0, 0, 0, 0.3)", border: "1px solid #414958", borderRadius: "0.75rem", color: "#94a3b8", fontSize: "0.85rem", lineHeight: 1.6 }}>
           <strong style={{ color: "#FBDB65" }}>What this page is and isn't:</strong>
           <ul style={{ marginTop: "0.5rem", paddingLeft: "1.25rem" }}>
             <li><strong>This page</strong> = visibility. If you can load it, the failure isn't catastrophic.</li>

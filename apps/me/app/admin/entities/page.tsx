@@ -127,8 +127,8 @@ function Section({
           return (
             <div key={e.id} style={{
               padding: '1rem 1.25rem',
-              background: '#1f2937',
-              border: '1px solid #374151',
+              background: '#353b4a',
+              border: '1px solid #414958',
               borderRadius: '10px',
               display: 'flex',
               gap: '1rem',
@@ -163,7 +163,7 @@ function Section({
                   <Link href={`/store/${e.slug}`} style={{
                     padding: '0.4rem 0.85rem',
                     background: 'transparent',
-                    border: '1px solid #374151',
+                    border: '1px solid #414958',
                     borderRadius: '6px',
                     color: '#9ca3af',
                     fontSize: '0.75rem',
@@ -185,8 +185,8 @@ function labelFor(a: string) {
 }
 function btnFor(a: 'approve' | 'suspend' | 'reject' | 'reopen'): React.CSSProperties {
   const colors: Record<string, { bg: string; fg: string }> = {
-    approve: { bg: '#10b981', fg: '#0a0a0a' },
-    suspend: { bg: '#f59e0b', fg: '#0a0a0a' },
+    approve: { bg: '#10b981', fg: '#2a2f3a' },
+    suspend: { bg: '#f59e0b', fg: '#2a2f3a' },
     reject: { bg: '#ef4444', fg: '#fff' },
     reopen: { bg: '#7D55C7', fg: '#fff' },
   };

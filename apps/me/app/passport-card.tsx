@@ -11,7 +11,7 @@ export function PassportCard({ code }: { code: string }) {
     QRCode.toCanvas(canvasRef.current, code, {
       width: 240,
       margin: 1,
-      color: { dark: '#0a0a0a', light: '#ffffff' },
+      color: { dark: '#2a2f3a', light: '#ffffff' },
       errorCorrectionLevel: 'M',
     }).catch((err) => console.error('[passport-card] QR render failed', err));
   }, [code]);

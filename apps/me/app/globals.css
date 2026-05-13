@@ -1,10 +1,15 @@
 :root {
-  --void: #000;
-  --panel: #0c0c0c;
-  --panel-hi: #151515;
-  --panel-mute: #080808;
-  --rule: #1f1f1f;
-  --rule-soft: #171717;
+  /* FUL-41: align Passport surface palette with the FU site V4 Grey theme.
+     Original pure-black base (#000) created a sharper visual rift between
+     fulluproar.com and afterroar.me. V4 Grey lifts the base to #2a2f3a
+     so users feel they're inside one ecosystem. Card layers keep enough
+     separation from the body that depth remains readable. */
+  --void: #2a2f3a;
+  --panel: #353b4a;
+  --panel-hi: #414958;
+  --panel-mute: #252a35;
+  --rule: #424857;
+  --rule-soft: #353b4a;
 
   --orange: #ff8200;
   --orange-mute: rgba(255, 130, 0, 0.15);
