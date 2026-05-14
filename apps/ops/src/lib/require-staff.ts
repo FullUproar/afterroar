@@ -12,6 +12,7 @@ import {
   hasFeature,
 } from "./permissions";
 import { getActiveStaffFromCookie } from "./active-staff";
+import { checkBusinessApproval } from "./business-approval/check";
 
 /** God-admin email — kept in sync with store-context.tsx GOD_ADMIN_EMAIL.
  *  This account bypasses both permission and feature-module checks server-side
@@ -69,6 +70,20 @@ export class FeatureNotAvailableError {
   message: string;
   constructor(feature: string) {
     this.message = `This feature requires an upgrade. Module: ${feature}`;
+  }
+}
+
+/**
+ * Thrown when the user has an approved Store Ops application but the
+ * 1-month trial window has elapsed without conversion to a paid plan.
+ * Routes that handle this catch it and route to /trial-expired.
+ */
+export class TrialExpiredError {
+  status = 402 as const;  // 402 Payment Required — closest semantic
+  message = "Your Store Ops trial has expired. Reply to your approval email to convert to a paid plan.";
+  expiredAt: Date | null;
+  constructor(expiredAt: Date | null) {
+    this.expiredAt = expiredAt;
   }
 }
 
@@ -142,6 +157,34 @@ export async function requireStaff(): Promise<StaffContext> {
   // the server still 403s on feature/permission gates → "why can I even try
   // this" UX dead-end.
   const isGodAdmin = session.user?.email === GOD_ADMIN_EMAIL;
+
+  // Trial-expiry gate. Cross-app check against HQ's BusinessApplication
+  // table. Fails OPEN (not closed) to avoid locking out a live POS if
+  // HQ is unreachable — we'd rather miss enforcing a trial than break
+  // an in-progress sale. Existing tenants with no application
+  // (Annika's test store, bots, etc.) are grandfathered: approved=false
+  // skips the lockout. Only `approved=true AND trial in the past`
+  // triggers the throw.
+  //
+  // God-admin always bypasses so platform owners can debug expired
+  // stores in place.
+  if (!isGodAdmin && session.user?.email) {
+    try {
+      const approval = await checkBusinessApproval(session.user.email, 'store_ops');
+      if (
+        approval.approved &&
+        approval.trialExpiresAt &&
+        new Date(approval.trialExpiresAt) < new Date()
+      ) {
+        throw new TrialExpiredError(new Date(approval.trialExpiresAt));
+      }
+    } catch (err) {
+      // Don't fail-closed on infra errors — re-throw only the trial
+      // expired error, swallow anything else (e.g. fetch failure).
+      if (err instanceof TrialExpiredError) throw err;
+      console.warn('[requireStaff] trial-check error (failing open):', err);
+    }
+  }
 
   return {
     session: session as StaffContext["session"],
@@ -219,6 +262,16 @@ export function handleAuthError(
   if (error instanceof FeatureNotAvailableError) {
     return NextResponse.json(
       { error: error.message, upgrade_required: true },
+      { status: error.status },
+    );
+  }
+  if (error instanceof TrialExpiredError) {
+    return NextResponse.json(
+      {
+        error: error.message,
+        code: 'trial_expired',
+        expiredAt: error.expiredAt?.toISOString() ?? null,
+      },
       { status: error.status },
     );
   }
