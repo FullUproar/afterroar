@@ -467,19 +467,37 @@ export async function POST(request: NextRequest) {
         : [];
       const txStockMap = new Map(txCurrentStock.map((s) => [s.id, s]));
 
+      // Aggregate quantities per inventory_item_id first so duplicate
+      // line items (same SKU added twice on the cart) don't decrement
+      // twice and so we can validate the *total* needed against stock
+      // before any write happens. A 5-line sale used to do 5 sequential
+      // round-trips through the tx; now it does N parallel updates
+      // where N is the count of distinct SKUs.
+      const decrementByItem = new Map<string, number>();
       for (const item of items) {
-        if (item.inventory_item_id) {
-          const current = txStockMap.get(item.inventory_item_id);
-          if (current && current.quantity < item.quantity && !body.allow_negative_stock) {
-            throw new Error(
-              `Insufficient quantity for "${current.name}". Available: ${current.quantity}, requested: ${item.quantity}`
-            );
-          }
-          await tx.posInventoryItem.update({
-            where: { id: item.inventory_item_id },
-            data: { quantity: { decrement: item.quantity } },
-          });
+        if (!item.inventory_item_id) continue;
+        decrementByItem.set(
+          item.inventory_item_id,
+          (decrementByItem.get(item.inventory_item_id) ?? 0) + item.quantity,
+        );
+      }
+      for (const [id, qty] of decrementByItem) {
+        const current = txStockMap.get(id);
+        if (current && current.quantity < qty && !body.allow_negative_stock) {
+          throw new Error(
+            `Insufficient quantity for "${current.name}". Available: ${current.quantity}, requested: ${qty}`,
+          );
         }
+      }
+      if (decrementByItem.size > 0) {
+        await Promise.all(
+          Array.from(decrementByItem.entries()).map(([id, qty]) =>
+            tx.posInventoryItem.update({
+              where: { id },
+              data: { quantity: { decrement: qty } },
+            }),
+          ),
+        );
       }
 
       // Earn loyalty points (if customer is attached and loyalty is enabled)

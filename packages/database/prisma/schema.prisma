@@ -1387,6 +1387,8 @@ model PosCustomer {
   pull_lists         PosPullList[]
 
   @@index([store_id])
+  @@index([store_id, phone])
+  @@index([store_id, email])
   @@map("pos_customers")
 }
 
@@ -1558,6 +1560,10 @@ model PosInventoryItem {
   @@index([catalog_product_id])
   @@index([oracle_id])
   @@index([parent_id])
+  // GIN index on `barcodes` array (declared in migration
+  // 2026-05-15-pos-hot-path-indexes.sql — Prisma can't express array
+  // GIN indexes in schema). Required for barcode-scan lookups against
+  // alternate UPCs/SKUs without seq-scanning the whole table.
   @@map("pos_inventory_items")
 }
 
@@ -2182,6 +2188,7 @@ model PosGiftCard {
 
   store PosStore @relation(fields: [store_id], references: [id], onDelete: Cascade)
 
+  @@index([store_id, active])
   @@map("pos_gift_cards")
 }
 
