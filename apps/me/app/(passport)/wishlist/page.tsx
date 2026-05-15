@@ -29,6 +29,7 @@ export default function WishlistPage() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [prefillBggId, setPrefillBggId] = useState<number | null>(null);
 
   const fetchWishlist = async () => {
     const res = await fetch('/api/wishlist');
@@ -42,15 +43,42 @@ export default function WishlistPage() {
 
   useEffect(() => { fetchWishlist(); }, []);
 
+  // Deep-link from FU storefront and friends. ?prefill=Brass+Birmingham&bgg=224517
+  // pops the add form prefilled so users land already on the right step.
+  // Uses window.location instead of useSearchParams to avoid the Suspense
+  // boundary requirement Next.js imposes on client components that read
+  // searchParams during static generation.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const prefillTitle = params.get('prefill');
+    if (!prefillTitle) return;
+    const bgg = params.get('bgg');
+    const note = params.get('note');
+    setForm({
+      gameTitle: prefillTitle,
+      priority: 3,
+      notes: note ?? '',
+    });
+    setPrefillBggId(bgg ? Number(bgg) : null);
+    setShowForm(true);
+    // Strip the params so a refresh doesn't re-open the form.
+    window.history.replaceState({}, '', '/wishlist');
+  }, []);
+
   const handleAdd = async () => {
     if (!form.gameTitle.trim()) return;
     setSaving(true);
     await fetch('/api/wishlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        bggId: prefillBggId ?? undefined,
+      }),
     });
     setForm({ gameTitle: '', priority: 3, notes: '' });
+    setPrefillBggId(null);
     setShowForm(false);
     setSaving(false);
     fetchWishlist();
