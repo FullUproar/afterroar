@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
+import { excludeTraining } from "@/lib/training-filter";
 
 export async function GET() {
   try {
-    const { db, storeId } = await requirePermission("reports");
+    const { db } = await requirePermission("reports");
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const [ledger, tradeIns, events, newCustomers] = await Promise.all([
+    const [ledgerRaw, tradeIns, events, newCustomers] = await Promise.all([
       db.posLedgerEntry.findMany({
         where: { created_at: { gte: todayStart } },
         select: { type: true, amount_cents: true, metadata: true },
@@ -23,6 +24,10 @@ export async function GET() {
         where: { created_at: { gte: todayStart } },
       }),
     ]);
+
+    // Strip training-mode rows so end-of-day numbers reflect real
+    // sales only (FUL pre-launch ask).
+    const ledger = excludeTraining(ledgerRaw);
 
     let salesCount = 0;
     let revenueCents = 0;

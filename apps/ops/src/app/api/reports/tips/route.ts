@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
+import { notTraining } from "@/lib/training-filter";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/reports/tips — tip summary by staff and period            */
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
     const byStaff = await db.posLedgerEntry.groupBy({
       by: ["staff_id"],
       where: {
+        ...notTraining(),
         type: "sale",
         tip_cents: { gt: 0 },
         created_at: { gte: new Date(from), lte: new Date(to) },
@@ -39,6 +41,7 @@ export async function GET(request: NextRequest) {
     // Total tips in period
     const totalResult = await db.posLedgerEntry.aggregate({
       where: {
+        ...notTraining(),
         type: "sale",
         tip_cents: { gt: 0 },
         created_at: { gte: new Date(from), lte: new Date(to) },
@@ -50,6 +53,7 @@ export async function GET(request: NextRequest) {
     // Recent tipped transactions
     const recent = await db.posLedgerEntry.findMany({
       where: {
+        ...notTraining(),
         type: "sale",
         tip_cents: { gt: 0 },
         created_at: { gte: new Date(from), lte: new Date(to) },

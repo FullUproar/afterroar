@@ -685,6 +685,66 @@ export async function POST(request: NextRequest) {
       staffName: staff.name,
     });
 
+    // Separate audit row for any cart-level discount applied. Makes
+    // "show me every discount manager X gave this month" queryable
+    // without having to scan ledger metadata. Loyalty redemptions are
+    // their own ledger entry so they don't need this.
+    if (discount_cents > 0) {
+      opLog({
+        storeId,
+        eventType: "checkout.discount_applied",
+        message: `Discount ${formatCents(discount_cents)} on ${formatCents(subtotal_cents + discount_cents)} sale · ${staff.name}${discount_reason ? ` · "${discount_reason}"` : ""}`,
+        metadata: {
+          ledger_entry_id: result.ledgerEntry.id,
+          discount_cents,
+          discount_reason: discount_reason ?? null,
+          subtotal_before_cents: subtotal_cents + discount_cents,
+          subtotal_after_cents: subtotal_cents,
+          discount_percent:
+            subtotal_cents + discount_cents > 0
+              ? Number(
+                  ((discount_cents / (subtotal_cents + discount_cents)) * 100).toFixed(2),
+                )
+              : 0,
+        },
+        userId: staff.user_id,
+        staffName: staff.name,
+      });
+    }
+
+    // Inline price overrides are detected by comparing the price the
+    // client sent for an item to its catalog price. We have to do this
+    // pre-write — at this point the sale has succeeded, so we just
+    // surface what was overridden for the audit trail.
+    const overrides = items.filter((item) => {
+      if (!item.inventory_item_id) return false;
+      const inv = invMap.get(item.inventory_item_id);
+      if (!inv || inv.price_cents === item.price_cents) return false;
+      return true;
+    });
+    if (overrides.length > 0) {
+      opLog({
+        storeId,
+        eventType: "checkout.price_override",
+        message: `Price override on ${overrides.length} line(s) · ${staff.name}`,
+        metadata: {
+          ledger_entry_id: result.ledgerEntry.id,
+          overrides: overrides.map((item) => {
+            const inv = item.inventory_item_id ? invMap.get(item.inventory_item_id) : null;
+            return {
+              inventory_item_id: item.inventory_item_id ?? null,
+              name: inv?.name ?? item.category ?? "Manual",
+              catalog_price_cents: inv?.price_cents ?? null,
+              sold_price_cents: item.price_cents,
+              quantity: item.quantity,
+            };
+          }),
+        },
+        userId: staff.user_id,
+        staffName: staff.name,
+      });
+    }
+
     return NextResponse.json(
       {
         success: true,

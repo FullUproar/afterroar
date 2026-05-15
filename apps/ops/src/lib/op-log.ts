@@ -17,6 +17,7 @@ export type EventType =
   | "inventory.adjust" | "inventory.import" | "inventory.price_change"
   | "settings.changed"
   | "checkout.complete" | "checkout.failed" | "checkout.void"
+  | "checkout.discount_applied" | "checkout.price_override"
   | "trade_in.complete"
   | "issue.flagged" | "issue.resolved"
   | "sync.failed" | "sync.retry"

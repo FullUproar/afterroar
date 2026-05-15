@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
+import { excludeTraining } from "@/lib/training-filter";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,8 +20,9 @@ export async function GET(req: NextRequest) {
     const toEnd = new Date(to);
     toEnd.setHours(23, 59, 59, 999);
 
-    // Pull sale ledger entries with COGS metadata in period
-    const entries = await db.posLedgerEntry.findMany({
+    // Pull sale ledger entries with COGS metadata in period.
+    // Training-mode entries excluded so test runs don't skew margins.
+    const rawEntries = await db.posLedgerEntry.findMany({
       where: {
         type: "sale",
         created_at: { gte: from, lte: toEnd },
@@ -32,6 +34,7 @@ export async function GET(req: NextRequest) {
         created_at: true,
       },
     });
+    const entries = excludeTraining(rawEntries);
 
     // Aggregate summary + by-category
     let totalRevenue = 0;

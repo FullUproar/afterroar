@@ -56,7 +56,7 @@ interface StripeConnectStatus {
 /*  Tab definitions — which SETTINGS_SECTIONS keys go where            */
 /* ------------------------------------------------------------------ */
 
-type TabKey = 'store' | 'payments' | 'staff' | 'integrations' | 'intelligence' | 'operations' | 'test-mode';
+type TabKey = 'store' | 'payments' | 'staff' | 'integrations' | 'intelligence' | 'operations' | 'data' | 'test-mode';
 
 const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: 'store', label: 'Store', description: 'Identity, tax, checkout, and receipt settings' },
@@ -65,6 +65,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: 'integrations', label: 'Integrations', description: 'Afterroar Network, Shopify, and external connections' },
   { key: 'intelligence', label: 'Intelligence', description: 'Store advisor, cash flow, and monthly fixed costs' },
   { key: 'operations', label: 'Operations', description: 'Cafe, loyalty, promotions, and appearance' },
+  { key: 'data', label: 'Data & Backups', description: 'Exports, backups, and data portability' },
   { key: 'test-mode', label: 'Test Mode', description: 'Training mode, demo data, and testing tools' },
 ];
 
@@ -75,6 +76,7 @@ const TAB_SECTIONS: Record<TabKey, string[]> = {
   integrations: [],
   intelligence: ['intelligence', 'intelligence_costs', 'intelligence_thresholds'],
   operations: ['cafe', 'loyalty', 'promo_guardrails', 'nav_visibility'],
+  data: [], // rendered manually below — exports + backup status
   'test-mode': [],
 };
 
@@ -1432,6 +1434,11 @@ export default function SettingsPage() {
             </Panel>
           )}
 
+          {/* ════════════════ DATA & BACKUPS TAB ════════════════ */}
+          {activeTab === 'data' && (
+            <DataAndBackupsPanel />
+          )}
+
           {/* ════════════════ TEST MODE TAB ════════════════ */}
           {activeTab === 'test-mode' && (
             <>
@@ -2715,5 +2722,124 @@ function ShopifyConnectionSection() {
         )}
       </div>
     </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Data & Backups — exports + reassurance about infra-level backups.  */
+/*  Lets a store walk away with their data if they ever leave, and     */
+/*  surfaces what's already happening behind the scenes (Neon            */
+/*  continuous WAL backups) so owners aren't anxious about it.         */
+/* ------------------------------------------------------------------ */
+
+function DataAndBackupsPanel() {
+  const today = new Date().toISOString().slice(0, 10);
+  const monthStart = (() => {
+    const d = new Date();
+    d.setUTCDate(1);
+    return d.toISOString().slice(0, 10);
+  })();
+  const [start, setStart] = useState(monthStart);
+  const [end, setEnd] = useState(today);
+
+  const exports = [
+    {
+      key: "customers",
+      label: "Customers",
+      desc: "Full customer list with LTV projection + auto-segment.",
+      href: `/api/customers/export`,
+    },
+    {
+      key: "inventory",
+      label: "Inventory",
+      desc: "Every active SKU: name, category, prices, quantities, supplier.",
+      href: `/api/inventory/export`,
+    },
+    {
+      key: "sales",
+      label: "Sales history",
+      desc: "Line-level sale ledger for the period you select.",
+      href: `/api/sales/export?start=${start}&end=${end}`,
+    },
+    {
+      key: "tax",
+      label: "Sales tax (period)",
+      desc: "Period totals for state filing. CSV format.",
+      href: `/api/reports/tax-period?start=${start}&end=${end}&format=csv`,
+    },
+  ] as const;
+
+  return (
+    <>
+      <Panel
+        num="01"
+        eyebrow="Continuous"
+        title="Backups"
+        desc="Your store data is mirrored continuously by our hosting provider (Neon Postgres). Point-in-time recovery covers the last 7 days; older snapshots are archived for 30."
+      >
+        <div className="px-5 py-5 space-y-3 text-ink-soft" style={{ fontSize: '0.85rem', lineHeight: 1.55 }}>
+          <p>
+            You don't need to schedule anything — every transaction, inventory change, and customer
+            update is captured into the write-ahead log within seconds. If something gets corrupted,
+            we can roll back to any point in the last 7 days without losing more than a minute or two.
+          </p>
+          <p className="text-ink-faint">
+            For your own off-platform copy, use the exports below. They produce CSVs you can keep
+            on your own drive between filings or before any major catalog change.
+          </p>
+        </div>
+      </Panel>
+
+      <Panel
+        num="02"
+        eyebrow="Exports"
+        title="Data exports"
+        desc="Download a CSV snapshot of your data. Use any of these as a backup or to migrate off the platform."
+      >
+        <div className="px-5 py-5 space-y-5">
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-ink-faint mb-1">From</label>
+              <input
+                type="date"
+                value={start}
+                max={end}
+                onChange={(e) => setStart(e.target.value)}
+                className="rounded-xl border border-rule bg-panel-mute px-3 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-ink-faint mb-1">To</label>
+              <input
+                type="date"
+                value={end}
+                min={start}
+                onChange={(e) => setEnd(e.target.value)}
+                className="rounded-xl border border-rule bg-panel-mute px-3 py-1.5 text-sm"
+              />
+            </div>
+            <p className="text-xs text-ink-faint flex-1">
+              Date range applies to sales and sales-tax exports. Customers and inventory snapshot the current state.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {exports.map((e) => (
+              <a
+                key={e.key}
+                href={e.href}
+                className="flex flex-col gap-1 rounded-xl border border-rule bg-panel-mute p-4 hover:bg-panel transition-colors"
+              >
+                <span className="font-display uppercase text-ink" style={{ fontSize: '0.85rem', letterSpacing: '0.12em' }}>
+                  {e.label}
+                </span>
+                <span className="text-xs text-ink-soft" style={{ lineHeight: 1.5 }}>{e.desc}</span>
+                <span className="text-[0.65rem] font-mono uppercase text-orange tracking-widest mt-1">Download CSV ↓</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </Panel>
+    </>
   );
 }

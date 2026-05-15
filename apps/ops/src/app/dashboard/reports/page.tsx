@@ -7,6 +7,7 @@ import { SubNav } from "@/components/ui/sub-nav";
 const REPORTS_TABS = [
   { href: "/dashboard/reports", label: "Event ROI" },
   { href: "/dashboard/reports/sales", label: "Sales" },
+  { href: "/dashboard/reports/tax", label: "Sales Tax" },
   { href: "/dashboard/reports/margins", label: "Margins" },
   { href: "/dashboard/reports/inventory-health", label: "Inventory Health" },
   { href: "/dashboard/reports/channels", label: "Channels" },

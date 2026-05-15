@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, handleAuthError } from "@/lib/require-staff";
+import { excludeTraining } from "@/lib/training-filter";
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,8 +36,10 @@ export async function GET(req: NextRequest) {
       toEnd.setHours(23, 59, 59, 999);
     }
 
-    // Fetch all sale entries in period
-    const entries = await db.posLedgerEntry.findMany({
+    // Fetch all sale entries in period. Training-mode transactions are
+    // filtered out post-query so register testing doesn't pollute real
+    // sales reports (FUL pre-launch ask).
+    const rawEntries = await db.posLedgerEntry.findMany({
       where: {
         store_id: storeId,
         type: "sale",
@@ -52,6 +55,7 @@ export async function GET(req: NextRequest) {
         created_at: true,
       },
     });
+    const entries = excludeTraining(rawEntries);
 
     // Summary
     let totalRevenue = 0;
