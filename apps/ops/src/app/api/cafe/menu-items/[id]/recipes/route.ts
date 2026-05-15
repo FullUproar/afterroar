@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireStaff, requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 
 export async function GET(
   _req: NextRequest,
@@ -32,7 +32,7 @@ export async function POST(
 ) {
   const { id } = await ctx.params;
   try {
-    const { db } = await requireStaff();
+    const { db } = await requirePermissionAndFeature("cafe.menu.manage", "cafe");
     let body: { inventory_item_id?: string; quantity_used?: number; notes?: string };
     try {
       body = await req.json();

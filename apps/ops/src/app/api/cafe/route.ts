@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
+import { requireStaff, requirePermission, handleAuthError, ForbiddenError, FeatureNotAvailableError } from "@/lib/require-staff";
+import type { Permission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { formatCents } from "@/lib/types";
 import { getDefaultTaxRate } from "@/lib/tax";
@@ -33,11 +34,59 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Permission required per cafe action. Keys outside this map need no
+ * cafe-specific check (they still require an authenticated staff
+ * session). When a new action lands, add it here.
+ */
+const ACTION_PERMISSION: Record<string, Permission> = {
+  // Tab lifecycle — cashiers get this by default
+  open_tab: "cafe.tab",
+  add_item: "cafe.tab",
+  add_inventory_item: "cafe.tab",
+  add_menu_to_tab: "cafe.tab",
+  update_item_status: "cafe.tab",
+  close_tab: "cafe.tab",
+  transfer_tab: "cafe.tab",
+  split_tab: "cafe.tab",
+  kds: "cafe.tab",
+  // Park/recall live alongside the tab system on the register
+  park_cart: "cafe.tab",
+  list_parked: "cafe.tab",
+  recall_cart: "cafe.tab",
+  // Alcohol — cashiers get this by default; revoke to enforce
+  // manager-only alcohol service
+  age_verify: "cafe.alcohol",
+  // Manager-only by default
+  set_table_fee: "cafe.table_fee.manage",
+  waive_table_fee: "cafe.table_fee.manage",
+  // Owner-only by default
+  add_menu_item: "cafe.menu.manage",
+  add_modifier: "cafe.menu.manage",
+  get_menu: "cafe.tab",  // reading the menu is part of running a tab
+};
+
 export async function POST(request: NextRequest) {
   try {
-    const { db, storeId, staff } = await requireStaff();
+    const ctx = await requireStaff();
+    const { db, storeId, staff } = ctx;
     const body = await request.json();
     const action = body.action as string;
+
+    // Feature-module gate: the entire cafe API is locked unless the
+    // store has the `cafe` add-on or is on Enterprise. The UI hides
+    // affordances behind hasModule("cafe") but the API was previously
+    // open — this closes the gap.
+    if (!ctx.hasModule("cafe")) {
+      throw new FeatureNotAvailableError("cafe");
+    }
+
+    // Per-action permission gate. Falls through silently for actions
+    // not in ACTION_PERMISSION (none currently — keep the map exhaustive).
+    const required = ACTION_PERMISSION[action];
+    if (required && !ctx.can(required)) {
+      throw new ForbiddenError(required);
+    }
 
     // ---- OPEN TAB ----
     if (action === "open_tab") {

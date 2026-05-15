@@ -2,6 +2,12 @@
 
 **Generated 2026-05-15.** Source of truth: `apps/ops/src/lib/permissions.ts`.
 
+> **2026-05-15 update:** the 6 gaps flagged in the original version are
+> now closed in code (commits in `apps/ops/src/lib/permissions.ts`,
+> `/api/cafe`, `/api/locations`, `/api/transfers`, `/api/mobile`,
+> `/api/certification`). New permissions: `cafe.tab`, `cafe.alcohol`,
+> `cafe.menu.manage`, `cafe.table_fee.manage`, `location.manage`.
+
 Two independent axes gate every feature:
 
 1. **Plan / Module** — which store plan the store is on (`free` / `base` / `pro` / `enterprise`), plus any add-on modules purchased independently.
@@ -58,6 +64,11 @@ Owner gets **everything** by default. Managers and cashiers as below. Owners can
 | **Events** |
 | events.checkin | ✓ | ✓ | ✓ |
 | events.manage | ✓ | ✓ |  |
+| **Cafe** (requires `cafe` module) |
+| cafe.tab | ✓ | ✓ | ✓ |
+| cafe.alcohol | ✓ | ✓ | ✓ |
+| cafe.menu.manage | ✓ | ✓ |  |
+| cafe.table_fee.manage | ✓ | ✓ |  |
 | **Reports & Intelligence** |
 | reports | ✓ | ✓ |  |
 | cash_flow | ✓ | ✓ |  |
@@ -69,6 +80,7 @@ Owner gets **everything** by default. Managers and cashiers as below. Owners can
 | manage_orders | ✓ | ✓ |  |
 | timeclock.view_all | ✓ | ✓ |  |
 | ops_log | ✓ |  |  |
+| location.manage | ✓ | ✓ |  |
 
 ---
 
@@ -179,20 +191,21 @@ Columns:
 
 | Feature | Plan | Module | Permission | O | M | C | Route / Notes |
 |---|---|---|---|:-:|:-:|:-:|---|
-| Open tab | enterprise | cafe | checkout | ✓ | ✓ | ✓ | `/dashboard/cafe` |
-| Add menu items to tab | enterprise | cafe | checkout | ✓ | ✓ | ✓ |  |
-| Add inventory items to tab | enterprise | cafe | checkout | ✓ | ✓ | ✓ | unified F&B + retail |
-| KDS (Kitchen Display) | enterprise | cafe | checkout | ✓ | ✓ | ✓ | status updates per item |
-| Menu builder | enterprise | cafe | store.settings | ✓ |  |  | items + modifiers |
-| Modifier pricing | enterprise | cafe | store.settings | ✓ |  |  | structured |
-| Set table fee (flat/hourly) | enterprise | cafe | store.settings | ✓ |  |  |  |
-| Auto-waive table fee at spend threshold | enterprise | cafe | store.settings | ✓ |  |  |  |
-| Tab transfer (move tables) | enterprise | cafe | checkout | ✓ | ✓ | ✓ |  |
-| Tab split (split bill) | enterprise | cafe | checkout | ✓ | ✓ | ✓ |  |
-| Age verification (alcohol gate) | enterprise | cafe | checkout | ✓ | ✓ | ✓ | flag on tab |
+| Open tab | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ | `/dashboard/cafe` |
+| Add menu items to tab | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ |  |
+| Add inventory items to tab | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ | unified F&B + retail |
+| KDS (Kitchen Display) | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ | status updates per item |
+| Menu builder | enterprise | cafe | cafe.menu.manage | ✓ | ✓ |  | items + modifiers |
+| Modifier pricing | enterprise | cafe | cafe.menu.manage | ✓ | ✓ |  | structured |
+| Set table fee (flat/hourly) | enterprise | cafe | cafe.table_fee.manage | ✓ | ✓ |  |  |
+| Waive table fee on a tab | enterprise | cafe | cafe.table_fee.manage | ✓ | ✓ |  |  |
+| Tab transfer (move tables) | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ |  |
+| Tab split (split bill) | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ |  |
+| Age verification (alcohol gate) | enterprise | cafe | cafe.alcohol | ✓ | ✓ | ✓ | revoke from cashier to require manager swipe |
+| Add alcohol-flagged item to tab | enterprise | cafe | cafe.alcohol (indirect — tab must be age-verified) | ✓ | ✓ | ✓ |  |
 | QR table ordering (customer phone) | enterprise | cafe | (public) | — | — | — | `/order/[slug]/[table]` |
-| Hourly timer + accrued fee display | enterprise | cafe | checkout | ✓ | ✓ | ✓ |  |
-| Close tab → settles to ledger | enterprise | cafe | checkout | ✓ | ✓ | ✓ |  |
+| Hourly timer + accrued fee display | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ |  |
+| Close tab → settles to ledger | enterprise | cafe | cafe.tab | ✓ | ✓ | ✓ |  |
 
 ### TCG Engine
 
@@ -268,7 +281,7 @@ Columns:
 
 | Feature | Plan | Module | Permission | O | M | C | Route / Notes |
 |---|---|---|---|:-:|:-:|:-:|---|
-| Locations list / mgmt | enterprise | multi_location | store.settings | ✓ |  |  | `/dashboard/locations` |
+| Locations list / mgmt | enterprise | multi_location | location.manage | ✓ | ✓ |  | `/dashboard/locations` |
 | Per-location inventory levels | enterprise | multi_location | inventory.view | ✓ | ✓ | ✓ |  |
 | Stock transfers between locations | enterprise | multi_location | inventory.adjust | ✓ | ✓ |  | `/dashboard/transfers` |
 | Warehouse routing | enterprise | multi_location | inventory.adjust | ✓ | ✓ |  |  |
@@ -319,7 +332,7 @@ Columns:
 | Operations log viewer | free | — | ops_log | ✓ |  |  | `/dashboard/ops-log` |
 | Timeclock — view all | free | — | timeclock.view_all | ✓ | ✓ |  | `/dashboard/timeclock` |
 | Timeclock — view own | free | — | (auto) | ✓ | ✓ | ✓ |  |
-| Certification management | free | — | certification | ✓ |  |  |  |
+| Certification runs (launch checklist) | free | — | certification | ✓ |  |  | `/api/certification` |
 | Training mode toggle | free | — | store.settings | ✓ |  |  | transactions marked training |
 | Demo data seeder | free | — | store.settings | ✓ |  |  | `/api/store/seed-demo` |
 | Onboarding wizard (6-step) | free | — | store.settings | ✓ |  |  |  |
@@ -362,12 +375,34 @@ Take a `base` plan and attach a single add-on (e.g., `tcg_engine`). Confirm TCG 
 
 ---
 
-## Notable gaps (worth flagging during testing)
+## Gap resolutions (2026-05-15)
 
-1. **Cafe permissions live under `checkout`** — there are no cafe-specific permission keys. A cashier with `checkout` can open tabs, set table fees inline (via tab modal), age-verify, transfer / split tabs. The menu builder is the only owner-gated piece. May be too permissive for some stores.
-2. **`certification` permission exists but no UI references it** — appears unused; either remove or wire up.
-3. **Cafe age verification is permission-free** — gates alcohol items by tab flag but doesn't require a specific permission. Stores that want manager-only alcohol service have no way to enforce that today.
-4. **Mobile register has no role-permission map at session-pair time** — once paired, the session inherits whatever PIN-auth resolves to. Confirm a cashier-PIN can't elevate by pairing to a manager-only device.
-5. **Stock transfers** (`multi_location` module) require `inventory.adjust` — cashiers don't have that, but the multi-location UI itself isn't role-gated separately, just hidden behind the module gate.
-6. **`api_access` add-on issues API keys** scoped only by store, not by tier-of-action. A key can write anywhere the calling user could.
-7. **Public-facing routes** (`/buylist/[slug]`, `/order/[slug]/[table]`, `/r/[token]`, `/api/public/catalog`) have no auth — confirm they expose only data the store has marked public.
+1. **Cafe permissions** — RESOLVED. Added `cafe.tab`, `cafe.alcohol`,
+   `cafe.menu.manage`, `cafe.table_fee.manage`. The `/api/cafe` POST now
+   per-action checks the right key and gates the whole API behind the
+   `cafe` feature module. Cashiers can run tabs and age-verify by
+   default; menu edits and table-fee changes need a manager.
+2. **`certification` permission** — RESOLVED. `/api/certification`
+   GET + POST now check the `certification` permission instead of
+   `store.settings`. Owner-only by default; matches its admin category.
+3. **Alcohol gate** — RESOLVED via `cafe.alcohol`. Revoking it from
+   cashiers means they can't age-verify, which means they can't add any
+   alcohol-flagged item (`age_restricted=true`) to a tab.
+4. **Mobile register role checks** — RESOLVED. `/api/mobile` activate
+   now refuses sign-in if the staff role has been stripped of
+   `checkout` permission. The checkout action re-checks server-side and
+   independently gates discount + refund on permission. Activate also
+   returns a `permissions` payload so the device UI can hide affordances
+   the staff can't use.
+5. **Locations** — RESOLVED. Added `location.manage` permission;
+   `/api/locations` POST and `/api/transfers` GET/POST now go through
+   `requirePermissionAndFeature` with both `multi_location` module +
+   the right permission.
+6. **API key scoping** — INVESTIGATED. The simple `api_key_hash` is
+   only consumed by `/api/orders/ingest` (single-purpose). The proper
+   `ApiKey` table used elsewhere already has a `scopes: string[]`
+   field and `hasScope()` helper. Not actually a gap.
+7. **Public routes** (`/buylist/[slug]`, `/order/[slug]/[table]`,
+   `/r/[token]`, `/api/public/catalog`) — still no auth. By design;
+   each only returns what the store has marked public. Worth a
+   deliberate audit if anything sensitive moves through them.

@@ -7,7 +7,7 @@ import { runAllChecks } from "@/lib/certification/checks";
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { db, storeId } = await requirePermission("store.settings");
+    const { db, storeId } = await requirePermission("certification");
 
     const certs = await db.posCertification.findMany({
       where: { store_id: storeId },
@@ -26,7 +26,7 @@ export async function GET() {
 /* ------------------------------------------------------------------ */
 export async function POST() {
   try {
-    const { staff, db, storeId } = await requirePermission("store.settings");
+    const { staff, db, storeId } = await requirePermission("certification");
 
     // Create certification record
     const cert = await db.posCertification.create({

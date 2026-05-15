@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission, handleAuthError } from "@/lib/require-staff";
+import { requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/transfers — list transfers for store                       */
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
-    const { db } = await requirePermission("inventory.adjust");
+    const { db } = await requirePermissionAndFeature("inventory.adjust", "multi_location");
 
     const transfers = await db.posTransfer.findMany({
       orderBy: { created_at: "desc" },
@@ -26,7 +26,7 @@ export async function GET() {
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { staff, storeId } = await requirePermission("inventory.adjust");
+    const { staff, storeId } = await requirePermissionAndFeature("inventory.adjust", "multi_location");
 
     let body: {
       from_location_id: string;

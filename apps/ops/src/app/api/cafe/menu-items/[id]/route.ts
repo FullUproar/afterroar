@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireStaff, requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 
 const PATCHABLE = [
   "name",
@@ -31,7 +31,7 @@ export async function PATCH(
 ) {
   const { id } = await ctx.params;
   try {
-    const { db } = await requireStaff();
+    const { db } = await requirePermissionAndFeature("cafe.menu.manage", "cafe");
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -71,7 +71,7 @@ export async function DELETE(
 ) {
   const { id } = await ctx.params;
   try {
-    const { db } = await requireStaff();
+    const { db } = await requirePermissionAndFeature("cafe.menu.manage", "cafe");
     // Soft-disable rather than hard-delete: closed tabs may still reference
     // the menu item by id in their items, and we want history preserved.
     const item = await db.posMenuItem.update({

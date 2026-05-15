@@ -35,6 +35,17 @@ export type Permission =
   // Events
   | "events.checkin"
   | "events.manage"               // create/edit/delete events
+  // Cafe (only meaningful when the `cafe` feature module is active —
+  // gated separately. These add fine-grained authorization so cashiers
+  // don't get unilateral control over menu, table fees, or alcohol.)
+  | "cafe.tab"                    // open/add/close/transfer/split tabs
+  | "cafe.alcohol"                // age-verify + serve alcohol-flagged items
+  | "cafe.menu.manage"            // menu builder (items + modifiers)
+  | "cafe.table_fee.manage"       // set + waive table fees
+  // Locations (only meaningful with `multi_location` add-on; required
+  // for the locations admin page itself, distinct from per-location
+  // inventory.adjust which still gates transfers.)
+  | "location.manage"
   // Reports & Intelligence
   | "reports"
   | "cash_flow"
@@ -66,6 +77,7 @@ export const PERMISSION_CATEGORIES = [
   { key: "customers", label: "Customers" },
   { key: "trade_returns", label: "Trade-Ins & Returns" },
   { key: "events", label: "Events" },
+  { key: "cafe", label: "Cafe" },
   { key: "reports", label: "Reports & Intelligence" },
   { key: "admin", label: "Administration" },
 ] as const;
@@ -99,6 +111,13 @@ export const ALL_PERMISSIONS: PermissionMeta[] = [
   // Events
   { key: "events.checkin", label: "Check in players", description: "Check players into events", category: "events" },
   { key: "events.manage", label: "Manage events", description: "Create, edit, and delete events", category: "events" },
+  // Cafe (only takes effect when `cafe` feature module is active)
+  { key: "cafe.tab", label: "Manage cafe tabs", description: "Open, add to, transfer, split, and close tabs", category: "cafe" },
+  { key: "cafe.alcohol", label: "Serve alcohol", description: "Age-verify customers and serve alcohol-flagged items", category: "cafe" },
+  { key: "cafe.menu.manage", label: "Edit cafe menu", description: "Add or edit menu items and modifiers", category: "cafe" },
+  { key: "cafe.table_fee.manage", label: "Set table fees", description: "Set per-tab table fees and grant waivers", category: "cafe" },
+  // Locations (only takes effect with `multi_location` add-on)
+  { key: "location.manage", label: "Manage locations", description: "View and configure store locations, transfer stock", category: "admin" },
   // Reports
   { key: "reports", label: "View reports", description: "Access sales reports and analytics", category: "reports" },
   { key: "cash_flow", label: "View cash flow", description: "Access cash flow dashboard and intelligence", category: "reports" },
@@ -141,6 +160,13 @@ const ROLE_DEFAULTS: Record<Role, Permission[]> = {
     "returns.no_receipt",
     "events.checkin",
     "events.manage",
+    // Cafe — managers get full cafe control by default (table fee
+    // waivers + alcohol + menu edits). Owners can revoke per-store.
+    "cafe.tab",
+    "cafe.alcohol",
+    "cafe.menu.manage",
+    "cafe.table_fee.manage",
+    "location.manage",
     "reports",
     "cash_flow",
     "timeclock.view_all",
@@ -154,6 +180,11 @@ const ROLE_DEFAULTS: Record<Role, Permission[]> = {
     "customers.view",
     "events.checkin",
     "trade_ins",
+    // Cashiers run service: open/close/transfer tabs, age-verify for
+    // alcohol. They don't get table-fee or menu authority by default —
+    // those need a manager swipe.
+    "cafe.tab",
+    "cafe.alcohol",
   ],
 };
 

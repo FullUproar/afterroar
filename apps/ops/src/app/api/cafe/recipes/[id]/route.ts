@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 
 export async function DELETE(
   _req: NextRequest,
@@ -13,7 +13,7 @@ export async function DELETE(
 ) {
   const { id } = await ctx.params;
   try {
-    const { db } = await requireStaff();
+    const { db } = await requirePermissionAndFeature("cafe.menu.manage", "cafe");
     await db.posMenuRecipe.delete({ where: { id } });
     return NextResponse.json({ id, removed: true });
   } catch (error) {

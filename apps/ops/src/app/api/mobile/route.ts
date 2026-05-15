@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getTenantClient } from "@/lib/tenant-prisma";
 import { compare, hash } from "bcryptjs";
 import { getStoreSettings } from "@/lib/store-settings-shared";
+import { hasPermission, type Role, type RolePermissionOverrides, type Permission } from "@/lib/permissions";
 
 /* ------------------------------------------------------------------ */
 /*  Mobile Register API                                                */
@@ -206,15 +207,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid PIN" }, { status: 401 });
     }
 
+    // Permission gate: the device-pairing pattern bypasses requireStaff
+    // entirely (no session, no JWT), so role-based permission overrides
+    // were getting skipped. A cashier-PIN couldn't ring up sales here
+    // even after an owner revoked their `checkout` permission. Resolve
+    // overrides at activate-time and refuse activation if the role has
+    // been stripped of the basic checkout right.
+    const activateStore = await prisma.posStore.findUnique({
+      where: { id: session.store_id },
+      select: { settings: true },
+    });
+    const activateSettings = (activateStore?.settings ?? {}) as Record<string, unknown>;
+    const activateOverrides = (activateSettings.role_permissions ?? null) as RolePermissionOverrides | null;
+    if (!hasPermission(staff.role as Role, "checkout", activateOverrides)) {
+      return NextResponse.json(
+        { error: "This account is not allowed to use the mobile register." },
+        { status: 403 },
+      );
+    }
+
     // Update session with active staff
     await prisma.posMobileSession.update({
       where: { id: sessionId },
       data: { staff_id: staff.id, last_active_at: new Date() },
     });
 
+    // Expose the resolved permissions so the device UI can hide
+    // affordances (discount, refund, etc.) the staff member isn't
+    // allowed to use — server still enforces independently at checkout.
+    const allowDiscount = hasPermission(staff.role as Role, "checkout.discount", activateOverrides);
+    const allowDiscountOverride = hasPermission(staff.role as Role, "checkout.discount.override", activateOverrides);
+    const allowRefund = hasPermission(staff.role as Role, "checkout.refund", activateOverrides);
+    const allowVoid = hasPermission(staff.role as Role, "checkout.void", activateOverrides);
+
     return NextResponse.json({
       staff_name: staff.name,
       role: staff.role,
+      permissions: {
+        discount: allowDiscount,
+        discount_override: allowDiscountOverride,
+        refund: allowRefund,
+        void: allowVoid,
+      },
     });
   }
 
@@ -243,7 +277,7 @@ export async function POST(request: NextRequest) {
     // Re-verify PIN (every transaction requires PIN confirmation)
     const staff = await prisma.posStaff.findFirst({
       where: { id: session.staff_id, store_id: session.store_id, active: true },
-      select: { id: true, name: true, pin_hash: true },
+      select: { id: true, name: true, pin_hash: true, role: true },
     });
 
     if (!staff || !staff.pin_hash) {
@@ -255,14 +289,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid PIN" }, { status: 401 });
     }
 
-    // Load store settings for guardrails
+    // Load store settings for guardrails + role overrides
     const store = await prisma.posStore.findUnique({
       where: { id: session.store_id },
       select: { settings: true },
     });
-    const settings = getStoreSettings(
-      (store?.settings ?? {}) as Record<string, unknown>,
-    );
+    const rawSettings = (store?.settings ?? {}) as Record<string, unknown>;
+    const settings = getStoreSettings(rawSettings);
+    const roleOverrides = (rawSettings.role_permissions ?? null) as RolePermissionOverrides | null;
+
+    // Server-side permission check — the device may have hidden
+    // affordances based on activate-time permissions, but enforce here
+    // too so a tampered client can't push a sale they're not allowed to.
+    const canCheck = (perm: Permission) =>
+      hasPermission(staff.role as Role, perm, roleOverrides);
+    if (!canCheck("checkout")) {
+      return NextResponse.json(
+        { error: "This account is not allowed to ring up sales." },
+        { status: 403 },
+      );
+    }
+    if (body.discount_cents && Number(body.discount_cents) > 0 && !canCheck("checkout.discount")) {
+      return NextResponse.json(
+        { error: "Discount permission required." },
+        { status: 403 },
+      );
+    }
+    if (body.payment_method === "refund" && !canCheck("checkout.refund")) {
+      return NextResponse.json(
+        { error: "Refund permission required." },
+        { status: 403 },
+      );
+    }
 
     // Enforce transaction count limit
     const maxTx = settings.mobile_max_tx_per_session || 0;

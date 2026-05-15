@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, handleAuthError } from "@/lib/require-staff";
+import { requireStaff, requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 
 export async function GET() {
   try {
@@ -42,7 +42,12 @@ interface CreateBody {
 
 export async function POST(req: NextRequest) {
   try {
-    const { db, storeId } = await requireStaff();
+    // Menu builder writes: require both the `cafe` module AND the
+    // `cafe.menu.manage` permission so cashiers can't edit the menu.
+    const { db, storeId } = await requirePermissionAndFeature(
+      "cafe.menu.manage",
+      "cafe",
+    );
     let body: CreateBody;
     try {
       body = await req.json();

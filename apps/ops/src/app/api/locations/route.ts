@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff, requirePermission, handleAuthError } from "@/lib/require-staff";
+import { requireStaff, requirePermissionAndFeature, handleAuthError } from "@/lib/require-staff";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/locations — list locations for store                       */
+/*  Reading is allowed for any authenticated staff so the register can  */
+/*  show "ship from / pick up at" labels. Mutations require both the    */
+/*  multi_location add-on AND `location.manage` permission.             */
 /* ------------------------------------------------------------------ */
 export async function GET() {
   try {
@@ -19,11 +22,15 @@ export async function GET() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  POST /api/locations — create a new location (owner only)            */
+/*  POST /api/locations — create a new location                         */
+/*  Gated by location.manage permission + multi_location feature.       */
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   try {
-    const { db, storeId } = await requirePermission("store.settings");
+    const { db, storeId } = await requirePermissionAndFeature(
+      "location.manage",
+      "multi_location",
+    );
 
     let body: {
       name: string;
