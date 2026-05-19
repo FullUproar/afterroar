@@ -241,7 +241,10 @@ export default async function SettingsPage() {
 
         {/* Connected entities */}
         <section>
-          <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 0.35rem' }}>Connected Stores &amp; Creators</h2>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h2 style={{ ...TYPE.mono, fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, margin: 0 }}>Connected Stores &amp; Creators</h2>
+            <a href="/connections" style={{ ...TYPE.mono, fontSize: '0.7rem', color: 'var(--ink-soft)', textDecoration: 'underline' }}>Full connections page →</a>
+          </header>
           <p style={{ ...TYPE.body, color: 'var(--ink-soft)', fontSize: '0.82rem', margin: '0 0 0.85rem' }}>
             Stores and creators you&apos;ve granted access to your Passport data. Revoke any time — they lose access immediately.
           </p>
