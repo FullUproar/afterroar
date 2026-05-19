@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChromeNav, PlayerCard, Workbench } from "@/app/components/card-shell";
 import { TYPE, TitleBar } from "@/app/components/ui";
@@ -14,6 +14,14 @@ function SignupContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const inviteCodeParam = searchParams.get("code")?.toUpperCase() || null;
+  // When set to 'google', auto-fires the Google OAuth handshake as
+  // soon as the user clears the age gate (or has already cleared it).
+  // Used by external entry points (e.g. the Full Uproar venue claim
+  // modal) that want a single-click sign-up where the cred form would
+  // be redundant noise. The auto-fire still respects the gate; it
+  // just skips the "click Google here" step at the end.
+  const continueWith = searchParams.get("continueWith");
+  const autoGoogleStartedRef = useRef(false);
 
   // Two-stage signup. Stage 1 ("gate") = ToS + age radio + Continue.
   // Stage 2 ("creds") = Google or email/password — only shown after the
@@ -76,6 +84,21 @@ function SignupContent() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
+  // Auto-fire Google OAuth when ?continueWith=google + we've reached
+  // the creds stage. Skips the redundant "Display Name / email /
+  // password / OR sign up with Google" form for callers who already
+  // know the user wants Google (e.g. the FU venue claim modal).
+  useEffect(() => {
+    if (
+      stage === 'creds' &&
+      continueWith === 'google' &&
+      !autoGoogleStartedRef.current
+    ) {
+      autoGoogleStartedRef.current = true;
+      void signIn('google', { callbackUrl });
+    }
+  }, [stage, continueWith, callbackUrl]);
 
   // Invite-gate check on mount. If the gate is enabled and there's no
   // ?code on the URL, route to /request-invite. If there is a code,
@@ -326,6 +349,8 @@ function SignupContent() {
                 onContinue={handleContinue}
                 submitting={gateSubmitting}
               />
+            ) : continueWith === 'google' ? (
+              <AutoGoogleStage />
             ) : (
               <CredsStage
                 callbackUrl={callbackUrl}
@@ -702,6 +727,26 @@ function Field({
         <span style={{ ...TYPE.body, fontSize: '0.82rem', color: 'var(--ink-faint)', lineHeight: 1.4 }}>{hint}</span>
       )}
     </label>
+  );
+}
+
+/**
+ * Rendered when the user reached the creds stage but ?continueWith=google
+ * is on the URL. Effect in SignupContent fires signIn('google'); this
+ * just gives the user a tight "we're handing you off" status panel
+ * while the redirect lands.
+ */
+function AutoGoogleStage() {
+  return (
+    <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+      <p style={{ ...TYPE.displayMd, color: 'var(--cream)', margin: '0 0 0.5rem', fontSize: '1.1rem' }}>
+        Continuing to Google…
+      </p>
+      <p style={{ ...TYPE.body, color: 'var(--ink-soft)', fontSize: '0.88rem', lineHeight: 1.5, margin: 0 }}>
+        One moment. We&rsquo;re finishing your sign-up with the
+        provider you picked.
+      </p>
+    </div>
   );
 }
 
