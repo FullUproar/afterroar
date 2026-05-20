@@ -44,11 +44,16 @@ const FU_SITE_DIR = path.resolve(
 const ENV_NAME = 'PASSPORT_API_KEY';
 const TARGET = 'production';
 const KEY_NAME = 'FU storefront — Points federation';
-// Scopes required by lib/afterroar-points.ts + backfill script:
+// Scopes required by lib/afterroar-points.ts + backfill script +
+// /api/auth/register's canonical Passport user-creation call:
 //   write:points   → grant + redeem federation calls
 //   read:points    → balance lookups + count-by-action
 //   read:users     → backfill's lookup-by-email batch resolver
-const SCOPES = ['write:points', 'read:points', 'read:users'];
+//   users:create   → POST /api/v1/users (signup mints Passport user)
+// 2026-05-19: users:create was missing, surfacing as a 403 → FU's
+// "Account service unavailable" on every fresh signup. patch script
+// at scripts/patch-fu-api-key-scopes.mjs backfills the live key.
+const SCOPES = ['write:points', 'read:points', 'read:users', 'users:create'];
 
 function mint() {
   const random = randomBytes(24).toString('base64url');
