@@ -211,12 +211,13 @@ export function StoreHealth() {
   }
 
   // ── Level 1: The command center ──
-  // Extract key metrics from domain data
-  const sales = data.domains.find((d) => d.key === "sales");
+  // The today-metrics row (Sales / Revenue / Customers / Events) used to
+  // live here, parsed out of API summary strings via regex. Those numbers
+  // duplicated the dashboard's top KPI strip and the two surfaces drifted
+  // (same labels, different sources). The top KPI strip on the dashboard
+  // page owns today's metrics now; StoreHealth focuses on status + alerts
+  // + drill-down + quick actions.
   const inventory = data.domains.find((d) => d.key === "inventory");
-  const people = data.domains.find((d) => d.key === "people");
-  const money = data.domains.find((d) => d.key === "money");
-  const events = data.domains.find((d) => d.key === "events");
 
   // Domains that need attention (yellow or red)
   const alerts = data.domains.filter((d) => d.status !== "green");
@@ -250,49 +251,7 @@ export function StoreHealth() {
         </div>
       )}
 
-      {/* ── ROW 2: Today's metrics (numbers, not status) ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {sales && (
-          <div className="rounded-xl border border-card-border bg-card p-4">
-            <div className="text-xs text-muted font-medium uppercase tracking-wider">Sales Today</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
-              {sales.summary.match(/^\d+/)?.[0] ?? "0"}
-            </div>
-            <div className="text-xs text-muted mt-0.5">
-              {sales.summary.replace(/^\d+\s*sales?\s*·?\s*/, "")}
-            </div>
-          </div>
-        )}
-        {money && (
-          <div className="rounded-xl border border-card-border bg-card p-4">
-            <div className="text-xs text-muted font-medium uppercase tracking-wider">Revenue</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground font-mono">
-              {money.summary.match(/\+?\$[\d,.]+/)?.[0] ?? "$0"}
-            </div>
-            <div className="text-xs text-muted mt-0.5">today</div>
-          </div>
-        )}
-        {people && (
-          <button onClick={() => setDrillPath(["people"])} className="rounded-xl border border-card-border bg-card p-4 text-left hover:border-accent/30 transition-colors">
-            <div className="text-xs text-muted font-medium uppercase tracking-wider">Customers</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
-              {people.summary.match(/^\d+/)?.[0] ?? "0"}
-            </div>
-            <div className="text-xs text-muted mt-0.5">{people.details.find((d) => d.key === "churn_risk")?.summary?.match(/^\d+/)?.[0] ?? "0"} at risk</div>
-          </button>
-        )}
-        {events && (
-          <div className="rounded-xl border border-card-border bg-card p-4">
-            <div className="text-xs text-muted font-medium uppercase tracking-wider">Events</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
-              {events.summary.match(/^\d+/)?.[0] ?? "0"}
-            </div>
-            <div className="text-xs text-muted mt-0.5">upcoming</div>
-          </div>
-        )}
-      </div>
-
-      {/* ── ROW 3: Quick actions (buttons, not status) ── */}
+      {/* ── ROW 2: Quick actions (buttons, not status) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Link
           href="/dashboard/register"
@@ -324,7 +283,7 @@ export function StoreHealth() {
         </Link>
       </div>
 
-      {/* ── ROW 4: Inventory health (only if there are issues, uses status) ── */}
+      {/* ── ROW 3: Inventory health (only if there are issues, uses status) ── */}
       {inventory && inventory.status !== "green" && (
         <button
           onClick={() => setDrillPath(["inventory"])}

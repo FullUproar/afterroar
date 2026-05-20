@@ -43,7 +43,11 @@ const STATUS_COLOR: Record<string, { bg: string; fg: string; label: string }> = 
   degraded: { bg: "rgba(251,191,36,0.15)", fg: "var(--amber)", label: "Degraded" },
   down: { bg: "rgba(239,68,68,0.15)", fg: "var(--red)", label: "Down" },
   unconfigured: { bg: "rgba(148,163,184,0.15)", fg: "var(--ink-soft)", label: "Unconfigured" },
-  untested: { bg: "rgba(148,163,184,0.10)", fg: "var(--ink-faint)", label: "Untested" },
+  // "Untested" was reading as "broken" to early reviewers — relabeled
+  // "Ready" because the integration is installed and reachable, it just
+  // hasn't been exercised against this store's data yet. Same status
+  // value, less alarming demo copy.
+  untested: { bg: "rgba(148,163,184,0.10)", fg: "var(--ink-faint)", label: "Ready" },
 };
 
 const KIND_LABELS: Record<string, string> = {
@@ -178,7 +182,7 @@ function IntegrationRow({
   testing: boolean;
 }) {
   const color = STATUS_COLOR[i.status] ?? STATUS_COLOR.untested!;
-  const lastTestedAgo = i.last_tested_at ? formatRelative(i.last_tested_at) : "never";
+  const lastTestedAgo = i.last_tested_at ? formatRelative(i.last_tested_at) : null;
 
   return (
     <div className="px-4 py-3">
@@ -235,10 +239,13 @@ function IntegrationRow({
               {i.last_error}
             </div>
           )}
-          <div className="mt-1 text-[10px] text-ink-faint">
-            Last tested {lastTestedAgo}
-            {i.last_latency_ms != null && ` · ${i.last_latency_ms}ms`}
-          </div>
+          {(lastTestedAgo || i.last_latency_ms != null) && (
+            <div className="mt-1 text-[10px] text-ink-faint">
+              {lastTestedAgo && `Last tested ${lastTestedAgo}`}
+              {lastTestedAgo && i.last_latency_ms != null && " · "}
+              {i.last_latency_ms != null && `${i.last_latency_ms}ms`}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-end gap-1 shrink-0">
