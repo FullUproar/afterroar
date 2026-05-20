@@ -35,7 +35,14 @@ const REQUIRED_SCOPES = [
   'write:points',
   'read:points',
   'read:users',
-  'users:create', // ← missing, the actual bug
+  'users:create',
+  // 2026-05-20: Passport-native auth flip (see
+  // project_auth_passport_native_2026_05_20.md). HQ + FU sign-in
+  // forms now call back into Passport server-to-server instead of
+  // bouncing through the visible OIDC redirect, which needs two new
+  // scopes on this same shared key.
+  'auth:verify',           // POST /api/v1/auth/login
+  'auth:google-exchange',  // POST /api/v1/auth/google-exchange
 ];
 
 const keys = await prisma.apiKey.findMany({
